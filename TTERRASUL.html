@@ -1,0 +1,1306 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tterrasul VW — Avaliação de Experiência</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --vw-blue: #003899;
+    --vw-blue-mid: #0050c8;
+    --vw-blue-light: #1a72e8;
+    --white: #ffffff;
+    --dark: #030a1a;
+    --dark2: #060e20;
+    --glass: rgba(255,255,255,0.05);
+    --glass2: rgba(255,255,255,0.09);
+    --border: rgba(255,255,255,0.10);
+    --border-blue: rgba(0,80,200,0.45);
+    --glow: rgba(0,100,255,0.35);
+    --success: #00d68f;
+    --error: #ff4455;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { min-height:100%; background:var(--dark); font-family:'Barlow',sans-serif; color:var(--white); overflow-x:hidden; }
+
+  /* BG */
+  body::before {
+    content:'';
+    position:fixed; inset:0;
+    background:
+      radial-gradient(ellipse 90% 55% at 50% -5%, rgba(0,56,153,0.52) 0%, transparent 60%),
+      radial-gradient(ellipse 45% 35% at 5% 55%, rgba(0,40,130,0.28) 0%, transparent 55%),
+      radial-gradient(ellipse 45% 35% at 95% 80%, rgba(0,30,110,0.22) 0%, transparent 55%),
+      linear-gradient(180deg,#030a1a 0%,#050d22 60%,#030810 100%);
+    pointer-events:none; z-index:0;
+  }
+
+  .grid-bg {
+    position:fixed; inset:0;
+    background-image:
+      linear-gradient(rgba(0,56,153,0.055) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(0,56,153,0.055) 1px,transparent 1px);
+    background-size:55px 55px;
+    pointer-events:none; z-index:0;
+  }
+
+  #app {
+    position:relative; z-index:1;
+    min-height:100vh;
+    display:flex; flex-direction:column; align-items:center;
+    padding:0 16px 70px;
+  }
+
+  /* ── HEADER ── */
+  .site-header {
+    width:100%; max-width:600px;
+    display:flex; align-items:center; justify-content:center;
+    padding:26px 0 20px;
+    border-bottom:1px solid var(--border);
+  }
+
+  .logo-text-img {
+    height:25px;
+    width:auto;
+    object-fit:contain;
+    filter:drop-shadow(0 0 6px rgba(100,180,255,0.3));
+    opacity:.95;
+  }
+
+  .logo-img {
+    width:54px; height:54px;
+    object-fit:contain;
+    filter:drop-shadow(0 0 8px rgba(100,180,255,0.5));
+    animation:logoGlow 3s ease-in-out infinite alternate;
+  }
+
+  @keyframes logoGlow {
+    from { filter:drop-shadow(0 0 6px rgba(80,160,255,0.4)); }
+    to   { filter:drop-shadow(0 0 20px rgba(100,200,255,0.85)); }
+  }
+
+  .header-text h1 {
+    font-family:'Rajdhani',sans-serif;
+    font-size:28px; font-weight:700;
+    letter-spacing:3.5px; text-transform:uppercase;
+    color:var(--white); line-height:1; margin-bottom:4px;
+  }
+
+  .header-text span {
+    font-family:'Rajdhani',sans-serif;
+    font-size:11px; font-weight:500;
+    letter-spacing:4px; text-transform:uppercase;
+    color:rgba(255,255,255,0.36);
+    display:block;
+  }
+
+  /* ── PROGRESS ── */
+  .progress-wrap {
+    width:100%; max-width:600px;
+    padding:18px 0 0; margin-bottom:6px;
+  }
+
+  .progress-track {
+    height:2px; background:rgba(255,255,255,0.08); border-radius:2px; overflow:hidden;
+  }
+
+  .progress-fill {
+    height:100%;
+    background:linear-gradient(90deg,var(--vw-blue),var(--vw-blue-light),#5bb0ff);
+    border-radius:2px;
+    transition:width .6s cubic-bezier(.4,0,.2,1);
+    box-shadow:0 0 10px rgba(0,100,255,0.65);
+  }
+
+  .progress-label {
+    text-align:right; font-size:11px; font-weight:600;
+    letter-spacing:1.5px; color:rgba(255,255,255,0.3);
+    margin-top:6px; text-transform:uppercase; font-family:'Rajdhani',sans-serif;
+  }
+
+  /* ── STEPS ── */
+  .step { display:none; width:100%; max-width:600px; animation:stepIn .4s cubic-bezier(.4,0,.2,1); }
+  .step.active { display:block; }
+
+  @keyframes stepIn {
+    from { opacity:0; transform:translateY(20px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+
+  .card {
+    background:var(--glass);
+    border:1px solid var(--border);
+    border-radius:18px;
+    padding:34px 30px;
+    backdrop-filter:blur(18px);
+    position:relative; overflow:hidden;
+    margin-top:22px;
+  }
+
+  .card::before {
+    content:''; position:absolute;
+    top:0; left:0; right:0; height:1px;
+    background:linear-gradient(90deg,transparent,var(--vw-blue-light),transparent);
+    opacity:.7;
+  }
+
+  .card::after {
+    content:''; position:absolute;
+    top:-70px; right:-70px;
+    width:180px; height:180px;
+    background:radial-gradient(circle,rgba(0,100,255,0.07) 0%,transparent 70%);
+    pointer-events:none;
+  }
+
+  /* ── HERO ── */
+  .hero-screen { text-align:center; padding:44px 28px; }
+
+  .hero-badge {
+    display:inline-flex; align-items:center; gap:8px;
+    background:rgba(0,56,153,0.28);
+    border:1px solid rgba(0,100,255,0.35);
+    border-radius:30px; padding:5px 16px;
+    font-family:'Rajdhani',sans-serif;
+    font-size:11px; font-weight:600; letter-spacing:2px;
+    text-transform:uppercase; color:#7ab8ff;
+    margin-bottom:26px;
+  }
+
+  .hero-badge::before {
+    content:''; display:block;
+    width:6px; height:6px; border-radius:50%;
+    background:#4d9fff;
+    box-shadow:0 0 8px rgba(0,150,255,0.8);
+    animation:pulse 1.8s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%,100% { opacity:1; transform:scale(1); }
+    50%      { opacity:.5; transform:scale(.7); }
+  }
+
+  .hero-title {
+    font-family:'Rajdhani',sans-serif;
+    font-size:38px; font-weight:700;
+    line-height:1.1; text-transform:uppercase;
+    letter-spacing:1.5px; margin-bottom:14px; color:var(--white);
+  }
+
+  .hero-title em { font-style:normal; color:#4d9fff; }
+
+  .hero-sub {
+    font-size:14px; font-weight:400; line-height:1.75;
+    color:rgba(255,255,255,0.48);
+    max-width:340px; margin:0 auto 34px;
+  }
+
+  /* VW RING com emblema */
+  .vw-ring {
+    width:108px; height:108px;
+    margin:0 auto 30px;
+    position:relative;
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  .vw-ring-svg {
+    position:absolute; inset:0; width:100%; height:100%;
+    animation:rotateRing 14s linear infinite;
+  }
+
+  @keyframes rotateRing { from{transform:rotate(0deg);} to{transform:rotate(360deg);} }
+
+  .vw-emblem {
+    width:72px; height:72px;
+    position:relative; z-index:2;
+    filter:drop-shadow(0 0 10px rgba(100,200,255,0.6)) drop-shadow(0 0 22px rgba(0,100,255,0.4));
+    animation:emblemGlow 2.5s ease-in-out infinite alternate;
+  }
+
+  @keyframes emblemGlow {
+    from { filter:drop-shadow(0 0 8px rgba(80,180,255,0.55)) drop-shadow(0 0 18px rgba(0,100,255,0.3)); }
+    to   { filter:drop-shadow(0 0 18px rgba(120,210,255,0.95)) drop-shadow(0 0 38px rgba(0,130,255,0.55)); }
+  }
+
+  /* ── STEP LABELS ── */
+  .step-kicker {
+    font-family:'Rajdhani',sans-serif;
+    font-size:11px; font-weight:600; letter-spacing:2.5px;
+    text-transform:uppercase; color:#4d9fff;
+    margin-bottom:8px;
+    display:flex; align-items:center; gap:8px;
+  }
+
+  .step-kicker::before {
+    content:''; display:block; width:18px; height:1px; background:var(--vw-blue-light);
+  }
+
+  .step-title {
+    font-family:'Rajdhani',sans-serif;
+    font-size:27px; font-weight:700;
+    text-transform:uppercase; letter-spacing:.8px;
+    line-height:1.15; margin-bottom:22px; color:var(--white);
+  }
+
+  /* ── INPUTS ── */
+  .field { margin-bottom:16px; }
+
+  .field label {
+    display:block; font-size:11px; font-weight:600;
+    letter-spacing:1.8px; text-transform:uppercase;
+    color:rgba(255,255,255,0.38); margin-bottom:7px;
+    font-family:'Rajdhani',sans-serif;
+  }
+
+  .field input, .field textarea, .field select {
+    width:100%;
+    background:rgba(255,255,255,0.055);
+    border:1px solid rgba(255,255,255,0.10);
+    border-radius:10px; padding:13px 16px;
+    font-family:'Barlow',sans-serif;
+    font-size:15px; font-weight:400; color:var(--white);
+    outline:none;
+    transition:border-color .25s, box-shadow .25s, background .25s;
+    appearance:none; -webkit-appearance:none;
+  }
+
+  .field select {
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.35)' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 14px center;
+    padding-right:38px; cursor:pointer;
+  }
+
+  .field select option { background:#0a1430; color:var(--white); }
+
+  .field input::placeholder, .field textarea::placeholder { color:rgba(255,255,255,0.22); }
+
+  .field input:focus, .field textarea:focus, .field select:focus {
+    border-color:var(--vw-blue-light);
+    box-shadow:0 0 0 3px rgba(0,100,255,0.13), inset 0 0 16px rgba(0,56,153,0.08);
+    background:rgba(0,50,150,0.09);
+  }
+
+  .field input.error, .field textarea.error, .field select.error {
+    border-color:var(--error);
+    box-shadow:0 0 0 3px rgba(255,68,85,0.13);
+  }
+
+  .field textarea { min-height:96px; resize:vertical; }
+
+  .error-msg {
+    display:none; font-size:12px; color:var(--error);
+    margin-top:5px; font-weight:500;
+  }
+
+  .error-msg.visible { display:block; }
+
+  /* ── OPTION CARDS ── */
+  .option-grid { display:grid; gap:10px; margin-bottom:6px; }
+  .option-grid.cols2 { grid-template-columns:1fr 1fr; }
+  .option-grid.cols3 { grid-template-columns:1fr 1fr 1fr; }
+
+  .opt-card {
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.09);
+    border-radius:13px; padding:18px 14px;
+    cursor:pointer; text-align:center;
+    transition:all .22s; user-select:none;
+  }
+
+  .opt-card:hover {
+    background:rgba(0,56,153,0.14);
+    border-color:rgba(0,100,255,0.32);
+    transform:translateY(-1px);
+  }
+
+  .opt-card.selected {
+    background:rgba(0,56,153,0.28);
+    border-color:var(--vw-blue-light);
+    box-shadow:0 0 18px rgba(0,100,255,0.22), inset 0 0 16px rgba(0,56,153,0.09);
+  }
+
+  .opt-icon-tech {
+    width:32px; height:32px; margin:0 auto 10px;
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  .opt-icon-tech svg { width:100%; height:100%; }
+
+  .opt-label {
+    font-family:'Rajdhani',sans-serif;
+    font-size:13px; font-weight:700;
+    letter-spacing:.8px; text-transform:uppercase;
+    color:rgba(255,255,255,0.65); line-height:1.3;
+  }
+
+  .opt-card.selected .opt-label { color:var(--white); }
+
+  /* ── MODEL LIST ── */
+  .model-list { display:flex; flex-direction:column; gap:7px; margin-bottom:6px; }
+
+  .model-item {
+    display:flex; align-items:center; gap:12px;
+    background:rgba(255,255,255,0.035);
+    border:1px solid rgba(255,255,255,0.07);
+    border-radius:11px; padding:12px 16px;
+    cursor:pointer; transition:all .22s; user-select:none;
+  }
+
+  .model-item:hover { background:rgba(0,56,153,0.13); border-color:rgba(0,100,255,0.27); }
+
+  .model-item.selected {
+    background:rgba(0,56,153,0.23);
+    border-color:var(--vw-blue-light);
+    box-shadow:0 0 12px rgba(0,100,255,0.18);
+  }
+
+  .model-check {
+    width:20px; height:20px; border-radius:50%;
+    border:1.5px solid rgba(255,255,255,0.18);
+    flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    transition:all .22s;
+  }
+
+  .model-item.selected .model-check {
+    background:var(--vw-blue-light); border-color:var(--vw-blue-light);
+    box-shadow:0 0 8px rgba(0,100,255,0.45);
+  }
+
+  .model-check::after {
+    content:''; display:none;
+    width:5px; height:5px; border-radius:50%; background:white;
+  }
+
+  .model-item.selected .model-check::after { display:block; }
+
+  .model-name {
+    font-size:14px; font-weight:500; color:rgba(255,255,255,0.75);
+  }
+
+  .model-item.selected .model-name { color:var(--white); }
+
+  .model-tag {
+    margin-left:auto; font-size:10px; font-weight:700;
+    letter-spacing:1px; text-transform:uppercase;
+    padding:2px 7px; border-radius:4px;
+    background:rgba(0,56,153,0.28); color:#7ab8ff;
+    border:1px solid rgba(0,100,255,0.25);
+    font-family:'Rajdhani',sans-serif;
+  }
+
+  /* ── TIME OPTIONS ── */
+  .time-options { display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-bottom:6px; }
+
+  .time-opt {
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.09);
+    border-radius:12px; padding:15px 12px;
+    cursor:pointer; text-align:center; transition:all .22s; user-select:none;
+  }
+
+  .time-opt:hover { background:rgba(0,56,153,0.13); border-color:rgba(0,100,255,0.27); }
+
+  .time-opt.selected {
+    background:rgba(0,56,153,0.26); border-color:var(--vw-blue-light);
+    box-shadow:0 0 14px rgba(0,100,255,0.18);
+  }
+
+  .time-num {
+    font-family:'Rajdhani',sans-serif;
+    font-size:28px; font-weight:700; color:var(--vw-blue-light); line-height:1; margin-bottom:4px;
+  }
+
+  .time-label {
+    font-family:'Rajdhani',sans-serif;
+    font-size:11px; font-weight:600; letter-spacing:1px;
+    text-transform:uppercase; color:rgba(255,255,255,0.45);
+  }
+
+  .time-opt.selected .time-label { color:rgba(255,255,255,0.82); }
+
+  /* ── STARS ── */
+  .stars-wrap { text-align:center; margin:18px 0; }
+
+  .star-row { display:flex; justify-content:center; gap:10px; margin-bottom:10px; }
+
+  .star {
+    width:44px; height:44px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:all .2s; user-select:none;
+  }
+
+  .star svg { width:36px; height:36px; }
+
+  .star svg path { fill:rgba(255,255,255,0.12); transition:fill .2s; }
+
+  .star.lit svg path { fill:#f5c518; }
+  .star.lit { filter:drop-shadow(0 0 10px rgba(245,197,24,0.7)); transform:scale(1.08); }
+
+  .star-label {
+    font-family:'Rajdhani',sans-serif;
+    font-size:13px; font-weight:600; letter-spacing:0.5px;
+    color:rgba(255,255,255,0.35); min-height:20px; transition:color .3s;
+    text-transform:uppercase;
+  }
+
+  .star-label.active { color:rgba(245,197,24,.85); }
+
+  /* ── RECOMMEND ── */
+  .recommend-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:6px; }
+
+  .rec-btn {
+    padding:20px 14px; border-radius:13px;
+    border:1px solid rgba(255,255,255,0.09);
+    background:rgba(255,255,255,0.04);
+    cursor:pointer; text-align:center; transition:all .28s; user-select:none;
+  }
+
+  .rec-icon {
+    width:36px; height:36px; margin:0 auto 10px;
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  .rec-icon svg { width:100%; height:100%; }
+
+  .rec-label {
+    font-family:'Rajdhani',sans-serif;
+    font-size:13px; font-weight:700;
+    text-transform:uppercase; letter-spacing:.6px; color:rgba(255,255,255,0.6);
+  }
+
+  .rec-btn:hover { transform:translateY(-2px); }
+
+  .rec-btn.yes:hover, .rec-btn.yes.selected {
+    background:rgba(0,214,143,0.13); border-color:var(--success);
+    box-shadow:0 0 18px rgba(0,214,143,0.18);
+  }
+
+  .rec-btn.yes.selected .rec-label { color:var(--success); }
+
+  .rec-btn.no:hover, .rec-btn.no.selected {
+    background:rgba(255,68,85,0.09); border-color:#ff6677;
+    box-shadow:0 0 18px rgba(255,68,85,0.13);
+  }
+
+  .rec-btn.no.selected .rec-label { color:#ff8899; }
+
+  /* ── BONUS ── */
+  .bonus-card {
+    background:linear-gradient(135deg,rgba(0,56,153,0.32) 0%,rgba(0,28,88,0.48) 100%);
+    border:1px solid rgba(0,100,255,0.35);
+    border-radius:14px; padding:24px 20px;
+    margin-bottom:18px; position:relative; overflow:hidden;
+  }
+
+  .bonus-card::before {
+    content:''; position:absolute;
+    top:-1px; left:0; right:0; height:1px;
+    background:linear-gradient(90deg,transparent,#4d9fff,#00c8ff,transparent);
+  }
+
+  .bonus-title {
+    font-family:'Rajdhani',sans-serif;
+    font-size:20px; font-weight:700; text-transform:uppercase;
+    letter-spacing:1px; color:#4d9fff; margin-bottom:10px;
+  }
+
+  .bonus-desc {
+    font-size:13px; line-height:1.75; color:rgba(255,255,255,0.65); margin-bottom:14px;
+  }
+
+  .bonus-highlight {
+    font-family:'Rajdhani',sans-serif;
+    font-size:12px; font-weight:700; color:#7ab8ff;
+    background:rgba(0,56,153,0.38); border-radius:7px;
+    padding:7px 12px; display:inline-block; letter-spacing:.5px;
+  }
+
+  /* ── IND CARDS ── */
+  .ind-card {
+    background:rgba(255,255,255,0.03);
+    border:1px solid rgba(255,255,255,0.07);
+    border-radius:13px; padding:18px;
+    margin-bottom:12px;
+  }
+
+  .ind-card h4 {
+    font-family:'Rajdhani',sans-serif;
+    font-size:12px; font-weight:700; letter-spacing:1.8px;
+    text-transform:uppercase; color:#4d9fff; margin-bottom:14px;
+    display:flex; align-items:center; gap:8px;
+  }
+
+  .ind-num {
+    width:20px; height:20px; border-radius:50%;
+    background:rgba(0,56,153,0.45);
+    border:1px solid rgba(0,100,255,0.35);
+    display:flex; align-items:center; justify-content:center;
+    font-size:11px; font-weight:900; color:#7ab8ff; flex-shrink:0;
+  }
+
+  /* ── BUTTONS ── */
+  .btn-primary {
+    width:100%; padding:16px 28px;
+    background:linear-gradient(135deg,var(--vw-blue) 0%,var(--vw-blue-mid) 50%,var(--vw-blue-light) 100%);
+    border:none; border-radius:11px;
+    font-family:'Rajdhani',sans-serif;
+    font-size:15px; font-weight:700;
+    letter-spacing:2.5px; text-transform:uppercase;
+    color:var(--white); cursor:pointer;
+    transition:all .28s; position:relative; overflow:hidden;
+    box-shadow:0 4px 22px rgba(0,56,153,0.48), 0 0 0 1px rgba(255,255,255,0.04);
+    margin-top:8px;
+  }
+
+  .btn-primary::before {
+    content:''; position:absolute; inset:0;
+    background:linear-gradient(135deg,transparent 0%,rgba(255,255,255,0.08) 100%);
+    opacity:0; transition:opacity .28s;
+  }
+
+  .btn-primary:hover {
+    transform:translateY(-2px);
+    box-shadow:0 8px 28px rgba(0,56,153,0.65), 0 0 36px rgba(0,100,255,0.28);
+  }
+
+  .btn-primary:hover::before { opacity:1; }
+  .btn-primary:active { transform:translateY(0); }
+  .btn-primary:disabled { opacity:.38; cursor:not-allowed; transform:none; box-shadow:none; }
+
+  .btn-secondary {
+    width:100%; padding:14px 28px;
+    background:transparent;
+    border:1px solid rgba(255,255,255,0.16);
+    border-radius:11px;
+    font-family:'Rajdhani',sans-serif;
+    font-size:13px; font-weight:600;
+    letter-spacing:2px; text-transform:uppercase;
+    color:rgba(255,255,255,0.42); cursor:pointer;
+    transition:all .25s; margin-top:8px;
+  }
+
+  .btn-secondary:hover { border-color:rgba(255,255,255,0.3); color:rgba(255,255,255,0.7); }
+
+  /* ── DIVIDER ── */
+  .divider { height:1px; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.08),transparent); margin:20px 0; }
+
+  /* ── FINAL ── */
+  .final-wrap { text-align:center; padding:46px 22px; }
+
+  .checkmark-ring {
+    width:84px; height:84px; margin:0 auto 26px;
+    border-radius:50%;
+    background:linear-gradient(135deg,rgba(0,56,153,0.38),rgba(0,100,255,0.22));
+    border:1.5px solid rgba(0,100,255,0.45);
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 0 36px rgba(0,100,255,0.32);
+    animation:checkGlow 2.2s ease-in-out infinite alternate;
+  }
+
+  @keyframes checkGlow {
+    from { box-shadow:0 0 18px rgba(0,100,255,0.28); }
+    to   { box-shadow:0 0 44px rgba(0,150,255,0.55), 0 0 70px rgba(0,100,255,0.18); }
+  }
+
+  .check-svg { width:36px; height:36px; }
+
+  .final-title {
+    font-family:'Rajdhani',sans-serif;
+    font-size:34px; font-weight:700;
+    text-transform:uppercase; letter-spacing:1px;
+    color:var(--white); margin-bottom:10px;
+  }
+
+  .final-sub { font-size:14px; color:rgba(255,255,255,0.45); line-height:1.8; max-width:330px; margin:0 auto 28px; }
+
+  /* ADDRESSES */
+  .addresses { display:flex; flex-direction:column; gap:10px; margin-top:26px; }
+
+  .addr-card {
+    display:flex; gap:13px; align-items:flex-start;
+    background:rgba(0,56,153,0.13);
+    border:1px solid rgba(0,100,255,0.18);
+    border-radius:11px; padding:14px;
+    text-decoration:none; color:inherit; transition:all .22s;
+  }
+
+  .addr-card:hover { background:rgba(0,56,153,0.22); border-color:rgba(0,100,255,0.35); transform:translateY(-1px); }
+
+  .addr-pin { flex-shrink:0; margin-top:2px; }
+  .addr-pin svg { width:20px; height:20px; }
+
+  .addr-info h5 {
+    font-family:'Rajdhani',sans-serif;
+    font-size:12px; font-weight:700; letter-spacing:1px;
+    text-transform:uppercase; color:#7ab8ff; margin-bottom:2px;
+  }
+
+  .addr-info p { font-size:12px; color:rgba(255,255,255,0.4); line-height:1.55; }
+
+  /* ── LOADING ── */
+  .loading-overlay {
+    display:none; position:fixed; inset:0;
+    background:rgba(3,10,26,0.82); z-index:999;
+    align-items:center; justify-content:center;
+    flex-direction:column; gap:14px;
+    backdrop-filter:blur(8px);
+  }
+
+  .loading-overlay.show { display:flex; }
+
+  .spinner {
+    width:44px; height:44px;
+    border:2.5px solid rgba(0,100,255,0.18);
+    border-top-color:var(--vw-blue-light);
+    border-radius:50%; animation:spin .8s linear infinite;
+    box-shadow:0 0 18px rgba(0,100,255,0.28);
+  }
+
+  @keyframes spin { to{transform:rotate(360deg);} }
+
+  .loading-text {
+    font-family:'Rajdhani',sans-serif;
+    font-size:12px; font-weight:600; letter-spacing:2.5px;
+    text-transform:uppercase; color:rgba(255,255,255,0.45);
+  }
+
+  @media(max-width:480px){
+    .card{padding:24px 18px;}
+    .hero-title{font-size:30px;}
+    .step-title{font-size:23px;}
+    .option-grid.cols3{grid-template-columns:1fr 1fr;}
+    .logo-img{width:46px;height:46px;}
+    .header-text h1{font-size:20px;}
+  }
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+<div id="app">
+
+  <!-- HEADER -->
+  <header class="site-header">
+    <img class="logo-text-img" src="data:image/png;base64,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" alt="Tterrasul">
+  </header>
+
+  <div class="progress-wrap">
+    <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    <div class="progress-label" id="progressLabel"></div>
+  </div>
+
+  <!-- STEP 0: WELCOME -->
+  <div class="step active" id="step0">
+    <div class="card hero-screen">
+      <div class="hero-badge">Programa de Avaliação</div>
+      <div class="vw-ring">
+        <!-- Anel girando -->
+        <svg class="vw-ring-svg" viewBox="0 0 108 108" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="54" cy="54" r="50" stroke="rgba(0,100,255,0.28)" stroke-width="1" stroke-dasharray="5 4"/>
+          <circle cx="54" cy="54" r="42" stroke="rgba(0,100,255,0.45)" stroke-width=".8"/>
+          <circle cx="54" cy="4" r="3" fill="rgba(0,160,255,0.8)"/>
+          <circle cx="104" cy="54" r="2" fill="rgba(0,100,255,0.55)"/>
+          <circle cx="54" cy="104" r="2" fill="rgba(0,100,255,0.38)"/>
+          <circle cx="4" cy="54" r="2" fill="rgba(0,100,255,0.48)"/>
+          <rect x="52" y="2" width="4" height="10" rx="2" fill="rgba(0,150,255,0.3)"/>
+        </svg>
+        <!-- Emblema VW no centro -->
+        <img class="vw-emblem" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAboAAAG6CAYAAAB+94OFAAAbm0lEQVR4nO3d25bjOI4FUMWs+v9f9jxkuiPS4bsl8hDY+3V6TUkggEM567JtAAAAAAAAAAAAADz2NfsBYBWn0+k0+xl++vr6Mr/wBIMCP6SF2aeEIQg6GqoWZu8SgnSh0SlLoL1HAFKNhqYEoXYs4cfKNC/LEWoZhB+r0KjEE2xrEHyk0pjEEWw1CD5SaEQiCLfahB4zaT6mEGy9CT5G0mwMI9y4JPAYQZNxKOHGKwQfR9BUHELA8QmBx540E7sRbhxB6PEpDcRHhBsjCT3eoWl4i4BjJoHHKzQLLxFwpBF6PKJBeEi4sQKBxy0ag5sEHCsSeFzSEPwi4KhA4HGmEfgfAUdFAg8NgIB7QeLSdH7PSTw7xnDwjVmQv1Vchs75XxXPmPsceEPdF59F94c+0AddOOhGOi42y+w1HXtk2/RJdQ63gS7Ly7I6hv5hdQ62sOoLymKaQ1+xGgdaUOVFZAnlqdpveq0OB1lIxYVj2aynWh/qwfU5wCIqLReLpY4qfakn1+bwFndeJF9fX18rLxWLpL6V+/NMn67JoS3K0mBVepfR/m/2A/A6iwLmqjCDnVg2C6k2XMKun2o9vG36eAX/zX4AHqu4HKCKn39OPvtZuM5Pl+GEHFVU7+Xq77cyN5BQXYbGLbiPLj29bfo6jS+6QJ0WAlRkhrO4dQTpOhxuv/V17e1t098JfNGF6LwIoDKzPZ+bxmSG4A+33rr0+Dd9PocvuoksAOjFzM8h6CbR8P9Sj5qc629qMp5/YHwwTQ74h8zH8kU3kJCjE/3+mBqNIegG0dCPqREd6fvjCbqDnf6a/RyX/GRCN18/zH6WS4k7opK4A68ksXkvh3yFZ2Q9aX11q6fSnnPb9P8RfNEdZJUBMlR0ltj/ibtjdYLuAGmNmvpzzS1p9eM1q51f4nysVsN0/vGCHaU1Z9rwwgzPzsH5f5cyx6fT6WSG9+GLbicpw7Ftr99QDRN7SZqDdyXNQ4V6JhB0O5jdjD8HM2lIPzG7ptTw7jwk/ZyZ+ndur0TQfSihAc8/cXwymClDzboSZmFvSXNRsb6jCLoPpDRe0jDuKaW+rGmvuUj7upv9DCsSdG9KaLi9BzBlmCFRynwk7J7VCLo3JDRaytAdLaHWPJZ2TkfNR8rXXVq90wm6FyU02JGDljDEkC5hThJ20SqmH9ZKZjfWqOGa/Z7XJCwWrkvrl9G9Mvv9zcZjvuiekPC392pmyDR7NmfvphUIugdmN9GMPxOYPbisY/Z8pJg9M87hPkF3x+zmmT08SWafBWuYOTOz/0YVM3KboLthdtPMDrnZf33yzZ6RVLPDzrn8JuiumNkos2+FyQww9yTNzexnMSv/EnQXZofcrL/2NWnPAysxPzkcxA9C7rfEm2FqrTpJ64v0nrBb5vJF95dGvC752WAV5mguQbfNCzl/HveetK+JbtLqv8oMzXrOtPOaoX3QjW6Cc7OvMpzbttazQjJhN0f7oBvp6+vr6/zfjpv9LPCOtIW54iwJu/FaB93og1855NKeu/PQsj5hN1bboJtx4GlhAStbfZ5m/Rl9x7BrGXRCroaOAzuTeh9D2B2vXdAJufdVeQ9II+yO1SroZvwZmXA4VqdhnSmtzhXnStgdp03QnQ905MEaRuAV5usYLYLOz5W1dbmVzpJW3+qzNfr90s73COWDTsjtr/r7wWzCbl/lg240IUAlaQuw03wJu/2UDrpZ/3qvDtLetfKQ0pew20fZoBNy8Jm0pdd1xkb/+3HTzn0PJYNOyPVUcUBh277/Pbmj/nrVZqlc0Am5cTq/O4zmZ8z3lQu6kSz6PJWGc6a0Opq1P9ThPaWCzj8MPp46wFgjZy7twvOuMkEn5DirMpyzpNXPvP2mJq8pEXRCbi41gbrSLj7vKBF0o1jo66gwnDOk1c3M3Tbyv2eX1hevWj7oRh2AgbtPfaC2lcNu6aATcrCftEVm7p6jTo8tG3RpQ0newOkRuvAT5n3LBt0oacsbjrDqAuObsLttyaDzkyXPWnEoMXvvEnbXLRd0Qi6busFcZvC35YJuBI1Sy2q3z9HS6mP+1pDWN/csFXQjCmvIPqeGMJefMP+1TNCtUlAy6Z/r0urikrQftfy2TNCNoDH2o5Yw34g5TLssXbNE0PnJkj2sMJAjpdXDDK4rrZcuxQedkFuXusJ85nCBoDuaJqCj9Bs4++r+E2Z00CUXjuekXST0VKa0Pqmoc41jg85PltCDOawj9SIZG3RHM1x9pQ7jKN3fv7OuP2FGBt3RhRJyY6k35Og4j5FBB0dLvHWOkPbeHZduB2l9Fhd0vuZqUnfI0e0nzKigE3JwnKTFs23mcbZO9Y8KOmpLG6y0xQ/VpMxYTND5muvDWYyXsnDO9ECGLucQE3T08PX19ZW0dJOeBWY4OuwSZiwi6BIKAYzR5StiFR32b0TQwUzVBz3l/QRcX7N7cHrQjSrA7ELzzcLryQzm6XIm04NupC6Hyuuq9kbae7nk9DWzF6cGXdoQMo6FB3N12r/Tgm5WkTsdLq+p1htp7+Nyw6yebPXTJVmSFl/Ss8DR0i5BR2sZdN0Omceq9UTa+7hIcDajN6cEXdoQMk/aAtSbVJfQ46OfYXjQJRR523KeA/aW1ttpl5nO0npjlJY/XcI9XZcBjDRyzoYGXdoCSXuertz463K2OTrvO190cMWqS2HV54YjDQs6A8g9bv5wnNT9O+q52n/RpTYAvCqtl11eSNE+6LYtb0F0lbYY9QUcb8ScDQk6CwOOlTZjaZeWztJ6YwZfdH9phgxpC1JfsLJV+vfo5zw86FYpNKwqbcbSLivgi+6HtIXRVdqi1BesaLW+PfJ5Dw261QoNfCbtkgLb5ovuF+HMNal9kfpczLVqXxz13IKOSL4M1uPMSHVY0K16o9i2tZ+dPvQp1+iL33zRESvtC8ECuS3trFjXEXN2SNBVWAgV3oG69CfX6IvrfNERLe1LwSKB4+09Z7sHXaVFUOldqCOtL9MuI12l9UUSX3TES1ukFgqsRdA9YKmRJK0f0y4hXaX1xR72fKddg65iseEavQ7r8EX3BEttPl8OeZxJBvvpMUEHi7DQ6Gavnt8t6KoPYfX3W0HaF4SeYDY9+BxfdLCAtIWWdumAewTdC9KWTUdpC1ZPMEuX3tvjPXcJui4FhxnS5ivtsgGP+KJ7UdrS6Sht0eoJRtNzrxF0ECxtoaVdMshyVH98OgcfB91Rg/j11xH/vz+Vtnw6SusNPUF3aTP5ky864CnJi6yTxEtVem9EBt3PoqUWMLHZmGvvntBjXFqhJxJ/vvwo6FYoOnWlXoIqUmtuWaE3Ir/oLqUWUtBzFL3FJT3xvrigSw01MqX1i2VEJ7fmL+3ny7iguyVtoZ1ZbOwtradSZ6+TtJ5YzdtBp/CkSFvEZoMO0ubunqgvukeFSy2sxcZe0nopdeY6SeuJZyX1TlTQwbuShmrb1l1O8IyZ8/bObL0VdDOHOG2hnVlsVJM6a53YK/uI+aIzVFTz6pKy1FjBK7s6Za/HBN0rUop3yaKaK7UvVqSW89kn+1ky6KAaS40VpFyAXp2Xl4MuZSBTCn4ppT5dpfXFiv2QVsOOVuybWxL6KeKLLqEQMEulpUZdK+/piKB718qF5zhpfSHIeIV+2d/SQZdKo/KstF5JuySQIbEvXpmdl4IubSi3LfMAti2zVp2k9YV+4BlV+2T2PE7/optdgCNUfCf2l7bU9C3XVOiL6UG3h7SDOC+wtEXWTWpfwDX64zj/zX4A6CR1maVdCsiQ3hen0+n0zDOW+KLbttwDSV1sQI4Oe2Lmjn466I44iNRwog499pgacU2lvijzRbdtuQfT4bYGvMd+OF6poINrUi9ACdSGa6r1RbmgSz0gtzbgkr3wuWdq+FTQ+fM5Vqff4DlHzsqsOSz3RbdtuUvN7Y0kqXPShX0wTsmgg2ssdriv6oyUDbrUA3OLI0HqfHRhD4xVNujgGgserqs8G6WDLvXg3OaYKXUuuug+/zP6b0rQGTRm0n/wx3kWVp+JR5eHh0G3+u0j9QBXryvwurS5T3ueo5T+6RL4V+rFj3k69ESLoEs9yC63qUSpPUFd5n2eFkEHCHd+m9UTo/+6bYIudcjd8uZJ7QnqMedzDQ86y+WbWjCKXuNStZ64d5lo80W3bXkHe/7PwLvtzZPWE9Rjvue7G3QO6HhqzNGEOZe69USrL7ptyz1ggQf1mOsM7YIOLqVefvZQ+d14T8eeaBl0qQft9gd1mOccLYMOLqVefmBPSX0+8lnaBl3Sgf/kFsheUnu8A3OcpW3QwSXBQGWd+7t10KUevNsgn0rt7Q7Mb56hQWf4SKdHqahLX9+6ZLT+otu23AZwK+RdqT3dQeLc6gdBB79YDFCLoNtyF1vi7ZBsqb3cgXnNJegAinLx+UPQ/ZXaEG6Jc6T2wzXnZ13pmasxp9kEHdywSnBYslyzSv+OIOh+SG0Mi2ye1J746euv2c/RlfnM99+t/4PDgz+ECKvRs//yRXchtUFcPCBP4lym7rCZBB0ApQm6K1JvRIm3R+jKPK5D0AEUkXpJn03Q3ZDaMG6RMJ853MeoPSvoAApIvZwnEHR3pDaO2yTMY/7WI+gAFpd6KU8h6B5IbSC3Shgvce5Sd1QSQQdAaYJuYYm3S6jKvK1L0D3BTwNAotV306jLg6B7UmpDuWXC8czZ2m7+1wuAf6Utu9TLF2M4/+cJugJOp9NJ0x8nLeDOfj6X8z9O6vnzvJs/XRqc39Skn1WW3CrPyT7sotf4M7oXpTaYRbe/1Wq62vOuQE1rEHRwhQVHqtTLdjJBV4jljB7Yj1rWIeje4EYFtaWGnN3zHkEHF1KX3LNWf37Ym6B7U+rNypKDmlJ3zgoEXUHC7n1qhx6oZ2jQVWsgNyxSVZu17uya59yqky+6D6U2oEX3OjUjsQdSd8xKBB0Ulbi0YQZBB5tQQA+MNrLegm4HqT8tGFxYW+puWY2gK07Y9eb8n6NOtQm6nbh5rcuSI5Gdsh9BB8UJ8vsS6yPk9nU36BT7Nan1ShzkFGoD9Q3/oqu+WIQdiZz/derSg58uacuSI1HqZXllgq4Ri7035/8v9ajl3gVB0B3AjQx4R5fdMfqSIeiacYv9Qx16c/69CLqDdLmZsRYLPpedcZwpQWfYmEn/9eb8+3kYdG4Z70utnUHvzfnnOO+I1F1RhZ8um+q67Lq+N3+knX/a81Ql6A7mpkYiCzZHtx1xRO89qqGgA1pIDPduITeLoBsgtZkTB/9I3d4X+GNa0Fk6MFenGez0rvz2VNClfpGsJLWGXRZAl/dkHak7oSI/XUJjHS4AHd5xFbPOQtANlHqDq74Iqr8f60ndBSt6ppZTg84Cgvkqz2Hld+N5TwedG8g+UutoIcAYqTugMj9dUlpagH/9Nfs5LqXVaQ8V32llM89D0E2QuOi2zWIYKbUHOJZz39ez9RR0lJUW3JbcOGlnz1zTg65rQ6Yuva7ncbRr553WA87+WGnn3clLQeegWMXpdDrp154Edp7ZZzL9i66z1EU8uyn3kvIe9845rQdSalZN2jl3ExF0hos96ae+Es9eyB3jlbpGBF1nqUOQuDAYw9lTjaCDA5wvMM9cZFIvO6sR0JkSzuXloDOU+0utaUKDvirlmVOeg7lSZ7ubmC86i4FqXllyaQtxtXlc7Xn5zKvzEhN03aUturOVFshKz0p9qTM9UspMvhV0DhDue2dG0uYqZUk9sspzMk/UF133hk1bdGcrnMsKz0gfqbPcVVTQQQWfLLm0BZl+gUh/vs6OOpt3ZkTQhUlbdGcWCjwndYY7ezvoHCYphPCxUuub+lzkifui07y5lwhn89geZ5d6/jzm7I71bn3jgg5eIXx7cu7Z0s7no6BzezlOam3TGjjJnmeWdv7O/bG0M+Nb5BedoeIZKX1iwUG2yKDjj9QFmhIwKY76j7ymnX/Kuac8x09pZzVT0j9WcPZx0B11wInNzLfZ5zP7r88czp13+KIL56aYr9MZCZrfOp3/I6n9IeggWNISnf0sqUuU433ae7sEnZ8vjzV7wdwy63y69UXK+Z/r3q3+96ScDff5ooMPdFt0s95XuOZLPiNBt4jUhTq6uZOHqQP1/5Y6k9XsUefdgs7Pl3QzctGlLdWRc2kH8ClfdHxs1CKy8EiRdvGYLX02lwi69CKOYrhyzDiLtPMfMZdmv7e9en7XoEsbRMaxkOjCnvvXCrO/xBfdtq1RzBG6DlnS+c88g7TzP/Jcks6c8fbs9WWCjnwWE9WlXTRmW2Xmdw86jXC8bjVOGqaE2ic8w09HnE/SmbO+pb7oNH8+Z0RVaReMyvau9SFBpyGO16XGScHZpebwjKTZfGSpL7ptW6u4XTmj46WF7p5nntg/afWu7IhaLxd0fDs3RNUhTFx4HMuZr2G1czos6I5cvqsV+WiJ9Uh8pk8kXibSnqnamZ+l1ZnX+aJbnCGkiqpBWc2R53TUPjs06HzV9fbJGSWdb/JlIu3Zks5tD2n15T2+6AowjKyuWkBWteLX3LYtHnSGI987Z5R0ritcItKeMen8PpFWV953eNBpljHUGTjSyheYpb/otm3t4nex6hmtdHlY6VkvJfbHyvVc0dH1HhJ0mmaMCnVOXHq87tlzdN5rWP2clv+i27b1D6EDZ8QqKlwYVzKi3sOCTvOMsXKdT6fTKeX5U57jFWnP/Ohy4/KzhgrnVOKLbttqHEZ1z5yRc2SmtMtCdaPqPTToNNEYK9Y5KeBWrN9Z2rPfOtek8+a2KudU5otu2+ocSmXOiFRpl4TZjp7VkfUeHnSaaYyV6pwUfivV7Za0d7g836Tzpof/Zj/A3pL+hgaus+j6ST9zO2Os0fWe8tPl0S+ZPlSjGN7XqBf8UW2HlvozOuAPof08tfpXpT+bO5sWdL7qxjDEQHe+6GCreSGo+E57U6N/Vfya27bJQeerbgzDDHRW/otO2PFI5YtA5Xf7lNr8q+rX3LYFBJ1mG0OdgVuqfxBMD7oRqh8i7+twAejwjq9Sk7Fm1zsi6GYXoQt1Bi5V/snyLCLots3fmAKMkbB4U3TZizFBN0KXQ73HkH/rVItO70qOlL6LCrqUogA12THfOl38o4JuhE6He4th71mDju/MdSP2YFK/xQXdiOIIO+gnafEyVlzQbZuGHKFzjb07nXX7mtu20KAbwVcd9JG2eGfpGHLbFhx0fsI8XmJDHq3jO3fmvNm24KADjtFp+Z9Op1On972n69fctoUHna+646U2JrCf7nsuOui2TdixH6H+rUsturznPaP2W3Kt44NulM5hl9ygQL70HbJE0KUXkXx66LfqNan+fs/ofIH/aYmg2zY/YR7NUoBa/GT5bZmgG6Vz2FW1wiDOUrU2Vd/rWULuX0sF3aiidg27VZqW/Tl7Klsq6LZN2PEaC/w5lfq9+5n7mvttuaDjWCs1L/tw5nUIueuWDDpfdTxjtWHkc53PXMjdtmTQbZuwO9KKjcxnnPnaOu6pVywbdCNpIsgnrI+3ao2XDrqRRe8Wdqs29Nnqzz+Dmq3JT5aPLR102ybsgLWX8CfspOcsH3TbJuyOsuryWPW5E6jdOkbuotX7okTQbZuwg65WX8LvEHKvKRN0HGO1Jl/teeFVQu51pYJu9FedLzsqWmm5rfSsexBy7ykVdNtW63BSqCnM52L9vnJBt23+vK4rgbyfFWq5wjPuZfQ/QlCttiWDbrQOYVet8WEVI/fL6XQ6VZz1skE3+rA6hF2yisM5W3JNk59tT6P3StW6lg26bRN2e6s6BJBIyO2ndNBtm7DroPKA8luH87ZH9lU+6LZN2O2pw5Lhm/Puofo5twi6GSqHXZLqA8q/Opy3nyz31yboZhxm1bDrMBh8c97jCLljtAm6bZsXdlUDD0aqvpSF3HFaBd22zTvcamGXMCQJz9CFWh9nxmW423m2C7ptE3awmqqL2U4Yo2XQbZuw28PM5VN18SVT833N2gUdz7Ft0G2bsIMVVFzMQm6s1kG3bcLuUzPq13VYqUHIjdc+6LZN2MGzRs9KteUs5OYQdH8Ju/eNrF33gWVdQm4eQffDzLCrEHj0MGpOKi1oITeXoLswszFWDrsRdTO0rGbmJda8fBN0Vwg7uO/oGamwpGfOcoX67UnQ3SDsXme44A8hl0XQ3SHschjePlY/ayGXR9A9MDvsVgs8g9bH3me9eu/MntfV63ckQfeE2Q20WtjtbXb9GeN0Op1WPevZM7pq3UYRdE+a3Uizb4uvmF0rxnHWQm4Fgu4FCQ01e6hGS6g5Y6x21gmXz9VqNouge1FCY80ermck1IkxOp51wgx2rPu7BN0bEhos4TZ5tIQ6M8ZKZ50wdyvVK4Gge1NKoyUM3S3v1iiltjyvw5klXC6//pr5DCsSdB9IabiEAdxTpXfhsZQ5uiehJ1eoUyqF20nCIGxb5jC8U5vE9+CxamdtrmvwRbeTlEas9nVHbSlzc03KHCXXaBWCbkcpDfn19fWVFHjnujyqz7P/O3JVOLvE2eEziniAlCE5SxmWc13OQXztf5PyrLzv2f5PPOuU2U2szcoU8yApA/NTwvDcq0vC87Gflc46aV7TalOBgh4saYDODBKjpf57LNPmM7FGFSjqAGnDtG0GCtLm0kweR2EHSRuqM8NFN2mzaAaPp8CDpQ3ZmWGjusTZM3djKPIEiQN3ZvCoJmnefv4dx2ZtHIWeJGn4rjGEVJA0Z0JuHsWeLGkQrzGQrCh1rszTHIoeIHUofzKgrCB5lszQPAofInlAfzKsJEqeHzMznwMIkzywPxleEqTPiznJ4BACpQ/vJcPMaOkzYiayOIxg6cN8yXBzpFXmwRzkcSDhVhnuS4advSTPwOV/iUPfZ3Ioi0ge9nsMPu9K73n/XNw6HM5C0gf/HouAZ6zW4/p6DQ5pQastg0uWA5dW7Gl9vA4HtbAVl8Mly6KvVftXz67HgRWw6sK4ZIHUt3Kv6s91ObgiVl4g11gqNVTpS/24NodXTJXF8pMls5ZKPaj3anCIRVVaNj9ZPJmq9Zs+q8VhFldtAV1jKY1Vvaf0Uz0OtIHqi+knS2p/XfpH79TlYBvpsrAuWWDP69gj+qM+B9xQx2V2TfcF170Pup9/Jw66se6L7pZKC9AZ/1bpfHmOA8cyfNPMhenMXifg+nLw/I/lSUUCDg3ALwKPCgQcZxqBu4QeqxFwXNIQPEXgkUy4cY/m4CUCjxTCjWdpFN4m9JhBwPEqDcPHBB4jCDjepXHYldBjT8KNPWgiDiHw+ISAY0+aicMJPZ4h3DiKxmIooceZYGMUjcY0Qq8f4cYMmo4Ygq8m4cZsGpBYgm9Ngo00GpJlCL5Mgo10GpQlCb25hBsr0ayUIfyOIdRYnQamNOH3GqFGRZqalroHoECjE80OF6qEoDCDPwwCfGhUMAouAAAAAAAAAACAyf4fZGO4kznkjhAAAAAASUVORK5CYII=" alt="VW">
+      </div>
+      <h2 class="hero-title">Sua <em>Experiência</em><br>é o que move<br>a Tterrasul</h2>
+      <p class="hero-sub">Avalie sua visita e ajude a Tterrasul a evoluir continuamente. Leva menos de 2 minutos.</p>
+      <button class="btn-primary" onclick="goTo(1)">Iniciar avaliação</button>
+    </div>
+  </div>
+
+  <!-- STEP 1: NOME -->
+  <div class="step" id="step1">
+    <div class="card">
+      <div class="step-kicker">Etapa 1</div>
+      <h2 class="step-title">Como você<br>se chama?</h2>
+      <div class="field">
+        <label>Nome completo</label>
+        <input type="text" id="nomeCompleto" placeholder="Nome e sobrenome" autocomplete="name">
+        <div class="error-msg" id="nomeErro">Informe seu nome e sobrenome.</div>
+      </div>
+      <button class="btn-primary" onclick="validarNome()">Continuar</button>
+    </div>
+  </div>
+
+  <!-- STEP 2: CONTATO -->
+  <div class="step" id="step2">
+    <div class="card">
+      <div class="step-kicker">Etapa 2</div>
+      <h2 class="step-title">Qual seu<br>número?</h2>
+      <div class="field">
+        <label>WhatsApp / Telefone</label>
+        <input type="tel" id="contato" placeholder="(53) 9 9999-9999" maxlength="20">
+        <div class="error-msg" id="contatoErro">Informe um número válido (mínimo 10 dígitos).</div>
+      </div>
+      <button class="btn-primary" onclick="validarContato()">Continuar</button>
+      <button class="btn-secondary" onclick="goTo(1)">Voltar</button>
+    </div>
+  </div>
+
+  <!-- STEP 3: TIPO DE VISITA -->
+  <div class="step" id="step3">
+    <div class="card">
+      <div class="step-kicker">Etapa 3</div>
+      <h2 class="step-title">Qual foi sua<br>experiência<br>conosco?</h2>
+      <div class="option-grid cols3">
+        <div class="opt-card" onclick="selecionarTipo('compra',this)">
+          <div class="opt-icon-tech">
+            <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M4 20l4-10h16l4 10" stroke="rgba(255,255,255,0.55)" stroke-width="1.5" stroke-linejoin="round"/>
+              <rect x="2" y="20" width="28" height="6" rx="2" stroke="rgba(255,255,255,0.55)" stroke-width="1.5"/>
+              <circle cx="9" cy="28" r="2" stroke="rgba(255,255,255,0.55)" stroke-width="1.5"/>
+              <circle cx="23" cy="28" r="2" stroke="rgba(255,255,255,0.55)" stroke-width="1.5"/>
+            </svg>
+          </div>
+          <div class="opt-label">Compra</div>
+        </div>
+        <div class="opt-card" onclick="selecionarTipo('troca',this)">
+          <div class="opt-icon-tech">
+            <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M6 10h20M22 6l4 4-4 4" stroke="rgba(255,255,255,0.55)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M26 22H6M10 18l-4 4 4 4" stroke="rgba(255,255,255,0.55)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="opt-label">Troca</div>
+        </div>
+        <div class="opt-card" onclick="selecionarTipo('manutencao',this)">
+          <div class="opt-icon-tech">
+            <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M20 6a6 6 0 01-1 9.9L8 27a2 2 0 01-2.8-2.8L16 13.1A6 6 0 0120 6z" stroke="rgba(255,255,255,0.55)" stroke-width="1.5" stroke-linejoin="round"/>
+              <circle cx="8.5" cy="23.5" r="1.5" fill="rgba(255,255,255,0.55)"/>
+            </svg>
+          </div>
+          <div class="opt-label">Manutenção</div>
+        </div>
+      </div>
+      <div class="error-msg" id="tipoErro" style="display:none">Selecione o tipo de visita.</div>
+      <button class="btn-secondary" onclick="goTo(2)" style="margin-top:14px">Voltar</button>
+    </div>
+  </div>
+
+  <!-- STEP 4A: TROCA — CARRO ANTERIOR -->
+  <div class="step" id="step4x">
+    <div class="card">
+      <div class="step-kicker">Etapa 4</div>
+      <h2 class="step-title">Qual era o<br>seu carro<br>anterior?</h2>
+      <div class="field">
+        <label>Marca e modelo</label>
+        <input type="text" id="carroAnterior" placeholder="Ex: Volkswagen Polo 2021, Chevrolet Onix..." autocomplete="off">
+        <div class="error-msg" id="carroAntErro">Informe o carro que você trocou.</div>
+      </div>
+      <button class="btn-primary" onclick="confirmarCarroAnterior()">Continuar</button>
+      <button class="btn-secondary" onclick="goTo(3)">Voltar</button>
+    </div>
+  </div>
+
+  <!-- STEP 4A: COMPRA — 0km ou Seminovo -->
+  <div class="step" id="step4a">
+    <div class="card">
+      <div class="step-kicker">Etapa 4</div>
+      <h2 class="step-title">O veículo<br>foi...</h2>
+      <div class="option-grid cols2">
+        <div class="opt-card" onclick="selecionarSubtipo('0km',this)">
+          <div class="opt-icon-tech">
+            <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M16 4l2 5h5l-4 3 1.5 5L16 14l-4.5 3L13 12l-4-3h5z" stroke="rgba(255,255,255,0.55)" stroke-width="1.4" stroke-linejoin="round"/>
+              <path d="M8 26h16" stroke="rgba(255,255,255,0.55)" stroke-width="1.4" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="opt-label">0 km<br>Novo</div>
+        </div>
+        <div class="opt-card" onclick="selecionarSubtipo('seminovo',this)">
+          <div class="opt-icon-tech">
+            <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="4" y="8" width="24" height="16" rx="3" stroke="rgba(255,255,255,0.55)" stroke-width="1.4"/>
+              <path d="M10 8V6M22 8V6" stroke="rgba(255,255,255,0.55)" stroke-width="1.4" stroke-linecap="round"/>
+              <path d="M8 14h16M8 18h10" stroke="rgba(255,255,255,0.55)" stroke-width="1.2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="opt-label">Seminovo</div>
+        </div>
+      </div>
+      <button class="btn-secondary" onclick="voltarDe4a()">Voltar</button>
+    </div>
+  </div>
+
+  <!-- STEP 4B: MODELOS 0KM -->
+  <div class="step" id="step4b">
+    <div class="card">
+      <div class="step-kicker">Etapa 4b</div>
+      <h2 class="step-title">Qual modelo<br>0 km?</h2>
+      <div class="model-list" id="listaZeroKm"></div>
+      <div class="error-msg" id="modeloErro">Selecione o modelo.</div>
+      <button class="btn-primary" onclick="confirmarModelo()" style="margin-top:10px">Continuar</button>
+      <button class="btn-secondary" onclick="goTo(4,'a')">Voltar</button>
+    </div>
+  </div>
+
+  <!-- STEP 4C: SEMINOVOS -->
+  <div class="step" id="step4c">
+    <div class="card">
+      <div class="step-kicker">Etapa 4b</div>
+      <h2 class="step-title">Qual modelo<br>seminovo?</h2>
+      <div class="model-list" id="listaSeminovo"></div>
+      <div class="error-msg" id="semErro">Selecione o modelo.</div>
+      <button class="btn-primary" onclick="confirmarSeminovo()" style="margin-top:10px">Continuar</button>
+      <button class="btn-secondary" onclick="goTo(4,'a')">Voltar</button>
+    </div>
+  </div>
+
+  <!-- STEP 4D: MANUTENÇÃO -->
+  <div class="step" id="step4d">
+    <div class="card">
+      <div class="step-kicker">Etapa 4</div>
+      <h2 class="step-title">Qual serviço<br>você realizou?</h2>
+      <div class="field">
+        <label>Descreva o serviço</label>
+        <textarea id="servicoDesc" placeholder="Ex: Revisão dos 10.000 km, troca de óleo, alinhamento e balanceamento..." rows="4"></textarea>
+        <div class="error-msg" id="servicoErro">Descreva o serviço realizado.</div>
+      </div>
+      <button class="btn-primary" onclick="confirmarServico()">Continuar</button>
+      <button class="btn-secondary" onclick="goTo(3)">Voltar</button>
+    </div>
+  </div>
+
+  <!-- STEP 5: QUEM ATENDEU -->
+  <div class="step" id="step5">
+    <div class="card">
+      <div class="step-kicker">Etapa 5</div>
+      <h2 class="step-title">Quem da nossa<br>equipe te atendeu?</h2>
+      <div class="field">
+        <label>Nome do colaborador</label>
+        <input type="text" id="funcionario" placeholder="Ex: Carlos, Ana, Roberto..." autocomplete="off">
+        <div class="error-msg" id="funcErro">Informe o nome de quem te atendeu.</div>
+      </div>
+      <button class="btn-primary" onclick="confirmarFuncionario()">Continuar</button>
+      <button class="btn-secondary" onclick="voltarStep5()">Voltar</button>
+    </div>
+  </div>
+
+  <!-- STEP 6: TEMPO -->
+  <div class="step" id="step6">
+    <div class="card">
+      <div class="step-kicker">Etapa 6</div>
+      <h2 class="step-title">Quanto tempo<br>estamos juntos?</h2>
+      <div class="time-options">
+        <div class="time-opt" onclick="selecionarTempo('primeira',this)">
+          <div class="time-num">1ª</div>
+          <div class="time-label">Primeira vez</div>
+        </div>
+        <div class="time-opt" onclick="selecionarTempo('1ano',this)">
+          <div class="time-num">1+</div>
+          <div class="time-label">1 ano ou mais</div>
+        </div>
+        <div class="time-opt" onclick="selecionarTempo('5anos',this)">
+          <div class="time-num">5+</div>
+          <div class="time-label">5 anos ou mais</div>
+        </div>
+        <div class="time-opt" onclick="selecionarTempo('10anos',this)">
+          <div class="time-num">10+</div>
+          <div class="time-label">10 anos ou mais</div>
+        </div>
+      </div>
+      <div class="error-msg" id="tempoErro" style="display:none">Selecione o tempo como cliente.</div>
+      <button class="btn-secondary" onclick="goTo(5)">Voltar</button>
+    </div>
+  </div>
+
+  <!-- STEP 7: ESTRELAS -->
+  <div class="step" id="step7">
+    <div class="card">
+      <div class="step-kicker">Etapa 7</div>
+      <h2 class="step-title" id="step7Title">O que achou do<br>atendimento?</h2>
+      <div class="stars-wrap">
+        <div class="star-row" id="starRow">
+          <div class="star" data-val="1" onclick="selecionarEstrelas(1)"><svg viewBox="0 0 24 24"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg></div>
+          <div class="star" data-val="2" onclick="selecionarEstrelas(2)"><svg viewBox="0 0 24 24"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg></div>
+          <div class="star" data-val="3" onclick="selecionarEstrelas(3)"><svg viewBox="0 0 24 24"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg></div>
+          <div class="star" data-val="4" onclick="selecionarEstrelas(4)"><svg viewBox="0 0 24 24"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg></div>
+          <div class="star" data-val="5" onclick="selecionarEstrelas(5)"><svg viewBox="0 0 24 24"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg></div>
+        </div>
+        <div class="star-label" id="starLabel">Selecione uma nota</div>
+      </div>
+      <div class="error-msg" id="estrelasErro" style="display:none">Selecione uma avaliação de 1 a 5.</div>
+      <button class="btn-primary" onclick="confirmarEstrelas()" style="margin-top:4px">Continuar</button>
+      <button class="btn-secondary" onclick="goTo(6)">Voltar</button>
+    </div>
+  </div>
+
+  <!-- STEP 8: RECOMENDA -->
+  <div class="step" id="step8">
+    <div class="card">
+      <div class="step-kicker">Etapa 8</div>
+      <h2 class="step-title">Você recomendaria<br>a Tterrasul?</h2>
+      <div class="recommend-row">
+        <div class="rec-btn yes" onclick="selecionarRecomendacao('sim',this)">
+          <div class="rec-icon">
+            <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M6 14h4v10H6V14zM10 14l6-8a2 2 0 012 2v4h6l-2 10H10V14z" stroke="rgba(0,214,143,0.8)" stroke-width="1.5" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="rec-label">Sim, com certeza</div>
+        </div>
+        <div class="rec-btn no" onclick="selecionarRecomendacao('nao',this)">
+          <div class="rec-icon">
+            <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M26 18h-4V8h4v10zM22 18l-6 8a2 2 0 01-2-2v-4H8l2-10h12v8z" stroke="rgba(255,100,110,0.8)" stroke-width="1.5" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="rec-label">Não por enquanto</div>
+        </div>
+      </div>
+      <div class="error-msg" id="recomErro" style="display:none">Selecione sua resposta.</div>
+      <button class="btn-secondary" onclick="goTo(7)">Voltar</button>
+    </div>
+  </div>
+
+  <!-- STEP 9: INDICAÇÃO + BÔNUS -->
+  <div class="step" id="step9">
+    <div class="card">
+      <div class="step-kicker">Etapa 9 — Bônus</div>
+      <h2 class="step-title">Indique e<br>receba bônus</h2>
+
+      <div class="bonus-card">
+        <div class="bonus-title">Programa de Bônus Tterrasul</div>
+        <p class="bonus-desc">Indique amigos ou familiares para a Tterrasul. Se algum deles fechar negócio conosco durante o ano, você recebe um bônus — e <strong style="color:#fff">o bônus é acumulativo</strong>: cada indicação que converter soma mais.</p>
+        <div class="bonus-highlight">Indicou · Amigo veio · Bônus acumulado para você</div>
+      </div>
+
+      <div id="indicacoesWrap">
+        <div class="ind-card">
+          <h4><div class="ind-num">1</div>1ª Indicação</h4>
+          <div class="field">
+            <label>Nome</label>
+            <input type="text" id="ind1nome" placeholder="Nome completo">
+          </div>
+          <div class="field">
+            <label>WhatsApp</label>
+            <input type="tel" id="ind1contato" placeholder="(53) 9 9999-9999">
+          </div>
+        </div>
+        <div class="ind-card">
+          <h4><div class="ind-num">2</div>2ª Indicação <span style="font-size:10px;color:rgba(255,255,255,0.3);font-weight:400;letter-spacing:0;text-transform:none">(opcional)</span></h4>
+          <div class="field">
+            <label>Nome</label>
+            <input type="text" id="ind2nome" placeholder="Nome completo">
+          </div>
+          <div class="field">
+            <label>WhatsApp</label>
+            <input type="tel" id="ind2contato" placeholder="(53) 9 9999-9999">
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-primary" onclick="enviarTudo()">Enviar avaliação</button>
+      <button class="btn-secondary" onclick="goTo(8)">Voltar</button>
+    </div>
+  </div>
+
+  <!-- STEP 10: OBRIGADO -->
+  <div class="step" id="step10">
+    <div class="card final-wrap">
+      <div class="checkmark-ring">
+        <svg class="check-svg" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M8 18l7 7 13-14" stroke="#4d9fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h2 class="final-title">Obrigado,<br><span id="finalNome" style="color:#4d9fff"></span></h2>
+      <p class="final-sub">Avaliação registrada. A Tterrasul agradece sua confiança e se compromete a continuar evoluindo para você.</p>
+
+      <div class="addresses">
+        <a class="addr-card" href="https://www.google.com/maps/dir/?api=1&destination=Av.%20Jo%C3%A3o%20Belchior%20Goulart,%201809%20-%20Centro,%20Sant%27Ana%20do%20Livramento%20-%20RS,%2097574-000" target="_blank" rel="noopener">
+          <div class="addr-pin">
+            <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M10 2a6 6 0 016 6c0 4-6 10-6 10S4 12 4 8a6 6 0 016-6z" stroke="#4d9fff" stroke-width="1.3"/>
+              <circle cx="10" cy="8" r="2" stroke="#4d9fff" stroke-width="1.3"/>
+            </svg>
+          </div>
+          <div class="addr-info">
+            <h5>Sant'Ana do Livramento</h5>
+            <p>Av. João Belchior Goulart, 1809<br>Centro — RS 97574-000</p>
+          </div>
+        </a>
+        <a class="addr-card" href="https://www.google.com/maps/dir/?api=1&destination=Av.%20Santa%20Tecla,%203000%20-%20Get%C3%BAlio%20Vargas,%20Bag%C3%A9%20-%20RS,%2096413-000" target="_blank" rel="noopener">
+          <div class="addr-pin">
+            <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M10 2a6 6 0 016 6c0 4-6 10-6 10S4 12 4 8a6 6 0 016-6z" stroke="#4d9fff" stroke-width="1.3"/>
+              <circle cx="10" cy="8" r="2" stroke="#4d9fff" stroke-width="1.3"/>
+            </svg>
+          </div>
+          <div class="addr-info">
+            <h5>Bagé</h5>
+            <p>Av. Santa Tecla, 3000<br>Getúlio Vargas — RS 96413-000</p>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-text">Registrando avaliação...</div>
+</div>
+
+<script>
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwGivUWIcIYbWknyTTvZwSrJa74MmZHBnWysJQMl2fhzBNBIxjd8wJX599XcTi_4fOe/exec';
+
+const MODELOS_ZERO_KM = [
+  {nome:'Polo',tag:'Hatch'},{nome:'Virtus',tag:'Sedã'},{nome:'Nivus',tag:'SUV'},
+  {nome:'T-Cross',tag:'SUV'},{nome:'Taos',tag:'SUV'},{nome:'Tiguan Allspace R-Line',tag:'SUV'},
+  {nome:'Novo Tiguan R-Line',tag:'SUV'},{nome:'Tera',tag:'SUV'},{nome:'Golf GTI',tag:'Performance'},
+  {nome:'Jetta GLI',tag:'Performance'},{nome:'Saveiro',tag:'Picape'},
+  {nome:'Amarok V6',tag:'Picape'},{nome:'ID.4',tag:'Elétrico'},{nome:'ID Buzz',tag:'Elétrico'},
+];
+
+const MODELOS_SEMINOVOS = [
+  {nome:'VW Polo',tag:'VW'},{nome:'VW Gol',tag:'VW'},{nome:'VW Virtus',tag:'VW'},
+  {nome:'VW T-Cross',tag:'VW'},{nome:'VW Nivus',tag:'VW'},{nome:'VW Fox',tag:'VW'},
+  {nome:'VW Voyage',tag:'VW'},{nome:'Chevrolet Onix',tag:'GM'},{nome:'Chevrolet Tracker',tag:'GM'},
+  {nome:'Toyota Corolla',tag:'Toyota'},{nome:'Hyundai HB20',tag:'Hyundai'},
+  {nome:'Fiat Argo',tag:'Fiat'},{nome:'Fiat Strada',tag:'Fiat'},{nome:'Outro modelo',tag:''},
+];
+
+const starLabels = ['','Ruim','Regular','Bom','Otimo','Excelente'];
+
+const d = {
+  nome:'',contato:'',tipoVisita:'',subtipo:'',modelo:'',
+  carroAnterior:'',servico:'',funcionario:'',
+  tempo:'',estrelas:0,recomenda:'',
+  ind1nome:'',ind1contato:'',ind2nome:'',ind2contato:'',
+};
+
+let stepAtual=0; const total=9;
+
+function goTo(n,sub){
+  document.querySelectorAll('.step').forEach(s=>s.classList.remove('active'));
+  let id='step'+n;
+  if(n===4){
+    if(sub==='a') id='step4a';
+    else if(sub==='b') id='step4b';
+    else if(sub==='c') id='step4c';
+    else if(sub==='d') id='step4d';
+    else id='step4a';
+  }
+  const el=document.getElementById(id);
+  if(el) el.classList.add('active');
+  stepAtual=n;
+  window.scrollTo(0,0);
+  updateProgress(n);
+}
+
+function updateProgress(n){
+  const pct=Math.round((n/total)*100);
+  document.getElementById('progressFill').style.width=pct+'%';
+  const lbl=document.getElementById('progressLabel');
+  lbl.textContent = n===0 ? '' : n+' / '+total;
+}
+
+// VALIDAÇÕES
+function validarNome(){
+  const v=document.getElementById('nomeCompleto').value.trim();
+  const p=v.split(' ').filter(x=>x.length>0);
+  if(p.length<2){
+    document.getElementById('nomeCompleto').classList.add('error');
+    document.getElementById('nomeErro').classList.add('visible');
+    return;
+  }
+  document.getElementById('nomeCompleto').classList.remove('error');
+  document.getElementById('nomeErro').classList.remove('visible');
+  d.nome=v; goTo(2);
+}
+
+function validarContato(){
+  const v=document.getElementById('contato').value.replace(/\D/g,'');
+  if(v.length<10){
+    document.getElementById('contato').classList.add('error');
+    document.getElementById('contatoErro').classList.add('visible');
+    return;
+  }
+  document.getElementById('contato').classList.remove('error');
+  document.getElementById('contatoErro').classList.remove('visible');
+  d.contato=document.getElementById('contato').value.trim();
+  goTo(3);
+}
+
+function selecionarTipo(tipo,el){
+  d.tipoVisita=tipo; d.subtipo=''; d.modelo=''; d.carroAnterior='';
+  document.getElementById('tipoErro').style.display='none';
+  document.querySelectorAll('#step3 .opt-card').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  setTimeout(()=>{
+    if(tipo==='troca') goTo('4x'); // pede carro anterior
+    else if(tipo==='compra'){ gerarListaZeroKm(); gerarListaSeminovo(); goTo(4,'a'); }
+    else goTo(4,'d');
+  },280);
+}
+
+function goTo4x(){ document.querySelectorAll('.step').forEach(s=>s.classList.remove('active')); document.getElementById('step4x').classList.add('active'); window.scrollTo(0,0); updateProgress(4); }
+
+// Override goTo para o caso '4x'
+const _goTo=goTo;
+window.goTo=function(n,sub){
+  if(n==='4x'){ goTo4x(); return; }
+  _goTo(n,sub);
+};
+
+function confirmarCarroAnterior(){
+  const v=document.getElementById('carroAnterior').value.trim();
+  if(v.length<2){
+    document.getElementById('carroAnterior').classList.add('error');
+    document.getElementById('carroAntErro').classList.add('visible');
+    return;
+  }
+  document.getElementById('carroAnterior').classList.remove('error');
+  document.getElementById('carroAntErro').classList.remove('visible');
+  d.carroAnterior=v;
+  gerarListaZeroKm(); gerarListaSeminovo();
+  _goTo(4,'a');
+}
+
+function selecionarSubtipo(sub,el){
+  d.subtipo=sub;
+  document.querySelectorAll('#step4a .opt-card').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  setTimeout(()=>{
+    if(sub==='0km') _goTo(4,'b');
+    else _goTo(4,'c');
+  },280);
+}
+
+function voltarDe4a(){
+  if(d.tipoVisita==='troca') goTo4x();
+  else _goTo(3);
+}
+
+function gerarLista(listId,arr){
+  const w=document.getElementById(listId); w.innerHTML='';
+  arr.forEach(m=>{
+    const div=document.createElement('div');
+    div.className='model-item';
+    div.onclick=()=>selecionarModeloLista(div,m.nome,listId);
+    div.innerHTML='<div class="model-check"></div><div class="model-name">'+m.nome+'</div>'+(m.tag?'<div class="model-tag">'+m.tag+'</div>':'');
+    w.appendChild(div);
+  });
+}
+
+function gerarListaZeroKm(){ gerarLista('listaZeroKm',MODELOS_ZERO_KM); }
+function gerarListaSeminovo(){ gerarLista('listaSeminovo',MODELOS_SEMINOVOS); }
+
+function selecionarModeloLista(el,nome,listId){
+  document.querySelectorAll('#'+listId+' .model-item').forEach(i=>i.classList.remove('selected'));
+  el.classList.add('selected'); d.modelo=nome;
+}
+
+function confirmarModelo(){
+  if(!d.modelo){ document.getElementById('modeloErro').classList.add('visible'); return; }
+  document.getElementById('modeloErro').classList.remove('visible');
+  _goTo(5);
+}
+
+function confirmarSeminovo(){
+  if(!d.modelo){ document.getElementById('semErro').classList.add('visible'); return; }
+  document.getElementById('semErro').classList.remove('visible');
+  _goTo(5);
+}
+
+function confirmarServico(){
+  const v=document.getElementById('servicoDesc').value.trim();
+  if(v.length<5){ document.getElementById('servicoDesc').classList.add('error'); document.getElementById('servicoErro').classList.add('visible'); return; }
+  document.getElementById('servicoDesc').classList.remove('error');
+  document.getElementById('servicoErro').classList.remove('visible');
+  d.servico=v; d.modelo=v; _goTo(5);
+}
+
+function confirmarFuncionario(){
+  const v=document.getElementById('funcionario').value.trim();
+  if(v.length<2){ document.getElementById('funcionario').classList.add('error'); document.getElementById('funcErro').classList.add('visible'); return; }
+  document.getElementById('funcionario').classList.remove('error');
+  document.getElementById('funcErro').classList.remove('visible');
+  d.funcionario=v;
+  const fn=v.split(' ')[0];
+  document.getElementById('step7Title').innerHTML='O que achou do<br>atendimento de<br><em style="color:#4d9fff;font-style:normal">'+fn+'</em>?';
+  _goTo(6);
+}
+
+function voltarStep5(){
+  if(d.tipoVisita==='manutencao') _goTo(4,'d');
+  else if(d.subtipo==='0km') _goTo(4,'b');
+  else if(d.subtipo==='seminovo') _goTo(4,'c');
+  else _goTo(4,'a');
+}
+
+function selecionarTempo(t,el){
+  d.tempo=t;
+  document.querySelectorAll('.time-opt').forEach(o=>o.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('tempoErro').style.display='none';
+  setTimeout(()=>_goTo(7),280);
+}
+
+function selecionarEstrelas(val){
+  d.estrelas=val;
+  document.querySelectorAll('.star').forEach((s,i)=>s.classList.toggle('lit',i<val));
+  const lbl=document.getElementById('starLabel');
+  lbl.textContent=starLabels[val]; lbl.className='star-label active';
+  document.getElementById('estrelasErro').style.display='none';
+}
+
+function confirmarEstrelas(){
+  if(!d.estrelas){ document.getElementById('estrelasErro').style.display='block'; return; }
+  _goTo(8);
+}
+
+function selecionarRecomendacao(val,el){
+  d.recomenda=val;
+  document.querySelectorAll('.rec-btn').forEach(b=>b.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('recomErro').style.display='none';
+  setTimeout(()=>_goTo(9),320);
+}
+
+async function enviarTudo(){
+  d.ind1nome=document.getElementById('ind1nome').value.trim();
+  d.ind1contato=document.getElementById('ind1contato').value.trim();
+  d.ind2nome=document.getElementById('ind2nome').value.trim();
+  d.ind2contato=document.getElementById('ind2contato').value.trim();
+
+  const tLabel={primeira:'Primeira visita','1ano':'1 ano ou mais','5anos':'5 anos ou mais','10anos':'10 anos ou mais'};
+
+  const payload={
+    dataHora:new Date().toLocaleString('pt-BR'),
+    nomeCliente:d.nome, contatoCliente:d.contato,
+    tipoVisita:d.tipoVisita, subtipo:d.subtipo,
+    carroAnterior:d.carroAnterior, modelo:d.modelo,
+    servico:d.servico, funcionario:d.funcionario,
+    tempoCliente:tLabel[d.tempo]||d.tempo,
+    notaAtendimento:d.estrelas,
+    recomendaria:d.recomenda==='sim'?'Sim':'Não',
+    ind1nome:d.ind1nome, ind1contato:d.ind1contato,
+    ind2nome:d.ind2nome, ind2contato:d.ind2contato,
+  };
+
+  document.getElementById('loadingOverlay').classList.add('show');
+  try {
+    await fetch(APPS_SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  } catch(e){ console.warn(e); }
+  document.getElementById('loadingOverlay').classList.remove('show');
+
+  document.getElementById('finalNome').textContent=d.nome.split(' ')[0]+'!';
+  _goTo(10);
+}
+
+updateProgress(0);
+document.getElementById('nomeCompleto').addEventListener('keydown',e=>{if(e.key==='Enter')validarNome();});
+document.getElementById('contato').addEventListener('keydown',e=>{if(e.key==='Enter')validarContato();});
+document.getElementById('funcionario').addEventListener('keydown',e=>{if(e.key==='Enter')confirmarFuncionario();});
+</script>
+</body>
+</html>

@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Orçamento — PBJJF × Quintessência</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --gold: #C9A84C;
+    --gold-light: #E8C97A;
+    --gold-dim: #8A6E32;
+    --dark: #0D0D0E;
+    --dark-2: #141416;
+    --dark-3: #1C1C1F;
+    --dark-4: #252528;
+    --mid: #3A3A3F;
+    --muted: #6B6B74;
+    --text: #E8E8EC;
+    --text-dim: #A0A0AC;
+    --border: rgba(201,168,76,0.18);
+    --border-strong: rgba(201,168,76,0.4);
+  }
+
+  @media print {
+    body { background: #fff !important; color: #111 !important; }
+    .page { box-shadow: none !important; }
+    .no-print { display: none !important; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+
+  body {
+    font-family: 'Barlow', sans-serif;
+    background: #0A0A0C;
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 40px 20px;
+  }
+
+  .page {
+    width: 100%;
+    max-width: 820px;
+    background: var(--dark-2);
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Corner accents */
+  .page::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 120px; height: 120px;
+    border-top: 2px solid var(--gold);
+    border-left: 2px solid var(--gold);
+    pointer-events: none;
+  }
+  .page::after {
+    content: '';
+    position: absolute;
+    bottom: 0; right: 0;
+    width: 120px; height: 120px;
+    border-bottom: 2px solid var(--gold);
+    border-right: 2px solid var(--gold);
+    pointer-events: none;
+  }
+
+  /* ─── HEADER ─── */
+  .header {
+    padding: 52px 56px 40px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 24px;
+  }
+
+  .brand-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 300;
+    font-size: 13px;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 6px;
+  }
+
+  .doc-type {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 42px;
+    font-weight: 300;
+    color: var(--text);
+    line-height: 1;
+    letter-spacing: -0.01em;
+  }
+
+  .doc-meta {
+    text-align: right;
+    font-size: 12px;
+    font-weight: 300;
+    color: var(--text-dim);
+    letter-spacing: 0.06em;
+    line-height: 2;
+  }
+
+  .doc-meta strong {
+    color: var(--text);
+    font-weight: 500;
+    display: block;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+
+  /* ─── PARTIES ─── */
+  .parties {
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .party {
+    padding: 32px 56px;
+  }
+
+  .party-divider {
+    background: var(--border);
+  }
+
+  .party-label {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+    margin-bottom: 12px;
+  }
+
+  .party-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 400;
+    color: var(--text);
+    line-height: 1.2;
+    margin-bottom: 4px;
+  }
+
+  .party-detail {
+    font-size: 12px;
+    color: var(--text-dim);
+    font-weight: 300;
+    letter-spacing: 0.03em;
+    line-height: 1.8;
+  }
+
+  /* ─── SCOPE ─── */
+  .scope {
+    padding: 40px 56px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-label {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+    margin-bottom: 24px;
+  }
+
+  .scope-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 26px;
+    font-weight: 300;
+    font-style: italic;
+    color: var(--text);
+    margin-bottom: 20px;
+    line-height: 1.3;
+  }
+
+  .scope-desc {
+    font-size: 13.5px;
+    font-weight: 300;
+    color: var(--text-dim);
+    line-height: 1.8;
+    max-width: 580px;
+    margin-bottom: 32px;
+  }
+
+  .deliverables {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .deliverable {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px 18px;
+    background: var(--dark-3);
+    border: 1px solid var(--border);
+    border-left: 2px solid var(--gold);
+  }
+
+  .deliverable-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(201,168,76,0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .deliverable-icon svg {
+    width: 14px;
+    height: 14px;
+    stroke: var(--gold);
+    fill: none;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .deliverable-text strong {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: 0.04em;
+    margin-bottom: 2px;
+  }
+
+  .deliverable-text span {
+    font-size: 11.5px;
+    font-weight: 300;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  /* ─── PRICING ─── */
+  .pricing {
+    padding: 40px 56px;
+    border-bottom: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    align-items: start;
+  }
+
+  .price-block {}
+
+  .price-from {
+    font-size: 12px;
+    font-weight: 300;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    text-decoration: line-through;
+    margin-bottom: 4px;
+  }
+
+  .price-label {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+    margin-bottom: 10px;
+  }
+
+  .price-main {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 58px;
+    font-weight: 300;
+    color: var(--gold-light);
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+
+  .price-main sup {
+    font-size: 22px;
+    font-weight: 400;
+    vertical-align: super;
+    letter-spacing: 0;
+  }
+
+  .price-note {
+    margin-top: 10px;
+    font-size: 12px;
+    font-weight: 300;
+    color: var(--text-dim);
+    letter-spacing: 0.04em;
+  }
+
+  .payment-block {}
+
+  .payment-methods {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 4px;
+  }
+
+  .payment-method {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 14px;
+    background: var(--dark-3);
+    border: 1px solid var(--border);
+    font-size: 12.5px;
+    font-weight: 400;
+    color: var(--text);
+    letter-spacing: 0.04em;
+  }
+
+  .payment-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--gold);
+    flex-shrink: 0;
+  }
+
+  /* ─── TERMS ─── */
+  .terms {
+    padding: 32px 56px;
+    border-bottom: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  .term-card {
+    padding: 20px 22px;
+    background: var(--dark-3);
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .term-card::after {
+    content: attr(data-pct);
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 52px;
+    font-weight: 300;
+    color: rgba(201,168,76,0.08);
+    line-height: 1;
+    pointer-events: none;
+  }
+
+  .term-moment {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+    margin-bottom: 8px;
+  }
+
+  .term-value {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 28px;
+    font-weight: 400;
+    color: var(--gold-light);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .term-desc {
+    font-size: 11.5px;
+    font-weight: 300;
+    color: var(--text-dim);
+  }
+
+  /* ─── FOOTER ─── */
+  .footer {
+    padding: 28px 56px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 24px;
+  }
+
+  .footer-left {
+    font-size: 11px;
+    font-weight: 300;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    line-height: 2;
+  }
+
+  .footer-right {
+    text-align: right;
+    font-size: 11px;
+    font-weight: 300;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    line-height: 2;
+  }
+
+  .footer-brand {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px;
+    font-weight: 400;
+    color: var(--gold);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  /* ─── DIVIDER LINE ─── */
+  .gold-rule {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
+    margin: 0 56px;
+  }
+
+  /* ─── VALIDITY BANNER ─── */
+  .validity {
+    background: rgba(201,168,76,0.06);
+    border-top: 1px solid var(--border);
+    padding: 16px 56px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 12px;
+    font-weight: 300;
+    color: var(--text-dim);
+    letter-spacing: 0.05em;
+  }
+
+  .validity-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--gold);
+    flex-shrink: 0;
+  }
+
+  /* ─── PRINT BTN ─── */
+  .print-btn {
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    background: var(--gold);
+    color: var(--dark);
+    border: none;
+    padding: 12px 24px;
+    font-family: 'Barlow', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s;
+    no-print: true;
+  }
+
+  .print-btn:hover { background: var(--gold-light); }
+
+  @media (max-width: 660px) {
+    .header { flex-direction: column; align-items: flex-start; padding: 36px 28px 28px; }
+    .doc-meta { text-align: left; }
+    .parties { grid-template-columns: 1fr; }
+    .party-divider { display: none; }
+    .party { padding: 24px 28px; }
+    .scope { padding: 32px 28px; }
+    .deliverables { grid-template-columns: 1fr; }
+    .pricing { grid-template-columns: 1fr; padding: 32px 28px; gap: 28px; }
+    .terms { grid-template-columns: 1fr; padding: 28px 28px; }
+    .footer { flex-direction: column; align-items: flex-start; padding: 24px 28px; }
+    .footer-right { text-align: left; }
+    .gold-rule { margin: 0 28px; }
+    .validity { padding: 16px 28px; }
+    .page::before, .page::after { width: 60px; height: 60px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div>
+      <div class="brand-name">Quintessência Marketing</div>
+      <div class="doc-type">Proposta<br>Comercial</div>
+    </div>
+    <div class="doc-meta">
+      <strong>Nº do Documento</strong>
+      QMK-2026-047
+      <strong>Data de Emissão</strong>
+      11 de maio de 2026
+      <strong>Validade</strong>
+      15 dias corridos
+    </div>
+  </div>
+
+  <!-- PARTIES -->
+  <div class="parties">
+    <div class="party">
+      <div class="party-label">Prestador de Serviços</div>
+      <div class="party-name">Quintessência<br>Marketing</div>
+      <div class="party-detail">
+        Bagé, RS — Brasil<br>
+        5essenciamarketing@gmail.com
+      </div>
+    </div>
+    <div class="party-divider"></div>
+    <div class="party">
+      <div class="party-label">Contratante</div>
+      <div class="party-name">PBJJF<br>Federação de Jiu-jitsu</div>
+      <div class="party-detail">
+        Solicitante: <strong style="color:var(--text);font-weight:500;">Carlos Kurt</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCOPE -->
+  <div class="scope">
+    <div class="section-label">Escopo do Serviço</div>
+    <div class="scope-title">Pack de 10 Produções<br>Institucionais & Educativas</div>
+    <div class="scope-desc">
+      Edição completa de 10 vídeos com finalidade digital — conteúdo institucional e educativo da PBJJF. Cada peça receberá tratamento individual com identidade visual unificada que se sustenta do primeiro ao último vídeo do pack, garantindo consistência e autoridade de marca em toda a coleção. Duração total máxima do pack: <strong style="color:var(--text);font-weight:500;">40 minutos.</strong>
+    </div>
+
+    <div class="deliverables">
+
+      <div class="deliverable">
+        <div class="deliverable-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        </div>
+        <div class="deliverable-text">
+          <strong>Edição Profissional</strong>
+          <span>10 vídeos editados com corte dinâmico, ritmo e fluidez narrativa adequados ao formato educativo.</span>
+        </div>
+      </div>
+
+      <div class="deliverable">
+        <div class="deliverable-icon">
+          <svg viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h10"/></svg>
+        </div>
+        <div class="deliverable-text">
+          <strong>Legendas (Closed Caption)</strong>
+          <span>Legenda sincronizada em cada vídeo — acessibilidade garantida e maior retenção no feed.</span>
+        </div>
+      </div>
+
+      <div class="deliverable">
+        <div class="deliverable-icon">
+          <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h10M4 17h12"/><rect x="15" y="10" width="6" height="6" rx="1"/></svg>
+        </div>
+        <div class="deliverable-text">
+          <strong>Titles Blocados</strong>
+          <span>Títulos e textos em motion design integrado — reforço visual das informações-chave de cada aula.</span>
+        </div>
+      </div>
+
+      <div class="deliverable">
+        <div class="deliverable-icon">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M3 12h.01M12 3v.01M21 12h-.01M12 21v-.01M5.6 5.6l.01.01M18.4 5.6l-.01.01M18.4 18.4l-.01-.01M5.6 18.4l.01-.01"/></svg>
+        </div>
+        <div class="deliverable-text">
+          <strong>Identidade Visual Unificada</strong>
+          <span>Linguagem visual consistente do vídeo 01 ao 10 — cores, fontes, transições e elementos de marca.</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- PRICING -->
+  <div class="pricing">
+    <div class="price-block">
+      <div class="price-label">Investimento</div>
+      <div class="price-from">De R$ 5.450,00</div>
+      <div class="price-main">
+        <sup>R$</sup> 3.999
+      </div>
+      <div class="price-note">Pack completo · 10 vídeos</div>
+    </div>
+
+    <div class="payment-block">
+      <div class="section-label">Formas de pagamento aceitas</div>
+      <div class="payment-methods">
+        <div class="payment-method">
+          <div class="payment-dot"></div>
+          PIX — transferência imediata
+        </div>
+        <div class="payment-method">
+          <div class="payment-dot"></div>
+          Cartão de Crédito / Débito
+        </div>
+        <div class="payment-method">
+          <div class="payment-dot"></div>
+          Prazo / Boleto combinado
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TERMS -->
+  <div class="terms">
+    <div class="term-card" data-pct="50%">
+      <div class="term-moment">Na assinatura</div>
+      <div class="term-value">R$ 1.999,50</div>
+      <div class="term-desc">50% na contratação para início imediato da produção.</div>
+    </div>
+    <div class="term-card" data-pct="50%">
+      <div class="term-moment">Na entrega</div>
+      <div class="term-value">R$ 1.999,50</div>
+      <div class="term-desc">50% restantes mediante entrega e aprovação dos materiais finalizados.</div>
+    </div>
+  </div>
+
+  <!-- VALIDITY -->
+  <div class="validity">
+    <div class="validity-dot"></div>
+    Esta proposta tem validade de <strong style="color:var(--text);font-weight:500;margin:0 4px;">15 dias corridos</strong> a partir da data de emissão (11/05/2026), podendo ser revisada após esse período.
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="footer-left">
+      <div class="footer-brand">Quintessência</div>
+      Marketing Estratégico<br>
+      Bagé, RS — Brasil
+    </div>
+    <div class="footer-right">
+      Dúvidas? Entre em contato:<br>
+      5essenciamarketing@gmail.com<br>
+      <span style="color:var(--gold);font-size:11px;letter-spacing:0.12em;">QMK-2026-047</span>
+    </div>
+  </div>
+
+</div>
+
+<button class="print-btn no-print" onclick="window.print()">
+  Imprimir / Salvar PDF
+</button>
+
+</body>
+</html>

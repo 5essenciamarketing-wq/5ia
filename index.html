@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NUMEN · Diagnóstico Gratuito</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Inter:wght@200;300;400;500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;background:#000;color:#fff;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Inter',sans-serif;font-weight:300;overflow:hidden;cursor:none}
+
+/* CURSOR */
+#cur{position:fixed;width:7px;height:7px;background:#fff;border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:width .18s,height .18s;mix-blend-mode:difference;box-shadow:0 0 12px rgba(255,255,255,.7)}
+#cur.big{width:44px;height:44px}
+
+/* PROGRESS */
+#prog{position:fixed;top:0;left:0;right:0;height:1px;background:rgba(255,255,255,0.07);z-index:200}
+#pfill{height:1px;background:#fff;width:0%;transition:width .5s ease;box-shadow:0 0 8px rgba(255,255,255,.8),0 0 20px rgba(255,255,255,.3)}
+
+/* QUINTESSÊNCIA WORDMARK — fixed bottom-left */
+#qmark{
+  position:fixed;bottom:26px;left:24px;z-index:300;
+  display:flex;flex-direction:column;gap:2px;
+}
+#qmark .q-logo{
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Inter',sans-serif;
+  font-size:11px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;
+  color:#fff;
+  text-shadow:0 0 18px rgba(255,255,255,.9),0 0 40px rgba(255,255,255,.4),0 0 80px rgba(255,255,255,.15);
+  animation:qshine 4s ease infinite;
+}
+#qmark .q-sub{
+  font-size:8px;font-weight:300;letter-spacing:.28em;text-transform:uppercase;
+  color:rgba(255,255,255,.3);
+}
+@keyframes qshine{
+  0%,100%{text-shadow:0 0 14px rgba(255,255,255,.7),0 0 32px rgba(255,255,255,.25)}
+  50%{text-shadow:0 0 22px rgba(255,255,255,1),0 0 50px rgba(255,255,255,.45),0 0 90px rgba(255,255,255,.2)}
+}
+
+/* DOTS */
+#dots{position:fixed;right:16px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:9px;z-index:200}
+.dot{width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,0.15);cursor:pointer;transition:all .3s}
+.dot.on{background:#fff;height:18px;border-radius:2px;box-shadow:0 0 10px rgba(255,255,255,.8),0 0 24px rgba(255,255,255,.3)}
+
+/* CONSTELLATION CANVAS — fixed full page background */
+#constellation{
+  position:fixed;inset:0;width:100%;height:100%;
+  z-index:0;pointer-events:none;
+}
+
+/* Slides sit on top */
+#slides{position:relative;z-index:1;height:100svh;overflow-y:scroll;scroll-snap-type:y mandatory;scroll-behavior:smooth}
+#slides::-webkit-scrollbar{display:none}
+
+/* ALL SLIDES — centered mobile-first */
+.slide{
+  height:100svh;scroll-snap-align:start;position:relative;overflow:hidden;
+  display:flex;flex-direction:column;justify-content:center;align-items:center;
+  text-align:center;padding:80px 28px 80px;
+}
+.slide-inner{
+  position:relative;z-index:2;
+  width:100%;max-width:420px;
+  display:flex;flex-direction:column;align-items:center;gap:0;
+}
+
+/* TEXT REVEALS */
+.s-tag{font-size:9px;font-weight:400;letter-spacing:.32em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:16px;opacity:0;transform:translateY(8px);transition:opacity .5s ease .1s,transform .5s ease .1s;text-align:center}
+.s-head{
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Inter',sans-serif;
+  font-size:clamp(1.75rem,7vw,2.8rem);font-weight:300;line-height:1.1;margin-bottom:16px;
+  opacity:0;transform:translateY(14px);transition:opacity .6s ease .25s,transform .6s ease .25s;
+  text-shadow:0 0 40px rgba(255,255,255,.1);text-align:center;width:100%;
+}
+.s-head em{font-style:italic;font-weight:200;color:rgba(255,255,255,.5)}
+.s-sub{font-size:13px;font-weight:300;line-height:1.9;color:rgba(255,255,255,.38);margin-bottom:28px;width:100%;opacity:0;transform:translateY(10px);transition:opacity .5s ease .38s,transform .5s ease .38s;text-align:center}
+.s-action{opacity:0;transform:translateY(10px);transition:opacity .5s ease .5s,transform .5s ease .5s;width:100%}
+.slide.active .s-tag,.slide.active .s-head,.slide.active .s-sub,.slide.active .s-action{opacity:1;transform:none}
+
+/* BTN */
+/* ── BTN SIRI ── */
+@property --ba {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+@keyframes siri-spin { to { --ba: 360deg; } }
+@keyframes siri-breathe {
+  0%,100%{box-shadow:0 0 0 0 rgba(255,255,255,0),0 0 12px rgba(255,255,255,.06)}
+  50%{box-shadow:0 0 0 3px rgba(255,255,255,.07),0 0 28px rgba(255,255,255,.14)}
+}
+
+.btn{
+  display:inline-flex;align-items:center;justify-content:space-between;
+  gap:16px;width:100%;padding:17px 24px;
+  background:rgba(255,255,255,.04);
+  color:#fff;
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Inter',sans-serif;
+  font-size:10px;font-weight:400;letter-spacing:.18em;text-transform:uppercase;
+  cursor:pointer;transition:all .35s;text-decoration:none;
+  border-radius:100px;border:none;
+  position:relative;overflow:hidden;
+  animation:siri-breathe 3s ease infinite;
+}
+/* Siri light ring */
+.btn::before{
+  content:'';position:absolute;inset:-1px;border-radius:100px;
+  background:conic-gradient(from var(--ba), transparent 60%, rgba(255,255,255,.55) 80%, transparent 95%);
+  animation:siri-spin 2.8s linear infinite;
+  z-index:0;
+}
+.btn::after{
+  content:'';position:absolute;inset:1px;border-radius:100px;
+  background:rgba(0,0,0,.88);z-index:1;
+}
+.btn span{position:relative;z-index:2}
+.btn:hover{background:rgba(255,255,255,.96);color:#000;animation:none}
+.btn:hover::before{display:none}
+.btn:hover::after{background:transparent}
+.btn.solid{background:rgba(255,255,255,.96);color:#000;animation:none}
+.btn.solid::before{display:none}
+.btn.solid::after{background:transparent}
+
+/* ══ S1 HERO ══ */
+#s1{background:rgba(0,0,0,.42)}
+#s1 .hero-top{position:absolute;top:32px;left:0;right:0;display:flex;flex-direction:column;align-items:center;gap:5px;z-index:2}
+#s1 .s-head{font-size:clamp(2.1rem,8.5vw,3.6rem);text-shadow:0 0 60px rgba(255,255,255,.3),0 0 120px rgba(255,255,255,.1);animation:floatY 7s ease infinite}
+#s1 .s-action{animation:floatY 7s ease infinite 1.5s}
+
+/* OTHER SLIDES */
+#s2,#s3,#s4,#s5,#s6{background:rgba(0,0,0,.84)}
+
+/* FLOAT */
+@keyframes floatY{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+
+
+/* GLITCH */
+.glitch{position:relative;display:inline}
+.glitch::before,.glitch::after{content:attr(data-text);position:absolute;inset:0;pointer-events:none}
+.glitch::before{color:#ff2020;animation:gb 4s infinite;clip-path:inset(100% 0 0 0)}
+.glitch::after{color:#00e5ff;animation:ga 4s infinite;clip-path:inset(100% 0 0 0)}
+@keyframes ga{0%,88%,100%{clip-path:inset(100% 0 0 0);transform:none;opacity:0}89%{opacity:.7;clip-path:inset(20% 0 58% 0);transform:translate(-3px,0)}91%{clip-path:inset(65% 0 8% 0);transform:translate(3px,0)}93%{opacity:0;clip-path:inset(100% 0 0 0)}}
+@keyframes gb{0%,90%,100%{clip-path:inset(100% 0 0 0);transform:none;opacity:0}91%{opacity:.6;clip-path:inset(8% 0 72% 0);transform:translate(4px,0)}93%{clip-path:inset(50% 0 30% 0);transform:translate(-3px,0)}95%{opacity:0;clip-path:inset(100% 0 0 0)}}
+
+.scroll-cue{display:flex;align-items:center;gap:14px}
+.s-line{width:40px;height:1px;background:#fff;position:relative;overflow:hidden}
+.s-line::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,.8);animation:sl 1.8s ease infinite}
+@keyframes sl{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+.s-txt{font-size:9px;letter-spacing:.28em;text-transform:uppercase;color:rgba(255,255,255,.3)}
+
+/* ══ S2 DOR ══ */
+#s2::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.15) 3px,rgba(0,0,0,.15) 4px);pointer-events:none;z-index:1;opacity:0;transition:opacity .9s ease .3s}
+#s2.active::before{opacity:1}
+.strike{position:relative;display:inline}
+.strike::after{content:"";position:absolute;left:0;right:0;top:52%;height:1.5px;background:rgba(255,255,255,0.5);transform:rotate(-1deg)}
+.red{font-style:italic;color:rgba(255,255,255,0.55)}
+
+/* APPLE GLASS CHART CARDS */
+.glass-card{
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:24px;
+  padding:22px 20px 14px;
+  backdrop-filter:blur(24px);
+  -webkit-backdrop-filter:blur(24px);
+  margin-bottom:18px;
+  opacity:0;
+  transition:opacity .6s ease .55s;
+  box-shadow:0 0 0 1px rgba(255,255,255,.04) inset,0 4px 40px rgba(255,255,255,.04);
+}
+#s2.active .glass-card,#s3.active .glass-card{opacity:1}
+#dorChart,#solChart{display:block;width:100%;height:130px}
+.chart-label{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Inter',sans-serif;font-size:8px;letter-spacing:.14em;color:rgba(255,255,255,.2);margin-bottom:12px;text-transform:uppercase;font-weight:400}
+.chart-wrap{margin-bottom:22px}
+
+/* ══ S4 FASES ══ */
+.fase-item{border-bottom:1px solid rgba(255,255,255,.07);padding:16px 0;display:flex;gap:20px;opacity:0;transform:translateX(-12px);transition:opacity .5s,transform .5s}
+#s4.active .fase-item:nth-child(1){opacity:1;transform:none;transition-delay:.2s}
+#s4.active .fase-item:nth-child(2){opacity:1;transform:none;transition-delay:.35s}
+#s4.active .fase-item:nth-child(3){opacity:1;transform:none;transition-delay:.5s}
+.fn{font-family:'Space Mono',monospace;font-size:.7rem;color:rgba(255,255,255,.2);padding-top:2px;flex-shrink:0;width:24px}
+.ft{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Inter',sans-serif;font-size:1rem;font-weight:400;color:#fff;margin-bottom:3px;text-shadow:0 0 20px rgba(255,255,255,.18)}
+.fd{font-size:11px;line-height:1.7;color:rgba(255,255,255,.3)}
+.axis-chip{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.1);padding:7px 13px;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Inter',sans-serif;font-size:8px;font-weight:400;color:rgba(255,255,255,.28);letter-spacing:.1em;margin-bottom:20px;border-radius:20px;background:rgba(255,255,255,.03);box-shadow:0 0 20px rgba(255,255,255,.03) inset}
+.adot{width:5px;height:5px;border-radius:50%;background:#fff;opacity:.35;animation:adot 2.2s ease infinite}
+@keyframes adot{0%,100%{opacity:.35}50%{opacity:.9;box-shadow:0 0 8px rgba(255,255,255,.8)}}
+
+/* ══ S5 FORM ══ */
+.tf-wrap{width:100%;position:relative;z-index:2}
+.tf-step{display:none}
+.tf-step.on{display:block;animation:fin .4s ease forwards}
+@keyframes fin{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.tf-q{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Inter',sans-serif;font-size:clamp(1.35rem,5vw,1.85rem);font-weight:300;line-height:1.2;color:#fff;margin-bottom:18px;text-shadow:0 0 30px rgba(255,255,255,.12)}
+.tf-q em{font-style:italic;font-weight:200;color:rgba(255,255,255,.42)}
+.tf-counter{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Inter',sans-serif;font-size:9px;font-weight:400;color:rgba(255,255,255,.2);letter-spacing:.18em;margin-bottom:16px;display:block;text-transform:uppercase}
+.tf-note{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.18);margin-top:10px}
+
+/* OPTION CARDS */
+.opts{display:flex;flex-direction:column;gap:7px;margin-bottom:20px}
+.opt{padding:14px 16px;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.025);color:rgba(255,255,255,.6);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Inter',sans-serif;font-size:12px;font-weight:300;text-align:left;cursor:pointer;transition:all .22s;letter-spacing:.01em;border-radius:12px}
+.opt:hover,.opt.sel{background:rgba(255,255,255,.94);color:#000;border-color:transparent;box-shadow:0 0 24px rgba(255,255,255,.18),0 0 60px rgba(255,255,255,.05)}
+.opt-sub{font-size:10px;color:rgba(255,255,255,.3);display:block;margin-top:2px;transition:inherit}
+.opt:hover .opt-sub,.opt.sel .opt-sub{color:rgba(0,0,0,.45)}
+
+/* INPUTS */
+.tf-input{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);border-radius:14px;outline:none;color:#fff;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Inter',sans-serif;font-size:1rem;font-weight:300;padding:14px 18px;margin-bottom:12px;transition:border-color .3s,box-shadow .3s;-webkit-appearance:none}
+.tf-input::placeholder{color:rgba(255,255,255,.2)}
+.tf-input:focus{border-color:rgba(255,255,255,.4);box-shadow:0 0 20px rgba(255,255,255,.08)}
+
+.suc{display:none;animation:fin .5s ease forwards}
+.suc.on{display:block}
+.suc-head{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Inter',sans-serif;font-size:2rem;font-weight:300;color:#fff;margin-bottom:10px;line-height:1.1;text-shadow:0 0 40px rgba(255,255,255,.4),0 0 80px rgba(255,255,255,.15)}
+.suc-sub{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,.25);line-height:2.2}
+
+/* WPP */
+.wpp{position:fixed;bottom:26px;right:26px;z-index:300;width:46px;height:46px;background:#25d366;border-radius:50%;display:flex;align-items:center;justify-content:center;text-decoration:none;box-shadow:0 0 20px rgba(37,211,102,.35)}
+.wpp svg{width:22px;height:22px;fill:#fff}
+
+/* FOOTER */
+#s6{height:auto;min-height:68px;scroll-snap-align:end;flex-direction:row;justify-content:space-between;align-items:center;padding:22px 28px;border-top:1px solid rgba(255,255,255,.05)}
+.ftxt{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Inter',sans-serif;font-size:9px;font-weight:300;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.15)}
+.ftxt.brand{color:rgba(255,255,255,.35);text-shadow:0 0 12px rgba(255,255,255,.3)}
+</style>
+</head>
+<body>
+
+<div id="cur"></div>
+<div id="prog"><div id="pfill"></div></div>
+<div id="dots"></div>
+
+<!-- CONSTELLATION — full page fixed background -->
+<canvas id="constellation"></canvas>
+
+<!-- QUINTESSÊNCIA — edificado em toda a LP -->
+<div id="qmark">
+  <span class="q-logo">Quintessência</span>
+  <span class="q-sub">Marketing · SC</span>
+</div>
+
+<div id="slides">
+
+<!-- S1 HERO -->
+<div class="slide" id="s1">
+  <div class="hero-top">
+    <span style="font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Inter',sans-serif;font-size:1rem;font-weight:500;letter-spacing:.28em;text-transform:uppercase;color:#fff;text-shadow:0 0 20px rgba(255,255,255,1),0 0 50px rgba(255,255,255,.5),0 0 100px rgba(255,255,255,.18)">NUMEN</span>
+    <span style="font-size:8px;font-weight:300;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.28)">por Quintessência</span>
+  </div>
+  <div class="slide-inner">
+    <p class="s-tag">Marketing para médicos e estéticas · SC</p>
+    <h1 class="s-head"><span class="glitch" data-text="Marketing é ocupar">Marketing é ocupar</span><br><em>um espaço na mente<br>do seu cliente.</em></h1>
+    <div class="s-action" style="margin-top:8px">
+      <button class="btn" onclick="goTo(1)"><span>Descobrir</span><span>↓</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- S2 DOR -->
+<div class="slide" id="s2">
+  <div class="slide-inner">
+    <p class="s-tag">O erro mais comum</p>
+    <h2 class="s-head"><span class="glitch" data-text="Fazer marketing">Fazer marketing</span><br>não é dar <span class="strike"><span class="red">desconto.</span></span></h2>
+    <p class="s-sub">É o caminho mais rápido para atrair o paciente errado, desgastar sua marca e competir por preço — para sempre.</p>
+    <div class="glass-card s-action" style="transition-delay:.42s;width:100%">
+      <p class="chart-label">Resultado de quem compete por preço</p>
+      <canvas id="dorChart"></canvas>
+    </div>
+    <div class="s-action" style="transition-delay:.6s;width:100%">
+      <button class="btn" onclick="goTo(2)"><span>A solução</span><span>→</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- S3 SOLUÇÃO -->
+<div class="slide" id="s3">
+  <div class="slide-inner">
+    <p class="s-tag">A solução</p>
+    <h2 class="s-head">Criamos <em>autoridade</em><br>e a audiência certa.</h2>
+    <p class="s-sub">Sem entrar em trend. Sem parecer engraçado.<br>Atraindo o paciente ideal — não qualquer um.</p>
+    <div class="glass-card s-action" style="transition-delay:.42s;width:100%">
+      <p class="chart-label">Com o sistema NUMEN</p>
+      <canvas id="solChart"></canvas>
+    </div>
+    <div class="s-action" style="transition-delay:.65s;width:100%">
+      <button class="btn" onclick="goTo(3)"><span>Como funciona</span><span>→</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- S4 FASES -->
+<div class="slide" id="s4">
+  <div class="slide-inner">
+    <p class="s-tag">O sistema NUMEN</p>
+    <h2 class="s-head">Um método.<br><em>Três fases.</em></h2>
+    <div class="s-action" style="width:100%;transition-delay:.1s">
+      <div class="fase-item"><span class="fn">01</span><div><p class="ft">Descoberta</p><p class="fd">Diagnóstico completo, ICP, SWOT e configuração do sistema para sua clínica.</p></div></div>
+      <div class="fase-item"><span class="fn">02</span><div><p class="ft">Captação</p><p class="fd">Conteúdo cinematográfico, editorial, anúncios e todos os pontos de contato.</p></div></div>
+      <div class="fase-item"><span class="fn">03</span><div><p class="ft">Tráfego & Gestão</p><p class="fd">Tráfego pago, agente IA no WhatsApp, CRM e efetivação comercial.</p></div></div>
+    </div>
+    <div class="s-action" style="width:100%;display:flex;flex-direction:column;gap:10px;margin-top:16px;transition-delay:.65s">
+      <div class="axis-chip"><span class="adot"></span>Metodologia Axis · 3 níveis de consciência</div>
+      <button class="btn solid" onclick="goTo(4)"><span>Diagnóstico gratuito</span><span>→</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- S5 FORM -->
+<div class="slide" id="s5">
+  <div class="slide-inner" style="max-width:420px">
+    <p class="s-tag" style="margin-bottom:12px">Diagnóstico gratuito · Sem compromisso</p>
+    <div class="tf-wrap" id="tfWrap">
+
+      <!-- STEP 0: NICHO -->
+      <div class="tf-step on" id="tf0">
+        <span class="tf-counter">Passo 1</span>
+        <p class="tf-q">Qual é a sua<br><em>área de atuação?</em></p>
+        <div class="opts">
+          <button class="opt" onclick="chooseNiche('cirurgia')">
+            Cirurgia Plástica
+            <span class="opt-sub">Rosto, corpo ou ambos</span>
+          </button>
+          <button class="opt" onclick="chooseNiche('estetica')">
+            Estética / Outra área
+            <span class="opt-sub">Dermatologia, medicina estética, odontologia...</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- === BRANCH CIRURGIA === -->
+      <div class="tf-step" id="cir1">
+        <span class="tf-counter">Passo 2 · Cirurgia Plástica</span>
+        <p class="tf-q">Seu foco principal<br><em>é onde?</em></p>
+        <div class="opts">
+          <button class="opt" onclick="chooseFocus('rosto')">
+            Rosto
+            <span class="opt-sub">Facelift, bléfaroplastia, rinoplastia, otoplastia</span>
+          </button>
+          <button class="opt" onclick="chooseFocus('corpo')">
+            Corpo
+            <span class="opt-sub">Lipoaspiração, mamoplastia, abdominoplastia</span>
+          </button>
+          <button class="opt" onclick="chooseFocus('ambos')">
+            Rosto e Corpo
+          </button>
+        </div>
+      </div>
+
+      <div class="tf-step" id="cir2">
+        <span class="tf-counter">Passo 3 · Cirurgia Plástica</span>
+        <p class="tf-q">Quantas cirurgias<br>você realiza <em>por mês hoje?</em></p>
+        <div class="opts">
+          <button class="opt" onclick="pickOpt(this,'vol','cir3')">1 a 5 cirurgias</button>
+          <button class="opt" onclick="pickOpt(this,'vol','cir3')">6 a 15 cirurgias</button>
+          <button class="opt" onclick="pickOpt(this,'vol','cir3')">Mais de 15 cirurgias</button>
+        </div>
+      </div>
+
+      <div class="tf-step" id="cir3">
+        <span class="tf-counter">Passo 4 · Cirurgia Plástica</span>
+        <p class="tf-q">Qual é seu maior<br><em>desafio hoje?</em></p>
+        <div class="opts">
+          <button class="opt" onclick="pickOpt(this,'desafio','cir4')">Leads que somem após o orçamento</button>
+          <button class="opt" onclick="pickOpt(this,'desafio','cir4')">Poucos pacientes qualificados chegando</button>
+          <button class="opt" onclick="pickOpt(this,'desafio','cir4')">Concorrência por preço — paciente só pergunta valor</button>
+          <button class="opt" onclick="pickOpt(this,'desafio','cir4')">Agenda irregular — meses cheios e meses vazios</button>
+        </div>
+      </div>
+
+      <div class="tf-step" id="cir4">
+        <span class="tf-counter">Último passo</span>
+        <p class="tf-q">Perfeito. Vamos marcar<br>seu <em>diagnóstico gratuito.</em></p>
+        <input class="tf-input" type="text" id="cNome" placeholder="Seu nome" autocomplete="off">
+        <input class="tf-input" type="tel" id="cWpp" placeholder="WhatsApp (com DDD)" autocomplete="off">
+        <button class="btn solid" onclick="submit('cirurgia')"><span>Quero meu diagnóstico</span><span>→</span></button>
+        <p class="tf-note">Apresentação gratuita · Sem compromisso · Resposta em até 24h</p>
+      </div>
+
+      <!-- === BRANCH ESTÉTICA === -->
+      <div class="tf-step" id="est1">
+        <span class="tf-counter">Passo 2 · Estética</span>
+        <p class="tf-q">Qual é a sua<br><em>especialidade?</em></p>
+        <div class="opts">
+          <button class="opt" onclick="pickOpt(this,'esp','est2')">Dermatologia</button>
+          <button class="opt" onclick="pickOpt(this,'esp','est2')">Medicina Estética</button>
+          <button class="opt" onclick="pickOpt(this,'esp','est2')">Odontologia Estética</button>
+          <button class="opt" onclick="pickOpt(this,'esp','est2')">Clínica de Estética</button>
+          <button class="opt" onclick="pickOpt(this,'esp','est2')">Outra área</button>
+        </div>
+      </div>
+
+      <div class="tf-step" id="est2">
+        <span class="tf-counter">Último passo</span>
+        <p class="tf-q">Ótimo. Vamos<br><em>nos conhecer.</em></p>
+        <input class="tf-input" type="text" id="eNome" placeholder="Seu nome" autocomplete="off">
+        <input class="tf-input" type="tel" id="eWpp" placeholder="WhatsApp (com DDD)" autocomplete="off">
+        <input class="tf-input" type="text" id="eCidade" placeholder="Cidade / Estado" autocomplete="off" style="font-size:1rem">
+        <button class="btn solid" onclick="submit('estetica')"><span>Agendar apresentação</span><span>→</span></button>
+        <p class="tf-note">Apresentação gratuita · Diagnóstico personalizado · Sem compromisso</p>
+      </div>
+
+      <!-- SUCCESS -->
+      <div class="suc" id="sucMsg">
+        <p class="suc-head">Diagnóstico<br>agendado.</p>
+        <p class="suc-sub">
+          Entro em contato em até 24h<br>
+          para confirmar sua apresentação.<br><br>
+          Patrick · NUMEN · 5essência
+        </p>
+      </div>
+
+    </div><!-- /tf-wrap -->
+  </div><!-- /slide-inner -->
+</div><!-- /s5 -->
+
+<!-- S6 FOOTER -->
+<div class="slide" id="s6" style="justify-content:center;align-items:center;flex-direction:column;gap:6px;min-height:auto;height:auto;padding:32px 28px;border-top:1px solid rgba(255,255,255,.05)">
+  <span class="ftxt brand" style="font-size:11px">Quintessência</span>
+  <span class="ftxt">NUMEN · Marketing · SC · 2025</span>
+</div>
+
+</div>
+
+<!-- WPP -->
+<a class="wpp" href="https://wa.me/5553999999999" target="_blank" aria-label="WhatsApp">
+  <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+</a>
+
+<script>
+// ── CURSOR
+const cur = document.getElementById('cur');
+document.addEventListener('mousemove', e => { cur.style.left=e.clientX+'px'; cur.style.top=e.clientY+'px'; });
+document.querySelectorAll('button,a,.opt,.dot').forEach(el => {
+  el.addEventListener('mouseenter',()=>cur.classList.add('big'));
+  el.addEventListener('mouseleave',()=>cur.classList.remove('big'));
+});
+
+// ── SLIDES SETUP
+const slides=[...document.querySelectorAll('.slide')];
+const dotsEl=document.getElementById('dots');
+const pfill=document.getElementById('pfill');
+slides.forEach((_,i)=>{ const d=document.createElement('div'); d.className='dot'; d.onclick=()=>goTo(i); dotsEl.appendChild(d); });
+const dots=[...document.querySelectorAll('.dot')];
+function goTo(i){ slides[i].scrollIntoView({behavior:'smooth'}); }
+
+// ── CONSTELLATION
+const cv = document.getElementById('constellation');
+const cx = cv.getContext('2d');
+
+function resize(){ cv.width=innerWidth; cv.height=innerHeight; }
+resize(); window.addEventListener('resize', resize);
+
+// Stars
+const NSTARS = 140;
+const stars = Array.from({length:NSTARS}, () => ({
+  x: Math.random(),
+  y: Math.random(),
+  r: Math.random() * 1.4 + 0.2,
+  vx: (Math.random()-.5) * 0.00012,
+  vy: (Math.random()-.5) * 0.00012,
+  twinkle: Math.random() * Math.PI * 2,
+  twinkleSpeed: 0.02 + Math.random() * 0.04,
+  brightness: 0.3 + Math.random() * 0.7,
+}));
+
+// Realistic comets — sparse, natural
+const comets = [];
+function spawnComet(){
+  const fromTop = Math.random() > 0.35;
+  const angle = fromTop
+    ? (Math.PI * 0.19) + (Math.random()-.5) * 0.18
+    : (Math.PI * 0.13) + (Math.random()-.5) * 0.14;
+  const speed = 0.0018 + Math.random() * 0.0014; // slower = more natural
+  const tailLen = 220 + Math.random() * 160;
+  comets.push({
+    x: fromTop ? 0.05 + Math.random() * 0.75 : -0.02,
+    y: fromTop ? -0.02 : Math.random() * 0.45,
+    angle, speed, tailLen,
+    prog: 0, maxProg: 1.3,
+    brightness: 0.7 + Math.random() * 0.3,
+    width: 0.9 + Math.random() * 0.6,
+    dust: Array.from({length:14}, (_,i) => ({
+      offset: i/14,
+      spread: (Math.random()-.5) * 4,
+      size: Math.random() * 0.9 + 0.15,
+      opacity: Math.random() * 0.35 + 0.08,
+    }))
+  });
+}
+// Random interval 8–14 seconds
+function schedulComet(){
+  const delay = 8000 + Math.random() * 6000;
+  setTimeout(()=>{ spawnComet(); schedulComet(); }, delay);
+}
+schedulComet();
+setTimeout(spawnComet, 800); // first one after 0.8s
+
+function constellationFrame(){
+  const W = cv.width, H = cv.height;
+  cx.clearRect(0,0,W,H);
+
+  // Move stars
+  stars.forEach(s=>{
+    s.x += s.vx; s.y += s.vy;
+    if(s.x<0)s.x=1; if(s.x>1)s.x=0;
+    if(s.y<0)s.y=1; if(s.y>1)s.y=0;
+    s.twinkle += s.twinkleSpeed;
+  });
+
+  // Connection lines between nearby stars
+  const DIST = 0.16;
+  for(let i=0;i<stars.length;i++){
+    for(let j=i+1;j<stars.length;j++){
+      const a=stars[i], b=stars[j];
+      const dx=(a.x-b.x)*W/H, dy=a.y-b.y;
+      const d=Math.sqrt(dx*dx+dy*dy);
+      if(d<DIST){
+        const alpha = (1-d/DIST)*0.12;
+        cx.strokeStyle=`rgba(255,255,255,${alpha})`;
+        cx.lineWidth=0.5;
+        cx.beginPath();
+        cx.moveTo(a.x*W, a.y*H);
+        cx.lineTo(b.x*W, b.y*H);
+        cx.stroke();
+      }
+    }
+  }
+
+  // Draw stars
+  stars.forEach(s=>{
+    const tw = (Math.sin(s.twinkle)*0.5+0.5) * 0.5 + 0.5;
+    const alpha = s.brightness * tw;
+    const px = s.x*W, py = s.y*H;
+
+    // Glow halo
+    if(s.r > 0.9){
+      const g = cx.createRadialGradient(px,py,0,px,py,s.r*6);
+      g.addColorStop(0,`rgba(255,255,255,${alpha*0.3})`);
+      g.addColorStop(1,'rgba(255,255,255,0)');
+      cx.fillStyle=g;
+      cx.beginPath();
+      cx.arc(px,py,s.r*6,0,Math.PI*2);
+      cx.fill();
+    }
+
+    // Star core
+    cx.fillStyle=`rgba(255,255,255,${alpha})`;
+    cx.beginPath();
+    cx.arc(px,py,s.r,0,Math.PI*2);
+    cx.fill();
+
+    // Cross sparkle on bright stars
+    if(s.r>1.2 && tw>0.7){
+      cx.strokeStyle=`rgba(255,255,255,${alpha*0.4})`;
+      cx.lineWidth=0.5;
+      const sl = s.r*4;
+      cx.beginPath();
+      cx.moveTo(px-sl,py); cx.lineTo(px+sl,py);
+      cx.moveTo(px,py-sl); cx.lineTo(px,py+sl);
+      cx.stroke();
+    }
+  });
+
+  // Realistic comets
+  for(let i=comets.length-1;i>=0;i--){
+    const c=comets[i];
+    c.prog += c.speed;
+    if(c.prog >= c.maxProg){ comets.splice(i,1); continue; }
+
+    const headX = (c.x + Math.cos(c.angle)*c.prog*0.9) * W;
+    const headY = (c.y + Math.sin(c.angle)*c.prog*0.9) * H;
+    const tailX = headX - Math.cos(c.angle) * c.tailLen;
+    const tailY = headY - Math.sin(c.angle) * c.tailLen;
+
+    // Fade in/out based on progress
+    const fadeIn = Math.min(c.prog / 0.1, 1);
+    const fadeOut = c.prog > 0.8 ? Math.max(0, 1-(c.prog-0.8)/0.4) : 1;
+    const opacity = fadeIn * fadeOut * c.brightness;
+
+    // Main tail gradient
+    const g = cx.createLinearGradient(tailX, tailY, headX, headY);
+    g.addColorStop(0, 'rgba(255,255,255,0)');
+    g.addColorStop(0.6, `rgba(220,235,255,${opacity*0.18})`);
+    g.addColorStop(0.88, `rgba(240,248,255,${opacity*0.55})`);
+    g.addColorStop(1, `rgba(255,255,255,${opacity})`);
+    cx.strokeStyle = g;
+    cx.lineWidth = c.width;
+    cx.lineCap = 'round';
+    cx.beginPath();
+    cx.moveTo(tailX, tailY);
+    cx.lineTo(headX, headY);
+    cx.stroke();
+
+    // Wide glow tail
+    const g2 = cx.createLinearGradient(tailX, tailY, headX, headY);
+    g2.addColorStop(0, 'rgba(180,210,255,0)');
+    g2.addColorStop(0.7, `rgba(200,225,255,${opacity*0.07})`);
+    g2.addColorStop(1, `rgba(220,240,255,${opacity*0.22})`);
+    cx.strokeStyle = g2;
+    cx.lineWidth = c.width * 8;
+    cx.beginPath();
+    cx.moveTo(tailX, tailY);
+    cx.lineTo(headX, headY);
+    cx.stroke();
+
+    // Dust particles along tail
+    c.dust.forEach(d => {
+      const t = 1 - d.offset;
+      const px = tailX + (headX-tailX)*t + Math.sin(t*12)*d.spread;
+      const py = tailY + (headY-tailY)*t + Math.cos(t*8)*d.spread;
+      const da = d.opacity * opacity * t;
+      cx.fillStyle = `rgba(255,255,255,${da})`;
+      cx.beginPath();
+      cx.arc(px, py, d.size*(0.3+t*0.7), 0, Math.PI*2);
+      cx.fill();
+    });
+
+    // Bright nucleus
+    const ng = cx.createRadialGradient(headX,headY,0,headX,headY,c.width*5);
+    ng.addColorStop(0, `rgba(255,255,255,${opacity})`);
+    ng.addColorStop(0.3, `rgba(220,240,255,${opacity*0.7})`);
+    ng.addColorStop(1, 'rgba(255,255,255,0)');
+    cx.fillStyle = ng;
+    cx.beginPath();
+    cx.arc(headX, headY, c.width*5, 0, Math.PI*2);
+    cx.fill();
+
+    // Hot core
+    cx.fillStyle = `rgba(255,255,255,${opacity})`;
+    cx.beginPath();
+    cx.arc(headX, headY, c.width*0.8, 0, Math.PI*2);
+    cx.fill();
+  }
+
+  requestAnimationFrame(constellationFrame);
+}
+requestAnimationFrame(constellationFrame);
+
+// ── CHARTS
+let d2=false,d3=false;
+function ease3(p){return 1-Math.pow(1-p,3);}
+
+function roundBar(ctx,x,y,w,h,r){
+  if(h<=0)return;
+  r=Math.min(r,h/2,w/2);
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.lineTo(x+w-r,y);
+  ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h);
+  ctx.lineTo(x,y+h);
+  ctx.lineTo(x,y+r);
+  ctx.quadraticCurveTo(x,y,x+r,y);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawDor(){
+  const c=document.getElementById('dorChart');
+  if(!c)return;
+  c.width=c.offsetWidth||320; c.height=130;
+  const ctx=c.getContext('2d');
+  const W=c.width,H=c.height;
+  const lh=18,pad=20,r=8;
+  const bars=[
+    {l:'Desconto',v:.82},
+    {l:'Autoridade',v:.16},
+    {l:'Lead ideal',v:.07}
+  ];
+  const n=bars.length,bw=Math.floor((W-pad*2-(n-1)*16)/n);
+  let p=0;
+  function f(){
+    ctx.clearRect(0,0,W,H);
+    p=Math.min(p+.032,1);
+    const e=1-Math.pow(1-p,3);
+    bars.forEach((b,i)=>{
+      const x=pad+i*(bw+16);
+      const maxH=H-lh-8;
+      const trackH=maxH;
+      const bh=maxH*b.v*e;
+      const ty=H-lh-trackH, by=H-lh-bh;
+      // track (rail)
+      ctx.fillStyle='rgba(255,255,255,0.05)';
+      roundBar(ctx,x,ty,bw,trackH,r);
+      // bar fill with glass gradient
+      const g=ctx.createLinearGradient(0,by,0,H-lh);
+      g.addColorStop(0,'rgba(255,255,255,0.18)');
+      g.addColorStop(0.5,'rgba(255,255,255,0.08)');
+      g.addColorStop(1,'rgba(255,255,255,0.02)');
+      ctx.fillStyle=g;
+      roundBar(ctx,x,by,bw,bh,r);
+      // inner border glow
+      ctx.strokeStyle='rgba(255,255,255,0.12)';
+      ctx.lineWidth=.8;
+      roundBar(ctx,x,by,bw,bh,r);
+      ctx.stroke();
+      // top shimmer line
+      if(bh>r*2){
+        ctx.fillStyle='rgba(255,255,255,0.22)';
+        ctx.beginPath();ctx.roundRect(x+2,by+1,bw-4,3,2);ctx.fill();
+      }
+      // label
+      ctx.fillStyle='rgba(255,255,255,0.25)';
+      ctx.font='8px Space Mono,monospace';
+      ctx.textAlign='center';
+      ctx.fillText(b.l,x+bw/2,H-2);
+      // value
+      if(e>.4){
+        ctx.fillStyle='rgba(255,255,255,0.5)';
+        ctx.font='700 9px Space Mono,monospace';
+        ctx.fillText(Math.round(b.v*100*e)+'%',x+bw/2,by-6);
+      }
+    });
+    if(p<1)requestAnimationFrame(f);
+  }f();
+}
+
+function drawSol(){
+  const c=document.getElementById('solChart');
+  if(!c)return;
+  c.width=c.offsetWidth||320; c.height=130;
+  const ctx=c.getContext('2d');
+  const W=c.width,H=c.height;
+  const lh=18,pad=20,r=8;
+  const bars=[
+    {l:'Autoridade',v:.88},
+    {l:'Lead ideal',v:.76},
+    {l:'Consultas',v:.93}
+  ];
+  const n=bars.length,bw=Math.floor((W-pad*2-(n-1)*16)/n);
+  let p=0;
+  function f(){
+    ctx.clearRect(0,0,W,H);
+    p=Math.min(p+.026,1);
+    const e=1-Math.pow(1-p,2.8);
+    bars.forEach((b,i)=>{
+      const x=pad+i*(bw+16);
+      const maxH=H-lh-8;
+      const bh=maxH*b.v*e;
+      const ty=H-lh-maxH, by=H-lh-bh;
+      // track
+      ctx.fillStyle='rgba(255,255,255,0.04)';
+      roundBar(ctx,x,ty,bw,maxH,r);
+      // fill — brighter for solution
+      const g=ctx.createLinearGradient(0,by,0,H-lh);
+      g.addColorStop(0,'rgba(255,255,255,0.55)');
+      g.addColorStop(0.4,'rgba(255,255,255,0.2)');
+      g.addColorStop(1,'rgba(255,255,255,0.04)');
+      ctx.fillStyle=g;
+      roundBar(ctx,x,by,bw,bh,r);
+      // border
+      ctx.strokeStyle='rgba(255,255,255,0.2)';
+      ctx.lineWidth=.8;
+      roundBar(ctx,x,by,bw,bh,r);
+      ctx.stroke();
+      // shimmer
+      if(bh>r*2){
+        ctx.fillStyle='rgba(255,255,255,0.45)';
+        ctx.beginPath();ctx.roundRect(x+2,by+1,bw-4,3,2);ctx.fill();
+      }
+      // label
+      ctx.fillStyle='rgba(255,255,255,0.3)';
+      ctx.font='8px Space Mono,monospace';
+      ctx.textAlign='center';
+      ctx.fillText(b.l,x+bw/2,H-2);
+      // counter
+      if(e>.2){
+        ctx.fillStyle='rgba(255,255,255,0.8)';
+        ctx.font='700 9px Space Mono,monospace';
+        ctx.fillText('+'+Math.round(b.v*100*e)+'%',x+bw/2,by-6);
+      }
+    });
+    if(p<1)requestAnimationFrame(f);
+  }f();
+}
+
+// ── INTERSECTION
+const io=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(!e.isIntersecting)return;
+    const idx=slides.indexOf(e.target);
+    slides.forEach(s=>s.classList.remove('active'));
+    e.target.classList.add('active');
+    dots.forEach((d,j)=>d.classList.toggle('on',j===idx));
+    pfill.style.width=(idx/(slides.length-1)*100)+'%';
+    if(e.target.id==='s2'&&!d2){d2=true;setTimeout(drawDor,500);}
+    if(e.target.id==='s3'&&!d3){d3=true;setTimeout(drawSol,400);}
+  });
+},{threshold:.6});
+slides.forEach(s=>io.observe(s));
+slides[0].classList.add('active');dots[0].classList.add('on');
+
+// ── FORM LOGIC
+const fd={};
+function show(id){document.querySelectorAll('.tf-step').forEach(s=>s.classList.remove('on'));document.getElementById(id).classList.add('on');}
+
+function chooseNiche(n){
+  fd.nicho=n;
+  if(n==='cirurgia')show('cir1');
+  else show('est1');
+}
+
+function chooseFocus(f){
+  fd.foco=f;
+  show('cir2');
+}
+
+function pickOpt(el,key,next){
+  fd[key]=el.textContent.trim();
+  setTimeout(()=>show(next),180);
+}
+
+// WPP mask
+function maskWpp(el){
+  el.addEventListener('input',function(){
+    let v=this.value.replace(/\D/g,'');
+    if(v.length>2)v='('+v.slice(0,2)+') '+v.slice(2);
+    if(v.length>10)v=v.slice(0,10)+'-'+v.slice(10,14);
+    this.value=v;
+  });
+}
+document.addEventListener('DOMContentLoaded',()=>{
+  ['cWpp','eWpp'].forEach(id=>{const el=document.getElementById(id);if(el)maskWpp(el);});
+});
+
+async function submit(branch){
+  let nome,wpp,cidade='';
+  if(branch==='cirurgia'){
+    nome=document.getElementById('cNome').value.trim();
+    wpp=document.getElementById('cWpp').value.trim();
+  } else {
+    nome=document.getElementById('eNome').value.trim();
+    wpp=document.getElementById('eWpp').value.trim();
+    cidade=document.getElementById('eCidade').value.trim();
+  }
+  if(!nome||!wpp)return;
+  Object.assign(fd,{nome,wpp,cidade,origem:'LP NUMEN SC',ts:new Date().toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'})});
+  const SCRIPT='https://script.google.com/macros/s/AKfycbz2vBD4WmZ4-Zn22o2uJX27XKDir3JaT8LKv3A9YQDbgyt-E8pM1NJPwoDZYC3V85z0wA/exec';
+  try{await fetch(SCRIPT,{method:'POST',mode:'no-cors',body:JSON.stringify(fd)});}catch(_){}
+  document.querySelectorAll('.tf-step').forEach(s=>s.style.display='none');
+  const suc=document.getElementById('sucMsg');suc.classList.add('on');
+}
+
+document.addEventListener('keydown',e=>{if(e.key!=='Enter')return;const b=document.querySelector('.tf-step.on .btn.solid');if(b)b.click();});
+</script>
+</body>
+</html>

@@ -2,14 +2,45 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Reserva Box</title>
+<title>Reserva Box Container</title>
+<style>
+body{
+font-family:Arial,sans-serif;
+background:#111;
+color:#fff;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+margin:0;
+text-align:center;
+}
+.container{
+max-width:500px;
+padding:20px;
+}
+.botao{
+display:inline-block;
+background:#25D366;
+color:white;
+padding:15px 30px;
+border-radius:8px;
+text-decoration:none;
+font-weight:bold;
+margin-top:20px;
+}
+</style>
 </head>
 <body>
-<h2>Reserve sua mesa no Box</h2>
-<p>Clique abaixo para falar com nossa equipe.</p>
+<div class="container">
+<h1>Reserve sua mesa</h1>
+<p>Clique no botão abaixo para falar com nossa equipe.</p>
 
-<a href="https://wa.me/555391699707?text=Olá,%20quero%20fazer%20uma%20reserva">
-Fazer reserva pelo WhatsApp
+<a class="botao"
+href="https://wa.me/555391699707?text=Olá,%20quero%20fazer%20uma%20reserva">
+Reservar pelo WhatsApp
 </a>
+
+</div>
 </body>
 </html>

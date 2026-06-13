@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Briefing — Landing Page | Sibele Campos Advocacia</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a0a;
+    --surface: #121212;
+    --border: #2a2a2a;
+    --gold: #c9a96e;
+    --gold-dim: rgba(201,169,110,0.15);
+    --text: #e8e4dc;
+    --muted: #888;
+    --white: #f5f2ed;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Barlow', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+  }
+
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 28px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px;
+    letter-spacing: 0.3em;
+    color: var(--gold);
+    text-transform: uppercase;
+  }
+
+  .badge {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .hero {
+    padding: 72px 40px 48px;
+    max-width: 760px;
+    margin: 0 auto;
+  }
+
+  .eyebrow {
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(32px, 5vw, 52px);
+    font-weight: 300;
+    line-height: 1.15;
+    color: var(--white);
+    margin-bottom: 16px;
+  }
+
+  h1 em { font-style: italic; color: var(--gold); }
+
+  .subtitle {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.7;
+    max-width: 540px;
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    max-width: 760px;
+    margin: 0 auto;
+  }
+
+  .section {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 48px 40px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-label {
+    font-size: 9px;
+    letter-spacing: 0.35em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  label {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    margin-top: 24px;
+  }
+
+  label:first-of-type { margin-top: 0; }
+
+  input, textarea, select {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Barlow', sans-serif;
+    font-size: 14px;
+    font-weight: 300;
+    padding: 14px 16px;
+    outline: none;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+    border-radius: 0;
+  }
+
+  input:focus, textarea:focus, select:focus { border-color: var(--gold); }
+  textarea { resize: vertical; min-height: 100px; }
+  select option { background: #1a1a1a; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  .hint {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 6px;
+    font-style: italic;
+  }
+
+  .radio-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .radio-group label {
+    margin: 0;
+    cursor: pointer;
+  }
+
+  .radio-group input[type=radio] {
+    display: none;
+  }
+
+  .radio-group input[type=radio] + span {
+    display: inline-block;
+    padding: 8px 18px;
+    border: 1px solid var(--border);
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+
+  .radio-group input[type=radio]:checked + span {
+    border-color: var(--gold);
+    color: var(--gold);
+    background: var(--gold-dim);
+  }
+
+  .upload-area {
+    border: 1px dashed var(--border);
+    background: var(--surface);
+    padding: 40px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    position: relative;
+  }
+
+  .upload-area:hover { border-color: var(--gold); }
+
+  .upload-area input[type=file] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+
+  .upload-area p {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.8;
+    pointer-events: none;
+  }
+
+  .upload-area strong {
+    display: block;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px;
+    color: var(--gold);
+    margin-bottom: 6px;
+    font-weight: 300;
+  }
+
+  .file-list { margin-top: 12px; }
+  .file-item {
+    font-size: 12px;
+    color: var(--gold);
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .btn-send {
+    width: 100%;
+    padding: 18px;
+    background: transparent;
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    font-family: 'Barlow', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.25s;
+    margin-top: 8px;
+  }
+
+  .btn-send:hover {
+    background: var(--gold);
+    color: var(--bg);
+  }
+
+  .btn-send:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .status {
+    text-align: center;
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 16px;
+    min-height: 20px;
+    letter-spacing: 0.1em;
+  }
+
+  .status.ok { color: var(--gold); }
+  .status.err { color: #e05c5c; }
+
+  footer {
+    text-align: center;
+    padding: 32px;
+    font-size: 10px;
+    color: #444;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+
+  /* LOGIN */
+  #login-screen {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+  }
+
+  #login-screen .logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px;
+    letter-spacing: 0.35em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  #login-screen .sub {
+    font-size: 10px;
+    letter-spacing: 0.25em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 48px;
+  }
+
+  .login-box {
+    width: 100%;
+    max-width: 360px;
+    border: 1px solid var(--border);
+    padding: 40px 32px;
+    background: var(--surface);
+  }
+
+  .login-box label {
+    margin-top: 20px;
+  }
+
+  .login-box label:first-of-type { margin-top: 0; }
+
+  #login-error {
+    font-size: 11px;
+    color: #e05c5c;
+    text-align: center;
+    margin-top: 16px;
+    letter-spacing: 0.05em;
+    min-height: 16px;
+  }
+
+  @media (max-width: 600px) {
+    header, .hero, .section { padding-left: 24px; padding-right: 24px; }
+    .grid-2 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TELA DE LOGIN -->
+<div id="login-screen">
+  <div class="logo">Quintessência</div>
+  <div class="sub">Acesso Restrito</div>
+  <div class="login-box">
+    <label>Login</label>
+    <input type="text" id="login-input" placeholder="usuário" autocomplete="username" />
+    <label>Senha</label>
+    <input type="password" id="senha-input" placeholder="••••••••" autocomplete="current-password" />
+    <button class="btn-send" style="margin-top:24px" onclick="doLogin()">Entrar</button>
+    <div id="login-error"></div>
+  </div>
+</div>
+
+<header>
+  <div class="logo">Quintessência</div>
+  <div class="badge">Briefing Confidencial</div>
+</header>
+
+<div class="hero">
+  <div class="eyebrow">Landing Page — Advocacia</div>
+  <h1>Sibele Campos<br><em>Advocacia</em></h1>
+  <p class="subtitle">Preencha com calma. Essas informações definem a estratégia visual e de conteúdo da sua LP. Leva cerca de 10 minutos.</p>
+</div>
+
+<div class="divider"></div>
+
+<form id="briefing-form">
+
+  <!-- 01. IDENTIDADE -->
+  <div class="section">
+    <div class="section-label">Identidade Profissional</div>
+
+    <label>Nome completo / Nome da banca</label>
+    <input type="text" name="nome" placeholder="Sibele Campos Advocacia" />
+
+    <div class="grid-2">
+      <div>
+        <label>OAB / Registro</label>
+        <input type="text" name="oab" placeholder="Ex: OAB/RS 00000" />
+      </div>
+      <div>
+        <label>Cidade / Estado</label>
+        <input type="text" name="cidade" placeholder="Ex: Bagé, RS" />
+      </div>
+    </div>
+
+    <label>Área(s) de atuação principal</label>
+    <input type="text" name="areas" placeholder="Ex: Direito de Família, Cível, Trabalhista..." />
+
+    <label>Tempo de atuação</label>
+    <input type="text" name="tempo" placeholder="Ex: 12 anos de experiência" />
+  </div>
+
+  <!-- 02. PÚBLICO -->
+  <div class="section">
+    <div class="section-label">Público e Posicionamento</div>
+
+    <label>Quem é o seu cliente ideal?</label>
+    <textarea name="publico" placeholder="Descreva perfil, situação de vida, problema que enfrenta..."></textarea>
+
+    <label>Qual a principal dor / urgência do seu cliente?</label>
+    <textarea name="dor" placeholder="Ex: Medo de perder a guarda dos filhos, dívidas, demissão injusta..."></textarea>
+
+    <label>O que te diferencia de outros advogados?</label>
+    <textarea name="diferencial" placeholder="Atendimento humanizado, especialização, resultado comprovado..."></textarea>
+  </div>
+
+  <!-- 03. OFERTA -->
+  <div class="section">
+    <div class="section-label">Oferta da LP</div>
+
+    <label>O que a LP vai oferecer / converter?</label>
+    <div class="radio-group">
+      <label><input type="radio" name="oferta" value="consulta_gratuita"><span>Consulta Gratuita</span></label>
+      <label><input type="radio" name="oferta" value="consulta_paga"><span>Consulta Paga</span></label>
+      <label><input type="radio" name="oferta" value="avaliacao"><span>Avaliação de Caso</span></label>
+      <label><input type="radio" name="oferta" value="whatsapp"><span>Contato WhatsApp</span></label>
+      <label><input type="radio" name="oferta" value="outro"><span>Outro</span></label>
+    </div>
+    <p class="hint">Se "outro", descreva abaixo.</p>
+
+    <label>Detalhes da oferta (se necessário)</label>
+    <textarea name="oferta_detalhe" placeholder="Ex: 30 min de consulta online gratuita para análise do caso..." style="min-height:70px"></textarea>
+
+    <label>Qual o canal de contato principal?</label>
+    <div class="grid-2">
+      <div>
+        <label>WhatsApp</label>
+        <input type="text" name="whatsapp" placeholder="(00) 00000-0000" />
+      </div>
+      <div>
+        <label>E-mail</label>
+        <input type="text" name="email" placeholder="contato@sibele.adv.br" />
+      </div>
+    </div>
+  </div>
+
+  <!-- 04. VISUAL -->
+  <div class="section">
+    <div class="section-label">Identidade Visual</div>
+
+    <label>Já existe identidade visual? (logo, cores)</label>
+    <div class="radio-group">
+      <label><input type="radio" name="tem_id" value="sim"><span>Sim</span></label>
+      <label><input type="radio" name="tem_id" value="nao"><span>Não</span></label>
+      <label><input type="radio" name="tem_id" value="parcial"><span>Parcialmente</span></label>
+    </div>
+
+    <label>Tom / Estética desejada para a LP</label>
+    <div class="radio-group">
+      <label><input type="radio" name="estetica" value="sóbrio-elegante"><span>Sóbrio & Elegante</span></label>
+      <label><input type="radio" name="estetica" value="moderno-clean"><span>Moderno & Clean</span></label>
+      <label><input type="radio" name="estetica" value="feminino-autoridade"><span>Feminino & Autoridade</span></label>
+      <label><input type="radio" name="estetica" value="tradicional"><span>Tradicional</span></label>
+    </div>
+
+    <label>Referências (sites, perfis, marcas que admira)</label>
+    <textarea name="referencias" placeholder="Links ou nomes de referências visuais..." style="min-height:70px"></textarea>
+
+    <label>Cores que gosta / não gosta</label>
+    <input type="text" name="cores" placeholder="Ex: Prefiro tons escuros, dourado, evitar laranja..." />
+  </div>
+
+  <!-- 05. PROVA SOCIAL -->
+  <div class="section">
+    <div class="section-label">Prova Social & Autoridade</div>
+
+    <label>Quantos casos / clientes atendidos (aproximado)?</label>
+    <input type="text" name="casos" placeholder="Ex: +200 famílias atendidas" />
+
+    <label>Algum resultado concreto que pode mencionar?</label>
+    <textarea name="resultado" placeholder="Ex: 95% de êxito em ações de guarda, recuperei R$ X em processos..." style="min-height:70px"></textarea>
+
+    <label>Possui depoimentos de clientes para usar?</label>
+    <div class="radio-group">
+      <label><input type="radio" name="depoimentos" value="sim"><span>Sim</span></label>
+      <label><input type="radio" name="depoimentos" value="nao"><span>Não ainda</span></label>
+    </div>
+  </div>
+
+  <!-- 06. FOTOS -->
+  <div class="section">
+    <div class="section-label">Envio de Fotos</div>
+    <p style="font-size:13px; color:var(--muted); margin-bottom:8px; line-height:1.8">
+      Envie <strong style="color:var(--text)">4 fotos suas</strong> de alta qualidade para compor a LP.
+    </p>
+    <p style="font-size:12px; color:var(--muted); margin-bottom:24px; line-height:1.8">
+      Prefira fotos com boa iluminação, foco nítido e resolução alta (mínimo 1MB cada). Fotos de celular recente são bem-vindas, desde que bem iluminadas.
+    </p>
+
+    <div class="upload-area" id="upload-area">
+      <input type="file" id="file-input" accept="image/*" multiple />
+      <strong>Selecionar Fotos</strong>
+      <p>Clique aqui ou arraste as imagens<br>JPG, PNG · máx. 10MB cada · mínimo 4 fotos</p>
+    </div>
+    <div class="file-list" id="file-list"></div>
+  </div>
+
+  <!-- 07. EXTRAS -->
+  <div class="section">
+    <div class="section-label">Observações Finais</div>
+
+    <label>Algo que NÃO deve aparecer na LP?</label>
+    <input type="text" name="nao" placeholder="Ex: Não quero falar de preço, evitar imagens de tribunal..." />
+
+    <label>Prazo desejado para entrega</label>
+    <input type="text" name="prazo" placeholder="Ex: Até o dia 30/06" />
+
+    <label>Informações adicionais / contexto livre</label>
+    <textarea name="obs" placeholder="Qualquer coisa que ajude a construir sua LP com mais precisão..."></textarea>
+  </div>
+
+  <!-- ENVIAR -->
+  <div class="section" style="border-bottom:none">
+    <button type="submit" class="btn-send" id="btn-send">Enviar Briefing via WhatsApp</button>
+    <p class="status" id="status"></p>
+  </div>
+
+</form>
+
+<footer>Quintessência Digital · Briefing Confidencial · 2026</footer>
+
+<script>
+  // LOGIN
+  function doLogin() {
+    const login = document.getElementById('login-input').value.trim();
+    const senha = document.getElementById('senha-input').value.trim();
+    if (login === 'sibelecampos' && senha === '5ia2026') {
+      document.getElementById('login-screen').style.display = 'none';
+    } else {
+      document.getElementById('login-error').textContent = 'Usuário ou senha incorretos.';
+    }
+  }
+
+  document.getElementById('senha-input').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') doLogin();
+  });
+
+  // File upload display
+  const fileInput = document.getElementById('file-input');
+  const fileList = document.getElementById('file-list');
+  let selectedFiles = [];
+
+  fileInput.addEventListener('change', () => {
+    selectedFiles = Array.from(fileInput.files);
+    fileList.innerHTML = selectedFiles.map((f, i) =>
+      `<div class="file-item"><span>📷 ${f.name}</span><span style="color:var(--muted)">${(f.size/1024/1024).toFixed(1)}MB</span></div>`
+    ).join('');
+  });
+
+  // Submit → WhatsApp
+  document.getElementById('briefing-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const f = this;
+    const btn = document.getElementById('btn-send');
+    const status = document.getElementById('status');
+
+    const data = {
+      nome: f.nome.value,
+      oab: f.oab.value,
+      cidade: f.cidade.value,
+      areas: f.areas.value,
+      tempo: f.tempo.value,
+      publico: f.publico.value,
+      dor: f.dor.value,
+      diferencial: f.diferencial.value,
+      oferta: f.oferta.value,
+      oferta_detalhe: f.oferta_detalhe.value,
+      whatsapp: f.whatsapp.value,
+      email: f.email.value,
+      tem_id: f.tem_id.value,
+      estetica: f.estetica.value,
+      referencias: f.referencias.value,
+      cores: f.cores.value,
+      casos: f.casos.value,
+      resultado: f.resultado.value,
+      depoimentos: f.depoimentos.value,
+      nao: f.nao.value,
+      prazo: f.prazo.value,
+      obs: f.obs.value,
+    };
+
+    const fotos = selectedFiles.length > 0
+      ? `\n📷 *Fotos:* ${selectedFiles.length} arquivo(s) selecionado(s) — envie junto nesta conversa`
+      : `\n📷 *Fotos:* Não enviadas ainda`;
+
+    const msg =
+`*BRIEFING — Landing Page*
+*Sibele Campos Advocacia*
+━━━━━━━━━━━━━━━━━━━━
+
+*IDENTIDADE*
+Nome/Banca: ${data.nome}
+OAB: ${data.oab}
+Cidade: ${data.cidade}
+Áreas: ${data.areas}
+Experiência: ${data.tempo}
+
+*PÚBLICO*
+Cliente ideal: ${data.publico}
+Dor principal: ${data.dor}
+Diferencial: ${data.diferencial}
+
+*OFERTA*
+Tipo: ${data.oferta}
+Detalhe: ${data.oferta_detalhe}
+WhatsApp: ${data.whatsapp}
+E-mail: ${data.email}
+
+*VISUAL*
+Identidade visual: ${data.tem_id}
+Estética: ${data.estetica}
+Referências: ${data.referencias}
+Cores: ${data.cores}
+
+*PROVA SOCIAL*
+Casos atendidos: ${data.casos}
+Resultado: ${data.resultado}
+Depoimentos: ${data.depoimentos}
+
+*EXTRAS*
+Não incluir: ${data.nao}
+Prazo: ${data.prazo}
+Obs: ${data.obs}
+${fotos}
+
+━━━━━━━━━━━━━━━━━━━━
+_Quintessência Digital_`;
+
+    const numero = '5535998686730';
+    const url = `https://wa.me/${numero}?text=${encodeURIComponent(msg)}`;
+
+    window.open(url, '_blank');
+    status.className = 'status ok';
+    status.textContent = 'Abrindo WhatsApp… envie as fotos logo na sequência.';
+  });
+</script>
+</body>
+</html>

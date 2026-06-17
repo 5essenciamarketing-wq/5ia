@@ -1,0 +1,1519 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Briefing — Patric Martins Imóveis</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --blue: #2563EB;
+    --blue-light: #3B82F6;
+    --blue-pale: #EFF6FF;
+    --blue-mid: #DBEAFE;
+    --bg: #F8FAFF;
+    --surface: #FFFFFF;
+    --surface-glass: rgba(255,255,255,0.72);
+    --border: rgba(37,99,235,0.13);
+    --border-soft: rgba(37,99,235,0.07);
+    --text: #0F172A;
+    --text-muted: #64748B;
+    --text-dim: #CBD5E1;
+    --danger: #EF4444;
+    --radius-sm: 10px;
+    --radius: 14px;
+    --radius-lg: 20px;
+    --shadow-sm: 0 1px 3px rgba(37,99,235,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow: 0 4px 24px rgba(37,99,235,0.08), 0 1px 4px rgba(0,0,0,0.04);
+    --shadow-lg: 0 8px 40px rgba(37,99,235,0.12), 0 2px 8px rgba(0,0,0,0.06);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* ── BG BLOBS ── */
+  body::before {
+    content: '';
+    position: fixed;
+    top: -180px; right: -180px;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(59,130,246,0.12) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    bottom: -200px; left: -150px;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(37,99,235,0.08) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    background: var(--surface-glass);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border-soft);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 40px;
+    height: 64px;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .header-logo {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--blue);
+    letter-spacing: -0.02em;
+  }
+
+  .header-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+    background: var(--blue-pale);
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+  }
+
+  .progress-bar {
+    position: fixed;
+    top: 64px; left: 0; right: 0;
+    height: 3px;
+    background: var(--blue-mid);
+    z-index: 99;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--blue), var(--blue-light));
+    width: 0%;
+    transition: width 0.4s ease;
+    border-radius: 0 2px 2px 0;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    padding-top: 130px;
+    padding-bottom: 72px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: 40px; left: 50%;
+    transform: translateX(-50%);
+    width: 700px; height: 300px;
+    background: radial-gradient(ellipse, rgba(59,130,246,0.1) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--blue);
+    background: var(--blue-pale);
+    border: 1px solid var(--border);
+    padding: 6px 16px;
+    border-radius: 20px;
+    margin-bottom: 28px;
+  }
+
+  .hero h1 {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: clamp(32px, 5vw, 56px);
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--text);
+    margin-bottom: 18px;
+    letter-spacing: -0.03em;
+  }
+
+  .hero h1 em {
+    font-style: normal;
+    color: var(--blue);
+    position: relative;
+  }
+
+  .hero-sub {
+    font-size: 16px;
+    color: var(--text-muted);
+    max-width: 460px;
+    margin: 0 auto 48px;
+    line-height: 1.7;
+  }
+
+  .hero-steps {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--surface-glass);
+    border: 1px solid var(--border);
+    border-radius: 40px;
+    padding: 6px 8px;
+    backdrop-filter: blur(12px);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .hero-steps span {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+    padding: 6px 14px;
+    border-radius: 30px;
+    transition: all 0.2s;
+  }
+
+  .hero-steps .active {
+    background: var(--blue);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(37,99,235,0.3);
+  }
+
+  /* ── LAYOUT ── */
+  .wrapper {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 0 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── SECTIONS ── */
+  .section {
+    padding: 64px 0;
+  }
+
+  .section-card {
+    background: var(--surface-glass);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-lg);
+    padding: 40px;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: var(--shadow);
+    margin-bottom: 24px;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    margin-bottom: 40px;
+  }
+
+  .section-num {
+    width: 44px; height: 44px;
+    background: var(--blue);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(37,99,235,0.3);
+  }
+
+  .section-meta h2 {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+    letter-spacing: -0.02em;
+  }
+
+  .section-meta p {
+    font-size: 14px;
+    color: var(--text-muted);
+  }
+
+  /* ── FIELDS ── */
+  .field-group {
+    display: grid;
+    gap: 24px;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  label .req {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--blue);
+    background: var(--blue-pale);
+    padding: 1px 7px;
+    border-radius: 10px;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  label .opt {
+    font-size: 10px;
+    font-weight: 400;
+    color: var(--text-muted);
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  .hint {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-top: -2px;
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="number"],
+  textarea,
+  select {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    padding: 13px 16px;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    appearance: none;
+    -webkit-appearance: none;
+    box-shadow: var(--shadow-sm);
+  }
+
+  textarea {
+    resize: vertical;
+    min-height: 100px;
+    line-height: 1.6;
+  }
+
+  input:focus, textarea:focus, select:focus {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+  }
+
+  input::placeholder, textarea::placeholder {
+    color: var(--text-dim);
+  }
+
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%232563EB' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 40px;
+    cursor: pointer;
+  }
+
+  select option {
+    background: #fff;
+    color: var(--text);
+  }
+
+  /* ── PHOTO UPLOAD ── */
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 40px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+    background: var(--blue-pale);
+  }
+
+  .upload-zone:hover {
+    border-color: var(--blue);
+    background: var(--blue-mid);
+  }
+
+  .upload-zone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+
+  .upload-icon {
+    font-size: 32px;
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  .upload-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--blue);
+    margin-bottom: 6px;
+  }
+
+  .upload-hint {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  /* ── CHECKBOXES ── */
+  .checkbox-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+    background: var(--surface);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .checkbox-item:hover {
+    border-color: var(--blue-light);
+    background: var(--blue-pale);
+  }
+
+  .checkbox-item input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    accent-color: var(--blue);
+    cursor: pointer;
+    border-radius: 4px;
+  }
+
+  .checkbox-item input[type="checkbox"]:checked + span {
+    color: var(--blue);
+    font-weight: 500;
+  }
+
+  .checkbox-item span {
+    font-size: 13px;
+    color: var(--text-muted);
+    transition: color 0.2s;
+  }
+
+  /* ── DIVIDER ── */
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 28px 0;
+  }
+
+  .divider-line {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .divider-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  /* ── RANGE SLIDER ── */
+  .range-field {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .range-value {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--blue);
+    letter-spacing: -0.02em;
+  }
+
+  input[type="range"] {
+    appearance: none;
+    -webkit-appearance: none;
+    background: var(--blue-mid);
+    height: 4px;
+    border-radius: 2px;
+    outline: none;
+    border: none;
+    padding: 0;
+    width: 100%;
+    cursor: pointer;
+    box-shadow: none;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    background: var(--blue);
+    border-radius: 50%;
+    cursor: pointer;
+    border: 3px solid #fff;
+    box-shadow: 0 2px 8px rgba(37,99,235,0.4);
+  }
+
+  /* ── NOTA INFORMATIVA ── */
+  .info-card {
+    background: var(--blue-pale);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--blue);
+    padding: 16px 20px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 28px;
+  }
+
+  .info-card p {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  .info-card strong {
+    color: var(--blue);
+    font-weight: 600;
+  }
+
+  /* ── SUBMIT ── */
+  .submit-section {
+    padding: 64px 0 80px;
+    text-align: center;
+  }
+
+  .submit-section h2 {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 10px;
+    letter-spacing: -0.02em;
+  }
+
+  .submit-section p {
+    font-size: 15px;
+    color: var(--text-muted);
+    margin-bottom: 36px;
+  }
+
+  .btn-submit {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--blue);
+    color: #fff;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 16px 40px;
+    border: none;
+    border-radius: 40px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+    box-shadow: 0 4px 20px rgba(37,99,235,0.35);
+    letter-spacing: -0.01em;
+  }
+
+  .btn-submit:hover {
+    background: #1D4ED8;
+    box-shadow: 0 6px 28px rgba(37,99,235,0.45);
+  }
+
+  .btn-submit:active { transform: scale(0.97); }
+
+  /* ── SUCCESS ── */
+  .success-screen {
+    display: none;
+    padding: 120px 24px;
+    text-align: center;
+    max-width: 520px;
+    margin: 0 auto;
+  }
+
+  .success-icon {
+    width: 72px; height: 72px;
+    background: linear-gradient(135deg, var(--blue), var(--blue-light));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 28px;
+    font-size: 28px;
+    color: #fff;
+    box-shadow: 0 8px 32px rgba(37,99,235,0.3);
+  }
+
+  .success-screen h2 {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 14px;
+    letter-spacing: -0.02em;
+  }
+
+  .success-screen p {
+    font-size: 15px;
+    color: var(--text-muted);
+    line-height: 1.7;
+    margin-bottom: 32px;
+  }
+
+  .btn-whatsapp {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: #25D366;
+    color: #fff;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 14px 32px;
+    border-radius: 40px;
+    cursor: pointer;
+    transition: background 0.2s, box-shadow 0.2s;
+    text-decoration: none;
+    box-shadow: 0 4px 16px rgba(37,211,102,0.3);
+  }
+
+  .btn-whatsapp:hover {
+    background: #1EBE5A;
+    box-shadow: 0 6px 20px rgba(37,211,102,0.4);
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    border-top: 1px solid var(--border-soft);
+    padding: 32px 24px;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+  }
+
+  footer p {
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  footer span {
+    color: var(--blue);
+  }
+
+  /* ── VALIDAÇÃO VISUAL ── */
+  input.error, textarea.error, select.error {
+    border-color: var(--danger) !important;
+    box-shadow: 0 0 0 3px rgba(239,68,68,0.1) !important;
+  }
+
+  .field-error {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--danger);
+    display: none;
+    margin-top: -4px;
+  }
+
+  .field-error.show { display: block; }
+
+  /* ── MOBILE ── */
+  @media (max-width: 600px) {
+    .header { padding: 0 20px; }
+    .hero { padding-top: 100px; }
+    .wrapper { padding: 0 16px; }
+    .field-row { grid-template-columns: 1fr; }
+    .checkbox-group { grid-template-columns: 1fr; }
+    .section { padding: 40px 0; }
+    .section-card { padding: 24px 20px; }
+    .section-header { gap: 14px; }
+  }
+
+  /* ── BANNER RASCUNHO ── */
+  .banner-rascunho {
+    display: none;
+    position: fixed;
+    bottom: 24px; left: 50%; transform: translateX(-50%);
+    z-index: 200;
+    background: var(--surface-glass);
+    border: 1.5px solid var(--border);
+    border-radius: 40px;
+    padding: 10px 20px 10px 16px;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: var(--shadow-lg);
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+  .banner-rascunho .dot {
+    width: 8px; height: 8px;
+    background: var(--blue);
+    border-radius: 50%;
+    flex-shrink: 0;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  .banner-rascunho button {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    padding: 0 0 0 4px;
+    transition: color 0.2s;
+  }
+  .banner-rascunho button:hover { color: var(--text); }
+
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-logo">Patric Martins</div>
+  <div class="header-label">Briefing · Landing Page</div>
+</header>
+
+<div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+<div class="banner-rascunho" id="bannerRascunho">
+  <div class="dot"></div>
+  <span>Rascunho salvo automaticamente</span>
+  <button onclick="limparRascunho()" title="Descartar rascunho">×</button>
+</div>
+
+
+<!-- HERO -->
+<section class="hero">
+  <div class="wrapper">
+    <p class="hero-eyebrow">Briefing Estratégico</p>
+    <h1>Construindo sua<br><em>presença digital</em></h1>
+    <p class="hero-sub">Preencha com atenção. Quanto mais detalhes você compartilhar, mais poderosa será sua landing page.</p>
+    <div class="hero-steps">
+      <span class="active">01 Você</span>
+      
+      <span>02 Empreendimento</span>
+      
+      <span>03 Público</span>
+      
+      <span>04 Conteúdo</span>
+    </div>
+  </div>
+</div></section>
+
+<!-- FORMULÁRIO -->
+<div id="briefingForm">
+<div class="wrapper">
+
+  <!-- ── SEÇÃO 1 · SOBRE VOCÊ ── -->
+  <section class="section" id="sec1"><div class="section-card">
+    <div class="section-header">
+      <div class="section-num">01</div>
+      <div class="section-meta">
+        <h2>Sobre Você</h2>
+        <p>Sua identidade como corretor é o primeiro ponto de confiança do lead.</p>
+      </div>
+    </div>
+
+    <div class="field-group">
+
+      <div class="field-row">
+        <div class="field">
+          <label>Nome completo <span class="req">· obrigatório</span></label>
+          <input type="text" id="nome" placeholder="Patric Martins" required>
+          <div class="field-error" id="err-nome">Informe seu nome completo.</div>
+        </div>
+        <div class="field">
+          <label>CRECI <span class="req">· obrigatório</span></label>
+          <input type="text" id="creci" placeholder="CRECI/SC 00000-F" required>
+          <div class="field-error" id="err-creci">Informe seu número de CRECI.</div>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>WhatsApp <span class="req">· obrigatório</span></label>
+          <input type="tel" id="whatsapp" placeholder="+55 47 9 9999-9999" required>
+          <div class="field-error" id="err-whatsapp">Informe seu WhatsApp com DDD.</div>
+        </div>
+        <div class="field">
+          <label>E-mail de contato <span class="opt">· opcional</span></label>
+          <input type="email" id="email" placeholder="patric@exemplo.com">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Foto de perfil profissional <span class="req">· obrigatório</span></label>
+        <p class="hint">Use uma foto de boa qualidade, preferencialmente em fundo neutro ou com visual profissional.</p>
+        <div class="upload-zone" id="uploadZone">
+          <input type="file" id="fotoFile" accept="image/*" onchange="fotoSelecionada(this)">
+          <div class="upload-icon" id="uploadIcon">📷</div>
+          <div class="upload-label" id="uploadLabel">Clique para selecionar a foto</div>
+          <div class="upload-hint">JPG ou PNG · mínimo 800×800px · até 10MB</div>
+        </div>
+        <div class="field-error" id="err-foto">Envie sua foto de perfil.</div>
+      </div>
+
+      <div class="field">
+        <label>Sua mini biografia <span class="req">· obrigatório</span></label>
+        <p class="hint">Escreva em primeira pessoa. Quem é você, há quanto tempo atua, no que se especializa, por que os clientes confiam em você. (3 a 5 linhas)</p>
+        <textarea id="bio" rows="5" placeholder="Ex: Há mais de 8 anos, ajudo famílias e investidores a conquistar seu espaço em uma das regiões que mais crescem no Brasil. Especializado em lançamentos na planta em Porto Belo e Itapema, já auxiliei dezenas de brasileiros residentes nos EUA a investir com segurança e rentabilidade no litoral catarinense..." required></textarea>
+        <div class="field-error" id="err-bio">Escreva sua bio.</div>
+      </div>
+
+      <div class="field">
+        <label>Credenciais e diferenciais <span class="opt">· opcional</span></label>
+        <p class="hint">Premiações, volume de vendas, especializações, certificações, parcerias com construtoras.</p>
+        <textarea id="credenciais" rows="3" placeholder="Ex: Mais de R$ 80M em VGV transacionados · Parceiro Master da Construtora XYZ · Especialista em vendas para não-residentes"></textarea>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>Instagram <span class="opt">· opcional</span></label>
+          <input type="text" id="instagram" placeholder="@patricmartins">
+        </div>
+        <div class="field">
+          <label>LinkedIn <span class="opt">· opcional</span></label>
+          <input type="url" id="linkedin" placeholder="linkedin.com/in/patricmartins">
+        </div>
+      </div>
+
+    </div>
+  </div></section>
+
+  <!-- ── SEÇÃO 2 · EMPREENDIMENTO ── -->
+  <section class="section" id="sec2"><div class="section-card">
+    <div class="section-header">
+      <div class="section-num">02</div>
+      <div class="section-meta">
+        <h2>O Empreendimento</h2>
+        <p>Dados do lançamento que será o foco principal da sua LP.</p>
+      </div>
+    </div>
+
+    <div class="info-card">
+      <p>Se você trabalha com <strong>mais de um empreendimento</strong>, preencha o principal aqui. Podemos adicionar uma seção de outros projetos na LP.</p>
+    </div>
+
+    <div class="field-group">
+
+      <div class="field">
+        <label>Nome do empreendimento <span class="req">· obrigatório</span></label>
+        <input type="text" id="empreendNome" placeholder="Ex: Residencial Bravura Porto Belo" required>
+        <div class="field-error" id="err-empreendNome">Informe o nome do empreendimento.</div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>Construtora / Incorporadora <span class="req">· obrigatório</span></label>
+          <input type="text" id="construtora" placeholder="Ex: Plaenge, MRV, Cyrela..." required>
+          <div class="field-error" id="err-construtora">Informe a construtora.</div>
+        </div>
+        <div class="field">
+          <label>Cidade / Bairro <span class="req">· obrigatório</span></label>
+          <input type="text" id="endereco" placeholder="Ex: Porto Belo · Centro" required>
+          <div class="field-error" id="err-endereco">Informe a localização.</div>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>Tipologia disponível <span class="req">· obrigatório</span></label>
+          <input type="text" id="tipologia" placeholder="Ex: Studios de 38m² a apartamentos de 3 suítes 120m²" required>
+          <div class="field-error" id="err-tipologia">Informe a tipologia.</div>
+        </div>
+        <div class="field">
+          <label>Total de unidades <span class="opt">· opcional</span></label>
+          <input type="number" id="unidades" placeholder="Ex: 240">
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field range-field">
+          <label>Preço a partir de (R$) <span class="req">· obrigatório</span></label>
+          <div class="range-value" id="precoDisplay">R$ 500.000</div>
+          <input type="range" id="precoRange" min="200000" max="5000000" step="50000" value="500000" oninput="updatePreco(this.value)">
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-dim);margin-top:4px;">
+            <span>R$ 200k</span><span>R$ 5M</span>
+          </div>
+        </div>
+        <div class="field range-field">
+          <label>Preço médio (R$) <span class="opt">· opcional</span></label>
+          <div class="range-value" id="precoMedioDisplay">R$ 900.000</div>
+          <input type="range" id="precoMedioRange" min="200000" max="10000000" step="50000" value="900000" oninput="updatePrecoMedio(this.value)">
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-dim);margin-top:4px;">
+            <span>R$ 200k</span><span>R$ 10M</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>Previsão de entrega <span class="req">· obrigatório</span></label>
+          <input type="text" id="entrega" placeholder="Ex: 4º trimestre de 2027" required>
+          <div class="field-error" id="err-entrega">Informe a previsão de entrega.</div>
+        </div>
+        <div class="field">
+          <label>Estágio da obra <span class="req">· obrigatório</span></label>
+          <select id="estagio" required>
+            <option value="" disabled selected>Selecione</option>
+            <option>Lançamento · pré-venda</option>
+            <option>Obras iniciadas</option>
+            <option>Em construção avançada</option>
+            <option>Pronto para morar</option>
+          </select>
+          <div class="field-error" id="err-estagio">Selecione o estágio.</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Diferenciais do empreendimento <span class="req">· obrigatório</span></label>
+        <p class="hint">O que torna esse projeto especial? Vista mar, lazer completo, home office, proximidade de atrações? Liste os 5 melhores argumentos de venda.</p>
+        <textarea id="diferenciais" rows="5" placeholder="1. Vista permanente para o mar em todas as unidades&#10;2. Área de lazer com piscina borda infinita e spa&#10;3. Estrutura pet-friendly&#10;4. Coworking e sala de reuniões&#10;5. A 300m da Praia de Porto Belo" required></textarea>
+        <div class="field-error" id="err-diferenciais">Liste os diferenciais do empreendimento.</div>
+      </div>
+
+      <div class="field">
+        <label>Condições de pagamento <span class="req">· obrigatório</span></label>
+        <p class="hint">Como funciona o parcelamento? Existe tabela de entrada + parcelas + saldo na entrega? O cliente americano precisa entender exatamente o fluxo financeiro.</p>
+        <textarea id="pagamento" rows="4" placeholder="Ex: 20% de entrada parcelado em até 36x · 80% financiado na entrega · FGTS pode ser utilizado · Permuta aceita" required></textarea>
+        <div class="field-error" id="err-pagamento">Informe as condições de pagamento.</div>
+      </div>
+
+      <div class="field">
+        <label>Itens de lazer e infraestrutura <span class="opt">· opcional</span></label>
+        <p class="hint">Marque tudo que o empreendimento oferece.</p>
+        <div class="checkbox-group">
+          <label class="checkbox-item"><input type="checkbox" value="Piscina"> <span>Piscina</span></label>
+          <label class="checkbox-item"><input type="checkbox" value="Academia"> <span>Academia</span></label>
+          <label class="checkbox-item"><input type="checkbox" value="Spa / Sauna"> <span>Spa / Sauna</span></label>
+          <label class="checkbox-item"><input type="checkbox" value="Salão de festas"> <span>Salão de festas</span></label>
+          <label class="checkbox-item"><input type="checkbox" value="Coworking"> <span>Coworking</span></label>
+          <label class="checkbox-item"><input type="checkbox" value="Espaço gourmet"> <span>Espaço gourmet</span></label>
+          <label class="checkbox-item"><input type="checkbox" value="Quadra esportiva"> <span>Quadra esportiva</span></label>
+          <label class="checkbox-item"><input type="checkbox" value="Playground"> <span>Playground</span></label>
+          <label class="checkbox-item"><input type="checkbox" value="Portaria 24h"> <span>Portaria 24h</span></label>
+          <label class="checkbox-item"><input type="checkbox" value="Pet place"> <span>Pet place</span></label>
+          <label class="checkbox-item"><input type="checkbox" value="Área kids"> <span>Área kids</span></label>
+          <label class="checkbox-item"><input type="checkbox" value="Vista mar"> <span>Vista mar</span></label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Link do book / material de vendas <span class="opt">· opcional</span></label>
+        <input type="url" id="linkBook" placeholder="https://link-do-book.com.br">
+      </div>
+
+      <div class="field">
+        <label>Imagens do empreendimento <span class="opt">· opcional</span></label>
+        <p class="hint">Cole links de imagens (renders, perspectivas, fotos) ou informe de onde podemos obter o material visual.</p>
+        <textarea id="imagensEmpreend" rows="3" placeholder="Ex: https://drive.google.com/... ou 'Enviarei os renders via WhatsApp'"></textarea>
+      </div>
+
+    </div>
+  </div></section>
+
+  <!-- ── SEÇÃO 3 · PÚBLICO-ALVO ── -->
+  <section class="section" id="sec3"><div class="section-card">
+    <div class="section-header">
+      <div class="section-num">03</div>
+      <div class="section-meta">
+        <h2>Público-Alvo</h2>
+        <p>Entender quem compra define toda a linguagem e os argumentos da LP.</p>
+      </div>
+    </div>
+
+    <div class="field-group">
+
+      <div class="field">
+        <label>Perfil principal do comprador <span class="req">· obrigatório</span></label>
+        <p class="hint">Descreva quem é a pessoa que mais compra com você: faixa etária, profissão, estado civil, motivação de compra.</p>
+        <textarea id="perfil" rows="4" placeholder="Ex: Brasileiros entre 35 e 55 anos residindo nos EUA (principalmente FL, MA, NY e CA), profissionais liberais e empreendedores, que buscam investimento seguro no Brasil ou segunda residência para férias e aposentadoria." required></textarea>
+        <div class="field-error" id="err-perfil">Descreva o perfil do seu comprador.</div>
+      </div>
+
+      <div class="field">
+        <label>Estados americanos onde você mais vende <span class="opt">· opcional</span></label>
+        <p class="hint">Isso nos ajuda a personalizar referências geográficas na LP (fusos horários, comunidades brasileiras etc.).</p>
+        <input type="text" id="estados" placeholder="Ex: Flórida, Massachusetts, Connecticut, Califórnia">
+      </div>
+
+      <div class="field">
+        <label>Principal motivação de compra <span class="req">· obrigatório</span></label>
+        <select id="motivacao" required>
+          <option value="" disabled selected>Selecione a principal</option>
+          <option>Investimento e rentabilidade (renda de aluguel)</option>
+          <option>Reserva de valor em moeda forte (dólar)</option>
+          <option>Segunda residência / férias no Brasil</option>
+          <option>Planejamento de retorno ao Brasil</option>
+          <option>Presente para família no Brasil</option>
+          <option>Diversificação de portfólio</option>
+        </select>
+        <div class="field-error" id="err-motivacao">Selecione a motivação.</div>
+      </div>
+
+      <div class="field">
+        <label>Objeções mais comuns <span class="req">· obrigatório</span></label>
+        <p class="hint">Quais são as dúvidas e medos que mais aparecem nas conversas? A LP vai antecipá-los e quebrá-los.</p>
+        <textarea id="objecoes" rows="4" placeholder="Ex: 'Como faço a escritura morando no exterior?' · 'Tenho medo da construtora falir' · 'Posso financiar sem residir no Brasil?' · 'Como recebo a renda de aluguel aqui nos EUA?'" required></textarea>
+        <div class="field-error" id="err-objecoes">Liste as principais objeções.</div>
+      </div>
+
+      <div class="field">
+        <label>Em que idioma prefere a LP? <span class="req">· obrigatório</span></label>
+        <select id="idioma" required>
+          <option value="" disabled selected>Selecione</option>
+          <option>Português (Brasil)</option>
+          <option>Inglês (EUA)</option>
+          <option>Bilíngue · Português + Inglês</option>
+        </select>
+        <div class="field-error" id="err-idioma">Selecione o idioma.</div>
+      </div>
+
+    </div>
+  </div></section>
+
+  <!-- ── SEÇÃO 4 · CONTEÚDO E ESTILO ── -->
+  <section class="section" id="sec4"><div class="section-card">
+    <div class="section-header">
+      <div class="section-num">04</div>
+      <div class="section-meta">
+        <h2>Conteúdo & Estilo</h2>
+        <p>Definições de tom, depoimentos e informações de suporte.</p>
+      </div>
+    </div>
+
+    <div class="field-group">
+
+      <div class="field">
+        <label>Depoimentos de clientes <span class="opt">· opcional</span></label>
+        <p class="hint">Cole até 3 depoimentos reais (nome, estado onde mora, o que disse). São o ativo de conversão mais poderoso da LP.</p>
+        <textarea id="depoimentos" rows="6" placeholder="1. Carlos Mendes · Framingham, MA · 'Comprei meu apartamento com o Patric sem sair de casa. Todo o processo foi rápido, seguro e transparente...'&#10;&#10;2. Ana Paula Souza · Orlando, FL · '...'"></textarea>
+      </div>
+
+      <div class="field">
+        <label>Números e provas sociais <span class="opt">· opcional</span></label>
+        <p class="hint">Quantos imóveis vendidos, anos de experiência, VGV, quantos clientes no exterior etc. Esses dados vão na seção de credibilidade.</p>
+        <textarea id="provasSociais" rows="3" placeholder="Ex: +120 imóveis vendidos · 9 anos de experiência · +R$ 60M em vendas · +80 clientes atendidos fora do Brasil"></textarea>
+      </div>
+
+      <div class="field">
+        <label>Tom de comunicação <span class="req">· obrigatório</span></label>
+        <select id="tom" required>
+          <option value="" disabled selected>Selecione</option>
+          <option>Sofisticado e exclusivo (voltado para alto padrão)</option>
+          <option>Confiável e consultivo (parceiro, não vendedor)</option>
+          <option>Direto e objetivo (foco em números e rentabilidade)</option>
+          <option>Caloroso e próximo (como conversar com um amigo de confiança)</option>
+        </select>
+        <div class="field-error" id="err-tom">Selecione o tom.</div>
+      </div>
+
+      <div class="field">
+        <label>Estética visual preferida <span class="req">· obrigatório</span></label>
+        <select id="estetica" required>
+          <option value="" disabled selected>Selecione</option>
+          <option>Dark & luxo (fundo escuro, dourado, tipografia elegante)</option>
+          <option>Clean & moderno (branco, preto, muito espaço)</option>
+          <option>Vibrante & contemporâneo (cores fortes, dinâmico)</option>
+          <option>Neutro & corporativo (cinzas, azul, sem excessos)</option>
+        </select>
+        <div class="field-error" id="err-estetica">Selecione a estética.</div>
+      </div>
+
+      <div class="field">
+        <label>Referências visuais <span class="opt">· opcional</span></label>
+        <p class="hint">Links de LPs, sites ou marcas cujo visual você admira ou que sirvam de referência.</p>
+        <textarea id="referencias" rows="3" placeholder="Ex: https://exemplo.com.br · 'Gosto do estilo da Cyrela Premium' · 'Me inspiro no site de luxo X'"></textarea>
+      </div>
+
+      <div class="divider">
+        <div class="divider-line"></div>
+        <div class="divider-label">Informações para o Processo de Compra</div>
+        <div class="divider-line"></div>
+      </div>
+
+      <div class="field">
+        <label>Como funciona a compra sendo não-residente? <span class="req">· obrigatório</span></label>
+        <p class="hint">Explique o passo a passo do seu processo. Esse conteúdo vai em uma seção dedicada a quebrar a barreira do "como compra de longe".</p>
+        <textarea id="processo" rows="5" placeholder="Ex: 1. Escolha online com apresentação por videochamada &#10;2. Proposta e reserva via e-mail &#10;3. Documentação enviada digitalmente com firma consularizada &#10;4. Assinatura eletrônica do contrato &#10;5. Acompanhamento mensal da obra por fotos e vídeos &#10;6. Escritura e entrega das chaves com procuração" required></textarea>
+        <div class="field-error" id="err-processo">Descreva o processo de compra para não-residentes.</div>
+      </div>
+
+      <div class="field">
+        <label>FAQ — perguntas frequentes <span class="opt">· opcional</span></label>
+        <p class="hint">Liste as perguntas que você responde repetidamente. Vão num accordion na LP.</p>
+        <textarea id="faq" rows="6" placeholder="P: Preciso de CPF para comprar?&#10;R: Sim, e posso te ajudar a regularizá-lo remotamente.&#10;&#10;P: Posso financiar sem ter conta em banco no Brasil?&#10;R: ..."></textarea>
+      </div>
+
+      <div class="field">
+        <label>Observações adicionais <span class="opt">· opcional</span></label>
+        <p class="hint">Algo que não foi contemplado acima e que é importante para sua LP ou para quem vai construí-la.</p>
+        <textarea id="obs" rows="3" placeholder="Qualquer informação extra que queira compartilhar..."></textarea>
+      </div>
+
+    </div>
+  </div></section>
+
+  <!-- SUBMIT -->
+  <div class="submit-section" id="submitArea">
+    <h2>Tudo preenchido?</h2>
+    <p>Revise as informações acima e clique em enviar.<br>Você receberá confirmação via WhatsApp em até 24h.</p>
+    <button class="btn-submit" id="btnEnviar" onclick="enviarBriefing()">
+      <span id="btnSpinner" style="display:none; width:16px; height:16px; border:2px solid rgba(255,255,255,0.4); border-top-color:#fff; border-radius:50%; animation:spin 0.7s linear infinite;"></span>
+      <span id="btnTexto">Enviar briefing</span>
+      <svg id="btnIcon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+  </div>
+
+</div><!-- /wrapper -->
+</div><!-- /briefingForm -->
+
+<!-- SUCCESS SCREEN -->
+<div class="success-screen" id="successScreen">
+  <div class="success-icon">✓</div>
+  <h2>Briefing enviado.</h2>
+  <p>Obrigado por compartilhar todas essas informações, <span id="nomeConfirm"></span>.<br>Nossa equipe vai analisar tudo com cuidado e entrar em contato via WhatsApp em até 24 horas úteis.</p>
+  <a class="btn-whatsapp" id="linkWhatsapp" href="#" target="_blank">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M20.52 3.449C18.24 1.245 15.24 0 12.045 0 5.463 0 .104 5.334.101 11.893c0 2.096.549 4.14 1.595 5.945L0 24l6.335-1.652c1.746.943 3.71 1.444 5.71 1.447h.006c6.585 0 11.946-5.336 11.949-11.896.002-3.176-1.24-6.165-3.48-8.45zM12.045 21.785h-.005c-1.775 0-3.513-.474-5.031-1.37l-.361-.214-3.741.977.998-3.645-.235-.375a9.855 9.855 0 0 1-1.517-5.26c.002-5.45 4.437-9.884 9.893-9.884 2.641 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.892 6.993c-.003 5.45-4.438 9.88-9.881 9.88zm5.425-7.403c-.298-.149-1.765-.868-2.037-.968-.273-.099-.471-.149-.67.149-.198.298-.768.967-.941 1.167-.173.199-.347.223-.644.074-.298-.149-1.255-.462-2.39-1.47-.883-.785-1.48-1.754-1.653-2.051-.173-.298-.018-.459.13-.607.133-.133.298-.347.447-.52.149-.174.199-.298.298-.497.1-.198.05-.372-.025-.52-.074-.148-.67-1.612-.916-2.207-.242-.579-.487-.5-.67-.51-.173-.008-.372-.01-.571-.01-.198 0-.52.074-.793.372-.273.298-1.042 1.017-1.042 2.48 0 1.463 1.067 2.877 1.216 3.075.148.199 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/></svg>
+    Falar com a equipe
+  </a>
+</div>
+
+<footer>
+  <p>Desenvolvido com <span>♦</span> por 5essência · Todos os dados são confidenciais</p>
+</footer>
+
+<script>
+  // ── CONFIG ──
+  const APPS_SCRIPT_URL = 'COLE_A_URL_DO_APPS_SCRIPT_AQUI';
+  const FOLDER_ID = '1wJ2vN_LnI4Q_R5lnx_qMaDrkfDMBAc3U';
+  const DRAFT_KEY = 'briefing_patric_draft';
+
+  // ── AUTOSAVE: IDs de todos os campos de texto ──
+  const FIELD_IDS = [
+    'nome','creci','whatsapp','email','bio','credenciais','instagram','linkedin',
+    'empreendNome','construtora','endereco','tipologia','unidades','entrega',
+    'diferenciais','pagamento','linkBook','imagensEmpreend',
+    'perfil','estados','objecoes',
+    'depoimentos','provasSociais','referencias','processo','faq','obs'
+  ];
+  const SELECT_IDS = ['estagio','motivacao','idioma','tom','estetica'];
+
+  function salvarRascunho() {
+    const draft = {};
+    FIELD_IDS.forEach(function(id) {
+      const el = document.getElementById(id);
+      if (el) draft[id] = el.value;
+    });
+    SELECT_IDS.forEach(function(id) {
+      const el = document.getElementById(id);
+      if (el) draft[id] = el.value;
+    });
+    draft['precoRange'] = document.getElementById('precoRange').value;
+    draft['precoMedioRange'] = document.getElementById('precoMedioRange').value;
+    const checks = [];
+    document.querySelectorAll('.checkbox-group input[type="checkbox"]:checked').forEach(function(cb) {
+      checks.push(cb.value);
+    });
+    draft['checkboxes'] = checks;
+    try { localStorage.setItem(DRAFT_KEY, JSON.stringify(draft)); } catch(e) {}
+  }
+
+  function restaurarRascunho() {
+    let draft;
+    try { draft = JSON.parse(localStorage.getItem(DRAFT_KEY)); } catch(e) {}
+    if (!draft) return;
+    FIELD_IDS.forEach(function(id) {
+      const el = document.getElementById(id);
+      if (el && draft[id]) el.value = draft[id];
+    });
+    SELECT_IDS.forEach(function(id) {
+      const el = document.getElementById(id);
+      if (el && draft[id]) el.value = draft[id];
+    });
+    if (draft['precoRange']) {
+      const r = document.getElementById('precoRange');
+      r.value = draft['precoRange'];
+      updatePreco(r.value);
+    }
+    if (draft['precoMedioRange']) {
+      const r = document.getElementById('precoMedioRange');
+      r.value = draft['precoMedioRange'];
+      updatePrecoMedio(r.value);
+    }
+    if (draft['checkboxes'] && draft['checkboxes'].length) {
+      document.querySelectorAll('.checkbox-group input[type="checkbox"]').forEach(function(cb) {
+        if (draft['checkboxes'].includes(cb.value)) cb.checked = true;
+      });
+    }
+    if (Object.keys(draft).some(function(k) { return draft[k] && k !== 'checkboxes' && k !== 'precoRange' && k !== 'precoMedioRange'; })) {
+      mostrarBannerRascunho();
+    }
+  }
+
+  function mostrarBannerRascunho() {
+    const b = document.getElementById('bannerRascunho');
+    if (b) b.style.display = 'flex';
+  }
+
+  function limparRascunho() {
+    try { localStorage.removeItem(DRAFT_KEY); } catch(e) {}
+    const b = document.getElementById('bannerRascunho');
+    if (b) b.style.display = 'none';
+  }
+
+  // Autosave a cada mudança e a cada 5s
+  function ativarAutosave() {
+    document.querySelectorAll('input, textarea, select').forEach(function(el) {
+      el.addEventListener('input', salvarRascunho);
+      el.addEventListener('change', salvarRascunho);
+    });
+    setInterval(salvarRascunho, 5000);
+  }
+
+  // ── PROGRESS BAR ──
+  function updateProgress() {
+    const total = document.documentElement.scrollHeight - window.innerHeight;
+    const pct = Math.round((window.scrollY / total) * 100);
+    document.getElementById('progressFill').style.width = pct + '%';
+  }
+  window.addEventListener('scroll', updateProgress);
+
+  // ── FOTO SELECIONADA (sem preview) ──
+  function fotoSelecionada(input) {
+    const label = document.getElementById('uploadLabel');
+    const icon = document.getElementById('uploadIcon');
+    if (input.files && input.files[0]) {
+      label.textContent = '✓ ' + input.files[0].name;
+      label.style.color = 'var(--blue)';
+      icon.textContent = '✅';
+      document.getElementById('err-foto').classList.remove('show');
+    } else {
+      label.textContent = 'Clique para selecionar a foto';
+      label.style.color = '';
+      icon.textContent = '📷';
+    }
+  }
+
+  // ── RANGE SLIDERS ──
+  function formatBRL(val) {
+    return 'R$ ' + Number(val).toLocaleString('pt-BR');
+  }
+  function updatePreco(val) {
+    document.getElementById('precoDisplay').textContent = formatBRL(val);
+  }
+  function updatePrecoMedio(val) {
+    document.getElementById('precoMedioDisplay').textContent = formatBRL(val);
+  }
+
+  // ── VALIDAÇÃO ──
+  const requiredFields = [
+    { id: 'nome', err: 'err-nome' },
+    { id: 'creci', err: 'err-creci' },
+    { id: 'whatsapp', err: 'err-whatsapp' },
+    { id: 'bio', err: 'err-bio' },
+    { id: 'empreendNome', err: 'err-empreendNome' },
+    { id: 'construtora', err: 'err-construtora' },
+    { id: 'endereco', err: 'err-endereco' },
+    { id: 'tipologia', err: 'err-tipologia' },
+    { id: 'entrega', err: 'err-entrega' },
+    { id: 'estagio', err: 'err-estagio' },
+    { id: 'diferenciais', err: 'err-diferenciais' },
+    { id: 'pagamento', err: 'err-pagamento' },
+    { id: 'perfil', err: 'err-perfil' },
+    { id: 'motivacao', err: 'err-motivacao' },
+    { id: 'objecoes', err: 'err-objecoes' },
+    { id: 'idioma', err: 'err-idioma' },
+    { id: 'tom', err: 'err-tom' },
+    { id: 'estetica', err: 'err-estetica' },
+    { id: 'processo', err: 'err-processo' },
+  ];
+
+  function validar() {
+    let ok = true;
+    requiredFields.forEach(function(f) {
+      const el = document.getElementById(f.id);
+      const errEl = document.getElementById(f.err);
+      if (!el || !el.value.trim()) {
+        if (el) el.classList.add('error');
+        if (errEl) errEl.classList.add('show');
+        ok = false;
+      } else {
+        if (el) el.classList.remove('error');
+        if (errEl) errEl.classList.remove('show');
+      }
+    });
+    const fotoFile = document.getElementById('fotoFile');
+    const errFoto = document.getElementById('err-foto');
+    if (!fotoFile.files || fotoFile.files.length === 0) {
+      errFoto.classList.add('show');
+      ok = false;
+    } else {
+      errFoto.classList.remove('show');
+    }
+    return ok;
+  }
+
+  // ── COLETAR DADOS ──
+  function coletarDados() {
+    const checkboxes = [];
+    document.querySelectorAll('.checkbox-group input[type="checkbox"]:checked').forEach(function(cb) {
+      checkboxes.push(cb.value);
+    });
+    return {
+      corretor: {
+        nome: document.getElementById('nome').value,
+        creci: document.getElementById('creci').value,
+        whatsapp: document.getElementById('whatsapp').value,
+        email: document.getElementById('email').value,
+        bio: document.getElementById('bio').value,
+        credenciais: document.getElementById('credenciais').value,
+        instagram: document.getElementById('instagram').value,
+        linkedin: document.getElementById('linkedin').value,
+      },
+      empreendimento: {
+        nome: document.getElementById('empreendNome').value,
+        construtora: document.getElementById('construtora').value,
+        endereco: document.getElementById('endereco').value,
+        tipologia: document.getElementById('tipologia').value,
+        unidades: document.getElementById('unidades').value,
+        precoAPartirDe: document.getElementById('precoRange').value,
+        precoMedio: document.getElementById('precoMedioRange').value,
+        entrega: document.getElementById('entrega').value,
+        estagio: document.getElementById('estagio').value,
+        diferenciais: document.getElementById('diferenciais').value,
+        pagamento: document.getElementById('pagamento').value,
+        itensLazer: checkboxes,
+        linkBook: document.getElementById('linkBook').value,
+        imagensEmpreend: document.getElementById('imagensEmpreend').value,
+      },
+      publico: {
+        perfil: document.getElementById('perfil').value,
+        estados: document.getElementById('estados').value,
+        motivacao: document.getElementById('motivacao').value,
+        objecoes: document.getElementById('objecoes').value,
+        idioma: document.getElementById('idioma').value,
+      },
+      conteudo: {
+        depoimentos: document.getElementById('depoimentos').value,
+        provasSociais: document.getElementById('provasSociais').value,
+        tom: document.getElementById('tom').value,
+        estetica: document.getElementById('estetica').value,
+        referencias: document.getElementById('referencias').value,
+        processo: document.getElementById('processo').value,
+        faq: document.getElementById('faq').value,
+        obs: document.getElementById('obs').value,
+      }
+    };
+  }
+
+  // ── MONTAR MENSAGEM WHATSAPP ──
+  function montarMensagem(dados) {
+    let m = '🏢 *BRIEFING — LANDING PAGE*\n\n';
+    m += '*CORRETOR*\n';
+    m += 'Nome: ' + dados.corretor.nome + '\n';
+    m += 'CRECI: ' + dados.corretor.creci + '\n';
+    m += 'WhatsApp: ' + dados.corretor.whatsapp + '\n';
+    m += 'Email: ' + (dados.corretor.email || '—') + '\n';
+    m += 'Bio: ' + dados.corretor.bio + '\n';
+    m += 'Credenciais: ' + (dados.corretor.credenciais || '—') + '\n\n';
+    m += '*EMPREENDIMENTO*\n';
+    m += 'Nome: ' + dados.empreendimento.nome + '\n';
+    m += 'Construtora: ' + dados.empreendimento.construtora + '\n';
+    m += 'Local: ' + dados.empreendimento.endereco + '\n';
+    m += 'Tipologia: ' + dados.empreendimento.tipologia + '\n';
+    m += 'Preço a partir de: R$ ' + Number(dados.empreendimento.precoAPartirDe).toLocaleString('pt-BR') + '\n';
+    m += 'Entrega: ' + dados.empreendimento.entrega + '\n';
+    m += 'Estágio: ' + dados.empreendimento.estagio + '\n';
+    m += 'Diferenciais: ' + dados.empreendimento.diferenciais + '\n';
+    m += 'Pagamento: ' + dados.empreendimento.pagamento + '\n';
+    m += 'Lazer: ' + (dados.empreendimento.itensLazer.join(', ') || '—') + '\n\n';
+    m += '*PÚBLICO*\n';
+    m += 'Perfil: ' + dados.publico.perfil + '\n';
+    m += 'Estados EUA: ' + (dados.publico.estados || '—') + '\n';
+    m += 'Motivação: ' + dados.publico.motivacao + '\n';
+    m += 'Objeções: ' + dados.publico.objecoes + '\n';
+    m += 'Idioma LP: ' + dados.publico.idioma + '\n\n';
+    m += '*CONTEÚDO E ESTILO*\n';
+    m += 'Tom: ' + dados.conteudo.tom + '\n';
+    m += 'Estética: ' + dados.conteudo.estetica + '\n';
+    m += 'Processo de compra: ' + dados.conteudo.processo + '\n';
+    m += 'Depoimentos: ' + (dados.conteudo.depoimentos || '—') + '\n';
+    m += 'Provas sociais: ' + (dados.conteudo.provasSociais || '—') + '\n';
+    m += 'FAQ: ' + (dados.conteudo.faq || '—') + '\n';
+    m += 'Obs: ' + (dados.conteudo.obs || '—') + '\n';
+    return m;
+  }
+
+  // ── FEEDBACK NO BOTÃO ──
+  function setBtnState(state) {
+    const btn = document.getElementById('btnEnviar');
+    const btnText = document.getElementById('btnTexto');
+    const btnIcon = document.getElementById('btnIcon');
+    const btnSpinner = document.getElementById('btnSpinner');
+    if (state === 'loading') {
+      btn.disabled = true;
+      btnText.textContent = 'Enviando foto para o Drive...';
+      btnSpinner.style.display = 'inline-block';
+      btnIcon.style.display = 'none';
+    } else if (state === 'wpp') {
+      btnText.textContent = 'Abrindo WhatsApp...';
+    } else if (state === 'done') {
+      btn.disabled = false;
+      btnText.textContent = 'Enviar briefing';
+      btnSpinner.style.display = 'none';
+      btnIcon.style.display = 'inline-block';
+      btn.style.background = '';
+    } else if (state === 'error') {
+      btn.disabled = false;
+      btnText.textContent = 'Tentar novamente';
+      btnSpinner.style.display = 'none';
+      btnIcon.style.display = 'inline-block';
+      btn.style.background = '#EF4444';
+    }
+  }
+
+  // ── UPLOAD PARA DRIVE ──
+  async function uploadParaDrive(file, nomeCorretor) {
+    return new Promise(function(resolve, reject) {
+      const reader = new FileReader();
+      reader.onload = async function(e) {
+        const base64 = e.target.result.split(',')[1];
+        const payload = {
+          folderId: FOLDER_ID,
+          fileName: nomeCorretor.replace(/\s+/g, '_') + '_' + file.name,
+          mimeType: file.type,
+          data: base64
+        };
+        try {
+          const resp = await fetch(APPS_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+          const json = await resp.json();
+          if (json.url) resolve(json.url);
+          else reject(new Error(json.error || 'Erro no upload'));
+        } catch(err) { reject(err); }
+      };
+      reader.onerror = function() { reject(new Error('Erro ao ler arquivo')); };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // ── ENVIAR ──
+  async function enviarBriefing() {
+    if (!validar()) {
+      const firstError = document.querySelector('.error, .field-error.show');
+      if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+    const dados = coletarDados();
+    const nome = dados.corretor.nome.split(' ')[0];
+    let driveUrl = '';
+    const fotoFile = document.getElementById('fotoFile').files[0];
+    const scriptConfigurado = APPS_SCRIPT_URL && APPS_SCRIPT_URL !== 'COLE_A_URL_DO_APPS_SCRIPT_AQUI';
+    if (scriptConfigurado && fotoFile) {
+      setBtnState('loading');
+      try {
+        driveUrl = await uploadParaDrive(fotoFile, dados.corretor.nome);
+      } catch(err) {
+        console.warn('Upload Drive falhou:', err);
+        driveUrl = '(upload falhou — enviar manualmente)';
+      }
+    }
+    setBtnState('wpp');
+    let mensagem = montarMensagem(dados);
+    if (driveUrl) mensagem += '\n📎 *Foto no Drive:* ' + driveUrl;
+    const encoded = encodeURIComponent(mensagem);
+    const wppLink = 'https://wa.me/5547999999999?text=' + encoded;
+    document.getElementById('nomeConfirm').textContent = nome;
+    document.getElementById('linkWhatsapp').href = wppLink;
+    limparRascunho();
+    setBtnState('done');
+    document.getElementById('briefingForm').style.display = 'none';
+    document.getElementById('successScreen').style.display = 'block';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(function() { window.open(wppLink, '_blank'); }, 300);
+  }
+
+  // ── INIT ──
+  window.addEventListener('DOMContentLoaded', function() {
+    restaurarRascunho();
+    ativarAutosave();
+  });
+</script>
+</body>
+</html>

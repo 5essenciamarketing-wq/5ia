@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRM — Consultório Dr. Gibran Chedid</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0b0a08;
+    --panel:#151310;
+    --panel-alt:#1c1913;
+    --gold:#c6a664;
+    --gold-dim:#8c7a52;
+    --gold-glow:rgba(198,166,100,.14);
+    --bordeaux:#7a2e38;
+    --bordeaux-soft:rgba(122,46,56,.18);
+    --sage:#89946f;
+    --sage-soft:rgba(137,148,111,.16);
+    --text:#f3ede0;
+    --text-muted:#948a76;
+    --border:rgba(198,166,100,.14);
+    --border-strong:rgba(198,166,100,.28);
+    --radius:2px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+  body::before{
+    content:'';
+    position:fixed; inset:0;
+    background:
+      radial-gradient(ellipse 900px 500px at 15% -10%, var(--gold-glow), transparent 60%),
+      radial-gradient(ellipse 700px 500px at 100% 10%, rgba(122,46,56,.08), transparent 60%);
+    pointer-events:none;
+    z-index:0;
+  }
+  .app{position:relative;z-index:1;}
+
+  /* ---------- HEADER ---------- */
+  header{
+    padding:28px 40px 20px;
+    display:flex; justify-content:space-between; align-items:flex-end;
+    border-bottom:1px solid var(--border);
+  }
+  .brand-eyebrow{
+    font-size:11px; letter-spacing:.18em; text-transform:uppercase;
+    color:var(--gold-dim); margin-bottom:6px;
+  }
+  h1{
+    font-family:'Cormorant Garamond',serif;
+    font-weight:500;
+    font-size:32px;
+    letter-spacing:.01em;
+    color:var(--text);
+  }
+  h1 em{color:var(--gold); font-style:normal;}
+  .header-actions{display:flex; gap:12px; align-items:center;}
+  .icon-btn{
+    width:40px;height:40px;
+    border:1px solid var(--border-strong);
+    background:transparent;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    border-radius:50%;
+    color:var(--gold);
+    position:relative;
+    transition:border-color .2s, background .2s;
+  }
+  .icon-btn:hover{background:var(--gold-glow); border-color:var(--gold);}
+  .badge{
+    position:absolute; top:-4px; right:-4px;
+    background:var(--bordeaux); color:#fff;
+    font-size:10px; font-weight:600;
+    min-width:16px; height:16px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    padding:0 3px;
+  }
+  .btn-primary{
+    background:var(--gold); color:#141210;
+    border:none; padding:11px 22px;
+    font-family:'Inter',sans-serif; font-weight:600; font-size:13px;
+    letter-spacing:.02em;
+    cursor:pointer; border-radius:1px;
+    display:flex; align-items:center; gap:8px;
+    transition:transform .15s, box-shadow .15s;
+  }
+  .btn-primary:hover{transform:translateY(-1px); box-shadow:0 6px 18px rgba(198,166,100,.25);}
+
+  /* ---------- JOURNEY LINE ---------- */
+  .journey{
+    padding:22px 40px 0;
+    display:flex; align-items:center; gap:0;
+    overflow-x:auto;
+  }
+  .journey-step{
+    display:flex; flex-direction:column; align-items:center;
+    min-width:150px; position:relative; flex-shrink:0;
+  }
+  .journey-step:not(:last-child)::after{
+    content:'';
+    position:absolute; top:5px; left:calc(50% + 14px); right:calc(-50% + 14px);
+    height:1px; background:var(--border-strong);
+  }
+  .journey-dot{
+    width:10px;height:10px;border-radius:50%;
+    background:var(--panel-alt); border:1px solid var(--border-strong);
+    margin-bottom:10px; z-index:1;
+  }
+  .journey-step.active .journey-dot{background:var(--gold); border-color:var(--gold);}
+  .journey-label{
+    font-size:11px; text-transform:uppercase; letter-spacing:.08em;
+    color:var(--text-muted); text-align:center;
+  }
+  .journey-count{
+    font-family:'Cormorant Garamond',serif; font-size:22px; color:var(--gold);
+    margin-top:2px;
+  }
+
+  /* ---------- BOARD ---------- */
+  .board{
+    display:flex; gap:1px;
+    padding:24px 40px 60px;
+    overflow-x:auto;
+    background:var(--border);
+  }
+  .column{
+    background:var(--bg);
+    min-width:280px; max-width:280px;
+    display:flex; flex-direction:column;
+  }
+  .column-head{
+    padding:14px 16px 12px;
+    border-bottom:1px solid var(--border);
+    display:flex; justify-content:space-between; align-items:baseline;
+  }
+  .column-title{
+    font-size:11px; text-transform:uppercase; letter-spacing:.1em;
+    color:var(--text-muted); font-weight:600;
+  }
+  .column-count{color:var(--gold-dim); font-size:11px;}
+  .column-body{
+    padding:12px; display:flex; flex-direction:column; gap:10px;
+    min-height:120px;
+    flex:1;
+  }
+  .column-body.drag-over{background:var(--gold-glow);}
+
+  .card{
+    background:var(--panel);
+    border:1px solid var(--border);
+    padding:14px 16px;
+    cursor:grab;
+    transition:border-color .15s, transform .1s;
+  }
+  .card:hover{border-color:var(--border-strong);}
+  .card.dragging{opacity:.4;}
+  .card-name{
+    font-family:'Cormorant Garamond',serif;
+    font-size:19px; font-weight:600;
+    color:var(--text); margin-bottom:6px;
+  }
+  .card-meta{
+    display:flex; flex-wrap:wrap; gap:6px;
+    font-size:11px; color:var(--text-muted); margin-bottom:8px;
+  }
+  .chip{
+    background:var(--panel-alt); border:1px solid var(--border);
+    padding:2px 8px; border-radius:20px; font-size:10.5px;
+    color:var(--gold-dim);
+  }
+  .card-footer{
+    display:flex; justify-content:space-between; align-items:center;
+    font-size:11px; color:var(--text-muted);
+    padding-top:8px; border-top:1px solid var(--border);
+  }
+  .card-value{color:var(--sage); font-weight:600;}
+  .card-stale{color:var(--bordeaux); font-weight:600;}
+  .card-task-btn{
+    background:none; border:none; color:var(--gold-dim);
+    cursor:pointer; font-size:14px; padding:2px 4px;
+  }
+  .card-task-btn:hover{color:var(--gold);}
+  .card-wa-btn{
+    background:none; border:none; color:var(--sage);
+    cursor:pointer; padding:2px 4px; display:flex; align-items:center;
+  }
+  .card-wa-btn:hover{color:#a3b48c;}
+  .card-actions{display:flex; align-items:center; gap:4px;}
+  .empty-col{
+    color:var(--text-muted); font-size:12px; text-align:center;
+    padding:20px 0; font-style:italic; opacity:.6;
+  }
+
+  /* ---------- SIDE PANEL (TAREFAS) ---------- */
+  .overlay{
+    position:fixed; inset:0; background:rgba(0,0,0,.55);
+    z-index:20; display:none;
+  }
+  .overlay.open{display:block;}
+  .panel{
+    position:fixed; top:0; right:-420px; width:400px; height:100%;
+    background:var(--panel); border-left:1px solid var(--border-strong);
+    z-index:21; transition:right .3s ease;
+    display:flex; flex-direction:column;
+  }
+  .panel.open{right:0;}
+  .panel-head{
+    padding:24px 24px 16px; border-bottom:1px solid var(--border);
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  .panel-head h2{font-family:'Cormorant Garamond',serif; font-size:24px; font-weight:600;}
+  .panel-close{background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer;}
+  .panel-body{padding:16px 24px; overflow-y:auto; flex:1;}
+  .task-item{
+    padding:14px 0; border-bottom:1px solid var(--border);
+    display:flex; gap:12px; align-items:flex-start;
+  }
+  .task-check{
+    width:18px;height:18px; border:1px solid var(--border-strong);
+    border-radius:50%; flex-shrink:0; cursor:pointer; margin-top:2px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .task-check:hover{border-color:var(--gold);}
+  .task-content{flex:1;}
+  .task-title{font-size:13.5px; font-weight:500; margin-bottom:3px;}
+  .task-lead{font-size:11.5px; color:var(--gold-dim); margin-bottom:3px;}
+  .task-due{font-size:11px; color:var(--text-muted);}
+  .task-due.overdue{color:var(--bordeaux); font-weight:600;}
+  .task-del{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;opacity:.5;}
+  .task-del:hover{opacity:1;color:var(--bordeaux);}
+  .task-wa-btn{background:none;border:none;color:var(--sage);cursor:pointer;padding:2px 4px;display:flex;align-items:center;}
+  .task-wa-btn:hover{color:#a3b48c;}
+  .task-actions{display:flex;align-items:center;gap:2px;}
+  .empty-state{
+    text-align:center; padding:60px 20px; color:var(--text-muted);
+  }
+  .empty-state svg{margin-bottom:14px; opacity:.4;}
+
+  /* ---------- MODAL ---------- */
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(0,0,0,.65);
+    z-index:30; display:none; align-items:center; justify-content:center;
+    padding:20px;
+  }
+  .modal-overlay.open{display:flex;}
+  .modal{
+    background:var(--panel); border:1px solid var(--border-strong);
+    width:100%; max-width:440px; padding:28px;
+    max-height:90vh; overflow-y:auto;
+  }
+  .modal h2{font-family:'Cormorant Garamond',serif; font-size:24px; margin-bottom:20px; font-weight:600;}
+  .field{margin-bottom:14px;}
+  .field label{
+    display:block; font-size:11px; text-transform:uppercase; letter-spacing:.06em;
+    color:var(--text-muted); margin-bottom:6px;
+  }
+  .field input, .field select, .field textarea{
+    width:100%; background:var(--panel-alt); border:1px solid var(--border);
+    color:var(--text); padding:10px 12px; font-family:'Inter',sans-serif; font-size:13.5px;
+    border-radius:1px;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus{
+    outline:none; border-color:var(--gold);
+  }
+  .field textarea{resize:vertical; min-height:60px;}
+  .field-row{display:flex; gap:12px;}
+  .field-row .field{flex:1;}
+  .modal-actions{display:flex; gap:10px; margin-top:20px;}
+  .btn-ghost{
+    background:transparent; border:1px solid var(--border-strong);
+    color:var(--text-muted); padding:10px 18px; cursor:pointer;
+    font-family:'Inter',sans-serif; font-size:13px;
+  }
+  .btn-ghost:hover{color:var(--text); border-color:var(--gold-dim);}
+
+  .toast{
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--panel-alt); border:1px solid var(--gold); color:var(--text);
+    padding:12px 22px; font-size:13px; border-radius:1px;
+    opacity:0; pointer-events:none; transition:opacity .25s, transform .25s;
+    z-index:40;
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+  /* ---------- RELATÓRIO DE PASSAGEM ---------- */
+  .report-transition{
+    font-size:12.5px; color:var(--text-muted);
+    background:var(--panel-alt); border:1px solid var(--border);
+    padding:10px 12px;
+  }
+  .report-transition strong{color:var(--gold);}
+  .reason-chips{display:flex; flex-wrap:wrap; gap:6px;}
+  .reason-chip{
+    background:var(--panel-alt); border:1px solid var(--border-strong);
+    color:var(--text-muted); font-size:11.5px;
+    padding:6px 12px; border-radius:20px; cursor:pointer;
+    transition:border-color .15s, color .15s;
+  }
+  .reason-chip:hover{border-color:var(--gold); color:var(--gold);}
+  .conversa-ok{
+    display:flex; align-items:center; gap:8px;
+    color:var(--sage); font-size:12.5px; margin-top:10px;
+    background:var(--sage-soft); border:1px solid var(--sage); padding:9px 12px;
+  }
+  .conversa-ok button{
+    margin-left:auto; background:none; border:none; color:var(--text-muted);
+    text-decoration:underline; cursor:pointer; font-size:11.5px;
+  }
+  .conversa-ok button:hover{color:var(--text);}
+
+  .loading{
+    position:fixed; inset:0; background:var(--bg); z-index:50;
+    display:flex; align-items:center; justify-content:center; flex-direction:column; gap:14px;
+  }
+  .loading.hidden{display:none;}
+  .loading-dot{
+    width:6px;height:6px;background:var(--gold);border-radius:50%;
+    animation:pulse 1.2s ease-in-out infinite;
+  }
+  @keyframes pulse{0%,100%{opacity:.3;}50%{opacity:1;}}
+  .loading span{font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--text-muted);letter-spacing:.03em;}
+
+  /* ---------- LOGIN ---------- */
+  .login-screen{
+    position:fixed; inset:0; z-index:45;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--bg);
+  }
+  .login-screen::before{
+    content:'';
+    position:fixed; inset:0;
+    background:radial-gradient(ellipse 900px 500px at 50% 0%, var(--gold-glow), transparent 60%);
+    pointer-events:none;
+  }
+  .login-screen.hidden{display:none;}
+  .login-box{
+    position:relative; z-index:1;
+    width:100%; max-width:360px;
+    background:var(--panel); border:1px solid var(--border-strong);
+    padding:36px 32px;
+  }
+  .login-error{
+    color:var(--bordeaux); font-size:12.5px; min-height:16px; margin-top:4px;
+  }
+
+  ::-webkit-scrollbar{height:6px;width:6px;}
+  ::-webkit-scrollbar-thumb{background:var(--border-strong);}
+  ::-webkit-scrollbar-track{background:transparent;}
+
+  @media (max-width:720px){
+    header{padding:20px 20px 16px; flex-direction:column; align-items:flex-start; gap:14px;}
+    .journey{padding:18px 20px 0;}
+    .board{padding:18px 20px 40px;}
+    .panel{width:100%; right:-100%;}
+  }
+</style>
+</head>
+<body>
+
+<div class="loading" id="loading">
+  <div style="display:flex;gap:6px;"><div class="loading-dot"></div><div class="loading-dot" style="animation-delay:.15s"></div><div class="loading-dot" style="animation-delay:.3s"></div></div>
+  <span>Carregando consultório…</span>
+</div>
+
+<div class="login-screen" id="loginScreen">
+  <form class="login-box" id="loginForm">
+    <div class="brand-eyebrow" style="text-align:center;">Dr. Gibran Chedid · Cirurgia Plástica Facial</div>
+    <h1 style="text-align:center;margin-bottom:26px;">Acesso ao <em>CRM</em></h1>
+    <div class="field">
+      <label>Usuário</label>
+      <input type="text" id="l_usuario" autocomplete="username" required>
+    </div>
+    <div class="field">
+      <label>Senha</label>
+      <input type="password" id="l_senha" autocomplete="current-password" required>
+    </div>
+    <div class="login-error" id="loginError"></div>
+    <button type="submit" class="btn-primary" style="width:100%;justify-content:center;margin-top:6px;">Entrar</button>
+  </form>
+</div>
+
+<div class="app">
+  <header>
+    <div>
+      <div class="brand-eyebrow">Dr. Gibran Chedid · Cirurgia Plástica Facial</div>
+      <h1>Jornada do <em>Paciente</em></h1>
+    </div>
+    <div class="header-actions">
+      <span id="userLabel" style="font-size:12px;color:var(--text-muted);margin-right:4px;"></span>
+      <button class="icon-btn" id="btnLogout" title="Sair">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+      </button>
+      <button class="icon-btn" id="btnTasks" title="Follow-ups">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        <span class="badge" id="taskBadge" style="display:none;">0</span>
+      </button>
+      <button class="btn-primary" id="btnNewLead">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
+        Novo Lead
+      </button>
+    </div>
+  </header>
+
+  <div class="journey" id="journey"></div>
+
+  <div class="board" id="board"></div>
+</div>
+
+<div class="overlay" id="overlay"></div>
+
+<!-- Painel de tarefas -->
+<div class="panel" id="taskPanel">
+  <div class="panel-head">
+    <h2>Follow-ups</h2>
+    <button class="panel-close" id="closePanel">✕</button>
+  </div>
+  <div class="panel-body" id="taskList"></div>
+</div>
+
+<!-- Modal novo lead -->
+<div class="modal-overlay" id="leadModalOverlay">
+  <div class="modal">
+    <h2>Novo Lead</h2>
+    <form id="leadForm">
+      <div class="field">
+        <label>Nome</label>
+        <input type="text" id="f_nome" required>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Telefone / WhatsApp</label>
+          <input type="text" id="f_telefone" placeholder="(47) 9....">
+        </div>
+        <div class="field">
+          <label>Instagram</label>
+          <input type="text" id="f_instagram" placeholder="@usuario">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Origem</label>
+          <select id="f_origem">
+            <option>Layla (WhatsApp)</option>
+            <option>Layla (Instagram)</option>
+            <option>Indicação</option>
+            <option>Meta Ads</option>
+            <option>Manual</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Procedimento</label>
+          <input type="text" id="f_procedimento" placeholder="Deep Plane Facelift">
+        </div>
+      </div>
+      <div class="field">
+        <label>Valor estimado (R$)</label>
+        <input type="text" id="f_valor" placeholder="Opcional">
+      </div>
+      <div class="field">
+        <label>Observações</label>
+        <textarea id="f_observacoes"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-ghost" id="cancelLead">Cancelar</button>
+        <button type="submit" class="btn-primary">Salvar Lead</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal nova tarefa -->
+<div class="modal-overlay" id="taskModalOverlay">
+  <div class="modal">
+    <h2>Novo Follow-up</h2>
+    <form id="taskForm">
+      <div class="field">
+        <label>Paciente</label>
+        <input type="text" id="t_leadNome" readonly style="opacity:.7;">
+      </div>
+      <div class="field">
+        <label>O que precisa ser feito</label>
+        <input type="text" id="t_titulo" placeholder="Ligar confirmando consulta" required>
+      </div>
+      <div class="field">
+        <label>Detalhes</label>
+        <textarea id="t_descricao"></textarea>
+      </div>
+      <div class="field">
+        <label>Data</label>
+        <input type="date" id="t_data">
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-ghost" id="cancelTask">Cancelar</button>
+        <button type="submit" class="btn-primary">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal relatório de passagem de etapa -->
+<div class="modal-overlay" id="reportModalOverlay">
+  <div class="modal" style="max-width:520px;">
+    <h2>Relatório de Passagem</h2>
+    <div class="report-transition" id="reportTransitionLabel"></div>
+
+    <div class="field" style="margin-top:16px;" id="conversaWrapper">
+      <label>Cole a conversa</label>
+      <textarea id="r_conversa" placeholder="Cole aqui a conversa do WhatsApp/Instagram..." style="min-height:120px;"></textarea>
+      <button type="button" class="btn-primary" id="btnAnalisarConversa" style="width:100%;justify-content:center;margin-top:10px;">Gerar Resumo</button>
+    </div>
+
+    <div class="conversa-ok" id="conversaOk" style="display:none;">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+      Conversa analisada
+      <button type="button" id="btnRefazerAnalise">refazer</button>
+    </div>
+
+    <div class="field" style="margin-top:14px;">
+      <label>Motivo rápido (opcional, clique para adicionar)</label>
+      <div class="reason-chips" id="reasonChips"></div>
+    </div>
+
+    <div class="field">
+      <label>Relatório</label>
+      <textarea id="r_relatorio" placeholder="Ou descreva manualmente o que aconteceu..." style="min-height:90px;" required></textarea>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="btn-ghost" id="cancelReport">Cancelar</button>
+      <button type="button" class="btn-primary" id="confirmReport">Confirmar passagem</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   CONFIGURAÇÃO — cole aqui a URL do seu App da Web (Apps Script)
+   ============================================================ */
+const CRM_API_URL = 'https://script.google.com/macros/s/AKfycby2tAmlxe2DaC1ls4aDBpjjj6Xwo_bEKCzN0qU88XS9emPEpcpC09Z5xlpbChnbTfFx/exec';
+
+/* Mensagens padrão do WhatsApp por etapa — edite à vontade */
+const STAGE_MESSAGES = {
+  'Welcome': 'Olá {nome}! Tudo bem? Aqui é da equipe do Dr. Gibran Chedid 😊 Vi seu interesse em conhecer nossos procedimentos, posso te ajudar?',
+  'Diálogo': 'Oi {nome}! Continuando por aqui nossa conversa — fico à disposição pra tirar qualquer dúvida.',
+  'Consulta': 'Olá {nome}! Passando para falar sobre sua consulta com o Dr. Gibran Chedid.',
+  'Cirurgia': 'Olá {nome}! Tudo certo com os preparativos para o seu procedimento?',
+  'Frio': 'Oi {nome}, tudo bem? Faz um tempinho que não conversamos — ainda tem interesse em agendar sua consulta com o Dr. Gibran?',
+  'Remarketing': 'Olá {nome}! Temos novidades do Dr. Gibran Chedid que podem te interessar.'
+};
+const DEFAULT_WHATSAPP_MESSAGE = 'Olá {nome}! Aqui é da equipe do Dr. Gibran Chedid.';
+
+function cleanPhone(telefone){
+  if(!telefone) return null;
+  let digits = String(telefone).replace(/\D/g, '');
+  if(!digits) return null;
+  // Sem código de país: assume Brasil (55)
+  if(digits.length <= 11) digits = '55' + digits;
+  return digits;
+}
+
+function whatsappLink(lead, message){
+  const phone = cleanPhone(lead.Telefone);
+  if(!phone){ showToast('Esse lead não tem telefone cadastrado.'); return null; }
+  const template = message || STAGE_MESSAGES[lead.Etapa] || DEFAULT_WHATSAPP_MESSAGE;
+  const text = template.replace('{nome}', (lead.Nome || '').split(' ')[0]);
+  return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
+}
+
+function openWhatsApp(lead, message){
+  const url = whatsappLink(lead, message);
+  if(url) window.open(url, '_blank');
+}
+
+/* ============================================================
+   BANCO DE PALAVRAS-CHAVE — resumo automático da conversa colada
+   Edite as frases-gatilho à vontade, sem precisar de IA externa.
+   ============================================================ */
+const KEYWORD_DB = [
+  // Interesse e intenção
+  { label: 'Lead demonstrou interesse no procedimento', keywords: ['tenho interesse','quero fazer','queria saber mais','me interessei','gostaria de saber sobre','quero marcar uma avaliação','quero fazer sim','vou fazer sim','quero muito fazer'] },
+  { label: 'Procedimento específico mencionado: rinoplastia', keywords: ['rinoplastia','cirurgia do nariz','nariz'] },
+  { label: 'Procedimento específico mencionado: lifting facial', keywords: ['lifting facial','facelift','face lift','rejuvenescimento facial','deep plane'] },
+  { label: 'Procedimento específico mencionado: blefaroplastia', keywords: ['blefaroplastia','cirurgia das pálpebras','pálpebra'] },
+  { label: 'Procedimento específico mencionado: harmonização facial', keywords: ['harmonização facial','preenchimento','botox','toxina botulínica'] },
+  { label: 'Procedimento específico mencionado: otoplastia', keywords: ['otoplastia','orelha de abano','cirurgia da orelha'] },
+  { label: 'Procedimento específico mencionado: bichectomia', keywords: ['bichectomia','bolsa de bichat'] },
+
+  // Agendamento e handoff
+  { label: 'Lead confirmou agendamento de consulta', keywords: ['posso agendar','vamos marcar','confirmo a consulta','marcar horario','ta agendado','esta agendado','confirmado para','pode marcar sim','vamos sim marcar'], suggestedStage: 'Consulta' },
+  { label: 'Lead encaminhado para agendamento com a equipe', keywords: ['vai cuidar do agendamento','vou te passar para','vai te ajudar com o agendamento','passando voce para','encaminhando para agendamento','vou passar seu contato para','quem vai cuidar do seu agendamento'], suggestedStage: 'Consulta' },
+  { label: 'Lead pediu para remarcar/reagendar', keywords: ['preciso remarcar','podemos remarcar','remarcar a consulta','trocar o horario','mudar a data'] },
+  { label: 'Lead cancelou ou faltou', keywords: ['preciso cancelar','vou cancelar','não vou conseguir ir','não pude comparecer','faltei na consulta','desmarcar'], suggestedStage: 'Frio' },
+
+  // Localização e logística
+  { label: 'Lead perguntou sobre localização/atendimento', keywords: ['qual cidade','onde fica a clinica','onde fica o consultorio','atende em','presencial ou online','endereço da clinica','fica em qual bairro'] },
+
+  // Dinheiro
+  { label: 'Lead perguntou sobre valores/orçamento', keywords: ['quanto custa','qual o valor','qual valor','preço','quanto fica','tem parcelamento','como funciona o pagamento','quantas vezes posso parcelar','aceita cartão'] },
+  { label: 'Lead pediu desconto/negociação de valor', keywords: ['tem desconto','consegue um desconto','tem como fazer mais barato','tem alguma condição especial','valor a vista'] },
+  { label: 'Lead perguntou sobre convênio/plano de saúde', keywords: ['tem convenio','aceita plano de saude','é particular mesmo','convenio cobre'] },
+
+  // Hesitação / objeção
+  { label: 'Lead pediu mais tempo para decidir', keywords: ['vou pensar','depois te aviso','preciso pensar','ainda nao decidi','mais pra frente','me da um tempo','preciso conversar com','vou analisar com calma'], suggestedStage: 'Frio' },
+  { label: 'Lead demonstrou objeção ou desistência', keywords: ['não vou fazer','desisti','não tenho mais interesse','não é o momento','vou deixar pra depois','achei caro','não faz sentido pra mim agora'], suggestedStage: 'Frio' },
+  { label: 'Lead com receio/medo do procedimento', keywords: ['tenho medo','fico com receio','é muito arriscado','tenho insegurança sobre'] },
+
+  // Confirmação forte / fechamento
+  { label: 'Consulta/procedimento confirmado como fechado', keywords: ['fechou o procedimento','vamos agendar a cirurgia','data da cirurgia','confirmou a cirurgia','fechamos a cirurgia','vamos marcar a cirurgia','confirmado o procedimento'], suggestedStage: 'Cirurgia' },
+  { label: 'Lead demonstrou satisfação após consulta', keywords: ['amei a consulta','adorei o atendimento','gostei muito da consulta','fiquei muito satisfeita com a consulta'] },
+
+  // Origem
+  { label: 'Lead veio por indicação', keywords: ['indicação','indicou','amiga indicou','vim atraves','me indicaram','fui indicada','uma amiga que fez'] },
+
+  // Silêncio / retomada
+  { label: 'Lead sem resposta / conversa parada', keywords: ['sem retorno','não respondeu','sumiu','parou de responder','nao vi sua mensagem'], suggestedStage: 'Frio' },
+  { label: 'Lead voltou a interagir após período parado', keywords: ['voltei a pensar','retomando nosso contato','desculpa a demora','oi de novo','voltei aqui','desculpa o sumiço'], suggestedStage: 'Diálogo' },
+
+  // Urgência
+  { label: 'Lead sinalizou urgência', keywords: ['preciso urgente','o quanto antes','essa semana mesmo','tem algo mais rapido','preciso resolver logo'] },
+
+  // Documentação / dúvidas gerais
+  { label: 'Lead pediu fotos de resultados/portfólio', keywords: ['tem fotos','pode mandar fotos','tem exemplos de resultado','antes e depois'] },
+  { label: 'Lead pediu mais explicações sobre o procedimento', keywords: ['como funciona o procedimento','me explica melhor','quais os riscos','quanto tempo de recuperação','tempo de recuperação']}
+];
+
+function normalizeText(str){
+  return String(str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+function analyzeConversation(text){
+  const normalized = normalizeText(text);
+  const found = [];
+  let suggestedStage = null;
+  KEYWORD_DB.forEach(entry => {
+    const hit = entry.keywords.some(k => normalized.includes(normalizeText(k)));
+    if(hit){
+      found.push(entry.label);
+      if(entry.suggestedStage) suggestedStage = entry.suggestedStage;
+    }
+  });
+  const valorMatch = text.match(/R\$\s?[\d.,]+/);
+  if(valorMatch) found.push(`Valor mencionado na conversa: ${valorMatch[0]}`);
+
+  const summary = found.length
+    ? found.map(f => '• ' + f).join('\n')
+    : '• Não identifiquei padrões conhecidos nessa conversa — descreva manualmente abaixo.';
+
+  return { summary, suggestedStage };
+}
+
+/* ============================================================
+   MOTIVOS PRÉ-DEFINIDOS POR TRANSIÇÃO DE ETAPA
+   ============================================================ */
+const GENERIC_REASONS = ['Contato realizado com sucesso', 'Avanço combinado com o paciente'];
+const TRANSITION_REASONS = {
+  'Welcome→Diálogo': ['Lead respondeu ao primeiro contato', 'Lead demonstrou interesse nos procedimentos'],
+  'Diálogo→Consulta': ['Lead confirmou agendamento de consulta', 'Consulta marcada por telefone/WhatsApp'],
+  'Consulta→Cirurgia': ['Consulta realizada e procedimento fechado', 'Orçamento aprovado pelo paciente'],
+  'Frio→Diálogo': ['Lead retomou contato espontaneamente', 'Reengajamento manual funcionou'],
+  'Remarketing→Diálogo': ['Lead respondeu à campanha de remarketing'],
+  '*→Frio': ['Lead parou de responder', 'Pediu para aguardar/pensar com mais calma', 'Sem retorno após múltiplas tentativas'],
+  '*→Remarketing': ['Lead perdido, indicado para nova campanha', 'Fora do perfil no momento, reengajar depois']
+};
+
+function getTransitionReasons(from, to){
+  const exact = TRANSITION_REASONS[`${from}→${to}`];
+  if(exact) return exact;
+  const wildcard = TRANSITION_REASONS[`*→${to}`];
+  if(wildcard) return wildcard;
+  return GENERIC_REASONS;
+}
+
+let STATE = { leads: [], tasks: [], stages: [] };
+let pendingLeadForTask = null;
+
+// Fallback: garante que o board sempre tenha as colunas, mesmo sem dados ainda
+const DEFAULT_STAGES = ['Welcome','Diálogo','Consulta','Cirurgia','Frio','Remarketing'];
+STATE.stages = DEFAULT_STAGES;
+
+function isConfigured(){
+  return CRM_API_URL && CRM_API_URL.indexOf('COLE_AQUI') === -1;
+}
+
+function showConfigBanner(){
+  const board = document.getElementById('board');
+  board.innerHTML = `<div style="padding:40px;color:var(--text-muted);max-width:520px;font-size:14px;line-height:1.6;">
+    <div style="font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--gold);margin-bottom:10px;">Falta conectar a planilha</div>
+    Abra este arquivo e cole a URL do seu App da Web do Apps Script na constante <code style="color:var(--gold-dim)">CRM_API_URL</code>, no início da tag &lt;script&gt;. Depois recarregue a página.
+  </div>`;
+}
+
+// ---------- SESSÃO (em memória — some ao recarregar a página) ----------
+let SESSION = { token: null, nome: null };
+
+// ---------- FETCH DATA ----------
+async function loadData(){
+  if(!isConfigured()){
+    render();
+    showConfigBanner();
+    document.getElementById('loading').classList.add('hidden');
+    return;
+  }
+  try{
+    const res = await fetch(CRM_API_URL + '?token=' + encodeURIComponent(SESSION.token));
+    const data = await res.json();
+    if(data.ok === false && data.error === 'auth'){
+      showLogin('Sessão expirada. Entre novamente.');
+      return;
+    }
+    STATE.leads = data.leads || [];
+    STATE.tasks = data.tasks || [];
+    STATE.stages = data.stages && data.stages.length ? data.stages : STATE.stages;
+  }catch(err){
+    console.error('Erro ao carregar dados', err);
+    showToast('Não foi possível carregar os dados. Confira a URL do App da Web.');
+  }finally{
+    render();
+    document.getElementById('loading').classList.add('hidden');
+  }
+}
+
+// ---------- WRITE (no-cors, fire-and-forget + reconciliação) ----------
+function postAction(params){
+  const body = new URLSearchParams({ ...params, token: SESSION.token });
+  return fetch(CRM_API_URL, { method:'POST', mode:'no-cors', body })
+    .catch(err => console.error('Erro ao salvar', err));
+}
+
+// ---------- RENDER ----------
+function render(){
+  renderJourney();
+  renderBoard();
+  renderTasks();
+}
+
+function daysAgo(dateStr){
+  if(!dateStr) return null;
+  const diff = Date.now() - new Date(dateStr).getTime();
+  return Math.floor(diff / 86400000);
+}
+
+function renderJourney(){
+  const el = document.getElementById('journey');
+  el.innerHTML = STATE.stages.map(stage => {
+    const count = STATE.leads.filter(l => l.Etapa === stage).length;
+    return `<div class="journey-step ${count>0?'active':''}">
+      <div class="journey-dot"></div>
+      <div class="journey-count">${count}</div>
+      <div class="journey-label">${stage}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderBoard(){
+  const el = document.getElementById('board');
+  el.innerHTML = STATE.stages.map(stage => {
+    const leads = STATE.leads.filter(l => l.Etapa === stage);
+    return `
+    <div class="column">
+      <div class="column-head">
+        <span class="column-title">${stage}</span>
+        <span class="column-count">${leads.length}</span>
+      </div>
+      <div class="column-body" data-stage="${stage}">
+        ${leads.length ? leads.map(leadCard).join('') : '<div class="empty-col">Vazio</div>'}
+      </div>
+    </div>`;
+  }).join('');
+
+  // Drag events
+  el.querySelectorAll('.card').forEach(card => {
+    card.addEventListener('dragstart', e => {
+      card.classList.add('dragging');
+      e.dataTransfer.setData('text/plain', card.dataset.id);
+    });
+    card.addEventListener('dragend', () => card.classList.remove('dragging'));
+  });
+  el.querySelectorAll('.column-body').forEach(col => {
+    col.addEventListener('dragover', e => { e.preventDefault(); col.classList.add('drag-over'); });
+    col.addEventListener('dragleave', () => col.classList.remove('drag-over'));
+    col.addEventListener('drop', e => {
+      e.preventDefault();
+      col.classList.remove('drag-over');
+      const id = e.dataTransfer.getData('text/plain');
+      const newStage = col.dataset.stage;
+      const lead = STATE.leads.find(l => l.ID === id);
+      if(lead && lead.Etapa !== newStage){
+        openReportModal(lead, newStage);
+      }
+    });
+  });
+
+  el.querySelectorAll('.card-wa-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const id = btn.dataset.id;
+      const lead = STATE.leads.find(l => l.ID === id);
+      if(lead) openWhatsApp(lead);
+    });
+  });
+
+  el.querySelectorAll('.card-task-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const id = btn.dataset.id;
+      const lead = STATE.leads.find(l => l.ID === id);
+      openTaskModal(lead);
+    });
+  });
+}
+
+function leadCard(lead){
+  const da = daysAgo(lead.Data_Ultima_Interacao);
+  const staleClass = da !== null && da >= 5 ? 'card-stale' : '';
+  const staleText = da === null ? '' : da === 0 ? 'hoje' : `há ${da}d`;
+  return `
+  <div class="card" draggable="true" data-id="${lead.ID}">
+    <div class="card-name">${escapeHtml(lead.Nome || 'Sem nome')}</div>
+    <div class="card-meta">
+      ${lead.Procedimento_Interesse ? `<span class="chip">${escapeHtml(lead.Procedimento_Interesse)}</span>` : ''}
+      ${lead.Origem ? `<span class="chip">${escapeHtml(lead.Origem)}</span>` : ''}
+    </div>
+    <div class="card-footer">
+      <span class="${staleClass}">${staleText}</span>
+      <span class="card-value">${lead.Valor_Estimado ? 'R$ '+escapeHtml(String(lead.Valor_Estimado)) : ''}</span>
+      <div class="card-actions">
+        <button class="card-wa-btn" data-id="${lead.ID}" title="Chamar no WhatsApp">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.46 1.32 4.96L2.05 22l5.25-1.38c1.44.79 3.07 1.2 4.73 1.2h.01c5.46 0 9.91-4.45 9.91-9.91S17.5 2 12.04 2zm0 18.06h-.01c-1.47 0-2.91-.39-4.17-1.14l-.3-.18-3.11.82.83-3.03-.19-.31a8.03 8.03 0 01-1.24-4.31c0-4.44 3.62-8.06 8.06-8.06 2.15 0 4.17.84 5.7 2.36a8.02 8.02 0 012.36 5.7c0 4.44-3.62 8.06-8.06 8.06zm4.42-6.03c-.24-.12-1.43-.71-1.65-.79-.22-.08-.38-.12-.55.12-.16.24-.62.79-.76.95-.14.16-.28.18-.52.06-.24-.12-1.01-.37-1.92-1.18-.71-.63-1.19-1.42-1.33-1.66-.14-.24-.02-.37.11-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.55-1.32-.75-1.81-.2-.48-.4-.41-.55-.42h-.47c-.16 0-.42.06-.64.3-.22.24-.84.82-.84 2s.86 2.32.98 2.48c.12.16 1.7 2.6 4.13 3.64.58.25 1.03.4 1.38.51.58.18 1.11.16 1.53.1.47-.07 1.43-.58 1.63-1.15.2-.56.2-1.04.14-1.15-.06-.1-.22-.16-.46-.28z"/></svg>
+        </button>
+        <button class="card-task-btn" data-id="${lead.ID}" title="Novo follow-up">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderTasks(){
+  const pending = STATE.tasks
+    .filter(t => t.Status !== 'Concluída')
+    .sort((a,b) => new Date(a.Data_Vencimento||'2999-01-01') - new Date(b.Data_Vencimento||'2999-01-01'));
+
+  const badge = document.getElementById('taskBadge');
+  if(pending.length){
+    badge.style.display='flex';
+    badge.textContent = pending.length;
+  } else {
+    badge.style.display='none';
+  }
+
+  const el = document.getElementById('taskList');
+  if(!pending.length){
+    el.innerHTML = `<div class="empty-state">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+      <div>Nenhum follow-up pendente.</div>
+    </div>`;
+    return;
+  }
+
+  const today = new Date().toISOString().slice(0,10);
+  el.innerHTML = pending.map(t => {
+    const overdue = t.Data_Vencimento && t.Data_Vencimento.slice(0,10) < today;
+    return `
+    <div class="task-item">
+      <div class="task-check" data-id="${t.ID}"></div>
+      <div class="task-content">
+        <div class="task-title">${escapeHtml(t.Titulo)}</div>
+        ${t.Lead_Nome ? `<div class="task-lead">${escapeHtml(t.Lead_Nome)}</div>` : ''}
+        <div class="task-due ${overdue?'overdue':''}">${t.Data_Vencimento ? formatDate(t.Data_Vencimento) : 'sem data'} ${overdue?'· atrasado':''}</div>
+      </div>
+      <div class="task-actions">
+        ${t.Lead_ID ? `<button class="task-wa-btn" data-lead-id="${t.Lead_ID}" data-titulo="${escapeHtml(t.Titulo)}" title="Chamar no WhatsApp">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.46 1.32 4.96L2.05 22l5.25-1.38c1.44.79 3.07 1.2 4.73 1.2h.01c5.46 0 9.91-4.45 9.91-9.91S17.5 2 12.04 2zm0 18.06h-.01c-1.47 0-2.91-.39-4.17-1.14l-.3-.18-3.11.82.83-3.03-.19-.31a8.03 8.03 0 01-1.24-4.31c0-4.44 3.62-8.06 8.06-8.06 2.15 0 4.17.84 5.7 2.36a8.02 8.02 0 012.36 5.7c0 4.44-3.62 8.06-8.06 8.06zm4.42-6.03c-.24-.12-1.43-.71-1.65-.79-.22-.08-.38-.12-.55.12-.16.24-.62.79-.76.95-.14.16-.28.18-.52.06-.24-.12-1.01-.37-1.92-1.18-.71-.63-1.19-1.42-1.33-1.66-.14-.24-.02-.37.11-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.55-1.32-.75-1.81-.2-.48-.4-.41-.55-.42h-.47c-.16 0-.42.06-.64.3-.22.24-.84.82-.84 2s.86 2.32.98 2.48c.12.16 1.7 2.6 4.13 3.64.58.25 1.03.4 1.38.51.58.18 1.11.16 1.53.1.47-.07 1.43-.58 1.63-1.15.2-.56.2-1.04.14-1.15-.06-.1-.22-.16-.46-.28z"/></svg>
+        </button>` : ''}
+        <button class="task-del" data-id="${t.ID}">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  el.querySelectorAll('.task-wa-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const leadId = btn.dataset.leadId;
+      const lead = STATE.leads.find(l => l.ID === leadId);
+      if(!lead){ showToast('Lead do follow-up não encontrado.'); return; }
+      const msg = 'Olá {nome}! ' + btn.dataset.titulo;
+      openWhatsApp(lead, msg);
+    });
+  });
+
+  el.querySelectorAll('.task-check').forEach(chk => {
+    chk.addEventListener('click', () => {
+      const id = chk.dataset.id;
+      const t = STATE.tasks.find(x => x.ID === id);
+      if(t){ t.Status = 'Concluída'; render(); postAction({action:'completeTask', id}); showToast('Follow-up concluído'); }
+    });
+  });
+  el.querySelectorAll('.task-del').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      STATE.tasks = STATE.tasks.filter(x => x.ID !== id);
+      render();
+      postAction({action:'deleteTask', id});
+    });
+  });
+}
+
+function formatDate(iso){
+  const d = new Date(iso);
+  if(isNaN(d)) return iso;
+  return d.toLocaleDateString('pt-BR');
+}
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+// ---------- TOAST ----------
+let toastTimer;
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 2500);
+}
+
+// ---------- MODALS ----------
+const leadModal = document.getElementById('leadModalOverlay');
+const taskModal = document.getElementById('taskModalOverlay');
+
+document.getElementById('btnNewLead').addEventListener('click', () => leadModal.classList.add('open'));
+document.getElementById('cancelLead').addEventListener('click', () => leadModal.classList.remove('open'));
+document.getElementById('cancelTask').addEventListener('click', () => taskModal.classList.remove('open'));
+
+document.getElementById('leadForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const params = {
+    action:'addLead',
+    nome: document.getElementById('f_nome').value,
+    telefone: document.getElementById('f_telefone').value,
+    instagram: document.getElementById('f_instagram').value,
+    origem: document.getElementById('f_origem').value,
+    procedimento: document.getElementById('f_procedimento').value,
+    valor: document.getElementById('f_valor').value,
+    observacoes: document.getElementById('f_observacoes').value,
+    etapa: STATE.stages[0]
+  };
+  // Optimistic
+  const tempLead = {
+    ID:'temp-'+Date.now(), Nome:params.nome, Telefone:params.telefone, Instagram:params.instagram,
+    Origem:params.origem, Etapa:params.etapa, Procedimento_Interesse:params.procedimento,
+    Valor_Estimado:params.valor, Data_Criacao:new Date().toISOString(), Data_Ultima_Interacao:new Date().toISOString(),
+    Observacoes:params.observacoes
+  };
+  STATE.leads.push(tempLead);
+  render();
+  leadModal.classList.remove('open');
+  e.target.reset();
+  postAction(params).then(()=> setTimeout(loadData, 1200));
+  showToast('Lead adicionado');
+});
+
+function openTaskModal(lead){
+  pendingLeadForTask = lead;
+  document.getElementById('t_leadNome').value = lead ? lead.Nome : '';
+  taskModal.classList.add('open');
+}
+
+document.getElementById('taskForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const params = {
+    action:'addTask',
+    leadId: pendingLeadForTask ? pendingLeadForTask.ID : '',
+    leadNome: pendingLeadForTask ? pendingLeadForTask.Nome : '',
+    titulo: document.getElementById('t_titulo').value,
+    descricao: document.getElementById('t_descricao').value,
+    dataVencimento: document.getElementById('t_data').value
+  };
+  const tempTask = {
+    ID:'temp-'+Date.now(), Lead_ID:params.leadId, Lead_Nome:params.leadNome,
+    Titulo:params.titulo, Descricao:params.descricao, Data_Vencimento:params.dataVencimento,
+    Status:'Pendente', Data_Criacao:new Date().toISOString()
+  };
+  STATE.tasks.push(tempTask);
+  render();
+  taskModal.classList.remove('open');
+  e.target.reset();
+  postAction(params).then(()=> setTimeout(loadData, 1200));
+  showToast('Follow-up criado');
+});
+
+// ---------- MODAL DE RELATÓRIO DE PASSAGEM ----------
+const reportModal = document.getElementById('reportModalOverlay');
+let pendingTransition = null; // { lead, toStage }
+
+function openReportModal(lead, toStage){
+  pendingTransition = { lead, toStage };
+  document.getElementById('reportTransitionLabel').innerHTML =
+    `${escapeHtml(lead.Nome)} — <strong>${escapeHtml(lead.Etapa)}</strong> → <strong>${escapeHtml(toStage)}</strong>`;
+  document.getElementById('r_relatorio').value = '';
+  document.getElementById('r_conversa').value = '';
+  document.getElementById('conversaWrapper').style.display = '';
+  document.getElementById('conversaOk').style.display = 'none';
+
+  const reasons = getTransitionReasons(lead.Etapa, toStage);
+  const chipsEl = document.getElementById('reasonChips');
+  chipsEl.innerHTML = reasons.map(r => `<button type="button" class="reason-chip">${escapeHtml(r)}</button>`).join('');
+  chipsEl.querySelectorAll('.reason-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const textarea = document.getElementById('r_relatorio');
+      textarea.value = textarea.value ? textarea.value + '\n' + chip.textContent : chip.textContent;
+    });
+  });
+
+  reportModal.classList.add('open');
+}
+
+document.getElementById('cancelReport').addEventListener('click', () => {
+  reportModal.classList.remove('open');
+  pendingTransition = null;
+  render(); // garante que o card volte pra coluna original visualmente
+});
+
+document.getElementById('btnAnalisarConversa').addEventListener('click', () => {
+  const conversa = document.getElementById('r_conversa').value;
+  if(!conversa.trim()){ showToast('Cole a conversa primeiro.'); return; }
+  const { summary } = analyzeConversation(conversa);
+  const relatorioField = document.getElementById('r_relatorio');
+  relatorioField.value = relatorioField.value.trim() ? relatorioField.value + '\n' + summary : summary;
+  // Some com a conversa colada — só o resumo fica visível daqui pra frente
+  document.getElementById('conversaWrapper').style.display = 'none';
+  document.getElementById('conversaOk').style.display = 'flex';
+});
+
+document.getElementById('btnRefazerAnalise').addEventListener('click', () => {
+  document.getElementById('conversaWrapper').style.display = '';
+  document.getElementById('conversaOk').style.display = 'none';
+});
+
+document.getElementById('confirmReport').addEventListener('click', () => {
+  const relatorio = document.getElementById('r_relatorio').value.trim();
+  if(!relatorio){ showToast('Descreva o relatório antes de confirmar.'); return; }
+  if(!pendingTransition) return;
+
+  const { lead, toStage } = pendingTransition;
+  lead.Etapa = toStage;
+  render();
+  reportModal.classList.remove('open');
+  postAction({ action:'moveStageWithReport', id: lead.ID, etapa: toStage, relatorio })
+    .then(()=> setTimeout(loadData, 1200));
+  showToast(`${lead.Nome} → ${toStage}`);
+  pendingTransition = null;
+});
+
+// ---------- TASK PANEL ----------
+const panel = document.getElementById('taskPanel');
+const overlay = document.getElementById('overlay');
+document.getElementById('btnTasks').addEventListener('click', () => {
+  panel.classList.add('open'); overlay.classList.add('open');
+});
+document.getElementById('closePanel').addEventListener('click', closePanel);
+overlay.addEventListener('click', closePanel);
+function closePanel(){ panel.classList.remove('open'); overlay.classList.remove('open'); }
+
+// ---------- LOGIN ----------
+const loginScreen = document.getElementById('loginScreen');
+const loginForm = document.getElementById('loginForm');
+const loginError = document.getElementById('loginError');
+
+function showLogin(msg){
+  SESSION = { token:null, nome:null };
+  document.getElementById('loading').classList.add('hidden');
+  loginScreen.classList.remove('hidden');
+  loginError.textContent = msg || '';
+}
+
+function hideLogin(){
+  loginScreen.classList.add('hidden');
+}
+
+loginForm.addEventListener('submit', async e => {
+  e.preventDefault();
+  loginError.textContent = '';
+  if(!isConfigured()){
+    loginError.textContent = 'CRM_API_URL não configurado no arquivo ainda.';
+    return;
+  }
+  const usuario = document.getElementById('l_usuario').value.trim();
+  const senha = document.getElementById('l_senha').value;
+  const submitBtn = loginForm.querySelector('button[type="submit"]');
+  submitBtn.disabled = true;
+  try{
+    const url = CRM_API_URL + '?action=login&usuario=' + encodeURIComponent(usuario) + '&senha=' + encodeURIComponent(senha);
+    const res = await fetch(url);
+    const data = await res.json();
+    if(data.ok){
+      SESSION = { token: data.token, nome: data.nome };
+      document.getElementById('userLabel').textContent = data.nome;
+      hideLogin();
+      document.getElementById('loading').classList.remove('hidden');
+      loadData();
+    } else {
+      loginError.textContent = data.error || 'Não foi possível entrar.';
+    }
+  }catch(err){
+    console.error('Erro no login', err);
+    loginError.textContent = 'Erro de conexão. Tente novamente.';
+  }finally{
+    submitBtn.disabled = false;
+  }
+});
+
+document.getElementById('btnLogout').addEventListener('click', () => {
+  showLogin();
+  loginForm.reset();
+});
+
+// ---------- INIT ----------
+document.getElementById('loading').classList.add('hidden');
+showLogin();
+setInterval(() => { if(SESSION.token) loadData(); }, 60000); // sincroniza a cada 1 min
+</script>
+</body>
+</html>

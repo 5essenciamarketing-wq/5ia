@@ -403,6 +403,40 @@
   }
   .surgery-status.done{color:var(--sage); border-color:var(--sage-soft);}
 
+  /* ---------- CARTÃO DE CONFIRMAÇÃO DE CONSULTA ---------- */
+  .consult-card{
+    position:relative;
+    background:var(--panel); border:1px solid var(--gold);
+    box-shadow:0 20px 60px rgba(0,0,0,.5), 0 0 40px var(--gold-glow);
+    width:100%; max-width:440px; padding:40px 34px 30px;
+    text-align:center;
+  }
+  .consult-card-close{
+    position:absolute; top:14px; right:14px;
+    background:none; border:none; color:var(--text-muted);
+    font-size:16px; cursor:pointer;
+  }
+  .consult-card-close:hover{color:var(--text);}
+  .consult-card-eyebrow{
+    font-size:11px; text-transform:uppercase; letter-spacing:.18em;
+    color:var(--gold); margin-bottom:10px;
+  }
+  .consult-card-name{
+    font-family:'Cormorant Garamond',serif; font-size:30px; font-weight:600;
+    color:var(--text); margin-bottom:18px;
+  }
+  .consult-card-row{
+    display:flex; align-items:flex-start; gap:8px; justify-content:center;
+    font-size:12.5px; color:var(--text-muted); margin-bottom:8px; text-align:left;
+    max-width:340px; margin-left:auto; margin-right:auto;
+  }
+  .consult-card-row svg{flex-shrink:0; margin-top:1px; color:var(--gold-dim);}
+  .consult-card-message{
+    font-size:13.5px; line-height:1.7; color:var(--text);
+    margin:20px 0 4px; text-align:left;
+    border-top:1px solid var(--border); padding-top:18px;
+  }
+
   @media (max-width:900px){
     .dashboard-grid{grid-template-columns:1fr;}
   }
@@ -634,6 +668,17 @@
       <textarea id="r_relatorio" placeholder="Ou descreva manualmente o que aconteceu..." style="min-height:90px;" required></textarea>
     </div>
 
+    <div class="field-row" id="consultaDateFields" style="display:none;">
+      <div class="field">
+        <label>Data da Consulta</label>
+        <input type="date" id="r_dataConsulta">
+      </div>
+      <div class="field">
+        <label>Hora</label>
+        <input type="time" id="r_horaConsulta">
+      </div>
+    </div>
+
     <div class="modal-actions">
       <button type="button" class="btn-ghost" id="cancelReport">Cancelar</button>
       <button type="button" class="btn-primary" id="confirmReport">Confirmar passagem</button>
@@ -657,6 +702,31 @@
   </div>
 </div>
 
+<!-- Cartão de confirmação de consulta -->
+<div class="modal-overlay" id="consultCardOverlay">
+  <div class="consult-card">
+    <button type="button" class="consult-card-close" id="closeConsultCard">✕</button>
+    <div class="consult-card-eyebrow">Consulta Confirmada</div>
+    <div class="consult-card-name" id="cc_nome"></div>
+    <div class="consult-card-row">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>
+      <span id="cc_datahora"></span>
+    </div>
+    <div class="consult-card-row">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 10c0 7-9 12-9 12s-9-5-9-12a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      <span>Koerich Beiramar Office — Av. Mauro Ramos, 1970, sala 511, Centro, Florianópolis - SC</span>
+    </div>
+    <p class="consult-card-message" id="cc_mensagem"></p>
+    <div class="modal-actions">
+      <button type="button" class="btn-ghost" id="btnFecharConsultCard">Fechar</button>
+      <button type="button" class="btn-primary" id="btnEnviarConsultCard">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.46 1.32 4.96L2.05 22l5.25-1.38c1.44.79 3.07 1.2 4.73 1.2h.01c5.46 0 9.91-4.45 9.91-9.91S17.5 2 12.04 2zm0 18.06h-.01c-1.47 0-2.91-.39-4.17-1.14l-.3-.18-3.11.82.83-3.03-.19-.31a8.03 8.03 0 01-1.24-4.31c0-4.44 3.62-8.06 8.06-8.06 2.15 0 4.17.84 5.7 2.36a8.02 8.02 0 012.36 5.7c0 4.44-3.62 8.06-8.06 8.06zm4.42-6.03c-.24-.12-1.43-.71-1.65-.79-.22-.08-.38-.12-.55.12-.16.24-.62.79-.76.95-.14.16-.28.18-.52.06-.24-.12-1.01-.37-1.92-1.18-.71-.63-1.19-1.42-1.33-1.66-.14-.24-.02-.37.11-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.55-1.32-.75-1.81-.2-.48-.4-.41-.55-.42h-.47c-.16 0-.42.06-.64.3-.22.24-.84.82-.84 2s.86 2.32.98 2.48c.12.16 1.7 2.6 4.13 3.64.58.25 1.03.4 1.38.51.58.18 1.11.16 1.53.1.47-.07 1.43-.58 1.63-1.15.2-.56.2-1.04.14-1.15-.06-.1-.22-.16-.46-.28z"/></svg>
+        Enviar no WhatsApp
+      </button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -665,16 +735,37 @@
    ============================================================ */
 const CRM_API_URL = 'https://script.google.com/macros/s/AKfycby2tAmlxe2DaC1ls4aDBpjjj6Xwo_bEKCzN0qU88XS9emPEpcpC09Z5xlpbChnbTfFx/exec';
 
-/* Mensagens padrão do WhatsApp por etapa — edite à vontade */
+/* ============================================================
+   MENSAGENS DO WHATSAPP — códigos disponíveis pra usar nos textos:
+   {nome}  → primeiro nome do lead (preenchido sozinho)
+   {data}  → data formatada (só disponível no CONSULTATION_MESSAGE_TEMPLATE)
+   {hora}  → horário (só disponível no CONSULTATION_MESSAGE_TEMPLATE)
+
+   Formatação do WhatsApp (funciona só dentro da mensagem enviada):
+   *texto*  → negrito
+   _texto_  → itálico
+   ~texto~  → tachado
+   ============================================================ */
 const STAGE_MESSAGES = {
-  'Welcome': 'Olá {nome}! Tudo bem? Aqui é da equipe do Dr. Gibran Chedid 😊 Vi seu interesse em conhecer nossos procedimentos, posso te ajudar?',
-  'Diálogo': 'Oi {nome}! Continuando por aqui nossa conversa — fico à disposição pra tirar qualquer dúvida.',
-  'Consulta': 'Olá {nome}! Passando para falar sobre sua consulta com o Dr. Gibran Chedid.',
-  'Cirurgia': 'Olá {nome}! Tudo certo com os preparativos para o seu procedimento?',
-  'Frio': 'Oi {nome}, tudo bem? Faz um tempinho que não conversamos — ainda tem interesse em agendar sua consulta com o Dr. Gibran?',
-  'Remarketing': 'Olá {nome}! Temos novidades do Dr. Gibran Chedid que podem te interessar.'
+  'Welcome': 'Olá *{nome}*! Tudo bem? Aqui é da equipe do Dr. Gibran Chedid 😊 Vi seu interesse em conhecer nossos procedimentos, posso te ajudar?',
+  'Diálogo': 'Oi *{nome}*! Continuando por aqui nossa conversa — fico à disposição pra tirar qualquer dúvida.',
+  'Consulta': 'Olá *{nome}*! Passando para falar sobre sua consulta com o Dr. Gibran Chedid.',
+  'Cirurgia': 'Olá *{nome}*! Tudo certo com os preparativos para o seu procedimento?',
+  'Frio': 'Oi *{nome}*, tudo bem? Faz um tempinho que não conversamos — ainda tem interesse em agendar sua consulta com o Dr. Gibran?',
+  'Remarketing': 'Olá *{nome}*! Temos novidades do Dr. Gibran Chedid que podem te interessar.'
 };
-const DEFAULT_WHATSAPP_MESSAGE = 'Olá {nome}! Aqui é da equipe do Dr. Gibran Chedid.';
+const DEFAULT_WHATSAPP_MESSAGE = 'Olá *{nome}*! Aqui é da equipe do Dr. Gibran Chedid.';
+
+/* Cartão de confirmação de consulta — edite o endereço e o texto à vontade */
+const CLINIC_ADDRESS = 'Koerich Beiramar Office — Av. Mauro Ramos, 1970, sala 511, Centro, Florianópolis - SC';
+const CONSULTATION_MESSAGE_TEMPLATE = `*Consulta Confirmada* — {nome}
+
+📅 Data: *{data}* às *{hora}*
+📍 Endereço: ${CLINIC_ADDRESS}
+
+Esse é o seu *primeiro passo* — e ele já começa com *segurança*. Na consulta, o Dr. Gibran vai te ouvir com atenção total, entender seus objetivos e explicar com transparência cada possibilidade, sempre com responsabilidade médica em primeiro lugar.
+
+Será um prazer te receber! ✨`;
 
 function cleanPhone(telefone){
   if(!telefone) return null;
@@ -1236,6 +1327,11 @@ function openReportModal(lead, toStage){
   document.getElementById('conversaWrapper').style.display = '';
   document.getElementById('conversaOk').style.display = 'none';
 
+  const isConsulta = toStage === 'Consulta';
+  document.getElementById('consultaDateFields').style.display = isConsulta ? 'flex' : 'none';
+  document.getElementById('r_dataConsulta').value = '';
+  document.getElementById('r_horaConsulta').value = '';
+
   const reasons = getTransitionReasons(lead.Etapa, toStage);
   const chipsEl = document.getElementById('reasonChips');
   chipsEl.innerHTML = reasons.map(r => `<button type="button" class="reason-chip">${escapeHtml(r)}</button>`).join('');
@@ -1278,15 +1374,25 @@ document.getElementById('confirmReport').addEventListener('click', () => {
 
   const { lead, toStage } = pendingTransition;
   const fromStage = lead.Etapa;
+
+  let dataConsulta = '', horaConsulta = '';
+  if(toStage === 'Consulta'){
+    dataConsulta = document.getElementById('r_dataConsulta').value;
+    horaConsulta = document.getElementById('r_horaConsulta').value;
+    if(!dataConsulta || !horaConsulta){ showToast('Preencha a data e a hora da consulta.'); return; }
+  }
+
   lead.Etapa = toStage;
+  if(toStage === 'Consulta'){ lead.Data_Consulta = dataConsulta; lead.Hora_Consulta = horaConsulta; }
   render();
   reportModal.classList.remove('open');
-  postAction({ action:'moveStageWithReport', id: lead.ID, etapa: toStage, relatorio })
+  postAction({ action:'moveStageWithReport', id: lead.ID, etapa: toStage, relatorio, dataConsulta, horaConsulta })
     .then(()=> setTimeout(loadData, 1200));
   showToast(`${lead.Nome} → ${toStage}`);
 
   if(fromStage === 'Diálogo' && toStage === 'Consulta'){
     launchConfetti();
+    showConsultationCard(lead, dataConsulta, horaConsulta);
   }
 
   pendingTransition = null;
@@ -1387,6 +1493,43 @@ function showCelebrationMessage(text){
     setTimeout(() => el.remove(), 500);
   }, 2200);
 }
+
+// Converte formatação do WhatsApp (*negrito*, _itálico_) em HTML só pra prévia na tela.
+// A mensagem enviada de verdade pro WhatsApp continua com os asteriscos crus (é assim que ele renderiza negrito lá).
+function whatsappMarkupToHtml(text){
+  return escapeHtml(text)
+    .replace(/\*(.+?)\*/g, '<strong>$1</strong>')
+    .replace(/_(.+?)_/g, '<em>$1</em>')
+    .replace(/\n/g, '<br>');
+}
+
+// ---------- CARTÃO DE CONFIRMAÇÃO DE CONSULTA ----------
+const consultCardOverlay = document.getElementById('consultCardOverlay');
+let currentConsultCardLead = null;
+let currentConsultCardMessage = '';
+
+function showConsultationCard(lead, dataConsulta, horaConsulta){
+  const dataFormatada = formatDate(dataConsulta);
+  const primeiroNome = (lead.Nome || '').split(' ')[0];
+
+  document.getElementById('cc_nome').textContent = lead.Nome;
+  document.getElementById('cc_datahora').textContent = `${dataFormatada} às ${horaConsulta}`;
+
+  currentConsultCardMessage = CONSULTATION_MESSAGE_TEMPLATE
+    .replace('{nome}', primeiroNome)
+    .replace('{data}', dataFormatada)
+    .replace('{hora}', horaConsulta);
+  document.getElementById('cc_mensagem').innerHTML = whatsappMarkupToHtml(currentConsultCardMessage);
+  currentConsultCardLead = lead;
+
+  consultCardOverlay.classList.add('open');
+}
+
+document.getElementById('closeConsultCard').addEventListener('click', () => consultCardOverlay.classList.remove('open'));
+document.getElementById('btnFecharConsultCard').addEventListener('click', () => consultCardOverlay.classList.remove('open'));
+document.getElementById('btnEnviarConsultCard').addEventListener('click', () => {
+  if(currentConsultCardLead) openWhatsApp(currentConsultCardLead, currentConsultCardMessage);
+});
 
 // ---------- PAINEL DE DESEMPENHO ----------
 const CHART_COLORS = {

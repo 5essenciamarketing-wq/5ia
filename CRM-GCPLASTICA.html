@@ -1007,6 +1007,13 @@ function renderBoard(){
 
       if(newStage === 'Cirurgia'){
         openSurgeryModal(lead);
+      } else if(lead.Etapa === 'Welcome' && newStage === 'Diálogo'){
+        // Welcome é só o cadastro do lead — passar pra Diálogo não pede relatório
+        lead.Etapa = newStage;
+        render();
+        postAction({ action:'moveStageWithReport', id: lead.ID, etapa: newStage, relatorio: 'Início de tratativa — lead movido para Diálogo.' })
+          .then(()=> setTimeout(loadData, 1200));
+        showToast(`${lead.Nome} → ${newStage}`);
       } else {
         openReportModal(lead, newStage);
       }

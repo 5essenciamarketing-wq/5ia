@@ -199,6 +199,9 @@
     color:var(--text-muted); font-size:12px; text-align:center;
     padding:20px 0; font-style:italic; opacity:.6;
   }
+  .card-locked{cursor:default; opacity:.92;}
+  .card-locked:hover{border-color:var(--border);}
+  .chip-cirurgia{color:var(--sage); border-color:var(--sage-soft);}
 
   /* ---------- SIDE PANEL (TAREFAS) ---------- */
   .overlay{
@@ -383,6 +386,23 @@
   .stat-row strong{font-family:'Cormorant Garamond',serif; font-size:24px; color:var(--gold); font-weight:600;}
   .stat-row strong.stat-danger{color:var(--bordeaux);}
 
+  .surgery-month-group{margin-bottom:16px;}
+  .surgery-month-header{
+    font-size:11px; text-transform:uppercase; letter-spacing:.08em;
+    color:var(--gold-dim); margin-bottom:8px; padding-bottom:6px; border-bottom:1px solid var(--border);
+  }
+  .surgery-row{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:8px 0; font-size:13px; color:var(--text);
+    border-bottom:1px solid var(--border);
+  }
+  .surgery-row .surgery-date{color:var(--text-muted); font-size:12px;}
+  .surgery-status{
+    font-size:10.5px; padding:2px 8px; border-radius:20px;
+    border:1px solid var(--border-strong); color:var(--gold-dim);
+  }
+  .surgery-status.done{color:var(--sage); border-color:var(--sage-soft);}
+
   @media (max-width:900px){
     .dashboard-grid{grid-template-columns:1fr;}
   }
@@ -486,6 +506,10 @@
         <div class="stat-row"><span>Pendentes</span><strong id="statTaskPendentes">0</strong></div>
         <div class="stat-row"><span>Atrasados</span><strong id="statTaskAtrasados" class="stat-danger">0</strong></div>
         <div class="stat-row"><span>Concluídos</span><strong id="statTaskConcluidos">0</strong></div>
+      </div>
+      <div class="dash-card" style="grid-column:1 / -1;">
+        <div class="dash-card-title">Cirurgias por Mês</div>
+        <div id="surgeryMonthList"></div>
       </div>
     </div>
   </div>
@@ -613,6 +637,22 @@
     <div class="modal-actions">
       <button type="button" class="btn-ghost" id="cancelReport">Cancelar</button>
       <button type="button" class="btn-primary" id="confirmReport">Confirmar passagem</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal data da cirurgia (Consulta → Cirurgia não pede relatório, só a data) -->
+<div class="modal-overlay" id="surgeryModalOverlay">
+  <div class="modal" style="max-width:420px;">
+    <h2>Cirurgia Confirmada</h2>
+    <div class="report-transition" id="surgeryLeadLabel" style="margin-bottom:16px;"></div>
+    <div class="field">
+      <label>Data da Cirurgia</label>
+      <input type="date" id="s_data" required>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn-ghost" id="cancelSurgery">Cancelar</button>
+      <button type="button" class="btn-primary" id="confirmSurgery">Confirmar Cirurgia</button>
     </div>
   </div>
 </div>
@@ -813,6 +853,25 @@ function getTransitionReasons(from, to){
   return GENERIC_REASONS;
 }
 
+/* ============================================================
+   REGRA DE FLUXO — só anda da esquerda pra direita.
+   Cirurgia é etapa final: uma vez lá, não move mais (só a data muda).
+   Frio/Remarketing são exceção: sempre acessíveis, e sempre podem voltar pro caminho principal.
+   ============================================================ */
+const MAIN_PATH = ['Welcome', 'Diálogo', 'Consulta', 'Cirurgia'];
+const SIDE_STAGES = ['Frio', 'Remarketing'];
+
+function canTransition(from, to){
+  if(from === to) return false;
+  if(from === 'Cirurgia') return false; // travado — etapa final
+  if(SIDE_STAGES.includes(to)) return true; // sempre pode esfriar/remarketing
+  if(SIDE_STAGES.includes(from)) return true; // reativação, pode voltar pro caminho principal
+  const iFrom = MAIN_PATH.indexOf(from);
+  const iTo = MAIN_PATH.indexOf(to);
+  if(iFrom === -1 || iTo === -1) return true; // etapa desconhecida, não bloqueia
+  return iTo > iFrom; // só avança
+}
+
 let STATE = { leads: [], tasks: [], stages: [], historico: [] };
 let pendingLeadForTask = null;
 
@@ -914,6 +973,12 @@ function renderBoard(){
 
   // Drag events
   el.querySelectorAll('.card').forEach(card => {
+    const lead = STATE.leads.find(l => l.ID === card.dataset.id);
+    if(lead && lead.Etapa === 'Cirurgia'){
+      card.setAttribute('draggable', 'false');
+      card.classList.add('card-locked');
+      return;
+    }
     card.addEventListener('dragstart', e => {
       card.classList.add('dragging');
       e.dataTransfer.setData('text/plain', card.dataset.id);
@@ -929,7 +994,20 @@ function renderBoard(){
       const id = e.dataTransfer.getData('text/plain');
       const newStage = col.dataset.stage;
       const lead = STATE.leads.find(l => l.ID === id);
-      if(lead && lead.Etapa !== newStage){
+      if(!lead || lead.Etapa === newStage) return;
+
+      if(!canTransition(lead.Etapa, newStage)){
+        if(lead.Etapa === 'Cirurgia'){
+          showToast(`${lead.Nome} já está em Cirurgia — não é possível mover pra trás.`);
+        } else {
+          showToast('O fluxo só avança da esquerda para a direita.');
+        }
+        return;
+      }
+
+      if(newStage === 'Cirurgia'){
+        openSurgeryModal(lead);
+      } else {
         openReportModal(lead, newStage);
       }
     });
@@ -958,12 +1036,17 @@ function leadCard(lead){
   const da = daysAgo(lead.Data_Ultima_Interacao);
   const staleClass = da !== null && da >= 5 ? 'card-stale' : '';
   const staleText = da === null ? '' : da === 0 ? 'hoje' : `há ${da}d`;
+  const isCirurgia = lead.Etapa === 'Cirurgia';
+  const cirurgiaBadge = isCirurgia && lead.Data_Cirurgia
+    ? `<span class="chip chip-cirurgia">${lead.Status_Cirurgia === 'Concluída' ? '✓ Concluída' : 'Cirurgia'}: ${formatDate(lead.Data_Cirurgia)}</span>`
+    : '';
   return `
-  <div class="card" draggable="true" data-id="${lead.ID}">
+  <div class="card ${isCirurgia ? 'card-locked' : ''}" draggable="${isCirurgia ? 'false' : 'true'}" data-id="${lead.ID}">
     <div class="card-name">${escapeHtml(lead.Nome || 'Sem nome')}</div>
     <div class="card-meta">
       ${lead.Procedimento_Interesse ? `<span class="chip">${escapeHtml(lead.Procedimento_Interesse)}</span>` : ''}
       ${lead.Origem ? `<span class="chip">${escapeHtml(lead.Origem)}</span>` : ''}
+      ${cirurgiaBadge}
     </div>
     <div class="card-footer">
       <span class="${staleClass}">${staleText}</span>
@@ -1197,12 +1280,49 @@ document.getElementById('confirmReport').addEventListener('click', () => {
 
   if(fromStage === 'Diálogo' && toStage === 'Consulta'){
     launchConfetti();
-  } else if(fromStage === 'Consulta' && toStage === 'Cirurgia'){
-    launchConfetti(220);
-    showCelebrationMessage(`${lead.Nome.split(' ')[0]} vai operar! ✨`);
   }
 
   pendingTransition = null;
+});
+
+// ---------- MODAL DATA DA CIRURGIA (Consulta → Cirurgia, sem relatório, só data) ----------
+const surgeryModal = document.getElementById('surgeryModalOverlay');
+let pendingSurgery = null; // { lead }
+
+function openSurgeryModal(lead){
+  pendingSurgery = { lead };
+  document.getElementById('surgeryLeadLabel').innerHTML =
+    `${escapeHtml(lead.Nome)} — <strong>${escapeHtml(lead.Etapa)}</strong> → <strong>Cirurgia</strong>`;
+  document.getElementById('s_data').value = '';
+  surgeryModal.classList.add('open');
+}
+
+document.getElementById('cancelSurgery').addEventListener('click', () => {
+  surgeryModal.classList.remove('open');
+  pendingSurgery = null;
+});
+
+document.getElementById('confirmSurgery').addEventListener('click', () => {
+  const dataCirurgia = document.getElementById('s_data').value;
+  if(!dataCirurgia){ showToast('Selecione a data da cirurgia.'); return; }
+  if(!pendingSurgery) return;
+
+  const { lead } = pendingSurgery;
+  lead.Etapa = 'Cirurgia';
+  lead.Data_Cirurgia = dataCirurgia;
+  lead.Status_Cirurgia = 'Agendada';
+  render();
+  surgeryModal.classList.remove('open');
+  postAction({
+    action:'moveStageWithReport', id: lead.ID, etapa:'Cirurgia',
+    relatorio: `Cirurgia agendada para ${formatDate(dataCirurgia)}`, dataCirurgia
+  }).then(()=> setTimeout(loadData, 1200));
+  showToast(`${lead.Nome} → Cirurgia`);
+
+  launchConfetti(220);
+  showCelebrationMessage(`${lead.Nome.split(' ')[0]} vai operar! ✨`);
+
+  pendingSurgery = null;
 });
 
 /* ---------- CELEBRAÇÃO (confetti + mensagem animada) ---------- */
@@ -1337,6 +1457,49 @@ function renderDashboard(){
   document.getElementById('statTaskPendentes').textContent = pendentes.length;
   document.getElementById('statTaskAtrasados').textContent = atrasados.length;
   document.getElementById('statTaskConcluidos').textContent = concluidos.length;
+
+  renderSurgeryMonthList();
+}
+
+const MONTH_NAMES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+function renderSurgeryMonthList(){
+  const el = document.getElementById('surgeryMonthList');
+  const cirurgias = STATE.leads.filter(l => l.Etapa === 'Cirurgia' && l.Data_Cirurgia);
+  if(!cirurgias.length){
+    el.innerHTML = '<div class="empty-state" style="padding:20px;">Nenhuma cirurgia agendada ainda.</div>';
+    return;
+  }
+
+  const groups = {};
+  cirurgias.forEach(l => {
+    const d = new Date(l.Data_Cirurgia);
+    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    if(!groups[key]) groups[key] = [];
+    groups[key].push(l);
+  });
+
+  const sortedKeys = Object.keys(groups).sort();
+  el.innerHTML = sortedKeys.map(key => {
+    const [year, month] = key.split('-');
+    const label = `${MONTH_NAMES[parseInt(month,10)-1]} de ${year}`;
+    const rows = groups[key]
+      .sort((a,b) => new Date(a.Data_Cirurgia) - new Date(b.Data_Cirurgia))
+      .map(l => {
+        const done = l.Status_Cirurgia === 'Concluída';
+        return `<div class="surgery-row">
+          <span>${escapeHtml(l.Nome)}</span>
+          <span style="display:flex;align-items:center;gap:10px;">
+            <span class="surgery-date">${formatDate(l.Data_Cirurgia)}</span>
+            <span class="surgery-status ${done ? 'done' : ''}">${done ? 'Concluída' : 'Agendada'}</span>
+          </span>
+        </div>`;
+      }).join('');
+    return `<div class="surgery-month-group">
+      <div class="surgery-month-header">${label}</div>
+      ${rows}
+    </div>`;
+  }).join('');
 }
 
 document.getElementById('btnDashboard').addEventListener('click', () => {

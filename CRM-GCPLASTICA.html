@@ -668,17 +668,6 @@
       <textarea id="r_relatorio" placeholder="Ou descreva manualmente o que aconteceu..." style="min-height:90px;" required></textarea>
     </div>
 
-    <div class="field-row" id="consultaDateFields" style="display:none;">
-      <div class="field">
-        <label>Data da Consulta</label>
-        <input type="date" id="r_dataConsulta">
-      </div>
-      <div class="field">
-        <label>Hora</label>
-        <input type="time" id="r_horaConsulta">
-      </div>
-    </div>
-
     <div class="modal-actions">
       <button type="button" class="btn-ghost" id="cancelReport">Cancelar</button>
       <button type="button" class="btn-primary" id="confirmReport">Confirmar passagem</button>
@@ -687,6 +676,28 @@
 </div>
 
 <!-- Modal data da cirurgia (Consulta → Cirurgia não pede relatório, só a data) -->
+<!-- Modal data/hora da consulta (Diálogo → Consulta, sem relatório, só data+hora) -->
+<div class="modal-overlay" id="consultaModalOverlay">
+  <div class="modal" style="max-width:420px;">
+    <h2>Consulta Confirmada</h2>
+    <div class="report-transition" id="consultaLeadLabel" style="margin-bottom:16px;"></div>
+    <div class="field-row">
+      <div class="field">
+        <label>Data da Consulta</label>
+        <input type="date" id="c_data" required>
+      </div>
+      <div class="field">
+        <label>Hora</label>
+        <input type="time" id="c_hora" required>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn-ghost" id="cancelConsulta">Cancelar</button>
+      <button type="button" class="btn-primary" id="confirmConsulta">Confirmar Consulta</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="surgeryModalOverlay">
   <div class="modal" style="max-width:420px;">
     <h2>Cirurgia Confirmada</h2>
@@ -1098,6 +1109,8 @@ function renderBoard(){
 
       if(newStage === 'Cirurgia'){
         openSurgeryModal(lead);
+      } else if(newStage === 'Consulta'){
+        openConsultaModal(lead);
       } else if(lead.Etapa === 'Welcome' && newStage === 'Diálogo'){
         // Welcome é só o cadastro do lead — passar pra Diálogo não pede relatório
         lead.Etapa = newStage;
@@ -1327,11 +1340,6 @@ function openReportModal(lead, toStage){
   document.getElementById('conversaWrapper').style.display = '';
   document.getElementById('conversaOk').style.display = 'none';
 
-  const isConsulta = toStage === 'Consulta';
-  document.getElementById('consultaDateFields').style.display = isConsulta ? 'flex' : 'none';
-  document.getElementById('r_dataConsulta').value = '';
-  document.getElementById('r_horaConsulta').value = '';
-
   const reasons = getTransitionReasons(lead.Etapa, toStage);
   const chipsEl = document.getElementById('reasonChips');
   chipsEl.innerHTML = reasons.map(r => `<button type="button" class="reason-chip">${escapeHtml(r)}</button>`).join('');
@@ -1373,29 +1381,57 @@ document.getElementById('confirmReport').addEventListener('click', () => {
   if(!pendingTransition) return;
 
   const { lead, toStage } = pendingTransition;
-  const fromStage = lead.Etapa;
-
-  let dataConsulta = '', horaConsulta = '';
-  if(toStage === 'Consulta'){
-    dataConsulta = document.getElementById('r_dataConsulta').value;
-    horaConsulta = document.getElementById('r_horaConsulta').value;
-    if(!dataConsulta || !horaConsulta){ showToast('Preencha a data e a hora da consulta.'); return; }
-  }
-
   lead.Etapa = toStage;
-  if(toStage === 'Consulta'){ lead.Data_Consulta = dataConsulta; lead.Hora_Consulta = horaConsulta; }
   render();
   reportModal.classList.remove('open');
-  postAction({ action:'moveStageWithReport', id: lead.ID, etapa: toStage, relatorio, dataConsulta, horaConsulta })
+  postAction({ action:'moveStageWithReport', id: lead.ID, etapa: toStage, relatorio })
     .then(()=> setTimeout(loadData, 1200));
   showToast(`${lead.Nome} → ${toStage}`);
 
-  if(fromStage === 'Diálogo' && toStage === 'Consulta'){
-    launchConfetti();
-    showConsultationCard(lead, dataConsulta, horaConsulta);
-  }
-
   pendingTransition = null;
+});
+
+// ---------- MODAL DATA/HORA DA CONSULTA (Diálogo → Consulta, sem relatório) ----------
+const consultaModal = document.getElementById('consultaModalOverlay');
+let pendingConsulta = null; // { lead }
+
+function openConsultaModal(lead){
+  pendingConsulta = { lead };
+  document.getElementById('consultaLeadLabel').innerHTML =
+    `${escapeHtml(lead.Nome)} — <strong>${escapeHtml(lead.Etapa)}</strong> → <strong>Consulta</strong>`;
+  document.getElementById('c_data').value = '';
+  document.getElementById('c_hora').value = '';
+  consultaModal.classList.add('open');
+}
+
+document.getElementById('cancelConsulta').addEventListener('click', () => {
+  consultaModal.classList.remove('open');
+  pendingConsulta = null;
+});
+
+document.getElementById('confirmConsulta').addEventListener('click', () => {
+  const dataConsulta = document.getElementById('c_data').value;
+  const horaConsulta = document.getElementById('c_hora').value;
+  if(!dataConsulta || !horaConsulta){ showToast('Preencha a data e a hora da consulta.'); return; }
+  if(!pendingConsulta) return;
+
+  const { lead } = pendingConsulta;
+  lead.Etapa = 'Consulta';
+  lead.Data_Consulta = dataConsulta;
+  lead.Hora_Consulta = horaConsulta;
+  render();
+  consultaModal.classList.remove('open');
+  postAction({
+    action:'moveStageWithReport', id: lead.ID, etapa:'Consulta',
+    relatorio: `Consulta agendada para ${formatDate(dataConsulta)} às ${horaConsulta}`,
+    dataConsulta, horaConsulta
+  }).then(()=> setTimeout(loadData, 1200));
+  showToast(`${lead.Nome} → Consulta`);
+
+  launchConfetti();
+  showConsultationCard(lead, dataConsulta, horaConsulta);
+
+  pendingConsulta = null;
 });
 
 // ---------- MODAL DATA DA CIRURGIA (Consulta → Cirurgia, sem relatório, só data) ----------

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CRM — Consultório Dr. Gibran Chedid</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
   :root{
@@ -23,7 +23,9 @@
     --text-muted:#948a76;
     --border:rgba(198,166,100,.14);
     --border-strong:rgba(198,166,100,.28);
-    --radius:2px;
+    --radius:14px;
+    --radius-sm:10px;
+    --radius-lg:20px;
   }
   *{box-sizing:border-box;margin:0;padding:0;}
   html,body{height:100%;}
@@ -56,10 +58,10 @@
     color:var(--gold-dim); margin-bottom:6px;
   }
   h1{
-    font-family:'Cormorant Garamond',serif;
-    font-weight:500;
-    font-size:32px;
-    letter-spacing:.01em;
+    font-family:'Inter',sans-serif;
+    font-weight:800;
+    font-size:30px;
+    letter-spacing:-.02em;
     color:var(--text);
   }
   h1 em{color:var(--gold); font-style:normal;}
@@ -87,9 +89,9 @@
   .btn-primary{
     background:var(--gold); color:#141210;
     border:none; padding:11px 22px;
-    font-family:'Inter',sans-serif; font-weight:600; font-size:13px;
-    letter-spacing:.02em;
-    cursor:pointer; border-radius:1px;
+    font-family:'Inter',sans-serif; font-weight:700; font-size:13px;
+    letter-spacing:.01em;
+    cursor:pointer; border-radius:999px;
     display:flex; align-items:center; gap:8px;
     transition:transform .15s, box-shadow .15s;
   }
@@ -121,21 +123,24 @@
     color:var(--text-muted); text-align:center;
   }
   .journey-count{
-    font-family:'Cormorant Garamond',serif; font-size:22px; color:var(--gold);
+    font-family:'Inter',sans-serif; font-weight:800; font-size:22px; color:var(--gold);
     margin-top:2px;
   }
 
   /* ---------- BOARD ---------- */
   .board{
-    display:flex; gap:1px;
+    display:flex; gap:16px;
     padding:24px 40px 60px;
     overflow-x:auto;
-    background:var(--border);
+    background:transparent;
   }
   .column{
-    background:var(--bg);
+    background:var(--panel-alt);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
     min-width:280px; max-width:280px;
     display:flex; flex-direction:column;
+    overflow:hidden;
   }
   .column-head{
     padding:14px 16px 12px;
@@ -144,9 +149,10 @@
   }
   .column-title{
     font-size:11px; text-transform:uppercase; letter-spacing:.1em;
-    color:var(--text-muted); font-weight:600;
+    color:var(--text-muted); font-weight:700;
   }
   .column-count{color:var(--gold-dim); font-size:11px;}
+  .stage-dot{display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:6px;}
   .column-body{
     padding:12px; display:flex; flex-direction:column; gap:10px;
     min-height:120px;
@@ -157,15 +163,22 @@
   .card{
     background:var(--panel);
     border:1px solid var(--border);
+    border-radius:var(--radius-sm);
     padding:14px 16px;
     cursor:grab;
-    transition:border-color .15s, transform .1s;
+    box-shadow:0 1px 3px rgba(0,0,0,.2);
+    transition:border-color .15s, transform .15s, box-shadow .15s;
   }
-  .card:hover{border-color:var(--border-strong);}
+  .card:hover{border-color:var(--border-strong); transform:translateY(-2px); box-shadow:0 8px 20px rgba(0,0,0,.35);}
   .card.dragging{opacity:.4;}
+  .card-top{display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:6px;}
+  .stage-tag{
+    flex-shrink:0; font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.04em;
+    padding:3px 8px; border-radius:999px; border:1px solid; white-space:nowrap;
+  }
   .card-name{
-    font-family:'Cormorant Garamond',serif;
-    font-size:19px; font-weight:600;
+    font-family:'Inter',sans-serif;
+    font-size:16px; font-weight:700;
     color:var(--text); margin-bottom:6px;
   }
   .card-meta{
@@ -220,7 +233,7 @@
     padding:24px 24px 16px; border-bottom:1px solid var(--border);
     display:flex; justify-content:space-between; align-items:center;
   }
-  .panel-head h2{font-family:'Cormorant Garamond',serif; font-size:24px; font-weight:600;}
+  .panel-head h2{font-family:'Inter',sans-serif; font-size:22px; font-weight:800; letter-spacing:-.01em;}
   .panel-close{background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer;}
   .panel-body{padding:16px 24px; overflow-y:auto; flex:1;}
   .task-item{
@@ -257,10 +270,12 @@
   .modal-overlay.open{display:flex;}
   .modal{
     background:var(--panel); border:1px solid var(--border-strong);
+    border-radius:var(--radius);
     width:100%; max-width:440px; padding:28px;
     max-height:90vh; overflow-y:auto;
+    box-shadow:0 20px 60px rgba(0,0,0,.5);
   }
-  .modal h2{font-family:'Cormorant Garamond',serif; font-size:24px; margin-bottom:20px; font-weight:600;}
+  .modal h2{font-family:'Inter',sans-serif; font-size:21px; margin-bottom:20px; font-weight:800; letter-spacing:-.01em;}
   .field{margin-bottom:14px;}
   .field label{
     display:block; font-size:11px; text-transform:uppercase; letter-spacing:.06em;
@@ -269,7 +284,7 @@
   .field input, .field select, .field textarea{
     width:100%; background:var(--panel-alt); border:1px solid var(--border);
     color:var(--text); padding:10px 12px; font-family:'Inter',sans-serif; font-size:13.5px;
-    border-radius:1px;
+    border-radius:var(--radius-sm);
   }
   .field input:focus, .field select:focus, .field textarea:focus{
     outline:none; border-color:var(--gold);
@@ -281,14 +296,15 @@
   .btn-ghost{
     background:transparent; border:1px solid var(--border-strong);
     color:var(--text-muted); padding:10px 18px; cursor:pointer;
-    font-family:'Inter',sans-serif; font-size:13px;
+    font-family:'Inter',sans-serif; font-size:13px; font-weight:600;
+    border-radius:999px;
   }
   .btn-ghost:hover{color:var(--text); border-color:var(--gold-dim);}
 
   .toast{
     position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px);
     background:var(--panel-alt); border:1px solid var(--gold); color:var(--text);
-    padding:12px 22px; font-size:13px; border-radius:1px;
+    padding:12px 22px; font-size:13px; border-radius:var(--radius-sm);
     opacity:0; pointer-events:none; transition:opacity .25s, transform .25s;
     z-index:40;
   }
@@ -330,7 +346,7 @@
     animation:pulse 1.2s ease-in-out infinite;
   }
   @keyframes pulse{0%,100%{opacity:.3;}50%{opacity:1;}}
-  .loading span{font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--text-muted);letter-spacing:.03em;}
+  .loading span{font-family:'Inter',sans-serif;font-size:16px;color:var(--text-muted);letter-spacing:.03em;}
 
   /* ---------- LOGIN ---------- */
   .login-screen{
@@ -349,7 +365,9 @@
     position:relative; z-index:1;
     width:100%; max-width:360px;
     background:var(--panel); border:1px solid var(--border-strong);
+    border-radius:var(--radius);
     padding:36px 32px;
+    box-shadow:0 20px 60px rgba(0,0,0,.5);
   }
   .login-error{
     color:var(--bordeaux); font-size:12.5px; min-height:16px; margin-top:4px;
@@ -366,12 +384,12 @@
     display:flex; justify-content:space-between; align-items:center;
     margin-bottom:22px; padding-bottom:16px; border-bottom:1px solid var(--border);
   }
-  .dashboard-head h2{font-family:'Cormorant Garamond',serif; font-size:26px; font-weight:600;}
+  .dashboard-head h2{font-family:'Inter',sans-serif; font-size:23px; font-weight:800; letter-spacing:-.01em;}
   .dashboard-grid{
-    display:grid; grid-template-columns:repeat(2, 1fr); gap:1px;
-    background:var(--border);
+    display:grid; grid-template-columns:repeat(2, 1fr); gap:16px;
+    background:transparent;
   }
-  .dash-card{background:var(--bg); padding:20px;}
+  .dash-card{background:var(--panel-alt); border:1px solid var(--border); border-radius:var(--radius); padding:20px;}
   .dash-card-title{
     font-size:11px; text-transform:uppercase; letter-spacing:.08em;
     color:var(--text-muted); margin-bottom:14px;
@@ -383,7 +401,7 @@
     font-size:13px; color:var(--text-muted);
     padding:10px 0; border-bottom:1px solid var(--border);
   }
-  .stat-row strong{font-family:'Cormorant Garamond',serif; font-size:24px; color:var(--gold); font-weight:600;}
+  .stat-row strong{font-family:'Inter',sans-serif; font-size:22px; color:var(--gold); font-weight:800;}
   .stat-row strong.stat-danger{color:var(--bordeaux);}
 
   .surgery-month-group{margin-bottom:16px;}
@@ -407,6 +425,7 @@
   .consult-card{
     position:relative;
     background:var(--panel); border:1px solid var(--gold);
+    border-radius:var(--radius-lg);
     box-shadow:0 20px 60px rgba(0,0,0,.5), 0 0 40px var(--gold-glow);
     width:100%; max-width:440px; padding:40px 34px 30px;
     text-align:center;
@@ -422,7 +441,7 @@
     color:var(--gold); margin-bottom:10px;
   }
   .consult-card-name{
-    font-family:'Cormorant Garamond',serif; font-size:30px; font-weight:600;
+    font-family:'Inter',sans-serif; font-size:26px; font-weight:800; letter-spacing:-.01em;
     color:var(--text); margin-bottom:18px;
   }
   .consult-card-row{
@@ -444,7 +463,7 @@
   /* ---------- CELEBRAÇÃO ---------- */
   .celebration-message{
     position:fixed; top:50%; left:50%; transform:translate(-50%,-50%) scale(.7);
-    font-family:'Cormorant Garamond',serif; font-size:42px; font-weight:600;
+    font-family:'Inter',sans-serif; font-size:34px; font-weight:800; letter-spacing:-.01em;
     color:var(--gold); text-align:center; z-index:10000;
     opacity:0; transition:opacity .4s ease, transform .4s cubic-bezier(.34,1.56,.64,1);
     text-shadow:0 4px 30px rgba(198,166,100,.5);
@@ -746,6 +765,17 @@
    ============================================================ */
 const CRM_API_URL = 'https://script.google.com/macros/s/AKfycby2tAmlxe2DaC1ls4aDBpjjj6Xwo_bEKCzN0qU88XS9emPEpcpC09Z5xlpbChnbTfFx/exec';
 
+/* Cores das etiquetas por etapa — edite à vontade */
+const STAGE_COLORS = {
+  'Welcome':     { text:'#f3ede0', bg:'rgba(243,237,224,.14)', border:'rgba(243,237,224,.35)' },
+  'Diálogo':     { text:'#f2c94c', bg:'rgba(242,201,76,.14)',  border:'rgba(242,201,76,.4)'  },
+  'Consulta':    { text:'#4caf6d', bg:'rgba(76,175,109,.14)',  border:'rgba(76,175,109,.4)'  },
+  'Cirurgia':    { text:'#c6a664', bg:'rgba(198,166,100,.16)', border:'rgba(198,166,100,.45)' },
+  'Frio':        { text:'#5b9bd5', bg:'rgba(91,155,213,.14)',  border:'rgba(91,155,213,.4)'  },
+  'Remarketing': { text:'#e0554f', bg:'rgba(224,85,79,.14)',   border:'rgba(224,85,79,.4)'   }
+};
+function stageColor(stage){ return STAGE_COLORS[stage] || STAGE_COLORS['Welcome']; }
+
 /* ============================================================
    MENSAGENS DO WHATSAPP — códigos disponíveis pra usar nos textos:
    {nome}  → primeiro nome do lead (preenchido sozinho)
@@ -988,7 +1018,7 @@ function isConfigured(){
 function showConfigBanner(){
   const board = document.getElementById('board');
   board.innerHTML = `<div style="padding:40px;color:var(--text-muted);max-width:520px;font-size:14px;line-height:1.6;">
-    <div style="font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--gold);margin-bottom:10px;">Falta conectar a planilha</div>
+    <div style="font-family:'Inter',sans-serif;font-size:22px;color:var(--gold);margin-bottom:10px;">Falta conectar a planilha</div>
     Abra este arquivo e cole a URL do seu App da Web do Apps Script na constante <code style="color:var(--gold-dim)">CRM_API_URL</code>, no início da tag &lt;script&gt;. Depois recarregue a página.
   </div>`;
 }
@@ -1049,9 +1079,11 @@ function renderJourney(){
   const el = document.getElementById('journey');
   el.innerHTML = STATE.stages.map(stage => {
     const count = STATE.leads.filter(l => l.Etapa === stage).length;
-    return `<div class="journey-step ${count>0?'active':''}">
-      <div class="journey-dot"></div>
-      <div class="journey-count">${count}</div>
+    const c = stageColor(stage);
+    const active = count > 0;
+    return `<div class="journey-step ${active?'active':''}">
+      <div class="journey-dot" style="${active ? `background:${c.text};border-color:${c.text};` : ''}"></div>
+      <div class="journey-count" style="${active ? `color:${c.text};` : ''}">${count}</div>
       <div class="journey-label">${stage}</div>
     </div>`;
   }).join('');
@@ -1061,10 +1093,11 @@ function renderBoard(){
   const el = document.getElementById('board');
   el.innerHTML = STATE.stages.map(stage => {
     const leads = STATE.leads.filter(l => l.Etapa === stage);
+    const c = stageColor(stage);
     return `
-    <div class="column">
+    <div class="column" style="border-top:3px solid ${c.text};">
       <div class="column-head">
-        <span class="column-title">${stage}</span>
+        <span class="column-title"><span class="stage-dot" style="background:${c.text};"></span>${stage}</span>
         <span class="column-count">${leads.length}</span>
       </div>
       <div class="column-body" data-stage="${stage}">
@@ -1151,9 +1184,13 @@ function leadCard(lead){
   const cirurgiaBadge = isCirurgia && lead.Data_Cirurgia
     ? `<span class="chip chip-cirurgia">${lead.Status_Cirurgia === 'Concluída' ? '✓ Concluída' : 'Cirurgia'}: ${formatDate(lead.Data_Cirurgia)}</span>`
     : '';
+  const c = stageColor(lead.Etapa);
   return `
-  <div class="card ${isCirurgia ? 'card-locked' : ''}" draggable="${isCirurgia ? 'false' : 'true'}" data-id="${lead.ID}">
-    <div class="card-name">${escapeHtml(lead.Nome || 'Sem nome')}</div>
+  <div class="card ${isCirurgia ? 'card-locked' : ''}" style="border-left:4px solid ${c.text};" draggable="${isCirurgia ? 'false' : 'true'}" data-id="${lead.ID}">
+    <div class="card-top">
+      <div class="card-name">${escapeHtml(lead.Nome || 'Sem nome')}</div>
+      <span class="stage-tag" style="color:${c.text}; background:${c.bg}; border-color:${c.border};">${escapeHtml(lead.Etapa)}</span>
+    </div>
     <div class="card-meta">
       ${lead.Procedimento_Interesse ? `<span class="chip">${escapeHtml(lead.Procedimento_Interesse)}</span>` : ''}
       ${lead.Origem ? `<span class="chip">${escapeHtml(lead.Origem)}</span>` : ''}

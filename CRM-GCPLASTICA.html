@@ -163,6 +163,18 @@
   }
   .column-body.drag-over{background:var(--gold-glow);}
 
+  .internal-dropzone{
+    margin:0 40px 40px; padding:16px 20px;
+    border:1.5px dashed var(--border-strong);
+    border-radius:var(--radius);
+    color:var(--text-muted); font-size:12.5px;
+    display:flex; align-items:center; gap:10px;
+    transition:border-color .15s, background .15s, color .15s;
+  }
+  .internal-dropzone.drag-over{
+    border-color:var(--bordeaux); background:var(--bordeaux-soft); color:var(--text);
+  }
+
   .card{
     background:var(--panel);
     border:1px solid var(--border);
@@ -580,6 +592,11 @@
   <div class="journey" id="journey"></div>
 
   <div class="board" id="board"></div>
+
+  <div class="internal-dropzone" id="internalDropzone">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z"/></svg>
+    Arraste aqui contatos internos (equipe, grupos, médicos) — some do board e nunca mais volta a virar lead
+  </div>
 
   <div class="dashboard" id="dashboard">
     <div class="dashboard-head">
@@ -1537,6 +1554,27 @@ document.getElementById('confirmReport').addEventListener('click', () => {
 });
 
 // ---------- MODAL DATA/HORA DA CONSULTA (Diálogo → Consulta, sem relatório) ----------
+// ---------- CAIXA DE CONTATOS INTERNOS (arrastar pra remover equipe/grupos) ----------
+const internalDropzone = document.getElementById('internalDropzone');
+internalDropzone.addEventListener('dragover', e => { e.preventDefault(); internalDropzone.classList.add('drag-over'); });
+internalDropzone.addEventListener('dragleave', () => internalDropzone.classList.remove('drag-over'));
+internalDropzone.addEventListener('drop', e => {
+  e.preventDefault();
+  internalDropzone.classList.remove('drag-over');
+  const id = e.dataTransfer.getData('text/plain');
+  const lead = STATE.leads.find(l => l.ID === id);
+  if(!lead) return;
+
+  const confirmado = confirm(`Marcar "${lead.Nome}" como contato interno (equipe/grupo)?\n\nIsso remove o card do board e ignora mensagens desse telefone daqui pra frente.`);
+  if(!confirmado) return;
+
+  STATE.leads = STATE.leads.filter(l => l.ID !== id);
+  render();
+  postAction({ action:'markAsInternal', id: lead.ID })
+    .then(()=> setTimeout(loadData, 1200));
+  showToast(`${lead.Nome} marcado como contato interno.`);
+});
+
 const consultaModal = document.getElementById('consultaModalOverlay');
 let pendingConsulta = null; // { lead }
 

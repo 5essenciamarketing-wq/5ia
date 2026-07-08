@@ -1902,7 +1902,7 @@ async function openChatPanel(lead){
   chatList.innerHTML = '<div class="empty-state">Carregando conversa...</div>';
 
   try{
-    const res = await fetch(`${CRM_API_URL}?action=getMessages&leadId=${encodeURIComponent(lead.ID)}&token=${encodeURIComponent(SESSION.token)}`);
+    const res = await fetch(`${CRM_API_URL}?action=getMessages&leadId=${encodeURIComponent(lead.ID)}&telefone=${encodeURIComponent(lead.Telefone || '')}&token=${encodeURIComponent(SESSION.token)}`);
     const data = await res.json();
     if(!data.ok){ chatList.innerHTML = '<div class="empty-state">Não foi possível carregar a conversa.</div>'; return; }
     renderChatMessages(data.mensagens || []);

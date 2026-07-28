@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Conheça a Cicatri+Derme</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0B211D; --surface:#12332C; --surface-2:#1A423A;
+    --paper:#F1ECE2; --paper-dim:#C9CBC0;
+    --red:#C1443B; --red-soft:#E4998F;
+    --teal:#5FB3A3; --teal-dim:#3D7C70;
+    --line: rgba(241,236,226,0.14);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--ink);color:var(--paper);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:820px;margin:0 auto;padding:0 28px;}
+  @media(max-width:600px){.wrap{padding:0 18px;}}
+  h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;letter-spacing:-0.01em;}
+
+  header{padding:76px 0 52px;border-bottom:1px solid var(--line);
+    background:radial-gradient(ellipse at 20% 0%, rgba(95,179,163,0.16), transparent 55%), var(--ink);}
+  .brandmark{display:flex;align-items:center;gap:12px;margin-bottom:40px;}
+  .brandmark svg{width:26px;height:26px;}
+  .brandmark span{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:0.06em;color:var(--paper);}
+  .eyebrow{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;color:var(--teal);display:flex;align-items:center;gap:10px;}
+  .eyebrow::before{content:'';width:18px;height:1px;background:var(--teal);display:inline-block;}
+  header h1{font-size:clamp(1.6rem,4vw,2.2rem);margin-top:18px;max-width:600px;line-height:1.18;}
+  header p{color:var(--paper-dim);margin-top:16px;max-width:540px;line-height:1.6;font-size:0.96rem;}
+
+  main{padding:56px 0 100px;}
+
+  /* video block header */
+  .vidhead{
+    margin:70px 0 0;padding:26px 30px;border-radius:4px;
+    background:var(--surface-2);border:1px solid var(--line);
+    display:flex;align-items:center;gap:20px;
+  }
+  .vidhead:first-of-type{margin-top:0;}
+  .vidhead .n{font-family:'Fraunces',serif;font-size:2.4rem;color:var(--teal);line-height:1;}
+  .vidhead .txt .stagelabel{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--red-soft);}
+  .vidhead .txt h2{font-size:1.35rem;margin-top:6px;}
+  .vidhead .txt p{color:var(--paper-dim);font-size:0.9rem;margin-top:6px;max-width:480px;line-height:1.5;}
+
+  .q{border-top:1px solid var(--line);padding:24px 0;}
+  .q label{display:block;font-size:0.96rem;color:var(--paper);line-height:1.5;margin-bottom:4px;}
+  .q .qtag{font-family:'JetBrains Mono',monospace;color:var(--teal);font-size:0.78rem;margin-right:6px;text-transform:uppercase;}
+  .q .hint{font-size:0.82rem;color:var(--paper-dim);margin-bottom:12px;line-height:1.5;}
+  .q input[type=text], .q textarea, .q select{
+    width:100%;background:var(--surface);border:1px solid var(--line);color:var(--paper);
+    padding:12px 14px;border-radius:3px;font-family:'Inter',sans-serif;font-size:0.94rem;resize:vertical;
+  }
+  .q textarea{min-height:70px;}
+  .q textarea.tall{min-height:140px;}
+  .q input[type=text]:focus, .q textarea:focus, .q select:focus{outline:none;border-color:var(--teal);}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+  @media(max-width:600px){.row2{grid-template-columns:1fr;}}
+
+  .required{color:var(--red-soft);}
+
+  .submitrow{margin-top:56px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:36px;}
+  button.submit{
+    background:var(--red);color:var(--paper);border:none;padding:16px 32px;border-radius:4px;
+    font-weight:600;font-size:0.95rem;cursor:pointer;font-family:'Inter',sans-serif;
+    transition:background .15s ease, transform .15s ease;
+  }
+  button.submit:hover{background:#a83a32;transform:translateY(-1px);}
+  button.submit:disabled{opacity:0.5;cursor:default;transform:none;}
+  .status{font-size:0.88rem;color:var(--paper-dim);}
+  .status.err{color:var(--red-soft);}
+
+  .done{display:none;text-align:center;padding:100px 0;}
+  .done.show{display:block;}
+  .done p{color:var(--paper-dim);margin-top:14px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="brandmark">
+      <svg viewBox="0 0 30 30" fill="none"><path d="M12 2H18V12H28V18H18V28H12V18H2V12H12V2Z" fill="#C1443B"/></svg>
+      <span>CICATRI <span style="color:var(--red-soft)">+</span> DERME × QUINTESSÊNCIA</span>
+    </div>
+    <div class="eyebrow">CONHECENDO A MARCA</div>
+    <h1>Antes de gravar, conta pra gente sobre a Cicatri+Derme.</h1>
+    <p>Perguntas abertas, sem enrolação — só pra entendermos a marca e o que ela faz de verdade. Responda do seu jeito, com o quanto quiser em cada campo.</p>
+  </div>
+</header>
+
+<main class="wrap" id="formArea">
+  <form id="scriptForm">
+
+    <div class="q">
+      <label><span class="qtag">A marca</span>Conte a história da Cicatri+Derme: o que ela faz e há quanto tempo existe. <span class="required">*</span></label>
+      <textarea name="historia" class="tall" required></textarea>
+    </div>
+
+    <div class="q">
+      <label><span class="qtag">Serviços</span>Quais serviços vocês oferecem hoje?</label>
+      <div class="hint">Ozonioterapia, laserterapia, curativos, home care, etc. — pode listar tudo.</div>
+      <textarea name="servicos" class="tall"></textarea>
+    </div>
+
+    <div class="q">
+      <label><span class="qtag">Home care</span>Como funciona o atendimento domiciliar na prática?</label>
+      <textarea name="homecare" class="tall"></textarea>
+    </div>
+
+    <div class="q">
+      <label><span class="qtag">Equipe</span>Quem faz parte da equipe? Formação, experiência, quem são as pessoas por trás do atendimento.</label>
+      <textarea name="equipe" class="tall"></textarea>
+    </div>
+
+    <div class="q">
+      <label><span class="qtag">Convênios</span>Quais convênios vocês atendem hoje?</label>
+      <textarea name="convenios" class="tall"></textarea>
+    </div>
+
+    <div class="q">
+      <label><span class="qtag">Diferencial</span>O que faz a Cicatri+Derme diferente de qualquer outra clínica ou home care da região?</label>
+      <textarea name="diferencial" class="tall"></textarea>
+    </div>
+
+    <div class="q">
+      <label><span class="qtag">Fica à vontade</span>Mais alguma coisa que ache importante a gente saber?</label>
+      <textarea name="livre" class="tall"></textarea>
+    </div>
+
+    <div class="submitrow">
+      <button type="submit" class="submit" id="submitBtn">Enviar</button>
+      <span class="status" id="statusMsg"></span>
+    </div>
+  </form>
+</main>
+
+<main class="wrap done" id="doneArea">
+  <div class="eyebrow" style="justify-content:center;">RECEBIDO</div>
+  <h2>Recebido, obrigado.</h2>
+  <p>Já dá pra seguir pra criação dos vídeos com isso em mãos.</p>
+</main>
+
+<script>
+  // Substitua pela URL do Web App do Google Apps Script (Sheets como backend)
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzdIPQqC-Ljg4e9u_ANGXSA8a5gA-8miO9CbkmE86N7Ie6-SUo4Nxz67We-9Pxh2SE/exec";
+
+  document.getElementById('scriptForm').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    const status = document.getElementById('statusMsg');
+    const form = e.target;
+
+    const data = {};
+    new FormData(form).forEach((v,k)=>{ data[k]=v; });
+    data['projeto'] = 'Cicatri+Derme — Conhecendo a marca';
+    data['data_envio'] = new Date().toLocaleString('pt-BR');
+
+    btn.disabled = true;
+    status.textContent = 'Enviando...';
+    status.className = 'status';
+
+    try{
+      if(SCRIPT_URL.indexOf('COLE_AQUI') !== -1){ throw new Error('config'); }
+      await fetch(SCRIPT_URL, {
+        method:'POST',
+        mode:'no-cors',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(data)
+      });
+      document.getElementById('formArea').style.display='none';
+      document.getElementById('doneArea').classList.add('show');
+    } catch(err){
+      status.textContent = 'Não foi possível enviar agora — configure o link do backend.';
+      status.className = 'status err';
+      btn.disabled = false;
+    }
+  });
+</script>
+
+</body>
+</html>

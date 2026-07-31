@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Briefing Interativo — Talismã</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
+
+:root{
+  --bg:#0A0B0D;
+  --ink:#EDEAE3;
+  --ink-dim:#9C978A;
+  --gold:#C9A464;
+  --gold-dim:#8A7345;
+  --line:rgba(201,164,100,0.20);
+  --teal:#74998C;
+  --danger:#C07158;
+  --glass:rgba(255,255,255,0.035);
+  --glass-strong:rgba(255,255,255,0.06);
+  --glass-border:rgba(201,164,100,0.22);
+  --r-lg:22px;
+  --r-md:16px;
+  --r-sm:12px;
+  --r-pill:999px;
+}
+*{margin:0;padding:0;box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+html,body{height:100%;}
+body{
+  background:
+    radial-gradient(ellipse 900px 600px at 10% -10%, rgba(201,164,100,0.10), transparent 60%),
+    radial-gradient(ellipse 800px 500px at 100% 10%, rgba(116,153,140,0.07), transparent 60%),
+    radial-gradient(ellipse 700px 500px at 50% 120%, rgba(201,164,100,0.06), transparent 60%),
+    var(--bg);
+  color:var(--ink);
+  font-family:'Inter', sans-serif;
+  font-weight:400;
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+@media (prefers-reduced-motion: reduce){
+  *{transition-duration:0.01ms !important; animation-duration:0.01ms !important;}
+}
+
+/* ---------- SHELL ---------- */
+.app{ height:100dvh; display:flex; flex-direction:column; }
+
+.topbar{
+  padding:calc(18px + env(safe-area-inset-top)) 20px 0; display:flex; align-items:center; justify-content:space-between; gap:16px;
+}
+.topbar-left{display:flex; align-items:center; gap:10px;}
+.mark{width:20px; height:20px; opacity:0.9; flex-shrink:0;}
+.topbar-title{font-size:11.5px; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink-dim);}
+.topbar-title strong{color:var(--gold); font-weight:600;}
+.topbar-count{font-family:'Space Grotesk',sans-serif; font-size:13px; color:var(--ink-dim); font-weight:500;}
+
+.progress-track{
+  height:3px; margin:14px 20px 0; background:var(--line); border-radius:var(--r-pill); overflow:hidden;
+}
+.progress-fill{
+  height:100%; background:linear-gradient(90deg, var(--gold-dim), var(--gold)); width:0%; border-radius:var(--r-pill);
+  transition:width 0.45s cubic-bezier(.65,0,.35,1);
+}
+
+/* ---------- STAGE ---------- */
+.stage{ flex:1; position:relative; overflow:hidden; touch-action:pan-y; }
+.track{ display:flex; height:100%; transition:transform 0.5s cubic-bezier(.65,0,.35,1); }
+.slide{
+  min-width:100%; height:100%; display:flex; align-items:center; justify-content:center;
+  padding:16px 20px; overflow-y:auto;
+}
+.slide-inner{ width:100%; max-width:640px; margin:auto; }
+
+/* intro */
+.intro-mark{width:44px; height:44px; margin-bottom:24px;}
+.eyebrow{font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:var(--gold); font-weight:600; display:block; margin-bottom:14px;}
+.intro-title{font-family:'Space Grotesk',sans-serif; font-weight:500; font-size:clamp(28px,7vw,44px); line-height:1.08; letter-spacing:-0.01em; max-width:13ch;}
+.intro-title em{font-style:normal; color:var(--gold); font-weight:700;}
+.intro-sub{margin-top:16px; font-size:15px; color:var(--ink-dim); font-weight:300; max-width:56ch; line-height:1.6;}
+
+.meta-row{display:flex; gap:12px; margin-top:20px; flex-wrap:wrap;}
+.meta-field{flex:1; min-width:160px;}
+.meta-field label{display:block; font-size:10.5px; letter-spacing:0.08em; text-transform:uppercase; color:var(--ink-dim); margin-bottom:8px;}
+.meta-field input{
+  width:100%; background:var(--glass); border:1px solid var(--line); border-radius:var(--r-sm);
+  color:var(--ink); font-family:'Inter'; font-size:15px; padding:12px 14px; outline:none;
+  backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+  transition:border-color 0.2s, background 0.2s;
+}
+.meta-field input:focus{border-color:var(--gold); background:var(--glass-strong);}
+
+.confirm-label{display:block; font-size:10.5px; letter-spacing:0.08em; text-transform:uppercase; color:var(--ink-dim); margin-top:26px; margin-bottom:10px;}
+.confirm-row{display:flex; gap:10px; flex-wrap:wrap;}
+.confirm-option{
+  flex:1; min-width:220px; text-align:left; cursor:pointer;
+  background:var(--glass); border:1px solid var(--line); border-radius:var(--r-md);
+  padding:16px 18px; transition:border-color 0.2s, background 0.2s, transform 0.15s;
+  backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+}
+.confirm-option:active{transform:scale(0.98);}
+.confirm-option:hover{border-color:var(--gold-dim);}
+.confirm-option.selected{border-color:var(--gold); background:rgba(201,164,100,0.09);}
+.confirm-option.suggested:not(.selected){border-style:dashed; border-color:var(--gold-dim);}
+.confirm-option .co-name{font-family:'Space Grotesk',sans-serif; font-size:16px; color:var(--ink); font-weight:500; display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+.confirm-option .co-meta{margin-top:4px; font-size:12px; color:var(--ink-dim); font-weight:300;}
+.confirm-option.selected .co-name{color:var(--gold);}
+.co-suggest-tag{font-size:9.5px; letter-spacing:0.08em; text-transform:uppercase; color:var(--gold-dim); border:1px solid var(--gold-dim); border-radius:var(--r-pill); padding:2px 8px; font-family:'Inter';}
+.confirm-option:not(.suggested) .co-suggest-tag, .confirm-option.selected .co-suggest-tag{display:none;}
+.other-name-field{margin-top:12px; display:none;}
+.other-name-field.visible{display:block;}
+
+/* question slide */
+.block-tag{display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap;}
+.block-tag .num{font-family:'Space Grotesk',sans-serif; color:var(--gold-dim); font-size:14px; font-weight:600;}
+.block-tag .name{font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink-dim);}
+.q-count{font-size:12px; color:var(--ink-dim); margin-bottom:8px;}
+.q-title{font-family:'Space Grotesk',sans-serif; font-weight:500; font-size:clamp(21px,5.5vw,30px); line-height:1.22; letter-spacing:-0.005em; max-width:32ch;}
+.q-note{display:block; margin-top:12px; font-size:13px; color:var(--teal); font-weight:300;}
+
+textarea.answer{
+  width:100%; margin-top:24px; min-height:120px; resize:vertical;
+  background:var(--glass); border:1px solid var(--line); border-radius:var(--r-md);
+  color:var(--ink); font-family:'Inter'; font-size:16px; font-weight:300; line-height:1.6;
+  padding:16px 18px; outline:none;
+  backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+  transition:border-color 0.2s, background 0.2s;
+}
+textarea.answer:focus{border-color:var(--gold); background:var(--glass-strong);}
+textarea.answer::placeholder{color:#5C594F;}
+
+/* review */
+.review-list{max-height:52vh; overflow-y:auto; margin-top:24px; padding-right:4px; -webkit-overflow-scrolling:touch;}
+.review-item{
+  border:1px solid var(--line); border-radius:var(--r-md); padding:16px 18px; margin-bottom:10px;
+  background:var(--glass); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+}
+.review-q{font-size:13px; color:var(--ink-dim); font-weight:400; max-width:60ch;}
+.review-a{margin-top:6px; font-size:14.5px; color:var(--ink); font-weight:300; max-width:60ch; white-space:pre-wrap;}
+.review-a.empty{color:#5C594F; font-style:italic;}
+.review-edit{margin-top:10px; background:none; border:none; color:var(--gold-dim); font-size:11px; letter-spacing:0.06em; text-transform:uppercase; cursor:pointer; padding:0;}
+.review-edit:hover{color:var(--gold);}
+
+/* success / config states */
+.state-icon{width:42px; height:42px; margin-bottom:22px;}
+.state-title{font-family:'Space Grotesk',sans-serif; font-size:26px; font-weight:500;}
+.state-sub{margin-top:12px; font-size:15px; color:var(--ink-dim); font-weight:300; max-width:52ch; line-height:1.6;}
+.pill-btn{
+  margin-top:24px; display:inline-flex; align-items:center; gap:8px;
+  background:var(--glass); border:1px solid var(--gold-dim); color:var(--gold);
+  font-family:'Inter'; font-size:13px; letter-spacing:0.02em; padding:12px 20px; border-radius:var(--r-pill);
+  cursor:pointer; transition:border-color 0.2s, color 0.2s, background 0.2s;
+  backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+}
+.pill-btn:hover{border-color:var(--gold); color:var(--ink); background:var(--glass-strong);}
+.pill-btn.ghost{border-color:var(--line); color:var(--ink-dim);}
+.pill-btn.ghost:hover{border-color:var(--ink-dim); color:var(--ink);}
+
+/* ---------- NAV BAR ---------- */
+.navbar{
+  padding:14px 20px calc(20px + env(safe-area-inset-bottom)); display:flex; align-items:center; justify-content:space-between; gap:14px;
+}
+.nav-btn{
+  width:52px; height:52px; border-radius:var(--r-pill); border:1px solid var(--line); background:var(--glass);
+  display:flex; align-items:center; justify-content:center; cursor:pointer;
+  transition:border-color 0.2s, transform 0.15s, background 0.2s;
+  flex-shrink:0; backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+}
+.nav-btn svg{width:18px; height:18px;}
+.nav-btn:hover:not(:disabled){border-color:var(--gold); background:var(--glass-strong);}
+.nav-btn:disabled{opacity:0.25; cursor:default;}
+.nav-btn:active:not(:disabled){transform:scale(0.94);}
+
+.dots{display:flex; gap:5px; align-items:center; flex:1; justify-content:center; flex-wrap:wrap; max-width:55%;}
+.dot{width:5px; height:5px; border-radius:var(--r-pill); background:var(--line);}
+.dot.done{background:var(--gold-dim);}
+.dot.current{background:var(--gold); width:8px; height:8px;}
+
+.primary-btn{
+  background:linear-gradient(135deg, var(--gold), var(--gold-dim)); color:#0A0B0D; border:none; font-family:'Inter'; font-weight:600;
+  font-size:14px; padding:15px 26px; border-radius:var(--r-pill); cursor:pointer; letter-spacing:0.01em;
+  transition:opacity 0.2s, transform 0.15s;
+}
+.primary-btn:hover{opacity:0.9;}
+.primary-btn:active{transform:scale(0.97);}
+.primary-btn:disabled{opacity:0.35; cursor:default;}
+
+@media (max-width:600px){
+  .dots{display:none;}
+  .review-list{max-height:44vh;}
+  .confirm-option{min-width:100%;}
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <svg class="mark" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M24 4L40 14V34L24 44L8 34V14L24 4Z" stroke="#C9A464" stroke-width="1.2"/>
+        <circle cx="24" cy="24" r="5" stroke="#C9A464" stroke-width="1"/>
+      </svg>
+      <span class="topbar-title">Talismã · Briefing <strong>Institucional</strong></span>
+    </div>
+    <span class="topbar-count" id="topCount">0 / 0</span>
+  </div>
+
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+
+  <div class="stage" id="stage">
+    <div class="track" id="track"><!-- slides injected here --></div>
+  </div>
+
+  <div class="navbar">
+    <button class="nav-btn" id="btnPrev" aria-label="Voltar">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M15 5L8 12L15 19" stroke="#C9A464" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <div class="dots" id="dots"></div>
+    <button class="nav-btn" id="btnNext" aria-label="Avançar">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M9 5L16 12L9 19" stroke="#C9A464" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+  </div>
+
+</div>
+
+<script>
+// =====================================================================
+// COLE AQUI a URL do Web App do Google Apps Script assim que o Patrick
+// enviar o link do Google Doc e o script de recebimento estiver publicado.
+// Exemplo: "https://script.google.com/macros/s/AKfycb.../exec"
+// =====================================================================
+const CONFIG = { WEBHOOK_URL: "" };
+
+const GUILHERME = { name: "Luiz Guilherme Poerner", creci: "26739", empresa: "Talismã Negócios Imobiliários" };
+
+// Perguntas com qSelf/qOther mudam de pronome dependendo de quem está respondendo
+const BLOCKS = [
+  { name:"Talismã — Origem e Propósito", questions:[
+    { q:`Como surgiu a Talismã? Conta rapidamente como tudo começou.` },
+    { q:`Qual conquista vocês mais se orgulham de contar?` },
+    { q:`Qual é a missão de vocês, em poucas palavras?` },
+  ]},
+  { name:"Luís Guilherme — O Protagonista", questions:[
+    { qSelf:`Como você entrou no mercado imobiliário?`, qOther:`Como o Luiz entrou no mercado imobiliário?` },
+    { qSelf:`O que fez você apostar tão forte nesse negócio?`, qOther:`O que fez o Luiz apostar tão forte nesse negócio?` },
+    { qSelf:`Tem uma frase ou crença que resume como você pensa negócios e vida?`, qOther:`Tem uma frase ou crença que resume como o Luiz pensa negócios e vida?`, note:"Boa candidata a citação do vídeo." },
+  ]},
+  { name:"Diferencial e Público", questions:[
+    { q:`O que a Talismã faz de diferente das outras imobiliárias?` },
+    { q:`Hoje vocês vendem pra paraguaios com um corretor especialista nesse público. Como funciona essa venda — o que atrai esse comprador?` },
+    { q:`Os EUA é um mercado novo que vocês vão começar a atacar agora. O que vocês querem repetir da experiência com os paraguaios?` },
+    { q:`Que dúvidas esse público de fora costuma ter antes de fechar negócio?` },
+    { q:`Como vocês querem que essa pessoa se sinta depois de assistir ao vídeo?` },
+  ]},
+  { name:"Direção do Vídeo", questions:[
+    { q:`Qual sentimento o vídeo precisa passar? Orgulho, ambição, força, pertencimento — ou outro?` },
+    { q:`Tem alguma referência visual — vídeo, marca, filme — que vocês gostam pra esse estilo?` },
+    { q:`Quantas pessoas devem aparecer nos vídeos, e quem são elas — só o Luiz, mais o sócio, mais alguém do time?` },
+    { q:`Que lugares não podem faltar — escritório, obra, praia, algo simbólico?` },
+  ]},
+  { name:"Fechamento", questions:[
+    { q:`O que esse vídeo precisa conquistar antes de qualquer oferta aparecer?` },
+    { q:`Tem uma data que vocês querem lançar?` },
+  ]},
+];
+
+// Flatten into a single ordered question list, each tagged with block info
+const QUESTIONS = [];
+BLOCKS.forEach((b, bi) => {
+  b.questions.forEach((item, qi) => {
+    QUESTIONS.push({ blockIndex: bi, blockName: b.name, blockNum: bi + 1, qInBlock: qi + 1, ...item });
+  });
+});
+
+function questionText(item){
+  if(item.qSelf && item.qOther){
+    return state.meta.respondentType === 'guilherme' ? item.qSelf : item.qOther;
+  }
+  return item.q;
+}
+
+// Slide indices: 0 = intro, 1..N = questions, N+1 = dados do contrato, N+2 = review, N+3 = success
+const TOTAL_Q = QUESTIONS.length;
+const SLIDE_CONTRACT = TOTAL_Q + 1;
+const SLIDE_REVIEW = TOTAL_Q + 2;
+const SLIDE_SUCCESS = TOTAL_Q + 3;
+const LAST_SLIDE = SLIDE_SUCCESS;
+
+const state = {
+  current: 0,
+  meta: { respondentType: null, name: "", role: "" }, // respondentType: 'guilherme' | 'outro'
+  answers: new Array(TOTAL_Q).fill(""),
+  contract: { cnpj: "", nome: "", nascimento: "", cpf: "", telefone: "", email: "" },
+};
+
+const track = document.getElementById('track');
+const stage = document.getElementById('stage');
+const progressFill = document.getElementById('progressFill');
+const topCount = document.getElementById('topCount');
+const dotsWrap = document.getElementById('dots');
+const btnPrev = document.getElementById('btnPrev');
+const btnNext = document.getElementById('btnNext');
+
+function svgCheck(){
+  return `<svg class="state-icon" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="21" stroke="#C9A464" stroke-width="1.2"/><path d="M15 24L21 30L33 17" stroke="#C9A464" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+function svgInfo(){
+  return `<svg class="state-icon" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="21" stroke="#C9A464" stroke-width="1.2"/><path d="M24 22V33" stroke="#C9A464" stroke-width="1.6" stroke-linecap="round"/><circle cx="24" cy="16" r="1.6" fill="#C9A464"/></svg>`;
+}
+
+function buildSlides(){
+  let html = "";
+
+  // Intro slide
+  html += `
+  <div class="slide"><div class="slide-inner">
+    <svg class="intro-mark" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M24 4L40 14V34L24 44L8 34V14L24 4Z" stroke="#C9A464" stroke-width="1"/>
+      <path d="M24 4V44M8 14L40 34M40 14L8 34" stroke="#C9A464" stroke-width="0.5" opacity="0.5"/>
+      <circle cx="24" cy="24" r="5" stroke="#C9A464" stroke-width="1"/>
+    </svg>
+    <span class="eyebrow">Briefing Interativo · Talismã Negócios Imobiliários</span>
+    <h1 class="intro-title">Sua história vira <em>roteiro</em>.</h1>
+    <p class="intro-sub">Este questionário vai guiar por ${TOTAL_Q} perguntas — da origem da Talismã até a direção das duas peças institucionais para o público brasileiro nos EUA. Responda com calma, uma pergunta por vez. Ao final, tudo é enviado como handoff único para a equipe de roteiro.</p>
+
+    <span class="confirm-label">Quem vai responder este briefing?</span>
+    <div class="confirm-row">
+      <div class="confirm-option" id="optGuilherme">
+        <div class="co-name">Luiz Guilherme Poerner <span class="co-suggest-tag">Sugerido</span></div>
+        <div class="co-meta">CRECI 26739 · Talismã Negócios Imobiliários</div>
+      </div>
+      <div class="confirm-option" id="optOutro">
+        <div class="co-name">Outro membro do time</div>
+        <div class="co-meta">Sócio, corretor(a) ou alguém da equipe</div>
+      </div>
+    </div>
+    <div class="other-name-field" id="otherNameField">
+      <div class="meta-row">
+        <div class="meta-field">
+          <label>Nome</label>
+          <input type="text" id="metaName" placeholder="Nome completo">
+        </div>
+        <div class="meta-field">
+          <label>Função</label>
+          <input type="text" id="metaRole" placeholder="Sócio, corretor(a)...">
+        </div>
+      </div>
+    </div>
+  </div></div>`;
+
+  // Question slides
+  QUESTIONS.forEach((item, i) => {
+    html += `
+    <div class="slide"><div class="slide-inner">
+      <div class="block-tag"><span class="num">0${item.blockNum}</span><span class="name">${item.blockName}</span></div>
+      <div class="q-count">Pergunta ${i + 1} de ${TOTAL_Q}</div>
+      <h2 class="q-title" id="qtitle-${i}">${questionText(item)}</h2>
+      ${item.note ? `<span class="q-note">${item.note}</span>` : ""}
+      <textarea class="answer" id="answer-${i}" placeholder="Escreva a resposta aqui..." data-index="${i}"></textarea>
+    </div></div>`;
+  });
+
+  // Dados do contrato
+  html += `
+  <div class="slide"><div class="slide-inner">
+    <span class="eyebrow">Última etapa · Dados para o contrato</span>
+    <h2 class="q-title" style="max-width:none;">Pra formalizar o contrato de prestação de serviço.</h2>
+    <p class="intro-sub" style="margin-top:8px;">Só isso e o briefing tá completo.</p>
+    <div class="meta-row" style="margin-top:24px;">
+      <div class="meta-field">
+        <label>CNPJ</label>
+        <input type="text" id="cCnpj" placeholder="00.000.000/0001-00">
+      </div>
+      <div class="meta-field">
+        <label>Nome completo do responsável</label>
+        <input type="text" id="cNome" placeholder="Nome completo">
+      </div>
+    </div>
+    <div class="meta-row">
+      <div class="meta-field">
+        <label>Data de nascimento</label>
+        <input type="text" id="cNascimento" placeholder="dd/mm/aaaa">
+      </div>
+      <div class="meta-field">
+        <label>CPF</label>
+        <input type="text" id="cCpf" placeholder="000.000.000-00">
+      </div>
+    </div>
+    <div class="meta-row">
+      <div class="meta-field">
+        <label>Telefone / WhatsApp</label>
+        <input type="text" id="cTelefone" placeholder="(00) 00000-0000">
+      </div>
+      <div class="meta-field">
+        <label>E-mail</label>
+        <input type="text" id="cEmail" placeholder="nome@empresa.com">
+      </div>
+    </div>
+  </div></div>`;
+
+  // Review slide
+  html += `<div class="slide"><div class="slide-inner">
+    <span class="eyebrow">Revisão final</span>
+    <h2 class="q-title" style="max-width:none;">Confira antes de enviar</h2>
+    <p class="intro-sub" style="margin-top:8px;">Revise as respostas abaixo. Toque em "editar" para voltar a qualquer pergunta.</p>
+    <div class="review-list" id="reviewList"></div>
+  </div></div>`;
+
+  // Success / config slide (shared container, content swapped by JS)
+  html += `<div class="slide"><div class="slide-inner" id="finalState"></div></div>`;
+
+  track.innerHTML = html;
+
+  // Restore textarea values on rebuild + bind listeners
+  QUESTIONS.forEach((_, i) => {
+    const ta = document.getElementById(`answer-${i}`);
+    ta.value = state.answers[i];
+    ta.addEventListener('input', (e) => { state.answers[i] = e.target.value; updateDots(); });
+  });
+
+  const metaNameEl = document.getElementById('metaName');
+  const metaRoleEl = document.getElementById('metaRole');
+  metaNameEl.value = state.meta.respondentType === 'outro' ? state.meta.name : "";
+  metaRoleEl.value = state.meta.role;
+  metaNameEl.addEventListener('input', e => state.meta.name = e.target.value);
+  metaRoleEl.addEventListener('input', e => state.meta.role = e.target.value);
+
+  const contractFields = { cCnpj: 'cnpj', cNome: 'nome', cNascimento: 'nascimento', cCpf: 'cpf', cTelefone: 'telefone', cEmail: 'email' };
+  Object.keys(contractFields).forEach(id => {
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.value = state.contract[contractFields[id]];
+    el.addEventListener('input', e => state.contract[contractFields[id]] = e.target.value);
+  });
+
+  const optGuilherme = document.getElementById('optGuilherme');
+  const optOutro = document.getElementById('optOutro');
+  const otherField = document.getElementById('otherNameField');
+
+  function refreshRespondentUI(){
+    optGuilherme.classList.toggle('selected', state.meta.respondentType === 'guilherme');
+    optOutro.classList.toggle('selected', state.meta.respondentType === 'outro');
+    otherField.classList.toggle('visible', state.meta.respondentType === 'outro');
+  }
+  function refreshDynamicQuestions(){
+    QUESTIONS.forEach((item, i) => {
+      if(item.qSelf && item.qOther){
+        const el = document.getElementById(`qtitle-${i}`);
+        if(el) el.textContent = questionText(item);
+      }
+    });
+  }
+  optGuilherme.addEventListener('click', () => {
+    state.meta.respondentType = 'guilherme';
+    state.meta.name = GUILHERME.name;
+    refreshRespondentUI();
+    refreshDynamicQuestions();
+  });
+  optOutro.addEventListener('click', () => {
+    state.meta.respondentType = 'outro';
+    if(state.meta.name === GUILHERME.name) state.meta.name = "";
+    refreshRespondentUI();
+    refreshDynamicQuestions();
+    metaNameEl.focus();
+  });
+  refreshRespondentUI();
+
+  // Sugestão padrão: destaca Luiz Guilherme como recomendação, sem contar como confirmado até o clique
+  if(!state.meta.respondentType){
+    optGuilherme.classList.add('suggested');
+  }
+}
+
+function buildDots(){
+  let html = "";
+  for (let i = 1; i <= TOTAL_Q; i++) html += `<div class="dot" data-i="${i}"></div>`;
+  dotsWrap.innerHTML = html;
+}
+
+function updateDots(){
+  const dots = dotsWrap.querySelectorAll('.dot');
+  dots.forEach((d, idx) => {
+    const slideIndex = idx + 1;
+    d.classList.toggle('done', !!state.answers[idx] && state.answers[idx].trim() !== "");
+    d.classList.toggle('current', state.current === slideIndex);
+  });
+}
+
+function renderReview(){
+  const wrap = document.getElementById('reviewList');
+  if(!wrap) return;
+  let html = "";
+  QUESTIONS.forEach((item, i) => {
+    const a = state.answers[i] && state.answers[i].trim();
+    html += `
+    <div class="review-item">
+      <div class="review-q">${i + 1}. ${questionText(item)}</div>
+      <div class="review-a ${a ? "" : "empty"}">${a ? escapeHtml(a) : "Sem resposta ainda"}</div>
+      <button class="review-edit" data-goto="${i + 1}">Editar</button>
+    </div>`;
+  });
+
+  const c = state.contract;
+  const contractFilled = c.cnpj || c.nome || c.nascimento || c.cpf || c.telefone || c.email;
+  html += `
+  <div class="review-item">
+    <div class="review-q">Dados para o contrato</div>
+    <div class="review-a ${contractFilled ? "" : "empty"}">${contractFilled ? [
+      c.cnpj && `CNPJ: ${escapeHtml(c.cnpj)}`,
+      c.nome && `Responsável: ${escapeHtml(c.nome)}`,
+      c.nascimento && `Nascimento: ${escapeHtml(c.nascimento)}`,
+      c.cpf && `CPF: ${escapeHtml(c.cpf)}`,
+      c.telefone && `Telefone: ${escapeHtml(c.telefone)}`,
+      c.email && `E-mail: ${escapeHtml(c.email)}`,
+    ].filter(Boolean).join(" · ") : "Sem dados ainda"}</div>
+    <button class="review-edit" data-goto="${SLIDE_CONTRACT}">Editar</button>
+  </div>`;
+
+  wrap.innerHTML = html;
+  wrap.querySelectorAll('.review-edit').forEach(btn => {
+    btn.addEventListener('click', () => goTo(parseInt(btn.dataset.goto)));
+  });
+}
+
+function escapeHtml(str){
+  return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+function buildPayload(){
+  const isGuilherme = state.meta.respondentType === 'guilherme';
+  return {
+    respondent: (isGuilherme ? GUILHERME.name : state.meta.name) || null,
+    respondentRole: isGuilherme ? "Sócio-fundador" : (state.meta.role || "Time Talismã"),
+    creci: isGuilherme ? GUILHERME.creci : null,
+    empresa: GUILHERME.empresa,
+    submittedAt: new Date().toISOString(),
+    source: "Briefing Interativo Talismã",
+    contrato: {
+      cnpj: state.contract.cnpj || null,
+      nomeResponsavel: state.contract.nome || null,
+      dataNascimento: state.contract.nascimento || null,
+      cpf: state.contract.cpf || null,
+      telefone: state.contract.telefone || null,
+      email: state.contract.email || null,
+    },
+    answers: QUESTIONS.map((item, i) => ({
+      bloco: item.blockNum,
+      blocoNome: item.blockName,
+      pergunta: questionText(item),
+      resposta: state.answers[i] || ""
+    }))
+  };
+}
+
+function downloadBackup(){
+  const payload = buildPayload();
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = "talisma-briefing-respostas.json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function copyAsText(){
+  const payload = buildPayload();
+  let text = `BRIEFING TALISMÃ — RESPOSTAS\nRespondido por: ${payload.respondent || "-"} (${payload.respondentRole})${payload.creci ? " · CRECI " + payload.creci : ""}\nEmpresa: ${payload.empresa}\n\n`;
+  payload.answers.forEach((a, i) => {
+    text += `${i + 1}. [Bloco ${a.bloco} — ${a.blocoNome}]\n${a.pergunta}\nResposta: ${a.resposta || "(sem resposta)"}\n\n`;
+  });
+  text += `DADOS PARA O CONTRATO\nCNPJ: ${payload.contrato.cnpj || "-"}\nResponsável: ${payload.contrato.nomeResponsavel || "-"}\nNascimento: ${payload.contrato.dataNascimento || "-"}\nCPF: ${payload.contrato.cpf || "-"}\nTelefone: ${payload.contrato.telefone || "-"}\nE-mail: ${payload.contrato.email || "-"}\n`;
+  navigator.clipboard?.writeText(text).catch(()=>{});
+  return text;
+}
+
+function renderFinalState(mode){
+  const el = document.getElementById('finalState');
+  if(!el) return;
+  if(mode === "sending"){
+    el.innerHTML = `
+      <span class="eyebrow">Enviando</span>
+      <h2 class="state-title">Enviando handoff...</h2>
+      <p class="state-sub">Aguarde só um instante.</p>`;
+  } else if(mode === "success"){
+    el.innerHTML = `
+      ${svgCheck()}
+      <span class="eyebrow">Handoff enviado</span>
+      <h2 class="state-title">Recebido, obrigado.</h2>
+      <p class="state-sub">Suas respostas foram enviadas para o documento da equipe. A partir daqui o roteiro das duas peças é construído em cima do que você contou aqui.</p>
+      <button class="pill-btn ghost" id="btnBackupAfter">Baixar backup .json</button>`;
+    document.getElementById('btnBackupAfter')?.addEventListener('click', downloadBackup);
+  } else if(mode === "not-configured"){
+    el.innerHTML = `
+      ${svgInfo()}
+      <span class="eyebrow">Endpoint ainda não configurado</span>
+      <h2 class="state-title">Quase lá.</h2>
+      <p class="state-sub">O envio automático para o Google Doc ainda não foi ligado neste arquivo. Suas respostas estão salvas nesta sessão — baixe o backup ou copie o texto agora para não perder nada, e reenvie assim que o link estiver ativo.</p>
+      <button class="pill-btn" id="btnBackupNC">Baixar backup .json</button>
+      <button class="pill-btn ghost" id="btnCopyNC" style="margin-left:10px;">Copiar como texto</button>`;
+    document.getElementById('btnBackupNC')?.addEventListener('click', downloadBackup);
+    document.getElementById('btnCopyNC')?.addEventListener('click', copyAsText);
+  } else if(mode === "error"){
+    el.innerHTML = `
+      ${svgInfo()}
+      <span class="eyebrow">Falha no envio</span>
+      <h2 class="state-title">Não conseguimos enviar.</h2>
+      <p class="state-sub">Houve um problema de conexão com o documento. Baixe o backup para garantir que nada se perca, e tente enviar novamente.</p>
+      <button class="pill-btn" id="btnBackupErr">Baixar backup .json</button>
+      <button class="pill-btn ghost" id="btnRetryErr" style="margin-left:10px;">Tentar novamente</button>`;
+    document.getElementById('btnBackupErr')?.addEventListener('click', downloadBackup);
+    document.getElementById('btnRetryErr')?.addEventListener('click', handleSubmit);
+  }
+}
+
+async function handleSubmit(){
+  renderFinalState("sending");
+  goTo(SLIDE_SUCCESS, true);
+
+  if(!CONFIG.WEBHOOK_URL){
+    renderFinalState("not-configured");
+    return;
+  }
+  try{
+    await fetch(CONFIG.WEBHOOK_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(buildPayload())
+    });
+    renderFinalState("success");
+  }catch(err){
+    renderFinalState("error");
+  }
+}
+
+function goTo(index, force){
+  if(!force && (index < 0 || index > LAST_SLIDE)) return;
+  state.current = index;
+  track.style.transform = `translateX(-${index * 100}%)`;
+
+  const onQuestion = index >= 1 && index <= TOTAL_Q;
+  const onContract = index === SLIDE_CONTRACT;
+  const onReview = index === SLIDE_REVIEW;
+  const onFinal = index === SLIDE_SUCCESS;
+
+  topCount.textContent = onQuestion ? `${index} / ${TOTAL_Q}` : (onContract ? "Dados do contrato" : (onReview ? "Revisão" : (onFinal ? "Concluído" : `0 / ${TOTAL_Q}`)));
+  const pct = onQuestion ? (index / (TOTAL_Q + 1)) * 100 : (onContract || onReview || onFinal ? 100 : 0);
+  progressFill.style.width = pct + "%";
+
+  btnPrev.disabled = index === 0 || onFinal;
+  btnNext.disabled = onFinal;
+  btnNext.style.display = onReview ? "none" : "flex";
+
+  // Swap next button for a submit button on review slide
+  let existingSubmit = document.getElementById('btnSubmit');
+  if(onReview){
+    if(!existingSubmit){
+      existingSubmit = document.createElement('button');
+      existingSubmit.id = 'btnSubmit';
+      existingSubmit.className = 'primary-btn';
+      existingSubmit.textContent = 'Enviar handoff';
+      existingSubmit.addEventListener('click', handleSubmit);
+      btnNext.insertAdjacentElement('afterend', existingSubmit);
+    }
+    renderReview();
+  } else if(existingSubmit){
+    existingSubmit.remove();
+  }
+
+  updateDots();
+}
+
+btnPrev.addEventListener('click', () => goTo(state.current - 1));
+btnNext.addEventListener('click', () => {
+  if(state.current === 0 && !state.meta.respondentType){
+    document.querySelectorAll('.confirm-option').forEach(el => el.style.borderColor = 'var(--danger)');
+    setTimeout(() => document.querySelectorAll('.confirm-option').forEach(el => el.style.borderColor = ''), 700);
+    return;
+  }
+  goTo(state.current + 1);
+});
+
+document.addEventListener('keydown', (e) => {
+  const tag = document.activeElement?.tagName;
+  if(tag === 'TEXTAREA' || tag === 'INPUT') return;
+  if(e.key === 'ArrowRight') goTo(state.current + 1);
+  if(e.key === 'ArrowLeft') goTo(state.current - 1);
+});
+
+// Swipe (mobile-first navigation)
+let touchStartX = 0, touchStartY = 0, touchActive = false;
+stage.addEventListener('touchstart', (e) => {
+  if(e.target.closest('textarea, input')) { touchActive = false; return; }
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+  touchActive = true;
+}, { passive: true });
+stage.addEventListener('touchend', (e) => {
+  if(!touchActive) return;
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  const dy = e.changedTouches[0].clientY - touchStartY;
+  if(Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy) * 1.4){
+    if(dx < 0) btnNext.click(); else goTo(state.current - 1);
+  }
+}, { passive: true });
+
+buildSlides();
+buildDots();
+goTo(0, true);
+</script>
+</body>
+</html>

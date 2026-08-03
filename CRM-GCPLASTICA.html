@@ -456,7 +456,7 @@
   .dash-card-stats{display:flex; flex-direction:column; justify-content:center; gap:12px;}
 
   .report-picker{display:flex; gap:10px; align-items:center; margin-bottom:18px;}
-  .report-picker input[type="month"]{
+  .report-picker input[type="month"], .report-picker select{
     background:var(--panel-alt); border:1px solid var(--border);
     color:var(--text); padding:9px 12px; font-family:'Inter',sans-serif; font-size:13px;
     border-radius:var(--radius-sm);
@@ -470,6 +470,23 @@
   .report-funnel-pct{font-size:11px; color:var(--sage); margin-top:2px;}
   .report-summary{font-size:13px; color:var(--text-muted); line-height:1.6;}
   .report-summary strong{color:var(--text);}
+
+  @media print{
+    body *{visibility:hidden;}
+    #printArea, #printArea *{visibility:visible;}
+    #printArea{
+      display:block !important;
+      position:absolute; top:0; left:0; width:100%;
+      background:#fff; color:#111; padding:30px;
+    }
+    #printArea .report-funnel{background:#ddd;}
+    #printArea .report-funnel-step{background:#fff;}
+    #printArea .report-funnel-num{color:#8c7a52;}
+    #printArea .report-summary{color:#333;}
+    #printArea .report-summary strong{color:#000;}
+    #printArea h1{font-family:'Inter',sans-serif; font-size:20px; margin-bottom:4px;}
+    #printArea .print-eyebrow{font-size:11px; color:#8c7a52; text-transform:uppercase; letter-spacing:.1em; margin-bottom:16px;}
+  }
   .stat-row{
     display:flex; justify-content:space-between; align-items:baseline;
     font-size:13px; color:var(--text-muted);
@@ -649,14 +666,18 @@
       <div class="dash-card" style="grid-column:1 / -1;">
         <div class="dash-card-title">Relatório Mensal</div>
         <div class="report-picker">
-          <input type="month" id="reportMonthInput">
+          <select id="reportMonthSelect"></select>
+          <select id="reportYearSelect"></select>
           <button class="btn-primary" id="btnGerarRelatorio">Gerar Relatório</button>
+          <button class="btn-ghost" id="btnBaixarPdf" style="display:none;">Baixar PDF</button>
         </div>
         <div id="monthlyReportResult"></div>
       </div>
     </div>
   </div>
 </div>
+
+<div id="printArea" style="display:none;"></div>
 
 <div class="overlay" id="overlay"></div>
 
@@ -1933,11 +1954,25 @@ function renderSurgeryMonthList(){
 }
 
 // ---------- RELATÓRIO MENSAL ----------
-document.getElementById('btnGerarRelatorio').addEventListener('click', () => {
-  const monthValue = document.getElementById('reportMonthInput').value; // formato "YYYY-MM"
-  if(!monthValue){ showToast('Selecione um mês primeiro.'); return; }
+(function initReportPickers(){
+  const monthSelect = document.getElementById('reportMonthSelect');
+  const yearSelect = document.getElementById('reportYearSelect');
+  monthSelect.innerHTML = MONTH_NAMES.map((m, i) => `<option value="${i+1}">${m}</option>`).join('');
 
-  const [ano, mes] = monthValue.split('-').map(Number);
+  const anoAtual = new Date().getFullYear();
+  const anos = [anoAtual - 1, anoAtual, anoAtual + 1];
+  yearSelect.innerHTML = anos.map(a => `<option value="${a}">${a}</option>`).join('');
+
+  // Deixa pré-selecionado o mês/ano atual
+  monthSelect.value = String(new Date().getMonth() + 1);
+  yearSelect.value = String(anoAtual);
+})();
+
+let ultimoRelatorio = null;
+
+function gerarRelatorioMensal(){
+  const mes = parseInt(document.getElementById('reportMonthSelect').value, 10);
+  const ano = parseInt(document.getElementById('reportYearSelect').value, 10);
 
   // Leads criados naquele mês
   const leadsDoMes = STATE.leads.filter(l => {
@@ -1963,9 +1998,9 @@ document.getElementById('btnGerarRelatorio').addEventListener('click', () => {
   const pct = (n) => totalEntraram ? Math.round((n / totalEntraram) * 100) : 0;
   const nomeMes = `${MONTH_NAMES[mes - 1]} de ${ano}`;
 
-  const resultEl = document.getElementById('monthlyReportResult');
-  resultEl.innerHTML = `
-    <p class="report-summary" style="margin-bottom:16px;">Relatório de <strong>${nomeMes}</strong></p>
+  ultimoRelatorio = { nomeMes, totalEntraram, viraramConsulta, viraramCirurgia, naoConverteram, pct };
+
+  const funilHtml = `
     <div class="report-funnel">
       <div class="report-funnel-step">
         <div class="report-funnel-num">${totalEntraram}</div>
@@ -1995,6 +2030,53 @@ document.getElementById('btnGerarRelatorio').addEventListener('click', () => {
       <strong>${naoConverteram}</strong> lead(s) ainda não converteram em consulta até agora.
     </p>
   `;
+
+  document.getElementById('monthlyReportResult').innerHTML =
+    `<p class="report-summary" style="margin-bottom:16px;">Relatório de <strong>${nomeMes}</strong></p>` + funilHtml;
+
+  document.getElementById('btnBaixarPdf').style.display = '';
+}
+
+document.getElementById('btnGerarRelatorio').addEventListener('click', gerarRelatorioMensal);
+
+document.getElementById('btnBaixarPdf').addEventListener('click', () => {
+  if(!ultimoRelatorio) return;
+  const r = ultimoRelatorio;
+  const printArea = document.getElementById('printArea');
+  printArea.innerHTML = `
+    <div class="print-eyebrow">Dr. Gibran Chedid · Cirurgia Plástica Facial — Relatório de Conversão</div>
+    <h1>Relatório Mensal — ${r.nomeMes}</h1>
+    <div class="report-funnel">
+      <div class="report-funnel-step">
+        <div class="report-funnel-num">${r.totalEntraram}</div>
+        <div class="report-funnel-label">Leads entraram</div>
+        <div class="report-funnel-pct">100%</div>
+      </div>
+      <div class="report-funnel-step">
+        <div class="report-funnel-num">${r.viraramConsulta}</div>
+        <div class="report-funnel-label">Viraram Consulta</div>
+        <div class="report-funnel-pct">${r.pct(r.viraramConsulta)}%</div>
+      </div>
+      <div class="report-funnel-step">
+        <div class="report-funnel-num">${r.viraramCirurgia}</div>
+        <div class="report-funnel-label">Viraram Cirurgia</div>
+        <div class="report-funnel-pct">${r.pct(r.viraramCirurgia)}%</div>
+      </div>
+      <div class="report-funnel-step">
+        <div class="report-funnel-num">${r.naoConverteram}</div>
+        <div class="report-funnel-label">Não converteram</div>
+        <div class="report-funnel-pct">${r.pct(r.naoConverteram)}%</div>
+      </div>
+    </div>
+    <p class="report-summary">
+      Em <strong>${r.nomeMes}</strong>, <strong>${r.totalEntraram}</strong> lead(s) entraram no funil.
+      Desses, <strong>${r.viraramConsulta}</strong> (${r.pct(r.viraramConsulta)}%) chegaram a marcar consulta, e
+      <strong>${r.viraramCirurgia}</strong> (${r.pct(r.viraramCirurgia)}%) fecharam cirurgia.
+      <strong>${r.naoConverteram}</strong> lead(s) ainda não converteram em consulta até agora.
+    </p>
+    <p class="report-summary" style="margin-top:20px;font-size:11px;">Gerado em ${new Date().toLocaleDateString('pt-BR')}</p>
+  `;
+  window.print();
 });
 
 document.getElementById('btnDashboard').addEventListener('click', () => {

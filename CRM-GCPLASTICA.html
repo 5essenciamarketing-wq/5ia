@@ -454,6 +454,22 @@
   }
   .dash-card canvas{max-height:240px;}
   .dash-card-stats{display:flex; flex-direction:column; justify-content:center; gap:12px;}
+
+  .report-picker{display:flex; gap:10px; align-items:center; margin-bottom:18px;}
+  .report-picker input[type="month"]{
+    background:var(--panel-alt); border:1px solid var(--border);
+    color:var(--text); padding:9px 12px; font-family:'Inter',sans-serif; font-size:13px;
+    border-radius:var(--radius-sm);
+  }
+  .report-funnel{display:flex; gap:1px; background:var(--border); margin-bottom:16px;}
+  .report-funnel-step{
+    flex:1; background:var(--bg); padding:16px 12px; text-align:center;
+  }
+  .report-funnel-num{font-family:'Inter',sans-serif; font-size:26px; font-weight:800; color:var(--gold);}
+  .report-funnel-label{font-size:10.5px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; margin-top:4px;}
+  .report-funnel-pct{font-size:11px; color:var(--sage); margin-top:2px;}
+  .report-summary{font-size:13px; color:var(--text-muted); line-height:1.6;}
+  .report-summary strong{color:var(--text);}
   .stat-row{
     display:flex; justify-content:space-between; align-items:baseline;
     font-size:13px; color:var(--text-muted);
@@ -629,6 +645,14 @@
       <div class="dash-card" style="grid-column:1 / -1;">
         <div class="dash-card-title">Cirurgias por Mês</div>
         <div id="surgeryMonthList"></div>
+      </div>
+      <div class="dash-card" style="grid-column:1 / -1;">
+        <div class="dash-card-title">Relatório Mensal</div>
+        <div class="report-picker">
+          <input type="month" id="reportMonthInput">
+          <button class="btn-primary" id="btnGerarRelatorio">Gerar Relatório</button>
+        </div>
+        <div id="monthlyReportResult"></div>
       </div>
     </div>
   </div>
@@ -1907,6 +1931,71 @@ function renderSurgeryMonthList(){
     </div>`;
   }).join('');
 }
+
+// ---------- RELATÓRIO MENSAL ----------
+document.getElementById('btnGerarRelatorio').addEventListener('click', () => {
+  const monthValue = document.getElementById('reportMonthInput').value; // formato "YYYY-MM"
+  if(!monthValue){ showToast('Selecione um mês primeiro.'); return; }
+
+  const [ano, mes] = monthValue.split('-').map(Number);
+
+  // Leads criados naquele mês
+  const leadsDoMes = STATE.leads.filter(l => {
+    const d = new Date(l.Data_Criacao);
+    return d.getFullYear() === ano && (d.getMonth() + 1) === mes;
+  });
+
+  const totalEntraram = leadsDoMes.length;
+
+  // Pra cada lead do mês, olha no histórico se ele já passou por Consulta e/ou Cirurgia em algum momento
+  let viraramConsulta = 0;
+  let viraramCirurgia = 0;
+
+  leadsDoMes.forEach(lead => {
+    const historicoLead = STATE.historico.filter(h => h.Lead_ID === lead.ID);
+    const passouConsulta = historicoLead.some(h => h.Para_Etapa === 'Consulta') || lead.Etapa === 'Consulta';
+    const passouCirurgia = historicoLead.some(h => h.Para_Etapa === 'Cirurgia') || lead.Etapa === 'Cirurgia';
+    if(passouConsulta) viraramConsulta++;
+    if(passouCirurgia) viraramCirurgia++;
+  });
+
+  const naoConverteram = totalEntraram - viraramConsulta;
+  const pct = (n) => totalEntraram ? Math.round((n / totalEntraram) * 100) : 0;
+  const nomeMes = `${MONTH_NAMES[mes - 1]} de ${ano}`;
+
+  const resultEl = document.getElementById('monthlyReportResult');
+  resultEl.innerHTML = `
+    <p class="report-summary" style="margin-bottom:16px;">Relatório de <strong>${nomeMes}</strong></p>
+    <div class="report-funnel">
+      <div class="report-funnel-step">
+        <div class="report-funnel-num">${totalEntraram}</div>
+        <div class="report-funnel-label">Leads entraram</div>
+        <div class="report-funnel-pct">100%</div>
+      </div>
+      <div class="report-funnel-step">
+        <div class="report-funnel-num">${viraramConsulta}</div>
+        <div class="report-funnel-label">Viraram Consulta</div>
+        <div class="report-funnel-pct">${pct(viraramConsulta)}%</div>
+      </div>
+      <div class="report-funnel-step">
+        <div class="report-funnel-num">${viraramCirurgia}</div>
+        <div class="report-funnel-label">Viraram Cirurgia</div>
+        <div class="report-funnel-pct">${pct(viraramCirurgia)}%</div>
+      </div>
+      <div class="report-funnel-step">
+        <div class="report-funnel-num" style="color:var(--bordeaux);">${naoConverteram}</div>
+        <div class="report-funnel-label">Não converteram</div>
+        <div class="report-funnel-pct">${pct(naoConverteram)}%</div>
+      </div>
+    </div>
+    <p class="report-summary">
+      Em <strong>${nomeMes}</strong>, <strong>${totalEntraram}</strong> lead(s) entraram no funil.
+      Desses, <strong>${viraramConsulta}</strong> (${pct(viraramConsulta)}%) chegaram a marcar consulta, e
+      <strong>${viraramCirurgia}</strong> (${pct(viraramCirurgia)}%) fecharam cirurgia.
+      <strong>${naoConverteram}</strong> lead(s) ainda não converteram em consulta até agora.
+    </p>
+  `;
+});
 
 document.getElementById('btnDashboard').addEventListener('click', () => {
   document.getElementById('board').style.display = 'none';

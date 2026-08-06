@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Briefing — Atendimento Inteligente para Studio de Unhas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#FAF3EF;
+  --card:#FFFFFF;
+  --ink:#2B211D;
+  --muted:#8A7A72;
+  --wine:#A63446;
+  --wine-dark:#7E2734;
+  --blush:#E7C4B5;
+  --sage:#7C9082;
+  --line:#EAE0D9;
+  --radius:20px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;}
+body{
+  font-family:'Manrope',sans-serif;
+  background:var(--cream);
+  color:var(--ink);
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px 16px;
+  -webkit-font-smoothing:antialiased;
+}
+.app{
+  width:100%;
+  max-width:560px;
+}
+.header{
+  text-align:center;
+  margin-bottom:22px;
+}
+.eyebrow{
+  font-size:12px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--wine);
+  font-weight:700;
+}
+.title{
+  font-family:'Fraunces',serif;
+  font-weight:600;
+  font-size:26px;
+  margin-top:6px;
+  line-height:1.2;
+}
+.subtitle{
+  color:var(--muted);
+  font-size:14px;
+  margin-top:8px;
+  line-height:1.5;
+}
+
+/* swatch progress — inspired by a nail-polish test strip */
+.swatches{
+  display:flex;
+  gap:6px;
+  margin:22px 0 4px;
+}
+.swatch{
+  flex:1;
+  height:8px;
+  border-radius:5px;
+  background:var(--line);
+  transition:background .35s ease, transform .35s ease;
+}
+.swatch.done{background:var(--wine);}
+.swatch.current{background:var(--blush);}
+.step-label{
+  font-size:12px;
+  color:var(--muted);
+  margin-bottom:18px;
+  font-weight:600;
+}
+
+.card{
+  background:var(--card);
+  border-radius:var(--radius);
+  padding:28px 24px;
+  box-shadow:0 10px 30px -14px rgba(43,33,29,.18);
+  border:1px solid var(--line);
+  min-height:330px;
+  display:flex;
+  flex-direction:column;
+}
+.q-title{
+  font-family:'Fraunces',serif;
+  font-size:20px;
+  font-weight:600;
+  margin-bottom:6px;
+  line-height:1.3;
+}
+.q-hint{
+  font-size:13px;
+  color:var(--muted);
+  margin-bottom:20px;
+  line-height:1.5;
+}
+.field-group{flex:1;}
+
+input[type=text], input[type=tel], input[type=number], textarea{
+  width:100%;
+  border:1.5px solid var(--line);
+  background:var(--cream);
+  border-radius:12px;
+  padding:13px 14px;
+  font-family:'Manrope',sans-serif;
+  font-size:15px;
+  color:var(--ink);
+  outline:none;
+  transition:border-color .2s ease;
+}
+input:focus, textarea:focus{border-color:var(--wine);}
+textarea{resize:vertical;min-height:90px;}
+
+.chips{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+.chip{
+  border:1.5px solid var(--line);
+  background:var(--cream);
+  border-radius:999px;
+  padding:9px 16px;
+  font-size:13.5px;
+  font-weight:600;
+  cursor:pointer;
+  color:var(--ink);
+  transition:all .15s ease;
+  user-select:none;
+}
+.chip.selected{
+  background:var(--wine);
+  border-color:var(--wine);
+  color:#fff;
+}
+.chip:active{transform:scale(.96);}
+
+.days-grid{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:6px;
+  margin-bottom:16px;
+}
+.day-chip{
+  border:1.5px solid var(--line);
+  background:var(--cream);
+  border-radius:10px;
+  padding:10px 0;
+  text-align:center;
+  font-size:12px;
+  font-weight:700;
+  cursor:pointer;
+  color:var(--muted);
+}
+.day-chip.selected{
+  background:var(--sage);
+  border-color:var(--sage);
+  color:#fff;
+}
+.hours-row{
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+.hours-row input{flex:1;}
+.hours-sep{color:var(--muted);font-size:13px;}
+
+.mini-label{
+  font-size:11.5px;
+  font-weight:700;
+  color:var(--muted);
+  text-transform:uppercase;
+  letter-spacing:.06em;
+  margin:14px 0 8px;
+}
+.mini-label:first-child{margin-top:0;}
+
+.stack{display:flex;flex-direction:column;gap:10px;}
+.price-row{
+  display:grid;
+  grid-template-columns:1fr 100px;
+  gap:8px;
+}
+.price-row input:last-child{text-align:right;}
+
+.nav{
+  display:flex;
+  gap:10px;
+  margin-top:22px;
+}
+.btn{
+  flex:1;
+  border:none;
+  border-radius:12px;
+  padding:14px 18px;
+  font-family:'Manrope',sans-serif;
+  font-weight:700;
+  font-size:14.5px;
+  cursor:pointer;
+  transition:opacity .15s ease, transform .1s ease;
+}
+.btn:active{transform:scale(.98);}
+.btn-primary{background:var(--wine);color:#fff;}
+.btn-primary:hover{background:var(--wine-dark);}
+.btn-ghost{background:transparent;color:var(--muted);flex:0 0 90px;border:1.5px solid var(--line);}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+
+.screen{display:none;animation:fade .25s ease;}
+.screen.active{display:flex;flex-direction:column;flex:1;}
+@keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+.done-screen{align-items:center;text-align:center;justify-content:center;flex:1;}
+.done-icon{
+  width:56px;height:56px;border-radius:50%;
+  background:var(--sage);
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:16px;
+}
+.done-icon svg{width:26px;height:26px;}
+.done-title{font-family:'Fraunces',serif;font-size:21px;font-weight:600;margin-bottom:8px;}
+.done-text{color:var(--muted);font-size:14px;line-height:1.6;max-width:360px;}
+.status{
+  font-size:12.5px;
+  color:var(--muted);
+  text-align:center;
+  margin-top:14px;
+  min-height:16px;
+}
+.footer-note{
+  text-align:center;
+  color:var(--muted);
+  font-size:11.5px;
+  margin-top:18px;
+}
+textarea::placeholder, input::placeholder{color:#B9ACA3;}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="header">
+    <div class="eyebrow">Quintessência · Autoatendimento IA</div>
+    <div class="title" id="mainTitle">Vamos montar a assistente virtual do seu studio</div>
+    <div class="subtitle" id="mainSubtitle">13 perguntas rápidas. Leva menos de 5 minutos e é só o que precisamos pra montar o link de atendimento da assistente virtual.</div>
+  </div>
+
+  <div class="swatches" id="swatches"></div>
+  <div class="step-label" id="stepLabel">Pergunta 1 de 13</div>
+
+  <div class="card">
+
+    <div class="screen active" data-step="1">
+      <div class="q-title">Como se chama o studio e quem responde por ele?</div>
+      <div class="q-hint">É assim que a IA vai se apresentar pras clientes.</div>
+      <div class="field-group stack">
+        <input type="text" id="q1_nome" placeholder="Nome do studio / marca">
+        <input type="text" id="q1_resp" placeholder="Nome da profissional responsável">
+      </div>
+    </div>
+
+    <div class="screen" data-step="2">
+      <div class="q-title">Como você quer que a assistente virtual se chame?</div>
+      <div class="q-hint">Ela vai ser um link de chat, tipo a Bella da Harmonizié — não um bot dentro do seu WhatsApp. Esse nome é a identidade dela na conversa.</div>
+      <div class="field-group">
+        <input type="text" id="q2_nome_ia" placeholder="Ex: Bella, Luna, Nay...">
+      </div>
+    </div>
+
+    <div class="screen" data-step="3">
+      <div class="q-title">Tem um WhatsApp pra transferir quando a assistente não resolver?</div>
+      <div class="q-hint">Número de apoio, pra quando a cliente precisar falar com uma pessoa de verdade.</div>
+      <div class="field-group">
+        <input type="tel" id="q2_whats" placeholder="(00) 00000-0000">
+      </div>
+    </div>
+
+    <div class="screen" data-step="4">
+      <div class="q-title">Quais serviços você oferece?</div>
+      <div class="q-hint">Toque em todos que se aplicam.</div>
+      <div class="field-group">
+        <div class="chips" id="q3_chips">
+          <div class="chip" data-v="Alongamento em gel">Alongamento em gel</div>
+          <div class="chip" data-v="Alongamento em fibra">Alongamento em fibra</div>
+          <div class="chip" data-v="Manutenção">Manutenção</div>
+          <div class="chip" data-v="Blindagem">Blindagem</div>
+          <div class="chip" data-v="Banho de gel">Banho de gel</div>
+          <div class="chip" data-v="Esmaltação em gel">Esmaltação em gel</div>
+          <div class="chip" data-v="Unha em pé (unha natural)">Unha em pé</div>
+          <div class="chip" data-v="Nail art / decoração">Nail art</div>
+          <div class="chip" data-v="Remoção">Remoção</div>
+        </div>
+        <input type="text" id="q3_outros" placeholder="Outro serviço (opcional)" style="margin-top:14px;">
+      </div>
+    </div>
+
+    <div class="screen" data-step="5">
+      <div class="q-title">Quais dias e horários você atende?</div>
+      <div class="q-hint">Selecione os dias e informe o horário de funcionamento.</div>
+      <div class="field-group">
+        <div class="days-grid" id="q4_days">
+          <div class="day-chip" data-v="Seg">SEG</div>
+          <div class="day-chip" data-v="Ter">TER</div>
+          <div class="day-chip" data-v="Qua">QUA</div>
+          <div class="day-chip" data-v="Qui">QUI</div>
+          <div class="day-chip" data-v="Sex">SEX</div>
+          <div class="day-chip" data-v="Sáb">SÁB</div>
+          <div class="day-chip" data-v="Dom">DOM</div>
+        </div>
+        <div class="hours-row">
+          <input type="text" id="q4_abre" placeholder="Abre (ex: 09:00)">
+          <span class="hours-sep">até</span>
+          <input type="text" id="q4_fecha" placeholder="Fecha (ex: 19:00)">
+        </div>
+      </div>
+    </div>
+
+    <div class="screen" data-step="6">
+      <div class="q-title">Quanto tempo dura cada procedimento?</div>
+      <div class="q-hint">Isso define os intervalos de agenda que a IA vai oferecer. Só preencha o que se aplica.</div>
+      <div class="field-group stack">
+        <input type="text" id="q5_along" placeholder="Alongamento (ex: 1h30)">
+        <input type="text" id="q5_manut" placeholder="Manutenção (ex: 1h)">
+        <input type="text" id="q5_esmalt" placeholder="Esmaltação em gel (ex: 40 min)">
+      </div>
+    </div>
+
+    <div class="screen" data-step="7">
+      <div class="q-title">De quanto em quanto tempo a cliente precisa voltar pra manutenção?</div>
+      <div class="q-hint">Ex: a cada 15, 21 ou 28 dias. Isso é uma das perguntas que as clientes mais fazem.</div>
+      <div class="field-group">
+        <input type="text" id="q6_intervalo" placeholder="Ex: a cada 21 dias">
+      </div>
+    </div>
+
+    <div class="screen" data-step="8">
+      <div class="q-title">Quais os valores dos principais serviços?</div>
+      <div class="q-hint">Preencha o que quiser deixar fixo. Pode deixar em branco o que variar caso a caso.</div>
+      <div class="field-group stack" id="q7_prices">
+        <div class="price-row"><input type="text" value="Alongamento" readonly style="background:transparent;border:none;padding-left:0;font-weight:600;color:var(--muted);"><input type="text" id="q7_p1" placeholder="R$"></div>
+        <div class="price-row"><input type="text" value="Manutenção" readonly style="background:transparent;border:none;padding-left:0;font-weight:600;color:var(--muted);"><input type="text" id="q7_p2" placeholder="R$"></div>
+        <div class="price-row"><input type="text" value="Esmaltação em gel" readonly style="background:transparent;border:none;padding-left:0;font-weight:600;color:var(--muted);"><input type="text" id="q7_p3" placeholder="R$"></div>
+        <div class="price-row"><input type="text" value="Nail art (adicional)" readonly style="background:transparent;border:none;padding-left:0;font-weight:600;color:var(--muted);"><input type="text" id="q7_p4" placeholder="R$"></div>
+      </div>
+    </div>
+
+    <div class="screen" data-step="9">
+      <div class="q-title">Como funciona o agendamento?</div>
+      <div class="q-hint">Precisa de sinal pra reservar horário? Com quanto de antecedência a cliente pode cancelar sem custo?</div>
+      <div class="field-group stack">
+        <input type="text" id="q8_sinal" placeholder="Ex: sinal de R$20 via Pix, ou 'não precisa'">
+        <input type="text" id="q8_cancel" placeholder="Ex: cancelamento com 24h de antecedência">
+      </div>
+    </div>
+
+    <div class="screen" data-step="10">
+      <div class="q-title">Onde fica o studio?</div>
+      <div class="q-hint">Ou marque se você atende a domicílio.</div>
+      <div class="field-group stack">
+        <input type="text" id="q9_endereco" placeholder="Endereço completo">
+        <div class="chips">
+          <div class="chip" data-single="q9_domicilio" data-v="Atende a domicílio">Atende a domicílio</div>
+          <div class="chip" data-single="q9_domicilio" data-v="Só no studio">Só no studio</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="screen" data-step="11">
+      <div class="q-title">Dúvidas que as clientes mais fazem</div>
+      <div class="q-hint">Responda rapidinho — a IA vai usar isso pra tirar dúvidas na hora.</div>
+      <div class="field-group stack">
+        <input type="text" id="q10_secar" placeholder="Quanto tempo pra secar / curar de vez?">
+        <input type="text" id="q10_molhar" placeholder="Pode molhar a mão / lavar louça depois?">
+        <input type="text" id="q10_doi" placeholder="Dói fazer? Machuca a unha natural?">
+        <input type="text" id="q10_fraca" placeholder="Dá pra fazer com unha fraca, quebrada ou roída?">
+      </div>
+    </div>
+
+    <div class="screen" data-step="12">
+      <div class="q-title">Formas de pagamento aceitas</div>
+      <div class="field-group">
+        <div class="chips" id="q11_chips">
+          <div class="chip" data-v="Pix">Pix</div>
+          <div class="chip" data-v="Dinheiro">Dinheiro</div>
+          <div class="chip" data-v="Cartão de débito">Débito</div>
+          <div class="chip" data-v="Cartão de crédito">Crédito</div>
+          <div class="chip" data-v="Parcelado">Parcelado</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="screen" data-step="13">
+      <div class="q-title">Mais alguma coisa que a IA precisa saber?</div>
+      <div class="q-hint">Promoções fixas, restrições, algo que sempre precisa avisar antes de agendar. Opcional.</div>
+      <div class="field-group">
+        <textarea id="q12_obs" placeholder="Escreva livremente aqui..."></textarea>
+      </div>
+    </div>
+
+    <div class="screen done-screen" data-step="14">
+      <div class="done-icon">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="done-title">Recebemos seu briefing!</div>
+      <div class="done-text">Já temos tudo que precisamos pra montar a assistente virtual do seu studio. Em breve a Quintessência entra em contato com os próximos passos.</div>
+    </div>
+
+  </div>
+
+  <div class="nav" id="navRow">
+    <button class="btn btn-ghost" id="btnBack">Voltar</button>
+    <button class="btn btn-primary" id="btnNext">Continuar</button>
+  </div>
+  <div class="status" id="statusMsg"></div>
+  <div class="footer-note">Quintessência — briefing de autoatendimento inteligente</div>
+</div>
+
+<script>
+const TOTAL_STEPS = 13;
+let current = 1;
+
+// ---- handoff: briefing é enviado direto pra planilha "brief - nail" ----
+// Troque pela URL de implantação do Apps Script (Extensões > Apps Script > Implantar > Nova implantação)
+const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzTk5Ig_ESgFSM85cifLaUvqM6gezf5UagIBIlB8My63cTLNS0miOCmI_EiQzo2dh4Szg/exec";
+
+const swatchWrap = document.getElementById('swatches');
+for(let i=0;i<TOTAL_STEPS;i++){
+  const s=document.createElement('div');
+  s.className='swatch';
+  swatchWrap.appendChild(s);
+}
+
+function updateProgress(){
+  const swatches = swatchWrap.children;
+  for(let i=0;i<TOTAL_STEPS;i++){
+    swatches[i].classList.remove('done','current');
+    if(i < current-1) swatches[i].classList.add('done');
+    else if(i === current-1) swatches[i].classList.add('current');
+  }
+  document.getElementById('stepLabel').textContent = current<=TOTAL_STEPS ? `Pergunta ${current} de ${TOTAL_STEPS}` : 'Concluído';
+}
+
+function showStep(n){
+  document.querySelectorAll('.screen').forEach(el=>el.classList.remove('active'));
+  document.querySelector(`.screen[data-step="${n}"]`).classList.add('active');
+  const nav = document.getElementById('navRow');
+  const back = document.getElementById('btnBack');
+  const next = document.getElementById('btnNext');
+  if(n > TOTAL_STEPS){
+    nav.style.display='none';
+  } else {
+    nav.style.display='flex';
+    back.style.display = n===1 ? 'none' : 'block';
+    next.textContent = n===TOTAL_STEPS ? 'Enviar briefing' : 'Continuar';
+  }
+  updateProgress();
+}
+
+// chip toggles (multi-select)
+document.querySelectorAll('.chips').forEach(group=>{
+  group.querySelectorAll('.chip').forEach(chip=>{
+    chip.addEventListener('click',()=>{
+      if(chip.dataset.single){
+        group.querySelectorAll(`.chip[data-single="${chip.dataset.single}"]`).forEach(c=>c.classList.remove('selected'));
+        chip.classList.add('selected');
+      } else {
+        chip.classList.toggle('selected');
+      }
+    });
+  });
+});
+document.querySelectorAll('.day-chip').forEach(chip=>{
+  chip.addEventListener('click',()=>chip.classList.toggle('selected'));
+});
+
+function getSelected(containerId){
+  return Array.from(document.querySelectorAll(`#${containerId} .chip.selected`)).map(c=>c.dataset.v);
+}
+function getSelectedDays(){
+  return Array.from(document.querySelectorAll('#q4_days .day-chip.selected')).map(c=>c.dataset.v);
+}
+function val(id){ const el=document.getElementById(id); return el ? el.value.trim() : ''; }
+
+document.getElementById('btnNext').addEventListener('click', async ()=>{
+  if(current < TOTAL_STEPS){
+    current++;
+    showStep(current);
+  } else {
+    await submitBriefing();
+  }
+});
+document.getElementById('btnBack').addEventListener('click', ()=>{
+  if(current>1){ current--; showStep(current); }
+});
+
+function buildPayload(){
+  return {
+    studio: val('q1_nome'),
+    responsavel: val('q1_resp'),
+    nome_assistente_ia: val('q2_nome_ia'),
+    whatsapp_apoio: val('q2_whats'),
+    servicos: getSelected('q3_chips'),
+    servicos_outros: val('q3_outros'),
+    dias_atendimento: getSelectedDays(),
+    horario_abre: val('q4_abre'),
+    horario_fecha: val('q4_fecha'),
+    duracao_alongamento: val('q5_along'),
+    duracao_manutencao: val('q5_manut'),
+    duracao_esmaltacao: val('q5_esmalt'),
+    intervalo_manutencao: val('q6_intervalo'),
+    preco_alongamento: val('q7_p1'),
+    preco_manutencao: val('q7_p2'),
+    preco_esmaltacao: val('q7_p3'),
+    preco_nailart: val('q7_p4'),
+    sinal: val('q8_sinal'),
+    politica_cancelamento: val('q8_cancel'),
+    endereco: val('q9_endereco'),
+    atende_domicilio: (document.querySelector('.chip.selected[data-single="q9_domicilio"]')||{}).dataset ? document.querySelector('.chip.selected[data-single="q9_domicilio"]').dataset.v : '',
+    faq_secagem: val('q10_secar'),
+    faq_molhar: val('q10_molhar'),
+    faq_dor: val('q10_doi'),
+    faq_unha_fraca: val('q10_fraca'),
+    pagamento: getSelected('q11_chips'),
+    observacoes: val('q12_obs'),
+    enviado_em: new Date().toLocaleString('pt-BR')
+  };
+}
+
+async function submitBriefing(){
+  const btn = document.getElementById('btnNext');
+  const status = document.getElementById('statusMsg');
+  btn.disabled = true;
+  btn.textContent = 'Enviando...';
+
+  const payload = buildPayload();
+
+  try{
+    if(WEBHOOK_URL && WEBHOOK_URL !== "REPLACE_WITH_APPS_SCRIPT_URL"){
+      await fetch(WEBHOOK_URL, {
+        method:'POST',
+        mode:'no-cors',
+        headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body: JSON.stringify(payload)
+      });
+    } else {
+      console.log('Briefing payload (webhook não configurado ainda):', payload);
+    }
+    current = TOTAL_STEPS+1;
+    showStep(current);
+  } catch(err){
+    status.textContent = 'Não foi possível enviar agora. Tente novamente.';
+    btn.disabled = false;
+    btn.textContent = 'Enviar briefing';
+  }
+}
+
+showStep(current);
+</script>
+
+</body>
+</html>

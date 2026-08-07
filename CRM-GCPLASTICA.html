@@ -100,6 +100,23 @@
   }
   .btn-primary:hover{transform:translateY(-1px); box-shadow:0 6px 18px rgba(198,166,100,.25);}
 
+  /* ---------- FILTRO DE MÊS ---------- */
+  .month-filter-bar{
+    padding:18px 40px 0;
+    display:flex; align-items:center; gap:10px;
+  }
+  .month-filter-label{
+    font-size:11px; text-transform:uppercase; letter-spacing:.1em;
+    color:var(--text-muted);
+  }
+  .month-filter-bar select{
+    background:var(--panel-alt); border:1px solid var(--border-strong);
+    color:var(--text); padding:7px 14px; font-family:'Inter',sans-serif;
+    font-size:13px; font-weight:600; border-radius:999px; cursor:pointer;
+  }
+  .month-filter-bar select:focus{outline:none; border-color:var(--gold);}
+  .month-filter-count{font-size:12px; color:var(--gold-dim);}
+
   /* ---------- JOURNEY LINE ---------- */
   .journey{
     padding:22px 40px 0;
@@ -621,6 +638,12 @@
       </button>
     </div>
   </header>
+
+  <div class="month-filter-bar">
+    <span class="month-filter-label">Período</span>
+    <select id="monthFilter"></select>
+    <span class="month-filter-count" id="monthFilterCount"></span>
+  </div>
 
   <div class="journey" id="journey"></div>
 
@@ -1200,10 +1223,51 @@ function postAction(params){
 }
 
 // ---------- RENDER ----------
+let selectedMonthFilter = 'all';
+
+function populateMonthFilterOptions(){
+  const select = document.getElementById('monthFilter');
+  const monthsSet = new Set();
+  STATE.leads.forEach(l => {
+    const d = new Date(l.Data_Criacao);
+    if(!isNaN(d)) monthsSet.add(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
+  });
+  const monthsSorted = Array.from(monthsSet).sort().reverse();
+  const previousValue = selectedMonthFilter;
+
+  let optionsHtml = `<option value="all">Todos os períodos</option>`;
+  monthsSorted.forEach(key => {
+    const [ano, mes] = key.split('-').map(Number);
+    optionsHtml += `<option value="${key}">${MONTH_NAMES[mes-1]} de ${ano}</option>`;
+  });
+  if(select.innerHTML !== optionsHtml) select.innerHTML = optionsHtml;
+
+  selectedMonthFilter = (previousValue === 'all' || monthsSorted.includes(previousValue)) ? previousValue : 'all';
+  select.value = selectedMonthFilter;
+}
+
+function getFilteredLeads(){
+  if(selectedMonthFilter === 'all') return STATE.leads;
+  const [ano, mes] = selectedMonthFilter.split('-').map(Number);
+  return STATE.leads.filter(l => {
+    const d = new Date(l.Data_Criacao);
+    return d.getFullYear() === ano && (d.getMonth() + 1) === mes;
+  });
+}
+
+document.getElementById('monthFilter').addEventListener('change', e => {
+  selectedMonthFilter = e.target.value;
+  render();
+});
+
 function render(){
+  populateMonthFilterOptions();
   renderJourney();
   renderBoard();
   renderTasks();
+  const filtered = getFilteredLeads();
+  document.getElementById('monthFilterCount').textContent =
+    selectedMonthFilter === 'all' ? '' : `${filtered.length} lead(s) nesse período`;
   if(document.getElementById('dashboard').classList.contains('open')) renderDashboard();
 }
 
@@ -1215,8 +1279,9 @@ function daysAgo(dateStr){
 
 function renderJourney(){
   const el = document.getElementById('journey');
+  const leadsFiltrados = getFilteredLeads();
   el.innerHTML = STATE.stages.map(stage => {
-    const count = STATE.leads.filter(l => l.Etapa === stage).length;
+    const count = leadsFiltrados.filter(l => l.Etapa === stage).length;
     const c = stageColor(stage);
     const active = count > 0;
     return `<div class="journey-step ${active?'active':''}">
@@ -1229,8 +1294,9 @@ function renderJourney(){
 
 function renderBoard(){
   const el = document.getElementById('board');
+  const leadsFiltrados = getFilteredLeads();
   el.innerHTML = STATE.stages.map(stage => {
-    const leads = STATE.leads
+    const leads = leadsFiltrados
       .filter(l => l.Etapa === stage)
       .sort((a, b) => new Date(a.Data_Criacao) - new Date(b.Data_Criacao)); // mais antigos primeiro, novos embaixo
     const c = stageColor(stage);

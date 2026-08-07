@@ -941,6 +941,46 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="frioDetalheModalOverlay">
+  <div class="modal" style="max-width:380px; text-align:center;">
+    <h2 id="frioDetalheNome" style="margin-bottom:4px;"></h2>
+    <p style="font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:20px;">Frio</p>
+    <div class="field" style="text-align:left;">
+      <label>Primeiro contato</label>
+      <p style="font-size:14px; color:var(--text); margin-top:2px;" id="frioDetalhePrimeiroContato"></p>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn-ghost" id="fecharFrioDetalhe">Fechar</button>
+      <button type="button" class="btn-primary" id="enviarMsgFrioDetalhe">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.46 1.32 4.96L2.05 22l5.25-1.38c1.44.79 3.07 1.2 4.73 1.2h.01c5.46 0 9.91-4.45 9.91-9.91S17.5 2 12.04 2zm0 18.06h-.01c-1.47 0-2.91-.39-4.17-1.14l-.3-.18-3.11.82.83-3.03-.19-.31a8.03 8.03 0 01-1.24-4.31c0-4.44 3.62-8.06 8.06-8.06 2.15 0 4.17.84 5.7 2.36a8.02 8.02 0 012.36 5.7c0 4.44-3.62 8.06-8.06 8.06zm4.42-6.03c-.24-.12-1.43-.71-1.65-.79-.22-.08-.38-.12-.55.12-.16.24-.62.79-.76.95-.14.16-.28.18-.52.06-.24-.12-1.01-.37-1.92-1.18-.71-.63-1.19-1.42-1.33-1.66-.14-.24-.02-.37.11-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.55-1.32-.75-1.81-.2-.48-.4-.41-.55-.42h-.47c-.16 0-.42.06-.64.3-.22.24-.84.82-.84 2s.86 2.32.98 2.48c.12.16 1.7 2.6 4.13 3.64.58.25 1.03.4 1.38.51.58.18 1.11.16 1.53.1.47-.07 1.43-.58 1.63-1.15.2-.56.2-1.04.14-1.15-.06-.1-.22-.16-.46-.28z"/></svg>
+        Enviar Mensagem
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="remarketingDetalheModalOverlay">
+  <div class="modal" style="max-width:420px;">
+    <h2 id="remarketingDetalheNome" style="margin-bottom:4px;"></h2>
+    <p style="font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:20px;">Remarketing</p>
+    <div class="field">
+      <label>Motivo</label>
+      <p style="font-size:13.5px; color:var(--text); line-height:1.5; margin-top:2px;" id="remarketingDetalheMotivo"></p>
+    </div>
+    <div class="field">
+      <label>Retorno previsto</label>
+      <p style="font-size:14px; color:var(--gold); margin-top:2px;" id="remarketingDetalheData"></p>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn-ghost" id="fecharRemarketingDetalhe">Fechar</button>
+      <button type="button" class="btn-primary" id="enviarMsgRemarketingDetalhe">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.46 1.32 4.96L2.05 22l5.25-1.38c1.44.79 3.07 1.2 4.73 1.2h.01c5.46 0 9.91-4.45 9.91-9.91S17.5 2 12.04 2zm0 18.06h-.01c-1.47 0-2.91-.39-4.17-1.14l-.3-.18-3.11.82.83-3.03-.19-.31a8.03 8.03 0 01-1.24-4.31c0-4.44 3.62-8.06 8.06-8.06 2.15 0 4.17.84 5.7 2.36a8.02 8.02 0 012.36 5.7c0 4.44-3.62 8.06-8.06 8.06zm4.42-6.03c-.24-.12-1.43-.71-1.65-.79-.22-.08-.38-.12-.55.12-.16.24-.62.79-.76.95-.14.16-.28.18-.52.06-.24-.12-1.01-.37-1.92-1.18-.71-.63-1.19-1.42-1.33-1.66-.14-.24-.02-.37.11-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.55-1.32-.75-1.81-.2-.48-.4-.41-.55-.42h-.47c-.16 0-.42.06-.64.3-.22.24-.84.82-.84 2s.86 2.32.98 2.48c.12.16 1.7 2.6 4.13 3.64.58.25 1.03.4 1.38.51.58.18 1.11.16 1.53.1.47-.07 1.43-.58 1.63-1.15.2-.56.2-1.04.14-1.15-.06-.1-.22-.16-.46-.28z"/></svg>
+        Enviar Mensagem
+      </button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="surgeryModalOverlay">
   <div class="modal" style="max-width:420px;">
     <h2>Cirurgia Confirmada</h2>
@@ -1288,14 +1328,6 @@ function postAction(params){
 // ---------- RENDER ----------
 let selectedMonthFilter = 'all';
 
-// Controla quais cards minimizados (Frio/Remarketing) estão expandidos no momento
-let expandedMinis = new Set();
-function toggleMiniExpand(id){
-  if(expandedMinis.has(id)) expandedMinis.delete(id);
-  else expandedMinis.add(id);
-  render();
-}
-
 function populateMonthFilterOptions(){
   const select = document.getElementById('monthFilter');
   const monthsSet = new Set();
@@ -1455,8 +1487,7 @@ function renderBoard(){
       <div class="column-body" data-stage="${col.stageKey}" data-dropzone="${col.isDropzone === false ? 'false' : 'true'}" data-virtual-action="${col.virtualAction || ''}">
         ${leads.length
           ? (col.minimized
-              ? leads.map((l, i) => {
-                  if(col.stageKey !== 'Consulta' && expandedMinis.has(l.ID)) return leadCard(l, i + 1, true);
+              ? leads.map(l => {
                   if(col.minimizedType === 'concluida') return miniConcluidaRow(l);
                   if(col.stageKey === 'Frio') return miniFrioRow(l);
                   if(col.stageKey === 'Remarketing') return miniRemarketingRow(l);
@@ -1468,7 +1499,7 @@ function renderBoard(){
     </div>`;
   }).join('');
 
-  el.querySelectorAll('.mini-consulta').forEach(item => {
+  el.querySelectorAll('.mini-consulta:not(.mini-frio):not(.mini-remarketing):not(.mini-concluida)').forEach(item => {
     item.addEventListener('click', () => {
       const lead = STATE.leads.find(l => l.ID === item.dataset.id);
       if(lead) openEditConsultaModal(lead);
@@ -1482,8 +1513,18 @@ function renderBoard(){
     });
   });
 
-  el.querySelectorAll('.mini-frio, .mini-remarketing').forEach(item => {
-    item.addEventListener('click', () => toggleMiniExpand(item.dataset.id));
+  el.querySelectorAll('.mini-frio').forEach(item => {
+    item.addEventListener('click', () => {
+      const lead = STATE.leads.find(l => l.ID === item.dataset.id);
+      if(lead) openFrioDetalheModal(lead);
+    });
+  });
+
+  el.querySelectorAll('.mini-remarketing').forEach(item => {
+    item.addEventListener('click', () => {
+      const lead = STATE.leads.find(l => l.ID === item.dataset.id);
+      if(lead) openRemarketingDetalheModal(lead);
+    });
   });
 
   // Drag events
@@ -1708,7 +1749,6 @@ function leadCard(lead, posicao, collapsible){
         </button>
       </div>
     </div>
-    ${collapsible ? `<button type="button" class="card-minimize-btn" onclick="toggleMiniExpand('${lead.ID}')">▲ Minimizar</button>` : ''}
   </div>`;
 }
 
@@ -2054,6 +2094,64 @@ document.getElementById('removerConsultaBtn').addEventListener('click', () => {
   showToast(`Consulta de ${lead.Nome} removida — voltou para Diálogo.`);
 
   pendingEditConsulta = null;
+});
+
+// ---------- MODAL DETALHE FRIO (nome, primeiro contato, enviar mensagem) ----------
+const frioDetalheModal = document.getElementById('frioDetalheModalOverlay');
+let pendingFrioDetalhe = null;
+
+function openFrioDetalheModal(lead){
+  pendingFrioDetalhe = lead;
+  document.getElementById('frioDetalheNome').textContent = lead.Nome || 'Sem nome';
+  document.getElementById('frioDetalhePrimeiroContato').textContent =
+    lead.Data_Criacao ? formatDate(lead.Data_Criacao) : 'Não registrado';
+  frioDetalheModal.classList.add('open');
+}
+
+document.getElementById('fecharFrioDetalhe').addEventListener('click', () => {
+  frioDetalheModal.classList.remove('open');
+  pendingFrioDetalhe = null;
+});
+
+document.getElementById('enviarMsgFrioDetalhe').addEventListener('click', () => {
+  if(pendingFrioDetalhe) openWhatsApp(pendingFrioDetalhe);
+});
+
+// ---------- MODAL DETALHE REMARKETING (motivo + retorno previsto + enviar mensagem) ----------
+const remarketingDetalheModal = document.getElementById('remarketingDetalheModalOverlay');
+let pendingRemarketingDetalhe = null;
+
+function getRemarketingInfo(lead){
+  const tarefa = STATE.tasks.find(t => t.Lead_ID === lead.ID && t.Status !== 'Concluída' && t.Data_Vencimento);
+  if(tarefa){
+    return { motivo: tarefa.Descricao || tarefa.Titulo || 'Sem motivo registrado.', dataRetorno: tarefa.Data_Vencimento };
+  }
+  const historicoDoLead = STATE.historico
+    .filter(h => h.Lead_ID === lead.ID && h.Para_Etapa === 'Remarketing')
+    .sort((a, b) => new Date(b.Data) - new Date(a.Data));
+  return {
+    motivo: historicoDoLead.length ? historicoDoLead[0].Relatorio : 'Sem motivo registrado.',
+    dataRetorno: null
+  };
+}
+
+function openRemarketingDetalheModal(lead){
+  pendingRemarketingDetalhe = lead;
+  const info = getRemarketingInfo(lead);
+  document.getElementById('remarketingDetalheNome').textContent = lead.Nome || 'Sem nome';
+  document.getElementById('remarketingDetalheMotivo').textContent = info.motivo;
+  document.getElementById('remarketingDetalheData').textContent =
+    info.dataRetorno ? formatDate(info.dataRetorno) : 'Não definido';
+  remarketingDetalheModal.classList.add('open');
+}
+
+document.getElementById('fecharRemarketingDetalhe').addEventListener('click', () => {
+  remarketingDetalheModal.classList.remove('open');
+  pendingRemarketingDetalhe = null;
+});
+
+document.getElementById('enviarMsgRemarketingDetalhe').addEventListener('click', () => {
+  if(pendingRemarketingDetalhe) openWhatsApp(pendingRemarketingDetalhe);
 });
 
 // ---------- MODAL DATA DA CIRURGIA (Consulta → Cirurgia, sem relatório, só data) ----------

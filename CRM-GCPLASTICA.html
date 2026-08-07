@@ -1246,13 +1246,27 @@ function populateMonthFilterOptions(){
   select.value = selectedMonthFilter;
 }
 
+// Cada etapa usa a data que faz sentido pra ela: Consulta → data da consulta,
+// Cirurgia → data da cirurgia, o resto → data de criação (quando o lead entrou).
+function dataRelevantePraEtapa(lead, stage){
+  if(stage === 'Consulta') return lead.Data_Consulta;
+  if(stage === 'Cirurgia') return lead.Data_Cirurgia;
+  return lead.Data_Criacao;
+}
+
+function leadBateNoMes(lead, stage, monthKey){
+  if(monthKey === 'all') return true;
+  const dataRef = dataRelevantePraEtapa(lead, stage);
+  if(!dataRef) return false;
+  const [ano, mes] = monthKey.split('-').map(Number);
+  const d = new Date(dataRef);
+  return !isNaN(d) && d.getFullYear() === ano && (d.getMonth() + 1) === mes;
+}
+
+// Usado só pro contador geral no topo (soma de todas as etapas, cada uma com sua própria data de referência)
 function getFilteredLeads(){
   if(selectedMonthFilter === 'all') return STATE.leads;
-  const [ano, mes] = selectedMonthFilter.split('-').map(Number);
-  return STATE.leads.filter(l => {
-    const d = new Date(l.Data_Criacao);
-    return d.getFullYear() === ano && (d.getMonth() + 1) === mes;
-  });
+  return STATE.leads.filter(l => leadBateNoMes(l, l.Etapa, selectedMonthFilter));
 }
 
 document.getElementById('monthFilter').addEventListener('change', e => {
@@ -1279,9 +1293,8 @@ function daysAgo(dateStr){
 
 function renderJourney(){
   const el = document.getElementById('journey');
-  const leadsFiltrados = getFilteredLeads();
   el.innerHTML = STATE.stages.map(stage => {
-    const count = leadsFiltrados.filter(l => l.Etapa === stage).length;
+    const count = STATE.leads.filter(l => l.Etapa === stage && leadBateNoMes(l, stage, selectedMonthFilter)).length;
     const c = stageColor(stage);
     const active = count > 0;
     return `<div class="journey-step ${active?'active':''}">
@@ -1294,10 +1307,9 @@ function renderJourney(){
 
 function renderBoard(){
   const el = document.getElementById('board');
-  const leadsFiltrados = getFilteredLeads();
   el.innerHTML = STATE.stages.map(stage => {
-    const leads = leadsFiltrados
-      .filter(l => l.Etapa === stage)
+    const leads = STATE.leads
+      .filter(l => l.Etapa === stage && leadBateNoMes(l, stage, selectedMonthFilter))
       .sort((a, b) => new Date(a.Data_Criacao) - new Date(b.Data_Criacao)); // mais antigos primeiro, novos embaixo
     const c = stageColor(stage);
     return `

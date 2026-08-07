@@ -949,6 +949,10 @@
       <label>Primeiro contato</label>
       <p style="font-size:14px; color:var(--text); margin-top:2px;" id="frioDetalhePrimeiroContato"></p>
     </div>
+    <div class="field" style="text-align:left;">
+      <label>Origem</label>
+      <p style="font-size:14px; color:var(--text); margin-top:2px;" id="frioDetalheOrigem"></p>
+    </div>
     <div class="modal-actions">
       <button type="button" class="btn-ghost" id="fecharFrioDetalhe">Fechar</button>
       <button type="button" class="btn-primary" id="enviarMsgFrioDetalhe">
@@ -970,6 +974,10 @@
     <div class="field">
       <label>Retorno previsto</label>
       <p style="font-size:14px; color:var(--gold); margin-top:2px;" id="remarketingDetalheData"></p>
+    </div>
+    <div class="field">
+      <label>Origem</label>
+      <p style="font-size:13px; color:var(--text-muted); margin-top:2px;" id="remarketingDetalheOrigem"></p>
     </div>
     <div class="modal-actions">
       <button type="button" class="btn-ghost" id="fecharRemarketingDetalhe">Fechar</button>
@@ -2131,6 +2139,7 @@ function openFrioDetalheModal(lead){
   document.getElementById('frioDetalheNome').textContent = lead.Nome || 'Sem nome';
   document.getElementById('frioDetalhePrimeiroContato').textContent =
     lead.Data_Criacao ? formatDate(lead.Data_Criacao) : 'Não registrado';
+  document.getElementById('frioDetalheOrigem').textContent = lead.Origem || 'Não informada';
   frioDetalheModal.classList.add('open');
 }
 
@@ -2168,6 +2177,7 @@ function openRemarketingDetalheModal(lead){
   document.getElementById('remarketingDetalheMotivo').textContent = info.motivo;
   document.getElementById('remarketingDetalheData').textContent =
     info.dataRetorno ? formatDate(info.dataRetorno) : 'Não definido';
+  document.getElementById('remarketingDetalheOrigem').textContent = lead.Origem || 'Não informada';
   remarketingDetalheModal.classList.add('open');
 }
 

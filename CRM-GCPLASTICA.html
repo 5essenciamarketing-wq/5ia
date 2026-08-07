@@ -263,14 +263,27 @@
     padding:20px 0; font-style:italic; opacity:.6;
   }
   .mini-consulta{
-    display:flex; justify-content:space-between; align-items:center; gap:8px;
+    display:flex; flex-direction:column; align-items:flex-start; gap:3px;
     padding:9px 12px; background:var(--panel); border:1px solid var(--border);
+    border-left:3px solid var(--sage);
     border-radius:var(--radius-sm); cursor:pointer;
     transition:border-color .15s;
   }
   .mini-consulta:hover{border-color:var(--gold-dim);}
-  .mini-consulta-name{font-size:12.5px; font-weight:600; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-  .mini-consulta-date{font-size:11px; color:var(--sage); flex-shrink:0;}
+  .mini-concluida{background:var(--sage-soft); border-color:rgba(137,148,111,.35); border-left-color:var(--sage);}
+  .card-minimize-btn{
+    width:100%; background:none; border:none; border-top:1px solid var(--border);
+    color:var(--text-muted); font-size:10.5px; padding:8px 0 0; margin-top:10px;
+    cursor:pointer; text-align:center;
+  }
+  .card-minimize-btn:hover{color:var(--gold);}
+  .mini-concluida:hover{border-color:var(--sage);}
+  .mini-consulta-name{font-size:12.5px; font-weight:600; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+  .mini-consulta-date{font-size:10.5px; color:var(--sage); flex-shrink:0;}
+  .mini-frio, .mini-remarketing{
+    flex-direction:row; justify-content:space-between; align-items:center;
+    border-left:3px solid var(--bordeaux);
+  }
   .card-locked{cursor:default; opacity:.92;}
   .card-locked:hover{border-color:var(--border);}
   .chip-cirurgia{color:var(--sage); border-color:var(--sage-soft);}
@@ -974,7 +987,7 @@
 /* ============================================================
    CONFIGURAÇÃO — cole aqui a URL do seu App da Web (Apps Script)
    ============================================================ */
-const CRM_API_URL = 'https://script.google.com/macros/s/AKfycby2tAmlxe2DaC1ls4aDBpjjj6Xwo_bEKCzN0qU88XS9emPEpcpC09Z5xlpbChnbTfFx/exec';
+const CRM_API_URL = 'https://script.google.com/macros/s/AKfycbwZ9zv4DNc94x9IzWs94r0Ect882EW8gEFVHEgtWHmVIlPwtdO92ODdn_c7iSVAhHxQ/exec';
 
 /* Cores das etiquetas por etapa — edite à vontade */
 const STAGE_COLORS = {
@@ -1275,6 +1288,14 @@ function postAction(params){
 // ---------- RENDER ----------
 let selectedMonthFilter = 'all';
 
+// Controla quais cards minimizados (Frio/Remarketing) estão expandidos no momento
+let expandedMinis = new Set();
+function toggleMiniExpand(id){
+  if(expandedMinis.has(id)) expandedMinis.delete(id);
+  else expandedMinis.add(id);
+  render();
+}
+
 function populateMonthFilterOptions(){
   const select = document.getElementById('monthFilter');
   const monthsSet = new Set();
@@ -1323,6 +1344,17 @@ function remarketingPertenceACristiane(lead){
   return !!(lead.Data_Consulta || lead.Data_Cirurgia || lead.Status_Cirurgia);
 }
 
+/**
+ * Data que define a prioridade de um lead em Remarketing: a data da tarefa de
+ * recontato pendente mais próxima (mesmo se já atrasada), ou — sem tarefa —
+ * a última interação (quem está frio há mais tempo aparece primeiro).
+ */
+function remarketingPriorityDate(lead){
+  const tarefa = STATE.tasks.find(t => t.Lead_ID === lead.ID && t.Status !== 'Concluída' && t.Data_Vencimento);
+  if(tarefa) return new Date(tarefa.Data_Vencimento).getTime();
+  return new Date(lead.Data_Ultima_Interacao || lead.Data_Criacao).getTime();
+}
+
 function getBoardColumns(){
   const papel = SESSION.papel;
 
@@ -1331,16 +1363,16 @@ function getBoardColumns(){
       { stageKey:'Welcome', title:'Welcome' },
       { stageKey:'Diálogo', title:'Diálogo' },
       { stageKey:'Consulta', title:'Consulta', minimized:true, isDropzone:true },
-      { stageKey:'Frio', title:'Frio' },
-      { stageKey:'Remarketing', title:'Remarketing', filterFn: l => !remarketingPertenceACristiane(l) }
+      { stageKey:'Frio', title:'Frio', minimized:true },
+      { stageKey:'Remarketing', title:'Remarketing', minimized:true, filterFn: l => !remarketingPertenceACristiane(l) }
     ];
   }
   if(papel === 'Pos-Consulta'){
     return [
       { stageKey:'Consulta', title:'Consulta' },
       { stageKey:'Cirurgia', title:'Cirurgia', filterFn: l => l.Status_Cirurgia !== 'Concluída' },
-      { stageKey:'Cirurgia', title:'Concluídas', filterFn: l => l.Status_Cirurgia === 'Concluída', virtualAction:'markSurgeryComplete' },
-      { stageKey:'Remarketing', title:'Remarketing', filterFn: l => remarketingPertenceACristiane(l) }
+      { stageKey:'Cirurgia', title:'Concluídas', filterFn: l => l.Status_Cirurgia === 'Concluída', virtualAction:'markSurgeryComplete', minimized:true, minimizedType:'concluida' },
+      { stageKey:'Remarketing', title:'Remarketing', minimized:true, filterFn: l => remarketingPertenceACristiane(l) }
     ];
   }
   // Admin / sem papel definido — vê tudo, sem recorte
@@ -1406,6 +1438,11 @@ function renderBoard(){
           // Ordena pela data da consulta marcada, não por quando o lead entrou
           return new Date(a.Data_Consulta || a.Data_Criacao) - new Date(b.Data_Consulta || b.Data_Criacao);
         }
+        if(col.stageKey === 'Remarketing'){
+          // Prioridade: quem tem retorno mais urgente (tarefa de recontato) primeiro;
+          // sem tarefa, quem está frio há mais tempo primeiro.
+          return remarketingPriorityDate(a) - remarketingPriorityDate(b);
+        }
         return new Date(a.Data_Criacao) - new Date(b.Data_Criacao); // mais antigos primeiro, novos embaixo
       });
     const c = stageColor(col.stageKey);
@@ -1417,7 +1454,15 @@ function renderBoard(){
       </div>
       <div class="column-body" data-stage="${col.stageKey}" data-dropzone="${col.isDropzone === false ? 'false' : 'true'}" data-virtual-action="${col.virtualAction || ''}">
         ${leads.length
-          ? (col.minimized ? leads.map(miniConsultaRow).join('') : leads.map((l, i) => leadCard(l, i + 1)).join(''))
+          ? (col.minimized
+              ? leads.map((l, i) => {
+                  if(col.stageKey !== 'Consulta' && expandedMinis.has(l.ID)) return leadCard(l, i + 1, true);
+                  if(col.minimizedType === 'concluida') return miniConcluidaRow(l);
+                  if(col.stageKey === 'Frio') return miniFrioRow(l);
+                  if(col.stageKey === 'Remarketing') return miniRemarketingRow(l);
+                  return miniConsultaRow(l);
+                }).join('')
+              : leads.map((l, i) => leadCard(l, i + 1)).join(''))
           : `<div class="empty-col">${col.emptyMsg || 'Vazio'}</div>`}
       </div>
     </div>`;
@@ -1428,6 +1473,17 @@ function renderBoard(){
       const lead = STATE.leads.find(l => l.ID === item.dataset.id);
       if(lead) openEditConsultaModal(lead);
     });
+  });
+
+  el.querySelectorAll('.mini-concluida').forEach(item => {
+    item.addEventListener('click', () => {
+      const lead = STATE.leads.find(l => l.ID === item.dataset.id);
+      if(lead) openChatPanel(lead);
+    });
+  });
+
+  el.querySelectorAll('.mini-frio, .mini-remarketing').forEach(item => {
+    item.addEventListener('click', () => toggleMiniExpand(item.dataset.id));
   });
 
   // Drag events
@@ -1546,14 +1602,53 @@ function renderBoard(){
 
 function miniConsultaRow(lead){
   const dataTxt = lead.Data_Consulta ? formatDate(lead.Data_Consulta) : 'sem data';
-  const horaTxt = lead.Hora_Consulta ? ' às ' + lead.Hora_Consulta : '';
-  return `<div class="mini-consulta" data-id="${lead.ID}">
+  return `<div class="mini-consulta" data-id="${lead.ID}" title="Clique para editar data/hora ou remover">
     <span class="mini-consulta-name">${escapeHtml(lead.Nome || 'Sem nome')}</span>
-    <span class="mini-consulta-date">${dataTxt}${horaTxt}</span>
+    <span class="mini-consulta-date">${dataTxt}</span>
   </div>`;
 }
 
-function leadCard(lead, posicao){
+function miniFrioRow(lead){
+  const da = daysAgo(lead.Data_Ultima_Interacao);
+  const diasTxt = da === null ? 'sem interação' : da === 0 ? 'hoje' : `há ${da}d`;
+  return `<div class="mini-consulta mini-frio" data-id="${lead.ID}" title="Clique para expandir">
+    <span class="mini-consulta-name">${escapeHtml(lead.Nome || 'Sem nome')}</span>
+    <span class="mini-consulta-date" style="color:var(--bordeaux);">${diasTxt}</span>
+  </div>`;
+}
+
+function miniRemarketingRow(lead){
+  const prioridade = remarketingPriorityDate(lead);
+  const hojeStr = new Date().toISOString().slice(0,10);
+  const tarefa = STATE.tasks.find(t => t.Lead_ID === lead.ID && t.Status !== 'Concluída' && t.Data_Vencimento);
+  let txt, cor;
+  if(tarefa){
+    const atrasada = String(tarefa.Data_Vencimento).slice(0,10) < hojeStr;
+    txt = (atrasada ? '⚠ ' : '') + formatDate(tarefa.Data_Vencimento);
+    cor = atrasada ? 'var(--bordeaux)' : 'var(--gold-dim)';
+  } else {
+    const da = daysAgo(lead.Data_Ultima_Interacao);
+    txt = da === null ? 'sem interação' : `há ${da}d`;
+    cor = 'var(--text-muted)';
+  }
+  return `<div class="mini-consulta mini-remarketing" data-id="${lead.ID}" title="Clique para expandir">
+    <span class="mini-consulta-name">${escapeHtml(lead.Nome || 'Sem nome')}</span>
+    <span class="mini-consulta-date" style="color:${cor};">${txt}</span>
+  </div>`;
+}
+
+function miniConcluidaRow(lead){
+  const dataTxt = lead.Data_Cirurgia ? formatDate(lead.Data_Cirurgia) : '';
+  return `<div class="mini-consulta mini-concluida" data-id="${lead.ID}" title="Ver conversa">
+    <span class="mini-consulta-name">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:5px;vertical-align:-1px;color:var(--sage);"><path d="M20 6L9 17l-5-5"/></svg>
+      ${escapeHtml(lead.Nome || 'Sem nome')}
+    </span>
+    <span class="mini-consulta-date" style="color:var(--sage);">${dataTxt}</span>
+  </div>`;
+}
+
+function leadCard(lead, posicao, collapsible){
   const da = daysAgo(lead.Data_Ultima_Interacao);
   const staleClass = da !== null && da >= 5 ? 'card-stale' : '';
   const staleText = da === null ? '' : da === 0 ? 'hoje' : `há ${da}d`;
@@ -1564,9 +1659,18 @@ function leadCard(lead, posicao){
     ? `<span class="chip chip-cirurgia">${lead.Status_Cirurgia === 'Concluída' ? '✓ Concluída' : 'Cirurgia'}: ${formatDate(lead.Data_Cirurgia)}</span>`
     : '';
   const consultaBadge = isConsulta && lead.Data_Consulta
-    ? `<span class="chip chip-cirurgia">Consulta: ${formatDate(lead.Data_Consulta)}${lead.Hora_Consulta ? ' às ' + lead.Hora_Consulta : ''}</span>`
+    ? `<span class="chip chip-cirurgia">Consulta: ${formatDate(lead.Data_Consulta)}${lead.Hora_Consulta ? ' às ' + formatHora(lead.Hora_Consulta) : ''}</span>`
     : '';
   const jaConsultouBadge = jaConsultou ? `<span class="chip chip-cirurgia">Já Consultou</span>` : '';
+  let retornoBadge = '';
+  if(lead.Etapa === 'Remarketing'){
+    const tarefa = STATE.tasks.find(t => t.Lead_ID === lead.ID && t.Status !== 'Concluída' && t.Data_Vencimento);
+    if(tarefa){
+      const hojeStr = new Date().toISOString().slice(0,10);
+      const atrasada = String(tarefa.Data_Vencimento).slice(0,10) < hojeStr;
+      retornoBadge = `<span class="chip" style="color:${atrasada ? 'var(--bordeaux)' : 'var(--gold-dim)'}; border-color:${atrasada ? 'rgba(122,46,56,.4)' : 'var(--border)'};">${atrasada ? '⚠ Retorno atrasado' : 'Retorno'}: ${formatDate(tarefa.Data_Vencimento)}</span>`;
+    }
+  }
   const naoDraggable = isCirurgia && lead.Status_Cirurgia === 'Concluída';
   const c = stageColor(lead.Etapa);
   return `
@@ -1586,6 +1690,7 @@ function leadCard(lead, posicao){
       ${cirurgiaBadge}
       ${consultaBadge}
       ${jaConsultouBadge}
+      ${retornoBadge}
     </div>
     <div class="card-footer">
       <span class="${staleClass}">${staleText}</span>
@@ -1603,6 +1708,7 @@ function leadCard(lead, posicao){
         </button>
       </div>
     </div>
+    ${collapsible ? `<button type="button" class="card-minimize-btn" onclick="toggleMiniExpand('${lead.ID}')">▲ Minimizar</button>` : ''}
   </div>`;
 }
 
@@ -1679,6 +1785,15 @@ function formatDate(iso){
   const d = new Date(iso);
   if(isNaN(d)) return iso;
   return d.toLocaleDateString('pt-BR');
+}
+// Blindagem: se por algum motivo vier um valor de horário corrompido (o Sheets
+// às vezes salva como data completa, tipo "1899-12-30T17:06:28.000Z"), extrai só o HH:MM.
+function formatHora(hora){
+  if(!hora) return '';
+  const str = String(hora);
+  const match = str.match(/T(\d{2}):(\d{2})/);
+  if(match) return match[1] + ':' + match[2];
+  return str;
 }
 function escapeHtml(str){
   return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
@@ -1895,7 +2010,7 @@ function openEditConsultaModal(lead){
   pendingEditConsulta = { lead };
   document.getElementById('editConsultaLeadLabel').innerHTML = escapeHtml(lead.Nome);
   document.getElementById('ec_data').value = lead.Data_Consulta ? String(lead.Data_Consulta).slice(0, 10) : '';
-  document.getElementById('ec_hora').value = lead.Hora_Consulta || '';
+  document.getElementById('ec_hora').value = formatHora(lead.Hora_Consulta);
   editConsultaModal.classList.add('open');
 }
 

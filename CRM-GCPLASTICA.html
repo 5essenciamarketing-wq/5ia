@@ -1439,6 +1439,21 @@ function daysAgo(dateStr){
   return Math.floor(diff / 86400000);
 }
 
+// Pra cards que já mostram uma data marcada (Consulta/Cirurgia) — quanto falta ou quanto atrasou
+// em relação a ESSA data específica, não em relação à última mexida no cadastro.
+function relativeToDate(dateStr){
+  if(!dateStr) return null;
+  const alvo = new Date(dateStr);
+  if(isNaN(alvo)) return null;
+  const hoje = new Date();
+  alvo.setHours(0,0,0,0);
+  hoje.setHours(0,0,0,0);
+  const diffDias = Math.round((alvo - hoje) / 86400000);
+  if(diffDias === 0) return { texto: 'hoje', atrasada: false };
+  if(diffDias > 0) return { texto: `em ${diffDias}d`, atrasada: false };
+  return { texto: `atrasada há ${Math.abs(diffDias)}d`, atrasada: true };
+}
+
 function renderJourney(){
   const el = document.getElementById('journey');
   const columns = getBoardColumns();
@@ -1690,11 +1705,22 @@ function miniConcluidaRow(lead){
 }
 
 function leadCard(lead, posicao, collapsible){
-  const da = daysAgo(lead.Data_Ultima_Interacao);
-  const staleClass = da !== null && da >= 5 ? 'card-stale' : '';
-  const staleText = da === null ? '' : da === 0 ? 'hoje' : `há ${da}d`;
   const isCirurgia = lead.Etapa === 'Cirurgia';
   const isConsulta = lead.Etapa === 'Consulta';
+
+  let staleClass = '', staleText = '';
+  if(isConsulta && lead.Data_Consulta){
+    const rel = relativeToDate(lead.Data_Consulta);
+    if(rel){ staleText = rel.texto; staleClass = rel.atrasada ? 'card-stale' : ''; }
+  } else if(isCirurgia && lead.Data_Cirurgia && lead.Status_Cirurgia !== 'Concluída'){
+    const rel = relativeToDate(lead.Data_Cirurgia);
+    if(rel){ staleText = rel.texto; staleClass = rel.atrasada ? 'card-stale' : ''; }
+  } else {
+    const da = daysAgo(lead.Data_Ultima_Interacao);
+    staleClass = da !== null && da >= 5 ? 'card-stale' : '';
+    staleText = da === null ? '' : da === 0 ? 'hoje' : `há ${da}d`;
+  }
+
   const jaConsultou = lead.Etapa === 'Remarketing' && (lead.Status_Cirurgia === 'Reagendar' || lead.Data_Consulta);
   const cirurgiaBadge = isCirurgia && lead.Data_Cirurgia
     ? `<span class="chip chip-cirurgia">${lead.Status_Cirurgia === 'Concluída' ? '✓ Concluída' : 'Cirurgia'}: ${formatDate(lead.Data_Cirurgia)}</span>`

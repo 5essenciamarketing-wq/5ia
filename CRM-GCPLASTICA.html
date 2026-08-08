@@ -235,7 +235,15 @@
   .card:active{cursor:grabbing;}
   .card.dragging{opacity:.4;}
   .card-top{display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:6px;}
-  .card-name-row{display:flex; align-items:baseline; gap:7px; min-width:0;}
+  .card-avatar-row{display:flex; align-items:center; gap:10px; min-width:0; flex:1;}
+  .card-avatar{
+    width:34px; height:34px; border-radius:50%; flex-shrink:0; overflow:hidden;
+    background:var(--panel-alt); border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .card-avatar img{width:100%; height:100%; object-fit:cover;}
+  .card-avatar-initials{font-size:12px; font-weight:700; color:var(--gold-dim);}
+  .card-name-row{display:flex; align-items:baseline; gap:6px; min-width:0; flex-wrap:wrap;}
   .order-badge{
     flex-shrink:0; font-size:10px; font-weight:700; color:var(--text-muted);
     background:var(--panel-alt); border:1px solid var(--border);
@@ -310,6 +318,14 @@
   }
   .card-minimize-btn:hover{color:var(--gold);}
   .mini-concluida:hover{border-color:var(--sage);}
+  .mini-consulta-namewrap{display:flex; align-items:center; gap:7px; min-width:0;}
+  .mini-avatar{
+    width:20px; height:20px; border-radius:50%; flex-shrink:0; overflow:hidden;
+    background:var(--panel-alt); border:1px solid var(--border);
+    display:inline-flex; align-items:center; justify-content:center;
+  }
+  .mini-avatar img{width:100%; height:100%; object-fit:cover;}
+  .mini-avatar-fallback{font-size:8.5px; font-weight:700; color:var(--gold-dim);}
   .mini-consulta-name{font-size:12.5px; font-weight:600; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
   .mini-consulta-date{font-size:10.5px; color:var(--sage); flex-shrink:0;}
   .mini-frio, .mini-remarketing{
@@ -1736,10 +1752,18 @@ function renderBoard(){
   });
 }
 
+function miniAvatarHtml(lead){
+  const iniciais = (lead.Nome || '?').trim().split(/\s+/).slice(0,2).map(p => p[0]).join('').toUpperCase();
+  if(lead.Foto){
+    return `<span class="mini-avatar"><img src="${lead.Foto}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"><span class="mini-avatar-fallback" style="display:none;">${iniciais}</span></span>`;
+  }
+  return `<span class="mini-avatar"><span class="mini-avatar-fallback">${iniciais}</span></span>`;
+}
+
 function miniConsultaRow(lead){
   const dataTxt = lead.Data_Consulta ? formatDate(lead.Data_Consulta) : 'sem data';
   return `<div class="mini-consulta" data-id="${lead.ID}" title="Clique para editar data/hora ou remover">
-    <span class="mini-consulta-name">${escapeHtml(lead.Nome || 'Sem nome')}</span>
+    <div class="mini-consulta-namewrap">${miniAvatarHtml(lead)}<span class="mini-consulta-name">${escapeHtml(lead.Nome || 'Sem nome')}</span></div>
     <span class="mini-consulta-date">${dataTxt}</span>
   </div>`;
 }
@@ -1748,7 +1772,7 @@ function miniFrioRow(lead){
   const da = daysAgo(lead.Data_Ultima_Interacao);
   const diasTxt = da === null ? 'sem interação' : da === 0 ? 'hoje' : `há ${da}d`;
   return `<div class="mini-consulta mini-frio" data-id="${lead.ID}" title="Clique para expandir">
-    <span class="mini-consulta-name">${escapeHtml(lead.Nome || 'Sem nome')}</span>
+    <div class="mini-consulta-namewrap">${miniAvatarHtml(lead)}<span class="mini-consulta-name">${escapeHtml(lead.Nome || 'Sem nome')}</span></div>
     <span class="mini-consulta-date" style="color:var(--bordeaux);">${diasTxt}</span>
   </div>`;
 }
@@ -1768,7 +1792,7 @@ function miniRemarketingRow(lead){
     cor = 'var(--text-muted)';
   }
   return `<div class="mini-consulta mini-remarketing" data-id="${lead.ID}" title="Clique para expandir">
-    <span class="mini-consulta-name">${escapeHtml(lead.Nome || 'Sem nome')}</span>
+    <div class="mini-consulta-namewrap">${miniAvatarHtml(lead)}<span class="mini-consulta-name">${escapeHtml(lead.Nome || 'Sem nome')}</span></div>
     <span class="mini-consulta-date" style="color:${cor};">${txt}</span>
   </div>`;
 }
@@ -1776,10 +1800,13 @@ function miniRemarketingRow(lead){
 function miniConcluidaRow(lead){
   const dataTxt = lead.Data_Cirurgia ? formatDate(lead.Data_Cirurgia) : '';
   return `<div class="mini-consulta mini-concluida" data-id="${lead.ID}" title="Ver conversa">
-    <span class="mini-consulta-name">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:5px;vertical-align:-1px;color:var(--sage);"><path d="M20 6L9 17l-5-5"/></svg>
-      ${escapeHtml(lead.Nome || 'Sem nome')}
-    </span>
+    <div class="mini-consulta-namewrap">
+      ${miniAvatarHtml(lead)}
+      <span class="mini-consulta-name">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:3px;vertical-align:-1px;color:var(--sage);"><path d="M20 6L9 17l-5-5"/></svg>
+        ${escapeHtml(lead.Nome || 'Sem nome')}
+      </span>
+    </div>
     <span class="mini-consulta-date" style="color:var(--sage);">${dataTxt}</span>
   </div>`;
 }
@@ -1820,12 +1847,19 @@ function leadCard(lead, posicao, collapsible){
   }
   const naoDraggable = isCirurgia && lead.Status_Cirurgia === 'Concluída';
   const c = stageColor(lead.Etapa);
+  const iniciais = (lead.Nome || '?').trim().split(/\s+/).slice(0,2).map(p => p[0]).join('').toUpperCase();
+  const avatarHtml = lead.Foto
+    ? `<img src="${lead.Foto}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"><span class="card-avatar-initials" style="display:none;">${iniciais}</span>`
+    : `<span class="card-avatar-initials">${iniciais}</span>`;
   return `
   <div class="card ${isCirurgia ? 'card-locked' : ''}" style="border-left:4px solid ${c.text}; animation-delay:${Math.min((posicao - 1) * 35, 350)}ms;" draggable="${naoDraggable ? 'false' : 'true'}" data-id="${lead.ID}">
     <div class="card-top">
-      <div class="card-name-row">
-        <span class="order-badge">#${posicao}</span>
-        <div class="card-name">${escapeHtml(lead.Nome || 'Sem nome')}</div>
+      <div class="card-avatar-row">
+        <div class="card-avatar">${avatarHtml}</div>
+        <div class="card-name-row">
+          <span class="order-badge">#${posicao}</span>
+          <div class="card-name">${escapeHtml(lead.Nome || 'Sem nome')}</div>
+        </div>
       </div>
       <span class="stage-tag" style="color:${c.text}; background:${c.bg}; border-color:${c.border};">${escapeHtml(lead.Etapa)}</span>
     </div>

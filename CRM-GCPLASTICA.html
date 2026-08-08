@@ -10,20 +10,20 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
   :root{
-    --bg:#0b0a08;
-    --panel:#151310;
-    --panel-alt:#1c1913;
-    --gold:#c6a664;
-    --gold-dim:#8c7a52;
-    --gold-glow:rgba(198,166,100,.14);
-    --bordeaux:#7a2e38;
-    --bordeaux-soft:rgba(122,46,56,.18);
-    --sage:#89946f;
-    --sage-soft:rgba(137,148,111,.16);
-    --text:#f3ede0;
-    --text-muted:#948a76;
-    --border:rgba(198,166,100,.14);
-    --border-strong:rgba(198,166,100,.28);
+    --bg:#f7f5f0;
+    --panel:#ffffff;
+    --panel-alt:#f1eee6;
+    --gold:#a9793f;
+    --gold-dim:#8a6f45;
+    --gold-glow:rgba(169,121,63,.10);
+    --bordeaux:#8f2f3a;
+    --bordeaux-soft:rgba(143,47,58,.10);
+    --sage:#5f7548;
+    --sage-soft:rgba(95,117,72,.12);
+    --text:#201d18;
+    --text-muted:#756b5c;
+    --border:rgba(32,29,24,.10);
+    --border-strong:rgba(32,29,24,.18);
     --radius:14px;
     --radius-sm:10px;
     --radius-lg:20px;
@@ -69,6 +69,16 @@
   }
   h1 em{color:var(--gold); font-style:normal;}
   .header-actions{display:flex; gap:12px; align-items:center;}
+  .avatar-btn{
+    width:36px; height:36px; border-radius:50%; border:1.5px solid var(--border-strong);
+    background:var(--panel-alt); cursor:pointer; overflow:hidden;
+    display:flex; align-items:center; justify-content:center;
+    transition:border-color .2s, transform .15s;
+    padding:0;
+  }
+  .avatar-btn:hover{border-color:var(--gold); transform:translateY(-1px);}
+  .avatar-btn img{width:100%; height:100%; object-fit:cover;}
+  .avatar-btn #avatarInitials{font-size:13px; font-weight:700; color:var(--gold-dim);}
   .icon-btn{
     width:40px;height:40px;
     border:1px solid var(--border-strong);
@@ -78,9 +88,10 @@
     border-radius:50%;
     color:var(--gold);
     position:relative;
-    transition:border-color .2s, background .2s;
+    transition:border-color .2s, background .2s, transform .15s;
   }
-  .icon-btn:hover{background:var(--gold-glow); border-color:var(--gold);}
+  .icon-btn:hover{background:var(--gold-glow); border-color:var(--gold); transform:translateY(-1px);}
+  .icon-btn:active{transform:scale(.92);}
   .badge{
     position:absolute; top:-4px; right:-4px;
     background:var(--bordeaux); color:#fff;
@@ -96,9 +107,10 @@
     letter-spacing:.01em;
     cursor:pointer; border-radius:999px;
     display:flex; align-items:center; gap:8px;
-    transition:transform .15s, box-shadow .15s;
+    transition:transform .15s cubic-bezier(.34,1.56,.64,1), box-shadow .15s;
   }
   .btn-primary:hover{transform:translateY(-1px); box-shadow:0 6px 18px rgba(198,166,100,.25);}
+  .btn-primary:active{transform:translateY(0) scale(.96);}
 
   /* ---------- FILTRO DE MÊS ---------- */
   .month-filter-bar{
@@ -136,6 +148,7 @@
     width:10px;height:10px;border-radius:50%;
     background:var(--panel-alt); border:1px solid var(--border-strong);
     margin-bottom:10px; z-index:1;
+    transition:background .4s ease, border-color .4s ease;
   }
   .journey-step.active .journey-dot{background:var(--gold); border-color:var(--gold);}
   .journey-label{
@@ -145,6 +158,7 @@
   .journey-count{
     font-family:'Inter',sans-serif; font-weight:800; font-size:22px; color:var(--gold);
     margin-top:2px;
+    transition:color .4s ease;
   }
 
   /* ---------- BOARD ---------- */
@@ -154,6 +168,10 @@
     overflow-x:auto;
     background:transparent;
   }
+  @keyframes columnIn{
+    from{opacity:0; transform:translateY(8px);}
+    to{opacity:1; transform:translateY(0);}
+  }
   .column{
     background:var(--panel-alt);
     border:1px solid var(--border);
@@ -161,7 +179,14 @@
     min-width:280px; max-width:280px;
     display:flex; flex-direction:column;
     overflow:hidden;
+    animation:columnIn .35s cubic-bezier(.16,1,.3,1) backwards;
   }
+  .column:nth-child(1){animation-delay:0ms;}
+  .column:nth-child(2){animation-delay:50ms;}
+  .column:nth-child(3){animation-delay:100ms;}
+  .column:nth-child(4){animation-delay:150ms;}
+  .column:nth-child(5){animation-delay:200ms;}
+  .column:nth-child(6){animation-delay:250ms;}
   .column-head{
     padding:14px 16px 12px;
     border-bottom:1px solid var(--border);
@@ -192,6 +217,10 @@
     border-color:var(--bordeaux); background:var(--bordeaux-soft); color:var(--text);
   }
 
+  @keyframes cardIn{
+    from{opacity:0; transform:translateY(10px) scale(.98);}
+    to{opacity:1; transform:translateY(0) scale(1);}
+  }
   .card{
     background:var(--panel);
     border:1px solid var(--border);
@@ -199,9 +228,11 @@
     padding:14px 16px;
     cursor:grab;
     box-shadow:0 1px 3px rgba(0,0,0,.2);
-    transition:border-color .15s, transform .15s, box-shadow .15s;
+    transition:border-color .2s, transform .2s cubic-bezier(.16,1,.3,1), box-shadow .2s;
+    animation:cardIn .4s cubic-bezier(.16,1,.3,1) backwards;
   }
-  .card:hover{border-color:var(--border-strong); transform:translateY(-2px); box-shadow:0 8px 20px rgba(0,0,0,.35);}
+  .card:hover{border-color:var(--gold-dim); transform:translateY(-3px); box-shadow:0 10px 24px rgba(0,0,0,.4), 0 0 0 1px rgba(198,166,100,.08);}
+  .card:active{cursor:grabbing;}
   .card.dragging{opacity:.4;}
   .card-top{display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:6px;}
   .card-name-row{display:flex; align-items:baseline; gap:7px; min-width:0;}
@@ -267,9 +298,10 @@
     padding:9px 12px; background:var(--panel); border:1px solid var(--border);
     border-left:3px solid var(--sage);
     border-radius:var(--radius-sm); cursor:pointer;
-    transition:border-color .15s;
+    transition:border-color .2s, transform .2s cubic-bezier(.16,1,.3,1), box-shadow .2s;
+    animation:cardIn .35s cubic-bezier(.16,1,.3,1) backwards;
   }
-  .mini-consulta:hover{border-color:var(--gold-dim);}
+  .mini-consulta:hover{border-color:var(--gold-dim); transform:translateX(2px); box-shadow:0 4px 12px rgba(0,0,0,.3);}
   .mini-concluida{background:var(--sage-soft); border-color:rgba(137,148,111,.35); border-left-color:var(--sage);}
   .card-minimize-btn{
     width:100%; background:none; border:none; border-top:1px solid var(--border);
@@ -294,15 +326,18 @@
 
   /* ---------- SIDE PANEL (TAREFAS) ---------- */
   .overlay{
-    position:fixed; inset:0; background:rgba(0,0,0,.55);
-    z-index:20; display:none;
+    position:fixed; inset:0; background:rgba(6,5,4,.6);
+    backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px);
+    z-index:20; opacity:0; visibility:hidden; pointer-events:none;
+    transition:opacity .25s ease, visibility .25s ease;
   }
-  .overlay.open{display:block;}
+  .overlay.open{opacity:1; visibility:visible; pointer-events:auto;}
   .panel{
     position:fixed; top:0; right:-420px; width:400px; height:100%;
     background:var(--panel); border-left:1px solid var(--border-strong);
-    z-index:21; transition:right .3s ease;
+    z-index:21; transition:right .4s cubic-bezier(.16,1,.3,1);
     display:flex; flex-direction:column;
+    box-shadow:-20px 0 60px rgba(0,0,0,.4);
   }
   .panel.open{right:0;}
   .panel-head{
@@ -360,18 +395,24 @@
 
   /* ---------- MODAL ---------- */
   .modal-overlay{
-    position:fixed; inset:0; background:rgba(0,0,0,.65);
-    z-index:30; display:none; align-items:center; justify-content:center;
+    position:fixed; inset:0; background:rgba(6,5,4,.72);
+    backdrop-filter:blur(7px); -webkit-backdrop-filter:blur(7px);
+    z-index:30; display:flex; align-items:center; justify-content:center;
     padding:20px;
+    opacity:0; visibility:hidden; pointer-events:none;
+    transition:opacity .25s ease, visibility .25s ease;
   }
-  .modal-overlay.open{display:flex;}
+  .modal-overlay.open{opacity:1; visibility:visible; pointer-events:auto;}
   .modal{
     background:var(--panel); border:1px solid var(--border-strong);
     border-radius:var(--radius);
     width:100%; max-width:440px; padding:28px;
     max-height:90vh; overflow-y:auto;
-    box-shadow:0 20px 60px rgba(0,0,0,.5);
+    box-shadow:0 24px 70px rgba(0,0,0,.55);
+    transform:scale(.94) translateY(10px);
+    transition:transform .35s cubic-bezier(.16,1,.3,1);
   }
+  .modal-overlay.open .modal{transform:scale(1) translateY(0);}
   .modal h2{font-family:'Inter',sans-serif; font-size:21px; margin-bottom:20px; font-weight:800; letter-spacing:-.01em;}
   .field{margin-bottom:14px;}
   .field label{
@@ -559,7 +600,10 @@
     box-shadow:0 20px 60px rgba(0,0,0,.5), 0 0 40px var(--gold-glow);
     width:100%; max-width:440px; padding:40px 34px 30px;
     text-align:center;
+    transform:scale(.92) translateY(10px);
+    transition:transform .4s cubic-bezier(.16,1,.3,1);
   }
+  .modal-overlay.open .consult-card{transform:scale(1) translateY(0);}
   .consult-card-close{
     position:absolute; top:14px; right:14px;
     background:none; border:none; color:var(--text-muted);
@@ -643,7 +687,12 @@
       </div>
     </div>
     <div class="header-actions">
-      <span id="userLabel" style="font-size:12px;color:var(--text-muted);margin-right:4px;"></span>
+      <span id="userLabel" style="font-size:12px;color:var(--text-muted);margin-right:2px;"></span>
+      <button class="avatar-btn" id="btnAvatar" title="Trocar foto de perfil">
+        <img id="avatarImg" style="display:none;" alt="Foto de perfil">
+        <span id="avatarInitials"></span>
+      </button>
+      <input type="file" id="avatarFileInput" accept="image/*" style="display:none;">
       <button class="icon-btn" id="btnLogout" title="Sair">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
       </button>
@@ -1296,7 +1345,7 @@ function showConfigBanner(){
 }
 
 // ---------- SESSÃO (em memória — some ao recarregar a página) ----------
-let SESSION = { token: null, nome: null, papel: null };
+let SESSION = { token: null, nome: null, papel: null, usuario: null, foto: null };
 
 // ---------- FETCH DATA ----------
 async function loadData(){
@@ -1462,23 +1511,46 @@ function relativeToDate(dateStr){
   return { texto: `atrasada há ${Math.abs(diffDias)}d`, atrasada: true };
 }
 
+let previousJourneyCounts = {};
+
 function renderJourney(){
   const el = document.getElementById('journey');
   const columns = getBoardColumns();
+  const newCounts = {};
   el.innerHTML = columns.map(col => {
     const count = STATE.leads.filter(l =>
       l.Etapa === col.stageKey &&
       leadBateNoMes(l, col.stageKey, selectedMonthFilter) &&
       (col.filterFn ? col.filterFn(l) : true)
     ).length;
+    newCounts[col.title] = count;
+    const startVal = previousJourneyCounts[col.title] !== undefined ? previousJourneyCounts[col.title] : count;
     const c = stageColor(col.stageKey);
     const active = count > 0;
     return `<div class="journey-step ${active?'active':''}">
       <div class="journey-dot" style="${active ? `background:${c.text};border-color:${c.text};` : ''}"></div>
-      <div class="journey-count" style="${active ? `color:${c.text};` : ''}">${count}</div>
+      <div class="journey-count" data-count="${count}" data-start="${startVal}" style="${active ? `color:${c.text};` : ''}">${startVal}</div>
       <div class="journey-label">${col.title}</div>
     </div>`;
   }).join('');
+  previousJourneyCounts = newCounts;
+  animateJourneyCounters();
+}
+
+function animateJourneyCounters(){
+  document.querySelectorAll('.journey-count[data-count]').forEach(counterEl => {
+    const target = parseInt(counterEl.dataset.count, 10) || 0;
+    const startVal = parseInt(counterEl.dataset.start, 10) || 0;
+    if(target === startVal) return;
+    const duration = 500;
+    const startTime = performance.now();
+    (function tick(now){
+      const progress = Math.min((now - startTime) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      counterEl.textContent = Math.round(startVal + (target - startVal) * eased);
+      if(progress < 1) requestAnimationFrame(tick);
+    })(startTime);
+  });
 }
 
 function renderBoard(){
@@ -1749,7 +1821,7 @@ function leadCard(lead, posicao, collapsible){
   const naoDraggable = isCirurgia && lead.Status_Cirurgia === 'Concluída';
   const c = stageColor(lead.Etapa);
   return `
-  <div class="card ${isCirurgia ? 'card-locked' : ''}" style="border-left:4px solid ${c.text};" draggable="${naoDraggable ? 'false' : 'true'}" data-id="${lead.ID}">
+  <div class="card ${isCirurgia ? 'card-locked' : ''}" style="border-left:4px solid ${c.text}; animation-delay:${Math.min((posicao - 1) * 35, 350)}ms;" draggable="${naoDraggable ? 'false' : 'true'}" data-id="${lead.ID}">
     <div class="card-top">
       <div class="card-name-row">
         <span class="order-badge">#${posicao}</span>
@@ -2398,10 +2470,10 @@ document.getElementById('btnEnviarConsultCard').addEventListener('click', () => 
 
 // ---------- PAINEL DE DESEMPENHO ----------
 const CHART_COLORS = {
-  gold:'#c6a664', goldDim:'#8c7a52', sage:'#89946f', bordeaux:'#7a2e38',
-  text:'#f3ede0', muted:'#948a76', grid:'rgba(198,166,100,.10)'
+  gold:'#a9793f', goldDim:'#8a6f45', sage:'#5f7548', bordeaux:'#8f2f3a',
+  text:'#201d18', muted:'#756b5c', grid:'rgba(32,29,24,.08)'
 };
-const CHART_PALETTE = ['#c6a664','#89946f','#7a2e38','#8c7a52','#a3b48c','#9c6b6b'];
+const CHART_PALETTE = ['#a9793f','#5f7548','#8f2f3a','#8a6f45','#7c9160','#a85f68'];
 let DASH_CHARTS = {};
 
 function destroyChart(key){
@@ -2436,7 +2508,7 @@ function renderDashboard(){
   destroyChart('origem');
   DASH_CHARTS.origem = new Chart(document.getElementById('chartOrigem'), {
     type:'doughnut',
-    data:{ labels:Object.keys(origens), datasets:[{ data:Object.values(origens), backgroundColor: CHART_PALETTE, borderColor:'#0b0a08', borderWidth:2 }] },
+    data:{ labels:Object.keys(origens), datasets:[{ data:Object.values(origens), backgroundColor: CHART_PALETTE, borderColor:'#f7f5f0', borderWidth:2 }] },
     options:{ responsive:true, maintainAspectRatio:true, plugins:{ legend:{ position:'bottom', labels:{ color: CHART_COLORS.muted, font:{ family:'Inter', size:10 }, boxWidth:10 } } } }
   });
 
@@ -2708,13 +2780,66 @@ function renderChatMessages(mensagens){
 document.getElementById('closeChatPanel').addEventListener('click', closeChatPanel);
 function closeChatPanel(){ chatPanel.classList.remove('open'); overlay.classList.remove('open'); }
 
+// ---------- AVATAR (foto de perfil) ----------
+function renderAvatar(){
+  const img = document.getElementById('avatarImg');
+  const initials = document.getElementById('avatarInitials');
+  if(SESSION.foto){
+    img.src = SESSION.foto;
+    img.style.display = 'block';
+    initials.style.display = 'none';
+  } else {
+    img.style.display = 'none';
+    initials.style.display = 'block';
+    const nome = SESSION.nome || '?';
+    initials.textContent = nome.trim().split(/\s+/).slice(0,2).map(p => p[0]).join('').toUpperCase();
+  }
+}
+
+document.getElementById('btnAvatar').addEventListener('click', () => {
+  document.getElementById('avatarFileInput').click();
+});
+
+document.getElementById('avatarFileInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+
+  // Redimensiona e comprime no navegador antes de enviar (a planilha tem limite de tamanho por célula)
+  const dataUrl = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const tamanho = 160;
+        const canvas = document.createElement('canvas');
+        canvas.width = tamanho; canvas.height = tamanho;
+        const ctx = canvas.getContext('2d');
+        const escala = Math.max(tamanho / img.width, tamanho / img.height);
+        const w = img.width * escala, h = img.height * escala;
+        ctx.drawImage(img, (tamanho - w) / 2, (tamanho - h) / 2, w, h);
+        resolve(canvas.toDataURL('image/jpeg', 0.75));
+      };
+      img.onerror = reject;
+      img.src = reader.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
+  SESSION.foto = dataUrl;
+  renderAvatar();
+  postAction({ action:'updateProfilePhoto', foto: dataUrl });
+  showToast('Foto de perfil atualizada.');
+  e.target.value = '';
+});
+
 // ---------- LOGIN ----------
 const loginScreen = document.getElementById('loginScreen');
 const loginForm = document.getElementById('loginForm');
 const loginError = document.getElementById('loginError');
 
 function showLogin(msg){
-  SESSION = { token:null, nome:null, papel:null };
+  SESSION = { token:null, nome:null, papel:null, usuario:null, foto:null };
   document.getElementById('loading').classList.add('hidden');
   loginScreen.classList.remove('hidden');
   loginError.textContent = msg || '';
@@ -2740,8 +2865,9 @@ loginForm.addEventListener('submit', async e => {
     const res = await fetch(url);
     const data = await res.json();
     if(data.ok){
-      SESSION = { token: data.token, nome: data.nome, papel: data.papel || '' };
+      SESSION = { token: data.token, nome: data.nome, papel: data.papel || '', usuario: data.usuario || '', foto: data.foto || '' };
       document.getElementById('userLabel').textContent = data.nome;
+      renderAvatar();
       hideLogin();
       document.getElementById('loading').classList.remove('hidden');
       loadData();

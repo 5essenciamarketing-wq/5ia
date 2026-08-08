@@ -1040,6 +1040,75 @@
   </div>
 </div>
 
+<!-- Consulta com data vencida há 7+ dias — vai operar? -->
+<div class="modal-overlay" id="consultaVencidaModalOverlay">
+  <div class="modal" style="max-width:420px; text-align:center;">
+    <h2>Consulta realizada — e agora?</h2>
+    <div class="report-transition" id="consultaVencidaLeadLabel" style="margin-bottom:16px;"></div>
+    <p style="font-size:13px; color:var(--text-muted); margin-bottom:20px;">A data da consulta já passou. Ela vai operar?</p>
+    <div class="modal-actions" style="justify-content:center;">
+      <button type="button" class="btn-ghost" id="consultaVencidaNao">Não vai operar</button>
+      <button type="button" class="btn-primary" id="consultaVencidaSim">Sim, vai operar</button>
+    </div>
+    <button type="button" class="btn-ghost" id="adiarConsultaVencida" style="width:100%; margin-top:10px;">Decidir depois</button>
+  </div>
+</div>
+
+<!-- Motivo + prazo de retorno quando a consulta não virou cirurgia -->
+<div class="modal-overlay" id="consultaNaoOperouModalOverlay">
+  <div class="modal" style="max-width:440px;">
+    <h2>Motivo e prazo de retorno</h2>
+    <div class="report-transition" id="consultaNaoOperouLeadLabel" style="margin-bottom:16px;"></div>
+    <div class="field">
+      <label>Motivo</label>
+      <textarea id="cno_motivo" placeholder="Ex: achou o valor alto, precisa pensar, quer fazer em outra época..." style="min-height:80px;" required></textarea>
+    </div>
+    <div class="field">
+      <label>Prazo pra retomar contato</label>
+      <div class="reason-chips" id="cnoPrazoChips">
+        <button type="button" class="reason-chip" data-dias="7">7 dias</button>
+        <button type="button" class="reason-chip" data-dias="15">15 dias</button>
+        <button type="button" class="reason-chip" data-dias="30">30 dias</button>
+        <button type="button" class="reason-chip" data-dias="45">45 dias</button>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn-ghost" id="cancelConsultaNaoOperou">Cancelar</button>
+      <button type="button" class="btn-primary" id="confirmConsultaNaoOperou">Mover para Remarketing</button>
+    </div>
+  </div>
+</div>
+
+<!-- 24h após a data da cirurgia — foi sucesso ou remarcada? -->
+<div class="modal-overlay" id="cirurgiaConfirmacaoModalOverlay">
+  <div class="modal" style="max-width:420px; text-align:center;">
+    <h2>Como foi a cirurgia?</h2>
+    <div class="report-transition" id="cirurgiaConfirmacaoLeadLabel" style="margin-bottom:16px;"></div>
+    <p style="font-size:13px; color:var(--text-muted); margin-bottom:20px;">Já se passaram 24h desde a data marcada.</p>
+    <div class="modal-actions" style="justify-content:center;">
+      <button type="button" class="btn-ghost" id="cirurgiaConfirmacaoRemarcada">Foi remarcada</button>
+      <button type="button" class="btn-primary" id="cirurgiaConfirmacaoSucesso">Foi um sucesso</button>
+    </div>
+    <button type="button" class="btn-ghost" id="adiarCirurgiaConfirmacao" style="width:100%; margin-top:10px;">Decidir depois</button>
+  </div>
+</div>
+
+<!-- Nova data quando a cirurgia foi remarcada -->
+<div class="modal-overlay" id="cirurgiaRemarcarDataModalOverlay">
+  <div class="modal" style="max-width:380px;">
+    <h2>Nova data da cirurgia</h2>
+    <div class="report-transition" id="cirurgiaRemarcarDataLeadLabel" style="margin-bottom:16px;"></div>
+    <div class="field">
+      <label>Nova data</label>
+      <input type="date" id="crd_data" required>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn-ghost" id="cancelCirurgiaRemarcarData">Cancelar</button>
+      <button type="button" class="btn-primary" id="confirmCirurgiaRemarcarData">Salvar nova data</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="consultaModalOverlay">
   <div class="modal" style="max-width:420px;">
     <h2>Consulta Confirmada</h2>
@@ -1471,6 +1540,8 @@ async function loadData(){
     STATE.historico = data.historico || [];
     STATE.stages = data.stages && data.stages.length ? data.stages : STATE.stages;
     verificarDialogosTravados();
+    verificarConsultasVencidas();
+    verificarCirurgiasPendentesConfirmacao();
   }catch(err){
     console.error('Erro ao carregar dados', err);
     showToast('Não foi possível carregar os dados. Confira a URL do App da Web.');
@@ -2806,6 +2877,182 @@ document.getElementById('confirmDialogoTravado').addEventListener('click', () =>
 
   pendingDialogoTravado = null;
   setTimeout(abrirProximoDialogoTravado, 500);
+});
+
+// ---------- MODAL CONSULTA VENCIDA (7+ dias após a data — vai operar?) ----------
+const consultaVencidaModal = document.getElementById('consultaVencidaModalOverlay');
+const consultaNaoOperouModal = document.getElementById('consultaNaoOperouModalOverlay');
+let pendingConsultaVencida = null;
+let prazoConsultaNaoOperou = null;
+let filaConsultaVencida = [];
+
+function verificarConsultasVencidas(){
+  if(SESSION.papel === 'Pre-Consulta') return; // isso é da Cristiane pra frente
+  if(consultaVencidaModal.classList.contains('open') || consultaNaoOperouModal.classList.contains('open')) return;
+
+  const pendentes = STATE.leads.filter(l => {
+    if(l.Etapa !== 'Consulta' || !l.Data_Consulta) return false;
+    if(leadsIgnoradosSessao.has(l.ID)) return false;
+    const dias = daysAgo(l.Data_Consulta);
+    return dias !== null && dias >= 7;
+  });
+  filaConsultaVencida = pendentes.map(l => l.ID);
+  if(filaConsultaVencida.length) abrirProximaConsultaVencida();
+}
+
+function abrirProximaConsultaVencida(){
+  if(!filaConsultaVencida.length) return;
+  const id = filaConsultaVencida.shift();
+  const lead = STATE.leads.find(l => l.ID === id);
+  if(!lead || lead.Etapa !== 'Consulta'){ abrirProximaConsultaVencida(); return; }
+  pendingConsultaVencida = lead;
+  document.getElementById('consultaVencidaLeadLabel').innerHTML = `${escapeHtml(lead.Nome)} — consulta em <strong>${formatDate(lead.Data_Consulta)}</strong>`;
+  consultaVencidaModal.classList.add('open');
+}
+
+document.getElementById('adiarConsultaVencida').addEventListener('click', () => {
+  if(pendingConsultaVencida) leadsIgnoradosSessao.add(pendingConsultaVencida.ID);
+  consultaVencidaModal.classList.remove('open');
+  pendingConsultaVencida = null;
+  setTimeout(abrirProximaConsultaVencida, 400);
+});
+
+document.getElementById('consultaVencidaSim').addEventListener('click', () => {
+  if(!pendingConsultaVencida) return;
+  const lead = pendingConsultaVencida;
+  consultaVencidaModal.classList.remove('open');
+  pendingConsultaVencida = null;
+  openSurgeryModal(lead); // fluxo já existente: pede a data e faz Consulta → Cirurgia
+});
+
+document.getElementById('consultaVencidaNao').addEventListener('click', () => {
+  if(!pendingConsultaVencida) return;
+  const lead = pendingConsultaVencida;
+  consultaVencidaModal.classList.remove('open');
+  document.getElementById('consultaNaoOperouLeadLabel').textContent = lead.Nome;
+  document.getElementById('cno_motivo').value = '';
+  prazoConsultaNaoOperou = null;
+  document.querySelectorAll('#cnoPrazoChips .reason-chip').forEach(c => c.classList.remove('chip-selected'));
+  consultaNaoOperouModal.classList.add('open');
+});
+
+document.querySelectorAll('#cnoPrazoChips .reason-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    prazoConsultaNaoOperou = parseInt(chip.dataset.dias, 10);
+    document.querySelectorAll('#cnoPrazoChips .reason-chip').forEach(c => c.classList.remove('chip-selected'));
+    chip.classList.add('chip-selected');
+  });
+});
+
+document.getElementById('cancelConsultaNaoOperou').addEventListener('click', () => {
+  consultaNaoOperouModal.classList.remove('open');
+  if(pendingConsultaVencida) leadsIgnoradosSessao.add(pendingConsultaVencida.ID);
+  pendingConsultaVencida = null;
+  setTimeout(abrirProximaConsultaVencida, 400);
+});
+
+document.getElementById('confirmConsultaNaoOperou').addEventListener('click', () => {
+  const motivo = document.getElementById('cno_motivo').value.trim();
+  if(!motivo){ showToast('Descreva o motivo antes de confirmar.'); return; }
+  if(!prazoConsultaNaoOperou){ showToast('Escolhe o prazo pra retomar contato.'); return; }
+  if(!pendingConsultaVencida) return;
+
+  const lead = pendingConsultaVencida;
+  const dataContato = new Date();
+  dataContato.setDate(dataContato.getDate() + prazoConsultaNaoOperou);
+  const dataContatoStr = dataContato.toISOString().slice(0, 10);
+
+  lead.Etapa = 'Remarketing';
+  render();
+  consultaNaoOperouModal.classList.remove('open');
+  postAction({ action:'consultaParaRemarketing', id: lead.ID, motivo, dataContato: dataContatoStr })
+    .then(()=> setTimeout(loadData, 1200));
+  showToast(`${lead.Nome} → Remarketing (retorno em ${prazoConsultaNaoOperou} dias)`);
+
+  pendingConsultaVencida = null;
+  setTimeout(abrirProximaConsultaVencida, 500);
+});
+
+// ---------- MODAL CIRURGIA — 24h depois: sucesso ou remarcada? ----------
+const cirurgiaConfirmacaoModal = document.getElementById('cirurgiaConfirmacaoModalOverlay');
+const cirurgiaRemarcarDataModal = document.getElementById('cirurgiaRemarcarDataModalOverlay');
+let pendingCirurgiaConfirmacao = null;
+let filaCirurgiaConfirmacao = [];
+
+function verificarCirurgiasPendentesConfirmacao(){
+  if(SESSION.papel === 'Pre-Consulta') return;
+  if(cirurgiaConfirmacaoModal.classList.contains('open') || cirurgiaRemarcarDataModal.classList.contains('open')) return;
+
+  const pendentes = STATE.leads.filter(l => {
+    if(l.Etapa !== 'Cirurgia' || l.Status_Cirurgia === 'Concluída' || !l.Data_Cirurgia) return false;
+    if(leadsIgnoradosSessao.has(l.ID)) return false;
+    const horas = (Date.now() - new Date(l.Data_Cirurgia).getTime()) / 3600000;
+    return horas >= 24;
+  });
+  filaCirurgiaConfirmacao = pendentes.map(l => l.ID);
+  if(filaCirurgiaConfirmacao.length) abrirProximaCirurgiaConfirmacao();
+}
+
+function abrirProximaCirurgiaConfirmacao(){
+  if(!filaCirurgiaConfirmacao.length) return;
+  const id = filaCirurgiaConfirmacao.shift();
+  const lead = STATE.leads.find(l => l.ID === id);
+  if(!lead || lead.Etapa !== 'Cirurgia' || lead.Status_Cirurgia === 'Concluída'){ abrirProximaCirurgiaConfirmacao(); return; }
+  pendingCirurgiaConfirmacao = lead;
+  document.getElementById('cirurgiaConfirmacaoLeadLabel').innerHTML = `${escapeHtml(lead.Nome)} — cirurgia marcada pra <strong>${formatDate(lead.Data_Cirurgia)}</strong>`;
+  cirurgiaConfirmacaoModal.classList.add('open');
+}
+
+document.getElementById('adiarCirurgiaConfirmacao').addEventListener('click', () => {
+  if(pendingCirurgiaConfirmacao) leadsIgnoradosSessao.add(pendingCirurgiaConfirmacao.ID);
+  cirurgiaConfirmacaoModal.classList.remove('open');
+  pendingCirurgiaConfirmacao = null;
+  setTimeout(abrirProximaCirurgiaConfirmacao, 400);
+});
+
+document.getElementById('cirurgiaConfirmacaoSucesso').addEventListener('click', () => {
+  if(!pendingCirurgiaConfirmacao) return;
+  const lead = pendingCirurgiaConfirmacao;
+  lead.Status_Cirurgia = 'Concluída';
+  render();
+  cirurgiaConfirmacaoModal.classList.remove('open');
+  postAction({ action:'markSurgeryComplete', id: lead.ID }).then(()=> setTimeout(loadData, 1200));
+  showToast(`${lead.Nome} marcada como Concluída.`);
+  pendingCirurgiaConfirmacao = null;
+  setTimeout(abrirProximaCirurgiaConfirmacao, 500);
+});
+
+document.getElementById('cirurgiaConfirmacaoRemarcada').addEventListener('click', () => {
+  if(!pendingCirurgiaConfirmacao) return;
+  const lead = pendingCirurgiaConfirmacao;
+  cirurgiaConfirmacaoModal.classList.remove('open');
+  document.getElementById('cirurgiaRemarcarDataLeadLabel').textContent = lead.Nome;
+  document.getElementById('crd_data').value = '';
+  cirurgiaRemarcarDataModal.classList.add('open');
+});
+
+document.getElementById('cancelCirurgiaRemarcarData').addEventListener('click', () => {
+  cirurgiaRemarcarDataModal.classList.remove('open');
+  if(pendingCirurgiaConfirmacao) leadsIgnoradosSessao.add(pendingCirurgiaConfirmacao.ID);
+  pendingCirurgiaConfirmacao = null;
+  setTimeout(abrirProximaCirurgiaConfirmacao, 400);
+});
+
+document.getElementById('confirmCirurgiaRemarcarData').addEventListener('click', () => {
+  const novaData = document.getElementById('crd_data').value;
+  if(!novaData){ showToast('Selecione a nova data.'); return; }
+  if(!pendingCirurgiaConfirmacao) return;
+
+  const lead = pendingCirurgiaConfirmacao;
+  lead.Data_Cirurgia = novaData;
+  render();
+  cirurgiaRemarcarDataModal.classList.remove('open');
+  postAction({ action:'updateSurgeryDate', id: lead.ID, dataCirurgia: novaData })
+    .then(()=> setTimeout(loadData, 1200));
+  showToast(`Nova data da cirurgia de ${lead.Nome}: ${formatDate(novaData)}`);
+
+  pendingCirurgiaConfirmacao = null;
+  setTimeout(abrirProximaCirurgiaConfirmacao, 500);
 });
 
 /* ---------- CELEBRAÇÃO (confetti + mensagem animada) ---------- */

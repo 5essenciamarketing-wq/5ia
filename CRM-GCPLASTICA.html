@@ -112,6 +112,30 @@
   .btn-primary:hover{transform:translateY(-1px); box-shadow:0 6px 18px rgba(198,166,100,.25);}
   .btn-primary:active{transform:translateY(0) scale(.96);}
 
+  /* ---------- CENTRAL DE PRIORIDADES ---------- */
+  .priorities-section{padding:22px 40px 4px;}
+  .priorities-head{display:flex; align-items:baseline; gap:10px; margin-bottom:14px;}
+  .priorities-title{font-family:'Inter',sans-serif; font-weight:800; font-size:16px; color:var(--text);}
+  .priorities-subtitle{font-size:12px; color:var(--text-muted);}
+  .priorities-list{display:flex; gap:12px; overflow-x:auto; padding-bottom:6px;}
+  .priority-card{
+    flex-shrink:0; width:250px;
+    background:var(--panel); border:1px solid var(--border); border-left:3px solid var(--bordeaux);
+    border-radius:var(--radius-sm); padding:12px 14px;
+    box-shadow:0 1px 3px rgba(0,0,0,.06);
+  }
+  .priority-card-top{display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;}
+  .priority-card-name{font-size:13.5px; font-weight:700; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:170px;}
+  .priority-card-score{font-size:11px; font-weight:800;}
+  .priority-card-meta{font-size:10.5px; color:var(--text-muted); margin-bottom:8px;}
+  .priority-card-action{font-size:11px; color:var(--text); line-height:1.4; margin-bottom:10px;}
+  .priority-card-btn{
+    width:100%; background:var(--gold); color:#fff; border:none; padding:7px;
+    border-radius:999px; font-size:11px; font-weight:700; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; gap:6px;
+  }
+  .priorities-empty{font-size:12.5px; color:var(--text-muted); font-style:italic; padding:10px 0;}
+
   /* ---------- FILTRO DE MÊS ---------- */
   .month-filter-bar{
     padding:18px 40px 0;
@@ -253,6 +277,23 @@
     flex-shrink:0; font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.04em;
     padding:3px 8px; border-radius:999px; border:1px solid; white-space:nowrap;
   }
+  .card-stage-row{margin-bottom:8px;}
+  .lead-score-badge{
+    flex-shrink:0; font-size:12px; font-weight:800;
+    padding:3px 9px; border-radius:999px; border:1.5px solid currentColor;
+    background:var(--panel-alt);
+    cursor:pointer; white-space:nowrap;
+  }
+  .card-next-action{
+    display:flex; align-items:flex-start; gap:6px;
+    font-size:11px; color:var(--text-muted); line-height:1.4;
+    padding:7px 9px; margin-bottom:9px;
+    background:var(--panel-alt); border-radius:var(--radius-sm);
+  }
+  .card-next-action strong{color:var(--text); font-weight:700;}
+  .card-next-action svg{flex-shrink:0; margin-top:1px; color:var(--gold-dim);}
+  .card-next-action.urgente{background:var(--bordeaux-soft);}
+  .card-next-action.urgente svg{color:var(--bordeaux);}
   .card-name{
     font-family:'Inter',sans-serif;
     font-size:16px; font-weight:700;
@@ -732,6 +773,14 @@
     <span class="month-filter-count" id="monthFilterCount"></span>
   </div>
 
+  <div class="priorities-section" id="prioritiesSection">
+    <div class="priorities-head">
+      <span class="priorities-title">🎯 Prioridades de Hoje</span>
+      <span class="priorities-subtitle">Quem precisa da sua atenção agora</span>
+    </div>
+    <div class="priorities-list" id="prioritiesList"></div>
+  </div>
+
   <div class="journey" id="journey"></div>
 
   <div class="board" id="board"></div>
@@ -1003,6 +1052,17 @@
       <button type="button" class="btn-primary" id="salvarEdicaoConsulta">Salvar</button>
     </div>
     <button type="button" class="btn-ghost" id="cancelEditConsulta" style="width:100%; margin-top:10px;">Fechar sem alterar</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="scoreDetalheModalOverlay">
+  <div class="modal" style="max-width:400px;">
+    <h2 id="scoreDetalheNome" style="margin-bottom:2px;"></h2>
+    <p id="scoreDetalheTemp" style="font-size:12.5px; color:var(--text-muted); margin-bottom:20px;"></p>
+    <div id="scoreDetalheFatores" style="display:flex; flex-direction:column; gap:8px; margin-bottom:20px;"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn-primary" id="fecharScoreDetalhe" style="width:100%; justify-content:center;">Entendi</button>
+    </div>
   </div>
 </div>
 
@@ -1449,6 +1509,105 @@ function remarketingPertenceACristiane(lead){
   return !!(lead.Data_Consulta || lead.Data_Cirurgia || lead.Status_Cirurgia);
 }
 
+/* ============================================================
+   LEAD SCORE — 0 a 100, sempre explicável (soma de fatores visíveis,
+   nada de caixa-preta). Pesos editáveis aqui, sem precisar de IA.
+   ============================================================ */
+const SCORE_FATORES = [
+  { chave:'origem_lp',       peso:25, label:'Veio de formulário da LP (alta intenção)',
+    testa: l => (l.Origem || '').indexOf('LP') !== -1 },
+  { chave:'origem_whatsapp', peso:15, label:'Procurou direto pelo WhatsApp',
+    testa: l => l.Origem === 'WhatsApp Direto' },
+  { chave:'origem_meta',     peso:10, label:'Veio de anúncio (Meta Ads)',
+    testa: l => l.Origem === 'Meta Ads' },
+  { chave:'respondeu',       peso:20, label:'Já teve alguma interação além do cadastro',
+    testa: l => l.Data_Ultima_Interacao && l.Data_Criacao &&
+      new Date(l.Data_Ultima_Interacao).getTime() > new Date(l.Data_Criacao).getTime() + 60000 },
+  { chave:'recente',         peso:15, label:'Interação nos últimos 3 dias',
+    testa: l => { const d = daysAgo(l.Data_Ultima_Interacao); return d !== null && d <= 3; } },
+  { chave:'procedimento',    peso:15, label:'Tem procedimento de interesse definido',
+    testa: l => !!(l.Procedimento_Interesse && l.Procedimento_Interesse.trim()) },
+  { chave:'sumiu',           peso:-20, label:'Sem nenhuma interação há mais de 7 dias',
+    testa: l => { const d = daysAgo(l.Data_Ultima_Interacao); return d !== null && d > 7; } }
+];
+
+function calcularLeadScore(lead){
+  let total = 0;
+  const fatoresAtivos = [];
+  SCORE_FATORES.forEach(f => {
+    if(f.testa(lead)){
+      total += f.peso;
+      fatoresAtivos.push(f);
+    }
+  });
+  total = Math.max(0, Math.min(100, total));
+  return { score: total, fatores: fatoresAtivos };
+}
+
+function getTemperatura(score){
+  if(score >= 81) return { label:'Alta Intenção', cor:'#8f2f3a', emoji:'🔥' };
+  if(score >= 61) return { label:'Quente', cor:'#a9793f', emoji:'🔥' };
+  if(score >= 31) return { label:'Morno', cor:'#8a6f45', emoji:'🌤' };
+  return { label:'Frio', cor:'#5f7548', emoji:'❄' };
+}
+
+/* ============================================================
+   NEXT BEST ACTION — regras determinísticas (sem IA), sempre com motivo.
+   ============================================================ */
+function getProximaAcao(lead){
+  const diasSemInteracao = daysAgo(lead.Data_Ultima_Interacao);
+  const { score } = calcularLeadScore(lead);
+
+  if(lead.Etapa === 'Welcome'){
+    return { texto:'Fazer primeiro contato', motivo:'Lead ainda não teve nenhuma interação.', urgente:true };
+  }
+  if(lead.Etapa === 'Diálogo'){
+    if(diasSemInteracao !== null && diasSemInteracao >= 3){
+      return { texto:'Retomar contato', motivo:`Sem interação há ${diasSemInteracao} dia(s).`, urgente: diasSemInteracao >= 5 };
+    }
+    if(score >= 61){
+      return { texto:'Avançar para consulta', motivo:'Lead engajado e com score alto — bom momento pra agendar.', urgente:false };
+    }
+    return { texto:'Continuar qualificando', motivo:'Conversa em andamento.', urgente:false };
+  }
+  if(lead.Etapa === 'Consulta'){
+    const rel = lead.Data_Consulta ? relativeToDate(lead.Data_Consulta) : null;
+    if(rel && rel.atrasada) return { texto:'Confirmar realização da consulta', motivo:'A data marcada já passou.', urgente:true };
+    return { texto:'Aguardar data da consulta', motivo: rel ? `Consulta ${rel.texto}.` : 'Consulta marcada.', urgente:false };
+  }
+  if(lead.Etapa === 'Frio'){
+    return { texto:'Reengajar', motivo:'Lead esfriou — pode ainda estar interessado.', urgente:false };
+  }
+  if(lead.Etapa === 'Remarketing'){
+    const tarefa = STATE.tasks.find(t => t.Lead_ID === lead.ID && t.Status !== 'Concluída' && t.Data_Vencimento);
+    if(tarefa){
+      const hojeStr = new Date().toISOString().slice(0,10);
+      const atrasada = String(tarefa.Data_Vencimento).slice(0,10) < hojeStr;
+      if(atrasada) return { texto:'Reengajar — retorno atrasado', motivo:`Retorno previsto pra ${formatDate(tarefa.Data_Vencimento)}.`, urgente:true };
+      return { texto:'Aguardar prazo de retorno', motivo:`Retorno previsto pra ${formatDate(tarefa.Data_Vencimento)}.`, urgente:false };
+    }
+    return { texto:'Reengajar', motivo:'Lead em remarketing, sem data de retorno definida.', urgente:false };
+  }
+  if(lead.Etapa === 'Cirurgia'){
+    if(lead.Status_Cirurgia === 'Concluída') return { texto:'Acompanhamento pós-operatório', motivo:'Cirurgia já realizada.', urgente:false };
+    const rel = lead.Data_Cirurgia ? relativeToDate(lead.Data_Cirurgia) : null;
+    return { texto:'Preparar cirurgia', motivo: rel ? `Cirurgia ${rel.texto}.` : 'Cirurgia marcada.', urgente: rel ? rel.atrasada : false };
+  }
+  return { texto:'Revisar lead', motivo:'', urgente:false };
+}
+
+/**
+ * SLA de primeiro contato — pra leads recém-chegados em Welcome.
+ * Limiar pensado pro ritmo real de uma equipe pequena (não 5 minutos de call center).
+ */
+function getSlaStatus(lead){
+  if(lead.Etapa !== 'Welcome') return null;
+  const horas = (Date.now() - new Date(lead.Data_Criacao).getTime()) / 3600000;
+  if(horas <= 2) return { cor:'#5f7548', label:'Dentro do prazo' };
+  if(horas <= 8) return { cor:'#a9793f', label:'Próximo do limite' };
+  return { cor:'#8f2f3a', label:'Prazo estourado' };
+}
+
 /**
  * Data que define a prioridade de um lead em Remarketing: a data da tarefa de
  * recontato pendente mais próxima (mesmo se já atrasada), ou — sem tarefa —
@@ -1500,10 +1659,75 @@ function render(){
   renderJourney();
   renderBoard();
   renderTasks();
+  renderPriorities();
   const filtered = getFilteredLeads();
   document.getElementById('monthFilterCount').textContent =
     selectedMonthFilter === 'all' ? '' : `${filtered.length} lead(s) nesse período`;
   if(document.getElementById('dashboard').classList.contains('open')) renderDashboard();
+}
+
+/**
+ * Prioridade = score + peso extra se a próxima ação é urgente ou o SLA estourou.
+ * Isso responde "quem eu devo atender primeiro" sem precisar abrir card por card.
+ */
+function calcularPrioridade(lead){
+  const { score } = calcularLeadScore(lead);
+  const acao = getProximaAcao(lead);
+  const sla = getSlaStatus(lead);
+  let prioridade = score;
+  if(acao.urgente) prioridade += 100;
+  if(sla && sla.label === 'Prazo estourado') prioridade += 50;
+  return prioridade;
+}
+
+function renderPriorities(){
+  const el = document.getElementById('prioritiesList');
+  const columns = getBoardColumns();
+  const stagesVisiveis = new Set(columns.map(c => c.stageKey));
+
+  // Só considera leads que estão em etapas visíveis pro papel logado, aplicando os mesmos filtros de cada coluna
+  const candidatos = STATE.leads.filter(lead => {
+    if(!stagesVisiveis.has(lead.Etapa)) return false;
+    const col = columns.find(c => c.stageKey === lead.Etapa);
+    if(col && col.filterFn && !col.filterFn(lead)) return false;
+    if(lead.Etapa === 'Cirurgia' && lead.Status_Cirurgia === 'Concluída') return false;
+    return true;
+  });
+
+  const priorizados = candidatos
+    .map(lead => ({ lead, prioridade: calcularPrioridade(lead), acao: getProximaAcao(lead) }))
+    .sort((a, b) => b.prioridade - a.prioridade)
+    .slice(0, 8);
+
+  if(!priorizados.length){
+    el.innerHTML = '<div class="priorities-empty">Nada urgente agora — bom trabalho! ✨</div>';
+    return;
+  }
+
+  el.innerHTML = priorizados.map(({ lead, acao }) => {
+    const { score } = calcularLeadScore(lead);
+    const temp = getTemperatura(score);
+    return `
+    <div class="priority-card" style="border-left-color:${acao.urgente ? 'var(--bordeaux)' : temp.cor};">
+      <div class="priority-card-top">
+        <span class="priority-card-name">${escapeHtml(lead.Nome || 'Sem nome')}</span>
+        <span class="priority-card-score" style="color:${temp.cor};">${temp.emoji} ${score}</span>
+      </div>
+      <div class="priority-card-meta">${escapeHtml(lead.Etapa)}${lead.Procedimento_Interesse ? ' · ' + escapeHtml(lead.Procedimento_Interesse) : ''}</div>
+      <div class="priority-card-action"><strong>${acao.texto}</strong>${acao.motivo ? ' — ' + acao.motivo : ''}</div>
+      <button class="priority-card-btn" data-id="${lead.ID}">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.46 1.32 4.96L2.05 22l5.25-1.38c1.44.79 3.07 1.2 4.73 1.2h.01c5.46 0 9.91-4.45 9.91-9.91S17.5 2 12.04 2zm0 18.06h-.01c-1.47 0-2.91-.39-4.17-1.14l-.3-.18-3.11.82.83-3.03-.19-.31a8.03 8.03 0 01-1.24-4.31c0-4.44 3.62-8.06 8.06-8.06 2.15 0 4.17.84 5.7 2.36a8.02 8.02 0 012.36 5.7c0 4.44-3.62 8.06-8.06 8.06zm4.42-6.03c-.24-.12-1.43-.71-1.65-.79-.22-.08-.38-.12-.55.12-.16.24-.62.79-.76.95-.14.16-.28.18-.52.06-.24-.12-1.01-.37-1.92-1.18-.71-.63-1.19-1.42-1.33-1.66-.14-.24-.02-.37.11-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.55-1.32-.75-1.81-.2-.48-.4-.41-.55-.42h-.47c-.16 0-.42.06-.64.3-.22.24-.84.82-.84 2s.86 2.32.98 2.48c.12.16 1.7 2.6 4.13 3.64.58.25 1.03.4 1.38.51.58.18 1.11.16 1.53.1.47-.07 1.43-.58 1.63-1.15.2-.56.2-1.04.14-1.15-.06-.1-.22-.16-.46-.28z"/></svg>
+        WhatsApp
+      </button>
+    </div>`;
+  }).join('');
+
+  el.querySelectorAll('.priority-card-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const lead = STATE.leads.find(l => l.ID === btn.dataset.id);
+      if(lead) openWhatsApp(lead);
+    });
+  });
 }
 
 function daysAgo(dateStr){
@@ -1635,6 +1859,14 @@ function renderBoard(){
     item.addEventListener('click', () => {
       const lead = STATE.leads.find(l => l.ID === item.dataset.id);
       if(lead) openRemarketingDetalheModal(lead);
+    });
+  });
+
+  el.querySelectorAll('.lead-score-badge').forEach(badge => {
+    badge.addEventListener('click', e => {
+      e.stopPropagation();
+      const lead = STATE.leads.find(l => l.ID === badge.dataset.id);
+      if(lead) openScoreDetalheModal(lead);
     });
   });
 
@@ -1851,6 +2083,12 @@ function leadCard(lead, posicao, collapsible){
   const avatarHtml = lead.Foto
     ? `<img src="${lead.Foto}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"><span class="card-avatar-initials" style="display:none;">${iniciais}</span>`
     : `<span class="card-avatar-initials">${iniciais}</span>`;
+
+  const { score } = calcularLeadScore(lead);
+  const temp = getTemperatura(score);
+  const acao = getProximaAcao(lead);
+  const sla = getSlaStatus(lead);
+
   return `
   <div class="card ${isCirurgia ? 'card-locked' : ''}" style="border-left:4px solid ${c.text}; animation-delay:${Math.min((posicao - 1) * 35, 350)}ms;" draggable="${naoDraggable ? 'false' : 'true'}" data-id="${lead.ID}">
     <div class="card-top">
@@ -1861,6 +2099,9 @@ function leadCard(lead, posicao, collapsible){
           <div class="card-name">${escapeHtml(lead.Nome || 'Sem nome')}</div>
         </div>
       </div>
+      <span class="lead-score-badge" style="color:${temp.cor};" title="${temp.label} — clique pra ver por quê" data-id="${lead.ID}">${temp.emoji} ${score}</span>
+    </div>
+    <div class="card-stage-row">
       <span class="stage-tag" style="color:${c.text}; background:${c.bg}; border-color:${c.border};">${escapeHtml(lead.Etapa)}</span>
     </div>
     <div class="card-meta">
@@ -1872,6 +2113,11 @@ function leadCard(lead, posicao, collapsible){
       ${consultaBadge}
       ${jaConsultouBadge}
       ${retornoBadge}
+      ${sla ? `<span class="chip" style="color:${sla.cor}; border-color:${sla.cor}55;">SLA: ${sla.label}</span>` : ''}
+    </div>
+    <div class="card-next-action ${acao.urgente ? 'urgente' : ''}">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/></svg>
+      <span><strong>${acao.texto}</strong>${acao.motivo ? ' — ' + acao.motivo : ''}</span>
     </div>
     <div class="card-footer">
       <span class="${staleClass}">${staleText}</span>
@@ -2239,6 +2485,33 @@ document.getElementById('removerConsultaBtn').addEventListener('click', () => {
 // ---------- MODAL DETALHE FRIO (nome, primeiro contato, enviar mensagem) ----------
 const frioDetalheModal = document.getElementById('frioDetalheModalOverlay');
 let pendingFrioDetalhe = null;
+
+// ---------- MODAL DETALHE DO SCORE (explicabilidade) ----------
+const scoreDetalheModal = document.getElementById('scoreDetalheModalOverlay');
+
+function openScoreDetalheModal(lead){
+  const { score, fatores } = calcularLeadScore(lead);
+  const temp = getTemperatura(score);
+  document.getElementById('scoreDetalheNome').textContent = `${lead.Nome} — Score ${score}`;
+  document.getElementById('scoreDetalheTemp').textContent = `${temp.emoji} ${temp.label}`;
+  document.getElementById('scoreDetalheTemp').style.color = temp.cor;
+
+  const fatoresEl = document.getElementById('scoreDetalheFatores');
+  if(!fatores.length){
+    fatoresEl.innerHTML = '<p style="font-size:13px;color:var(--text-muted);">Nenhum fator positivo ainda — lead recém-criado ou parado há muito tempo.</p>';
+  } else {
+    fatoresEl.innerHTML = fatores.map(f => `
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; padding:8px 10px; background:var(--panel-alt); border-radius:var(--radius-sm);">
+        <span style="font-size:12.5px; color:var(--text);">${escapeHtml(f.label)}</span>
+        <span style="font-size:12.5px; font-weight:800; color:${f.peso > 0 ? 'var(--sage)' : 'var(--bordeaux)'}; flex-shrink:0;">${f.peso > 0 ? '+' : ''}${f.peso}</span>
+      </div>`).join('');
+  }
+  scoreDetalheModal.classList.add('open');
+}
+
+document.getElementById('fecharScoreDetalhe').addEventListener('click', () => {
+  scoreDetalheModal.classList.remove('open');
+});
 
 function openFrioDetalheModal(lead){
   pendingFrioDetalhe = lead;

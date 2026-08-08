@@ -520,6 +520,7 @@
     transition:border-color .15s, color .15s;
   }
   .reason-chip:hover{border-color:var(--gold); color:var(--gold);}
+  .reason-chip.chip-selected{background:var(--gold); color:#fff; border-color:var(--gold);}
   .conversa-ok{
     display:flex; align-items:center; gap:8px;
     color:var(--sage); font-size:12.5px; margin-top:10px;
@@ -1012,6 +1013,33 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="dialogoTravadoModalOverlay">
+  <div class="modal" style="max-width:440px;">
+    <h2>Relatório necessário</h2>
+    <div class="report-transition" id="dialogoTravadoLeadLabel" style="margin-bottom:16px;"></div>
+    <p style="font-size:12.5px; color:var(--text-muted); margin-bottom:16px;">Esse lead está há 7+ dias em Diálogo sem avançar para Consulta. Antes de continuar, conta o que aconteceu.</p>
+    <div class="field">
+      <label>O que aconteceu com esse contato?</label>
+      <textarea id="dt_motivo" placeholder="Ex: parou de responder, pediu mais tempo, não tinha interesse real..." style="min-height:80px;" required></textarea>
+    </div>
+    <div class="field">
+      <label>Pra onde esse lead vai?</label>
+      <div class="reason-chips" id="dialogoTravadoDestino">
+        <button type="button" class="reason-chip" data-destino="Frio">Frio</button>
+        <button type="button" class="reason-chip" data-destino="Remarketing">Remarketing</button>
+      </div>
+    </div>
+    <div class="field" id="dialogoTravadoDataWrapper" style="display:none;">
+      <label>Quando reativar esse lead?</label>
+      <input type="date" id="dt_dataContato">
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn-ghost" id="adiarDialogoTravado">Decidir depois</button>
+      <button type="button" class="btn-primary" id="confirmDialogoTravado">Confirmar</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="consultaModalOverlay">
   <div class="modal" style="max-width:420px;">
     <h2>Consulta Confirmada</h2>
@@ -1442,6 +1470,7 @@ async function loadData(){
     STATE.tasks = data.tasks || [];
     STATE.historico = data.historico || [];
     STATE.stages = data.stages && data.stages.length ? data.stages : STATE.stages;
+    verificarDialogosTravados();
   }catch(err){
     console.error('Erro ao carregar dados', err);
     showToast('Não foi possível carregar os dados. Confira a URL do App da Web.');
@@ -1617,6 +1646,19 @@ function remarketingPriorityDate(lead){
   const tarefa = STATE.tasks.find(t => t.Lead_ID === lead.ID && t.Status !== 'Concluída' && t.Data_Vencimento);
   if(tarefa) return new Date(tarefa.Data_Vencimento).getTime();
   return new Date(lead.Data_Ultima_Interacao || lead.Data_Criacao).getTime();
+}
+
+/**
+ * Quantos dias um lead está parado em Diálogo, contando da última vez que ele
+ * ENTROU nessa etapa (não da data de criação do lead, que pode ser bem anterior).
+ */
+function diasEmDialogo(lead){
+  if(lead.Etapa !== 'Diálogo') return null;
+  const entradas = STATE.historico
+    .filter(h => h.Lead_ID === lead.ID && h.Para_Etapa === 'Diálogo')
+    .sort((a, b) => new Date(b.Data) - new Date(a.Data));
+  const dataEntrada = entradas.length ? entradas[0].Data : lead.Data_Criacao;
+  return daysAgo(dataEntrada);
 }
 
 function getBoardColumns(){
@@ -2680,6 +2722,90 @@ document.getElementById('confirmConsultaRemarketing').addEventListener('click', 
   showToast(`${lead.Nome} → Remarketing`);
 
   pendingConsultaRemarketing = null;
+});
+
+// ---------- MODAL DIÁLOGO TRAVADO (7+ dias sem avançar — relatório obrigatório) ----------
+const dialogoTravadoModal = document.getElementById('dialogoTravadoModalOverlay');
+let pendingDialogoTravado = null; // { lead }
+let destinoDialogoTravado = null; // 'Frio' | 'Remarketing'
+const leadsIgnoradosSessao = new Set(); // "decidir depois" — não pergunta de novo nessa sessão
+let filaDialogoTravado = [];
+
+function verificarDialogosTravados(){
+  // Só faz sentido pra quem cuida de Diálogo — Cristiane não vê essa etapa.
+  if(SESSION.papel === 'Pos-Consulta') return;
+  if(dialogoTravadoModal.classList.contains('open')) return; // já tem um aberto, não empilha
+
+  const pendentes = STATE.leads.filter(l => {
+    if(leadsIgnoradosSessao.has(l.ID)) return false;
+    const dias = diasEmDialogo(l);
+    return dias !== null && dias >= 7;
+  });
+  filaDialogoTravado = pendentes.map(l => l.ID);
+  if(filaDialogoTravado.length) abrirProximoDialogoTravado();
+}
+
+function abrirProximoDialogoTravado(){
+  if(!filaDialogoTravado.length) return;
+  const id = filaDialogoTravado.shift();
+  const lead = STATE.leads.find(l => l.ID === id);
+  if(!lead || lead.Etapa !== 'Diálogo'){ abrirProximoDialogoTravado(); return; }
+  openDialogoTravadoModal(lead);
+}
+
+function openDialogoTravadoModal(lead){
+  pendingDialogoTravado = lead;
+  destinoDialogoTravado = null;
+  const dias = diasEmDialogo(lead);
+  document.getElementById('dialogoTravadoLeadLabel').innerHTML =
+    `${escapeHtml(lead.Nome)} — parado em <strong>Diálogo</strong> há <strong>${dias} dias</strong>`;
+  document.getElementById('dt_motivo').value = '';
+  document.getElementById('dt_dataContato').value = '';
+  document.getElementById('dialogoTravadoDataWrapper').style.display = 'none';
+  document.querySelectorAll('#dialogoTravadoDestino .reason-chip').forEach(c => c.classList.remove('chip-selected'));
+  dialogoTravadoModal.classList.add('open');
+}
+
+document.querySelectorAll('#dialogoTravadoDestino .reason-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    destinoDialogoTravado = chip.dataset.destino;
+    document.querySelectorAll('#dialogoTravadoDestino .reason-chip').forEach(c => c.classList.remove('chip-selected'));
+    chip.classList.add('chip-selected');
+    document.getElementById('dialogoTravadoDataWrapper').style.display = destinoDialogoTravado === 'Remarketing' ? 'block' : 'none';
+  });
+});
+
+document.getElementById('adiarDialogoTravado').addEventListener('click', () => {
+  if(pendingDialogoTravado) leadsIgnoradosSessao.add(pendingDialogoTravado.ID);
+  dialogoTravadoModal.classList.remove('open');
+  pendingDialogoTravado = null;
+  setTimeout(abrirProximoDialogoTravado, 400);
+});
+
+document.getElementById('confirmDialogoTravado').addEventListener('click', () => {
+  const motivo = document.getElementById('dt_motivo').value.trim();
+  const dataContato = document.getElementById('dt_dataContato').value;
+  if(!motivo){ showToast('Descreva o que aconteceu antes de confirmar.'); return; }
+  if(!destinoDialogoTravado){ showToast('Escolhe pra onde esse lead vai — Frio ou Remarketing.'); return; }
+  if(destinoDialogoTravado === 'Remarketing' && !dataContato){ showToast('Selecione quando reativar esse lead.'); return; }
+  if(!pendingDialogoTravado) return;
+
+  const lead = pendingDialogoTravado;
+  lead.Etapa = destinoDialogoTravado;
+  render();
+  dialogoTravadoModal.classList.remove('open');
+
+  if(destinoDialogoTravado === 'Remarketing'){
+    postAction({ action:'consultaParaRemarketing', id: lead.ID, motivo, dataContato })
+      .then(()=> setTimeout(loadData, 1200));
+  } else {
+    postAction({ action:'moveStageWithReport', id: lead.ID, etapa:'Frio', relatorio: motivo })
+      .then(()=> setTimeout(loadData, 1200));
+  }
+  showToast(`${lead.Nome} → ${destinoDialogoTravado}`);
+
+  pendingDialogoTravado = null;
+  setTimeout(abrirProximoDialogoTravado, 500);
 });
 
 /* ---------- CELEBRAÇÃO (confetti + mensagem animada) ---------- */

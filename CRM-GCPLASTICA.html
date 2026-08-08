@@ -10,23 +10,23 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
   :root{
-    --bg:#f7f5f0;
+    --bg:#f7f8fa;
     --panel:#ffffff;
-    --panel-alt:#f1eee6;
-    --gold:#a9793f;
-    --gold-dim:#8a6f45;
-    --gold-glow:rgba(169,121,63,.10);
-    --bordeaux:#8f2f3a;
-    --bordeaux-soft:rgba(143,47,58,.10);
-    --sage:#5f7548;
-    --sage-soft:rgba(95,117,72,.12);
-    --text:#201d18;
-    --text-muted:#756b5c;
-    --border:rgba(32,29,24,.10);
-    --border-strong:rgba(32,29,24,.18);
-    --radius:14px;
-    --radius-sm:10px;
-    --radius-lg:20px;
+    --panel-alt:#f1f2f5;
+    --gold:#4338ca;
+    --gold-dim:#5b52d6;
+    --gold-glow:rgba(67,56,202,.08);
+    --bordeaux:#dc2626;
+    --bordeaux-soft:rgba(220,38,38,.08);
+    --sage:#16a34a;
+    --sage-soft:rgba(22,163,74,.10);
+    --text:#0f1117;
+    --text-muted:#6b7280;
+    --border:rgba(15,17,23,.08);
+    --border-strong:rgba(15,17,23,.14);
+    --radius:10px;
+    --radius-sm:8px;
+    --radius-lg:16px;
   }
   *{box-sizing:border-box;margin:0;padding:0;}
   html,body{height:100%;}
@@ -101,15 +101,15 @@
     padding:0 3px;
   }
   .btn-primary{
-    background:var(--gold); color:#141210;
-    border:none; padding:11px 22px;
-    font-family:'Inter',sans-serif; font-weight:700; font-size:13px;
+    background:var(--gold); color:#ffffff;
+    border:none; padding:10px 20px;
+    font-family:'Inter',sans-serif; font-weight:600; font-size:13px;
     letter-spacing:.01em;
-    cursor:pointer; border-radius:999px;
+    cursor:pointer; border-radius:var(--radius-sm);
     display:flex; align-items:center; gap:8px;
-    transition:transform .15s cubic-bezier(.34,1.56,.64,1), box-shadow .15s;
+    transition:transform .15s cubic-bezier(.34,1.56,.64,1), box-shadow .15s, background .15s;
   }
-  .btn-primary:hover{transform:translateY(-1px); box-shadow:0 6px 18px rgba(198,166,100,.25);}
+  .btn-primary:hover{transform:translateY(-1px); box-shadow:0 6px 18px rgba(67,56,202,.25); background:var(--gold-dim);}
   .btn-primary:active{transform:translateY(0) scale(.96);}
 
   /* ---------- CENTRAL DE PRIORIDADES ---------- */
@@ -255,7 +255,7 @@
     transition:border-color .2s, transform .2s cubic-bezier(.16,1,.3,1), box-shadow .2s;
     animation:cardIn .4s cubic-bezier(.16,1,.3,1) backwards;
   }
-  .card:hover{border-color:var(--gold-dim); transform:translateY(-3px); box-shadow:0 10px 24px rgba(0,0,0,.4), 0 0 0 1px rgba(198,166,100,.08);}
+  .card:hover{border-color:var(--gold-dim); transform:translateY(-3px); box-shadow:0 10px 24px rgba(0,0,0,.4), 0 0 0 1px rgba(67,56,202,.10);}
   .card:active{cursor:grabbing;}
   .card.dragging{opacity:.4;}
   .card-top{display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:6px;}
@@ -442,13 +442,13 @@
     border-bottom-left-radius:4px;
   }
   .chat-bubble-row.enviada .chat-bubble{
-    background:var(--gold); color:#141210;
+    background:var(--gold); color:#ffffff;
     border-bottom-right-radius:4px;
   }
   .chat-bubble-time{
     font-size:10px; color:var(--text-muted); margin-top:4px; display:block;
   }
-  .chat-bubble-row.enviada .chat-bubble-time{color:rgba(20,18,16,.55);}
+  .chat-bubble-row.enviada .chat-bubble-time{color:rgba(255,255,255,.7);}
 
   /* ---------- MODAL ---------- */
   .modal-overlay{
@@ -697,7 +697,7 @@
     font-family:'Inter',sans-serif; font-size:34px; font-weight:800; letter-spacing:-.01em;
     color:var(--gold); text-align:center; z-index:10000;
     opacity:0; transition:opacity .4s ease, transform .4s cubic-bezier(.34,1.56,.64,1);
-    text-shadow:0 4px 30px rgba(198,166,100,.5);
+    text-shadow:0 4px 30px rgba(67,56,202,.4);
     pointer-events:none; padding:0 24px; max-width:90vw;
   }
   .celebration-message.show{opacity:1; transform:translate(-50%,-50%) scale(1);}
@@ -1164,12 +1164,12 @@ const CRM_API_URL = 'https://script.google.com/macros/s/AKfycbwZ9zv4DNc94x9IzWs9
 
 /* Cores das etiquetas por etapa — edite à vontade */
 const STAGE_COLORS = {
-  'Welcome':     { text:'#f3ede0', bg:'rgba(243,237,224,.14)', border:'rgba(243,237,224,.35)' },
-  'Diálogo':     { text:'#f2c94c', bg:'rgba(242,201,76,.14)',  border:'rgba(242,201,76,.4)'  },
-  'Consulta':    { text:'#4caf6d', bg:'rgba(76,175,109,.14)',  border:'rgba(76,175,109,.4)'  },
-  'Cirurgia':    { text:'#c6a664', bg:'rgba(198,166,100,.16)', border:'rgba(198,166,100,.45)' },
-  'Frio':        { text:'#5b9bd5', bg:'rgba(91,155,213,.14)',  border:'rgba(91,155,213,.4)'  },
-  'Remarketing': { text:'#e0554f', bg:'rgba(224,85,79,.14)',   border:'rgba(224,85,79,.4)'   }
+  'Welcome':     { text:'#6b7280', bg:'rgba(107,114,128,.08)', border:'rgba(107,114,128,.25)' },
+  'Diálogo':     { text:'#b45309', bg:'rgba(180,83,9,.08)',    border:'rgba(180,83,9,.25)'    },
+  'Consulta':    { text:'#15803d', bg:'rgba(21,128,61,.08)',   border:'rgba(21,128,61,.25)'   },
+  'Cirurgia':    { text:'#4338ca', bg:'rgba(67,56,202,.08)',   border:'rgba(67,56,202,.25)'   },
+  'Frio':        { text:'#0369a1', bg:'rgba(3,105,161,.08)',   border:'rgba(3,105,161,.25)'   },
+  'Remarketing': { text:'#dc2626', bg:'rgba(220,38,38,.08)',   border:'rgba(220,38,38,.25)'   }
 };
 function stageColor(stage){ return STAGE_COLORS[stage] || STAGE_COLORS['Welcome']; }
 
@@ -1545,10 +1545,10 @@ function calcularLeadScore(lead){
 }
 
 function getTemperatura(score){
-  if(score >= 81) return { label:'Alta Intenção', cor:'#8f2f3a', emoji:'🔥' };
-  if(score >= 61) return { label:'Quente', cor:'#a9793f', emoji:'🔥' };
-  if(score >= 31) return { label:'Morno', cor:'#8a6f45', emoji:'🌤' };
-  return { label:'Frio', cor:'#5f7548', emoji:'❄' };
+  if(score >= 81) return { label:'Alta Intenção', cor:'#dc2626', emoji:'🔥' };
+  if(score >= 61) return { label:'Quente', cor:'#ea580c', emoji:'🔥' };
+  if(score >= 31) return { label:'Morno', cor:'#ca8a04', emoji:'🌤' };
+  return { label:'Frio', cor:'#0369a1', emoji:'❄' };
 }
 
 /* ============================================================
@@ -1603,9 +1603,9 @@ function getProximaAcao(lead){
 function getSlaStatus(lead){
   if(lead.Etapa !== 'Welcome') return null;
   const horas = (Date.now() - new Date(lead.Data_Criacao).getTime()) / 3600000;
-  if(horas <= 2) return { cor:'#5f7548', label:'Dentro do prazo' };
-  if(horas <= 8) return { cor:'#a9793f', label:'Próximo do limite' };
-  return { cor:'#8f2f3a', label:'Prazo estourado' };
+  if(horas <= 2) return { cor:'#16a34a', label:'Dentro do prazo' };
+  if(horas <= 8) return { cor:'#ca8a04', label:'Próximo do limite' };
+  return { cor:'#dc2626', label:'Prazo estourado' };
 }
 
 /**
@@ -2691,7 +2691,7 @@ function launchConfetti(count){
   canvas.height = window.innerHeight;
   document.body.appendChild(canvas);
   const ctx = canvas.getContext('2d');
-  const colors = ['#c6a664','#f3ede0','#89946f','#e8c17e','#d9a5a5'];
+  const colors = ['#4338ca','#f1f2f5','#16a34a','#818cf8','#f0abfc'];
   const particles = Array.from({length:count}, () => ({
     x: Math.random()*canvas.width,
     y: -20 - Math.random()*canvas.height*0.3,
@@ -2777,10 +2777,10 @@ document.getElementById('btnEnviarConsultCard').addEventListener('click', () => 
 
 // ---------- PAINEL DE DESEMPENHO ----------
 const CHART_COLORS = {
-  gold:'#a9793f', goldDim:'#8a6f45', sage:'#5f7548', bordeaux:'#8f2f3a',
-  text:'#201d18', muted:'#756b5c', grid:'rgba(32,29,24,.08)'
+  gold:'#4338ca', goldDim:'#5b52d6', sage:'#16a34a', bordeaux:'#dc2626',
+  text:'#0f1117', muted:'#6b7280', grid:'rgba(15,17,23,.06)'
 };
-const CHART_PALETTE = ['#a9793f','#5f7548','#8f2f3a','#8a6f45','#7c9160','#a85f68'];
+const CHART_PALETTE = ['#4338ca','#16a34a','#dc2626','#ca8a04','#0369a1','#c026d3'];
 let DASH_CHARTS = {};
 
 function destroyChart(key){
@@ -2815,7 +2815,7 @@ function renderDashboard(){
   destroyChart('origem');
   DASH_CHARTS.origem = new Chart(document.getElementById('chartOrigem'), {
     type:'doughnut',
-    data:{ labels:Object.keys(origens), datasets:[{ data:Object.values(origens), backgroundColor: CHART_PALETTE, borderColor:'#f7f5f0', borderWidth:2 }] },
+    data:{ labels:Object.keys(origens), datasets:[{ data:Object.values(origens), backgroundColor: CHART_PALETTE, borderColor:'#f7f8fa', borderWidth:2 }] },
     options:{ responsive:true, maintainAspectRatio:true, plugins:{ legend:{ position:'bottom', labels:{ color: CHART_COLORS.muted, font:{ family:'Inter', size:10 }, boxWidth:10 } } } }
   });
 

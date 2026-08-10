@@ -157,6 +157,30 @@
   }
   .month-filter-bar select:focus{outline:none; border-color:var(--gold);}
   .month-filter-count{font-size:12px; color:var(--gold-dim);}
+  .global-search-wrap{position:relative; margin-left:auto; width:280px;}
+  .global-search-icon{position:absolute; left:11px; top:50%; transform:translateY(-50%); color:var(--text-muted); pointer-events:none;}
+  .global-search-input{
+    width:100%; background:var(--panel); border:1px solid var(--border-strong);
+    border-radius:999px; padding:8px 14px 8px 32px; font-family:'Inter',sans-serif;
+    font-size:12.5px; color:var(--text);
+  }
+  .global-search-input:focus{outline:none; border-color:var(--gold);}
+  .global-search-results{
+    position:absolute; top:calc(100% + 6px); left:0; right:0;
+    background:var(--panel); border:1px solid var(--border-strong); border-radius:var(--radius-sm);
+    box-shadow:0 12px 32px rgba(0,0,0,.18); max-height:340px; overflow-y:auto;
+    z-index:40; display:none;
+  }
+  .global-search-results.open{display:block;}
+  .global-search-item{
+    display:flex; align-items:center; gap:10px; padding:9px 14px; cursor:pointer;
+    border-bottom:1px solid var(--border);
+  }
+  .global-search-item:last-child{border-bottom:none;}
+  .global-search-item:hover{background:var(--panel-alt);}
+  .global-search-item-name{font-size:12.5px; font-weight:600; color:var(--text);}
+  .global-search-item-meta{font-size:10.5px; color:var(--text-muted);}
+  .global-search-empty{padding:14px; font-size:12px; color:var(--text-muted); text-align:center; font-style:italic;}
 
   /* ---------- JOURNEY LINE ---------- */
   .journey{
@@ -381,6 +405,7 @@
   .card-locked{cursor:default; opacity:.92;}
   .card-locked:hover{border-color:var(--border);}
   .chip-cirurgia{color:var(--sage); border-color:var(--sage-soft);}
+  .chip-paciente{color:var(--gold-dim); border-color:var(--gold-glow); background:var(--gold-glow); font-weight:700;}
   .chip-whatsapp{
     color:#25D366; border-color:rgba(37,211,102,.4); background:rgba(37,211,102,.12);
     display:inline-flex; align-items:center;
@@ -799,6 +824,11 @@
     <span class="month-filter-label">Período</span>
     <select id="monthFilter"></select>
     <span class="month-filter-count" id="monthFilterCount"></span>
+    <div class="global-search-wrap">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="global-search-icon"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input type="text" id="globalSearchInput" class="global-search-input" placeholder="Buscar por nome ou telefone...">
+      <div class="global-search-results" id="globalSearchResults"></div>
+    </div>
   </div>
 
   <div class="priorities-section" id="prioritiesSection">
@@ -1803,6 +1833,48 @@ document.getElementById('monthFilter').addEventListener('change', e => {
   render();
 });
 
+// ---------- BUSCA GLOBAL (nome ou telefone) ----------
+const globalSearchInput = document.getElementById('globalSearchInput');
+const globalSearchResults = document.getElementById('globalSearchResults');
+
+globalSearchInput.addEventListener('input', () => {
+  const termo = globalSearchInput.value.trim().toLowerCase();
+  if(!termo){ globalSearchResults.classList.remove('open'); return; }
+
+  const termoDigitos = termo.replace(/\D/g, '');
+  const encontrados = STATE.leads.filter(l => {
+    const nomeBate = (l.Nome || '').toLowerCase().includes(termo);
+    const telBate = termoDigitos.length >= 3 && (l.Telefone || '').replace(/\D/g, '').includes(termoDigitos);
+    return nomeBate || telBate;
+  }).slice(0, 12);
+
+  if(!encontrados.length){
+    globalSearchResults.innerHTML = '<div class="global-search-empty">Nenhum lead encontrado.</div>';
+  } else {
+    globalSearchResults.innerHTML = encontrados.map(l => `
+      <div class="global-search-item" data-id="${l.ID}">
+        ${miniAvatarHtml(l)}
+        <div>
+          <div class="global-search-item-name">${escapeHtml(l.Nome || 'Sem nome')}</div>
+          <div class="global-search-item-meta">${escapeHtml(l.Etapa)}${l.Telefone ? ' · ' + escapeHtml(l.Telefone) : ''}</div>
+        </div>
+      </div>`).join('');
+    globalSearchResults.querySelectorAll('.global-search-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const lead = STATE.leads.find(l => l.ID === item.dataset.id);
+        if(lead) openChatPanel(lead);
+        globalSearchResults.classList.remove('open');
+        globalSearchInput.value = '';
+      });
+    });
+  }
+  globalSearchResults.classList.add('open');
+});
+
+document.addEventListener('click', e => {
+  if(!e.target.closest('.global-search-wrap')) globalSearchResults.classList.remove('open');
+});
+
 function render(){
   populateMonthFilterOptions();
   renderJourney();
@@ -1932,6 +2004,17 @@ function abrirAcaoPrioridade(lead){
   }
   // Fallback: abre a conversa, sempre útil independente da situação
   openChatPanel(lead);
+}
+
+/**
+ * Classificação do contato: Lead (padrão) ou Paciente (uma vez que teve data de
+ * cirurgia registrada, fica Paciente pra sempre — mesmo se depois voltar a falar
+ * com a clínica por outro motivo, ele já é reconhecido como paciente, não lead novo).
+ * "Contato Interno" nem chega a aparecer aqui — esses já são filtrados e nunca
+ * viram card de lead (ficam só na aba Contatos_Internos).
+ */
+function tipoDeContato(lead){
+  return lead.Data_Cirurgia ? 'Paciente' : 'Lead';
 }
 
 function daysAgo(dateStr){
@@ -2307,6 +2390,7 @@ function leadCard(lead, posicao, collapsible){
     </div>
     <div class="card-stage-row">
       <span class="stage-tag" style="color:${c.text}; background:${c.bg}; border-color:${c.border};">${escapeHtml(lead.Etapa)}</span>
+      ${tipoDeContato(lead) === 'Paciente' ? `<span class="chip chip-paciente">Paciente</span>` : ''}
     </div>
     <div class="card-meta">
       ${lead.Procedimento_Interesse ? `<span class="chip">${escapeHtml(lead.Procedimento_Interesse)}</span>` : ''}

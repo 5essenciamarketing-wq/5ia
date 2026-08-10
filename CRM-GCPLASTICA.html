@@ -267,6 +267,26 @@
   }
   .column-body.drag-over{background:var(--gold-glow);}
 
+  .bulk-action-bar{
+    position:fixed; top:76px; left:50%; transform:translateX(-50%) translateY(-12px);
+    display:flex; align-items:center; gap:14px; z-index:46;
+    background:var(--panel); border:1px solid var(--border-strong); border-radius:999px;
+    padding:10px 12px 10px 20px; box-shadow:0 12px 32px rgba(0,0,0,.22);
+    opacity:0; pointer-events:none; transition:opacity .2s, transform .2s;
+  }
+  .bulk-action-bar.visible{opacity:1; transform:translateX(-50%) translateY(0); pointer-events:auto;}
+  .bulk-action-bar span{font-size:13px; font-weight:700; color:var(--text); white-space:nowrap;}
+  .card-select-checkbox{
+    position:absolute; top:10px; left:10px; z-index:5;
+    width:20px; height:20px; border-radius:6px; border:2px solid var(--border-strong);
+    background:var(--panel); display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+  }
+  .card-select-checkbox svg{display:none; width:13px; height:13px; color:#fff;}
+  .card.card-selected{border-color:var(--gold) !important; box-shadow:0 0 0 2px var(--gold-glow);}
+  .card.card-selected .card-select-checkbox{background:var(--gold); border-color:var(--gold);}
+  .card.card-selected .card-select-checkbox svg{display:block;}
+  .card.modo-selecao-ativo{padding-left:38px; cursor:pointer;}
   .quick-drop-backdrop{
     position:fixed; inset:0; z-index:44;
     background:rgba(15,17,23,.4);
@@ -834,6 +854,9 @@
       <button class="icon-btn" id="btnDashboard" title="Painel de Desempenho">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
       </button>
+      <button class="icon-btn" id="btnModoSelecao" title="Selecionar vários leads (envio em massa)">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M17 14l1.5 1.5L21 13"/></svg>
+      </button>
       <button class="icon-btn" id="btnTasks" title="Follow-ups">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
         <span class="badge" id="taskBadge" style="display:none;">0</span>
@@ -870,6 +893,35 @@
   <div class="board" id="board"></div>
 
   <div class="quick-drop-backdrop" id="quickDropBackdrop"></div>
+
+  <div class="bulk-action-bar" id="bulkActionBar">
+    <span id="bulkActionCount">0 selecionados</span>
+    <button type="button" class="btn-ghost" id="btnCancelarSelecao">Cancelar</button>
+    <button type="button" class="btn-primary" id="btnEnviarEmMassa">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.46 1.32 4.96L2.05 22l5.25-1.38c1.44.79 3.07 1.2 4.73 1.2h.01c5.46 0 9.91-4.45 9.91-9.91S17.5 2 12.04 2zm0 18.06h-.01c-1.47 0-2.91-.39-4.17-1.14l-.3-.18-3.11.82.83-3.03-.19-.31a8.03 8.03 0 01-1.24-4.31c0-4.44 3.62-8.06 8.06-8.06 2.15 0 4.17.84 5.7 2.36a8.02 8.02 0 012.36 5.7c0 4.44-3.62 8.06-8.06 8.06zm4.42-6.03c-.24-.12-1.43-.71-1.65-.79-.22-.08-.38-.12-.55.12-.16.24-.62.79-.76.95-.14.16-.28.18-.52.06-.24-.12-1.01-.37-1.92-1.18-.71-.63-1.19-1.42-1.33-1.66-.14-.24-.02-.37.11-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.55-1.32-.75-1.81-.2-.48-.4-.41-.55-.42h-.47c-.16 0-.42.06-.64.3-.22.24-.84.82-.84 2s.86 2.32.98 2.48c.12.16 1.7 2.6 4.13 3.64.58.25 1.03.4 1.38.51.58.18 1.11.16 1.53.1.47-.07 1.43-.58 1.63-1.15.2-.56.2-1.04.14-1.15-.06-.1-.22-.16-.46-.28z"/></svg>
+      Enviar Mensagem
+    </button>
+  </div>
+
+  <div class="modal-overlay" id="bulkMessageModalOverlay">
+    <div class="modal" style="max-width:460px;">
+      <h2>Mensagem em massa</h2>
+      <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px;" id="bulkMessageCountLabel"></p>
+      <div class="field">
+        <label>Mensagem</label>
+        <textarea id="bulk_mensagem" placeholder="Escreva a mensagem que vai pra todos os selecionados..." style="min-height:110px;" required></textarea>
+      </div>
+      <p style="font-size:11.5px; color:var(--text-muted); margin-bottom:10px;">Envia um por um, com um pequeno intervalo entre cada — evita parecer disparo automático em massa pro WhatsApp.</p>
+      <div id="bulkSendProgress" style="display:none; margin-bottom:12px;">
+        <div class="meta-consultas-bar"><div class="meta-consultas-fill" id="bulkSendProgressFill" style="width:0%;"></div></div>
+        <p style="font-size:12px; color:var(--text-muted); margin-top:6px;" id="bulkSendProgressLabel"></p>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-ghost" id="cancelBulkMessage">Cancelar</button>
+        <button type="button" class="btn-primary" id="confirmBulkMessage">Enviar pra todos</button>
+      </div>
+    </div>
+  </div>
 
   <div class="quick-drop-bar" id="quickDropBar">
     <div class="quick-drop-group" id="quickDropGroupPreConsulta">
@@ -1677,6 +1729,10 @@ function executarTransicao(lead, newStage){
 }
 
 let STATE = { leads: [], tasks: [], stages: [], historico: [], metas: [] };
+
+// ---------- MODO DE SELEÇÃO MÚLTIPLA (envio de mensagem em massa) ----------
+let modoSelecaoAtivo = false;
+let leadsSelecionados = new Set();
 let pendingLeadForTask = null;
 
 // Fallback: garante que o board sempre tenha as colunas, mesmo sem dados ainda
@@ -1949,6 +2005,104 @@ document.getElementById('monthFilter').addEventListener('change', e => {
 });
 
 // ---------- BUSCA GLOBAL (nome ou telefone) ----------
+// ---------- SELEÇÃO MÚLTIPLA + ENVIO EM MASSA ----------
+const btnModoSelecao = document.getElementById('btnModoSelecao');
+const bulkActionBar = document.getElementById('bulkActionBar');
+const bulkMessageModal = document.getElementById('bulkMessageModalOverlay');
+
+function toggleSelecaoLead(id){
+  if(leadsSelecionados.has(id)) leadsSelecionados.delete(id);
+  else leadsSelecionados.add(id);
+  atualizarBarraSelecao();
+  render();
+}
+
+function atualizarBarraSelecao(){
+  const n = leadsSelecionados.size;
+  document.getElementById('bulkActionCount').textContent = `${n} selecionado${n === 1 ? '' : 's'}`;
+  bulkActionBar.classList.toggle('visible', n > 0);
+}
+
+btnModoSelecao.addEventListener('click', () => {
+  modoSelecaoAtivo = !modoSelecaoAtivo;
+  btnModoSelecao.classList.toggle('drag-over', modoSelecaoAtivo); // reaproveita o destaque dourado
+  if(!modoSelecaoAtivo){
+    leadsSelecionados.clear();
+    atualizarBarraSelecao();
+  }
+  render();
+});
+
+document.getElementById('btnCancelarSelecao').addEventListener('click', () => {
+  modoSelecaoAtivo = false;
+  btnModoSelecao.classList.remove('drag-over');
+  leadsSelecionados.clear();
+  atualizarBarraSelecao();
+  render();
+});
+
+document.getElementById('btnEnviarEmMassa').addEventListener('click', () => {
+  if(!leadsSelecionados.size) return;
+  document.getElementById('bulkMessageCountLabel').textContent = `Vai pra ${leadsSelecionados.size} lead(s) selecionado(s).`;
+  document.getElementById('bulk_mensagem').value = '';
+  document.getElementById('bulkSendProgress').style.display = 'none';
+  bulkMessageModal.classList.add('open');
+});
+
+document.getElementById('cancelBulkMessage').addEventListener('click', () => {
+  bulkMessageModal.classList.remove('open');
+});
+
+document.getElementById('confirmBulkMessage').addEventListener('click', async () => {
+  const mensagem = document.getElementById('bulk_mensagem').value.trim();
+  if(!mensagem){ showToast('Escreva a mensagem antes de enviar.'); return; }
+
+  const ids = Array.from(leadsSelecionados);
+  const confirmBtn = document.getElementById('confirmBulkMessage');
+  const cancelBtn = document.getElementById('cancelBulkMessage');
+  confirmBtn.disabled = true;
+  cancelBtn.disabled = true;
+  const progressEl = document.getElementById('bulkSendProgress');
+  const progressFill = document.getElementById('bulkSendProgressFill');
+  const progressLabel = document.getElementById('bulkSendProgressLabel');
+  progressEl.style.display = 'block';
+
+  let enviados = 0, falharam = 0;
+  for(let i = 0; i < ids.length; i++){
+    const lead = STATE.leads.find(l => l.ID === ids[i]);
+    progressLabel.textContent = `Enviando ${i + 1}/${ids.length}${lead ? ' — ' + lead.Nome : ''}...`;
+    progressFill.style.width = `${Math.round(((i) / ids.length) * 100)}%`;
+
+    if(lead){
+      try{
+        const url = `${CRM_API_URL}?action=sendWhatsAppMessage&id=${encodeURIComponent(lead.ID)}&mensagem=${encodeURIComponent(mensagem)}&token=${encodeURIComponent(SESSION.token)}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        if(data.ok) enviados++; else falharam++;
+      }catch(err){
+        falharam++;
+      }
+    }
+    // Pequeno intervalo entre envios — evita parecer disparo automático em massa pro WhatsApp
+    if(i < ids.length - 1) await new Promise(r => setTimeout(r, 1800));
+  }
+
+  progressFill.style.width = '100%';
+  progressLabel.textContent = `Concluído — ${enviados} enviada(s)${falharam ? `, ${falharam} falharam` : ''}.`;
+
+  setTimeout(() => {
+    bulkMessageModal.classList.remove('open');
+    confirmBtn.disabled = false;
+    cancelBtn.disabled = false;
+    modoSelecaoAtivo = false;
+    btnModoSelecao.classList.remove('drag-over');
+    leadsSelecionados.clear();
+    atualizarBarraSelecao();
+    render();
+    showToast(`Envio em massa concluído — ${enviados} enviada(s)${falharam ? `, ${falharam} falharam` : ''}.`);
+  }, 1400);
+});
+
 const globalSearchInput = document.getElementById('globalSearchInput');
 const globalSearchResults = document.getElementById('globalSearchResults');
 
@@ -2353,6 +2507,20 @@ function renderBoard(){
     });
     card.addEventListener('dragend', () => card.classList.remove('dragging'));
   });
+
+  // Modo de seleção múltipla — clicar no checkbox ou no card inteiro alterna a seleção
+  if(modoSelecaoAtivo){
+    el.querySelectorAll('.card-select-checkbox').forEach(cb => {
+      cb.addEventListener('click', e => {
+        e.stopPropagation();
+        toggleSelecaoLead(cb.dataset.selectId);
+      });
+    });
+    el.querySelectorAll('.card.modo-selecao-ativo').forEach(card => {
+      card.addEventListener('click', () => toggleSelecaoLead(card.dataset.id));
+    });
+  }
+
   el.querySelectorAll('.column-body[data-dropzone="true"]').forEach(col => {
     col.addEventListener('dragover', e => { e.preventDefault(); col.classList.add('drag-over'); });
     col.addEventListener('dragleave', () => col.classList.remove('drag-over'));
@@ -2531,8 +2699,14 @@ function leadCard(lead, posicao, collapsible){
   const acao = getProximaAcao(lead);
   const sla = getSlaStatus(lead);
 
+  const selecionado = typeof leadsSelecionados !== 'undefined' && leadsSelecionados.has(lead.ID);
+  const checkboxHtml = (typeof modoSelecaoAtivo !== 'undefined' && modoSelecaoAtivo)
+    ? `<div class="card-select-checkbox" data-select-id="${lead.ID}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></div>`
+    : '';
+
   return `
-  <div class="card ${isCirurgia ? 'card-locked' : ''}" style="border-left:4px solid ${c.text}; animation-delay:${Math.min((posicao - 1) * 35, 350)}ms;" draggable="${naoDraggable ? 'false' : 'true'}" data-id="${lead.ID}">
+  <div class="card ${isCirurgia ? 'card-locked' : ''} ${modoSelecaoAtivo ? 'modo-selecao-ativo' : ''} ${selecionado ? 'card-selected' : ''}" style="border-left:4px solid ${c.text}; animation-delay:${Math.min((posicao - 1) * 35, 350)}ms; position:relative;" draggable="${(naoDraggable || modoSelecaoAtivo) ? 'false' : 'true'}" data-id="${lead.ID}">
+    ${checkboxHtml}
     <div class="card-top">
       <div class="card-avatar-row">
         <div class="card-avatar">${avatarHtml}</div>

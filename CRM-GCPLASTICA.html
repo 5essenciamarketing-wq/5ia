@@ -13,9 +13,9 @@
     --bg:#f7f8fa;
     --panel:#ffffff;
     --panel-alt:#f1f2f5;
-    --gold:#4338ca;
-    --gold-dim:#5b52d6;
-    --gold-glow:rgba(67,56,202,.08);
+    --gold:#a8802e;
+    --gold-dim:#8f6d28;
+    --gold-glow:rgba(168,128,46,.10);
     --bordeaux:#dc2626;
     --bordeaux-soft:rgba(220,38,38,.08);
     --sage:#16a34a;
@@ -109,7 +109,7 @@
     display:flex; align-items:center; gap:8px;
     transition:transform .15s cubic-bezier(.34,1.56,.64,1), box-shadow .15s, background .15s;
   }
-  .btn-primary:hover{transform:translateY(-1px); box-shadow:0 6px 18px rgba(67,56,202,.25); background:var(--gold-dim);}
+  .btn-primary:hover{transform:translateY(-1px); box-shadow:0 6px 18px rgba(168,128,46,.25); background:var(--gold-dim);}
   .btn-primary:active{transform:translateY(0) scale(.96);}
 
   /* ---------- CENTRAL DE PRIORIDADES ---------- */
@@ -129,11 +129,16 @@
   .priority-card-score{font-size:11px; font-weight:800;}
   .priority-card-meta{font-size:10.5px; color:var(--text-muted); margin-bottom:8px;}
   .priority-card-action{font-size:11px; color:var(--text); line-height:1.4; margin-bottom:10px;}
+  .priority-card-actions-row{display:flex; gap:6px;}
   .priority-card-btn{
-    width:100%; background:var(--gold); color:#fff; border:none; padding:7px;
+    flex:1; background:var(--panel-alt); color:var(--text); border:1px solid var(--border-strong); padding:7px;
     border-radius:999px; font-size:11px; font-weight:700; cursor:pointer;
     display:flex; align-items:center; justify-content:center; gap:6px;
+    transition:background .15s, border-color .15s;
   }
+  .priority-card-btn:hover{border-color:var(--gold);}
+  .priority-card-btn-primary{background:var(--gold); color:#fff; border-color:var(--gold);}
+  .priority-card-btn-primary:hover{background:var(--gold-dim);}
   .priorities-empty{font-size:12.5px; color:var(--text-muted); font-style:italic; padding:10px 0;}
 
   /* ---------- FILTRO DE MÊS ---------- */
@@ -255,7 +260,7 @@
     transition:border-color .2s, transform .2s cubic-bezier(.16,1,.3,1), box-shadow .2s;
     animation:cardIn .4s cubic-bezier(.16,1,.3,1) backwards;
   }
-  .card:hover{border-color:var(--gold-dim); transform:translateY(-3px); box-shadow:0 10px 24px rgba(0,0,0,.4), 0 0 0 1px rgba(67,56,202,.10);}
+  .card:hover{border-color:var(--gold-dim); transform:translateY(-3px); box-shadow:0 10px 24px rgba(0,0,0,.4), 0 0 0 1px rgba(168,128,46,.10);}
   .card:active{cursor:grabbing;}
   .card.dragging{opacity:.4;}
   .card-top{display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:6px;}
@@ -698,7 +703,7 @@
     font-family:'Inter',sans-serif; font-size:34px; font-weight:800; letter-spacing:-.01em;
     color:var(--gold); text-align:center; z-index:10000;
     opacity:0; transition:opacity .4s ease, transform .4s cubic-bezier(.34,1.56,.64,1);
-    text-shadow:0 4px 30px rgba(67,56,202,.4);
+    text-shadow:0 4px 30px rgba(168,128,46,.4);
     pointer-events:none; padding:0 24px; max-width:90vw;
   }
   .celebration-message.show{opacity:1; transform:translate(-50%,-50%) scale(1);}
@@ -1090,7 +1095,7 @@
   <div class="modal" style="max-width:420px; text-align:center;">
     <h2>Como foi a cirurgia?</h2>
     <div class="report-transition" id="cirurgiaConfirmacaoLeadLabel" style="margin-bottom:16px;"></div>
-    <p style="font-size:13px; color:var(--text-muted); margin-bottom:20px;">Já se passaram 24h desde a data marcada.</p>
+    <p style="font-size:13px; color:var(--text-muted); margin-bottom:20px;" id="cirurgiaConfirmacaoTempo"></p>
     <div class="modal-actions" style="justify-content:center;">
       <button type="button" class="btn-ghost" id="cirurgiaConfirmacaoRemarcada">Foi remarcada</button>
       <button type="button" class="btn-primary" id="cirurgiaConfirmacaoSucesso">Foi um sucesso</button>
@@ -1271,7 +1276,7 @@ const STAGE_COLORS = {
   'Welcome':     { text:'#6b7280', bg:'rgba(107,114,128,.08)', border:'rgba(107,114,128,.25)' },
   'Diálogo':     { text:'#b45309', bg:'rgba(180,83,9,.08)',    border:'rgba(180,83,9,.25)'    },
   'Consulta':    { text:'#15803d', bg:'rgba(21,128,61,.08)',   border:'rgba(21,128,61,.25)'   },
-  'Cirurgia':    { text:'#4338ca', bg:'rgba(67,56,202,.08)',   border:'rgba(67,56,202,.25)'   },
+  'Cirurgia':    { text:'#a8802e', bg:'rgba(168,128,46,.08)',   border:'rgba(168,128,46,.25)'   },
   'Frio':        { text:'#0369a1', bg:'rgba(3,105,161,.08)',   border:'rgba(3,105,161,.25)'   },
   'Remarketing': { text:'#dc2626', bg:'rgba(220,38,38,.08)',   border:'rgba(220,38,38,.25)'   }
 };
@@ -1836,19 +1841,73 @@ function renderPriorities(){
       </div>
       <div class="priority-card-meta">${escapeHtml(lead.Etapa)}${lead.Procedimento_Interesse ? ' · ' + escapeHtml(lead.Procedimento_Interesse) : ''}</div>
       <div class="priority-card-action"><strong>${acao.texto}</strong>${acao.motivo ? ' — ' + acao.motivo : ''}</div>
-      <button class="priority-card-btn" data-id="${lead.ID}">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.46 1.32 4.96L2.05 22l5.25-1.38c1.44.79 3.07 1.2 4.73 1.2h.01c5.46 0 9.91-4.45 9.91-9.91S17.5 2 12.04 2zm0 18.06h-.01c-1.47 0-2.91-.39-4.17-1.14l-.3-.18-3.11.82.83-3.03-.19-.31a8.03 8.03 0 01-1.24-4.31c0-4.44 3.62-8.06 8.06-8.06 2.15 0 4.17.84 5.7 2.36a8.02 8.02 0 012.36 5.7c0 4.44-3.62 8.06-8.06 8.06zm4.42-6.03c-.24-.12-1.43-.71-1.65-.79-.22-.08-.38-.12-.55.12-.16.24-.62.79-.76.95-.14.16-.28.18-.52.06-.24-.12-1.01-.37-1.92-1.18-.71-.63-1.19-1.42-1.33-1.66-.14-.24-.02-.37.11-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.55-1.32-.75-1.81-.2-.48-.4-.41-.55-.42h-.47c-.16 0-.42.06-.64.3-.22.24-.84.82-.84 2s.86 2.32.98 2.48c.12.16 1.7 2.6 4.13 3.64.58.25 1.03.4 1.38.51.58.18 1.11.16 1.53.1.47-.07 1.43-.58 1.63-1.15.2-.56.2-1.04.14-1.15-.06-.1-.22-.16-.46-.28z"/></svg>
-        WhatsApp
-      </button>
+      <div class="priority-card-actions-row">
+        <button class="priority-card-btn priority-card-btn-primary" data-id="${lead.ID}" data-abrir="1">
+          Abrir
+        </button>
+        <button class="priority-card-btn" data-id="${lead.ID}">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.46 1.32 4.96L2.05 22l5.25-1.38c1.44.79 3.07 1.2 4.73 1.2h.01c5.46 0 9.91-4.45 9.91-9.91S17.5 2 12.04 2zm0 18.06h-.01c-1.47 0-2.91-.39-4.17-1.14l-.3-.18-3.11.82.83-3.03-.19-.31a8.03 8.03 0 01-1.24-4.31c0-4.44 3.62-8.06 8.06-8.06 2.15 0 4.17.84 5.7 2.36a8.02 8.02 0 012.36 5.7c0 4.44-3.62 8.06-8.06 8.06zm4.42-6.03c-.24-.12-1.43-.71-1.65-.79-.22-.08-.38-.12-.55.12-.16.24-.62.79-.76.95-.14.16-.28.18-.52.06-.24-.12-1.01-.37-1.92-1.18-.71-.63-1.19-1.42-1.33-1.66-.14-.24-.02-.37.11-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.55-1.32-.75-1.81-.2-.48-.4-.41-.55-.42h-.47c-.16 0-.42.06-.64.3-.22.24-.84.82-.84 2s.86 2.32.98 2.48c.12.16 1.7 2.6 4.13 3.64.58.25 1.03.4 1.38.51.58.18 1.11.16 1.53.1.47-.07 1.43-.58 1.63-1.15.2-.56.2-1.04.14-1.15-.06-.1-.22-.16-.46-.28z"/></svg>
+          WhatsApp
+        </button>
+      </div>
     </div>`;
   }).join('');
 
-  el.querySelectorAll('.priority-card-btn').forEach(btn => {
+  el.querySelectorAll('.priority-card-btn[data-abrir]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const lead = STATE.leads.find(l => l.ID === btn.dataset.id);
+      if(lead) abrirAcaoPrioridade(lead);
+    });
+  });
+
+  el.querySelectorAll('.priority-card-btn:not([data-abrir])').forEach(btn => {
     btn.addEventListener('click', () => {
       const lead = STATE.leads.find(l => l.ID === btn.dataset.id);
       if(lead) openWhatsApp(lead);
     });
   });
+}
+
+/**
+ * "Abrir" no card de prioridade — em vez de só mostrar texto, dispara de verdade
+ * a ação recomendada: abre o modal certo (mesmo que apareceria sozinho pelo
+ * gatilho automático), ou a conversa, dependendo da situação do lead.
+ */
+function abrirAcaoPrioridade(lead){
+  if(lead.Etapa === 'Diálogo'){
+    const dias = diasEmDialogo(lead);
+    if(dias !== null && dias >= 7){ openDialogoTravadoModal(lead); return; }
+  }
+  if(lead.Etapa === 'Consulta' && lead.Data_Consulta){
+    const dias = daysAgo(lead.Data_Consulta);
+    if(dias !== null && dias >= 7){
+      pendingConsultaVencida = lead;
+      document.getElementById('consultaVencidaLeadLabel').innerHTML = `${escapeHtml(lead.Nome)} — consulta em <strong>${formatDate(lead.Data_Consulta)}</strong>`;
+      consultaVencidaModal.classList.add('open');
+      return;
+    }
+  }
+  if(lead.Etapa === 'Cirurgia' && lead.Status_Cirurgia !== 'Concluída' && lead.Data_Cirurgia){
+    const horas = (Date.now() - new Date(lead.Data_Cirurgia).getTime()) / 3600000;
+    if(horas >= 24){
+      pendingCirurgiaConfirmacao = lead;
+      document.getElementById('cirurgiaConfirmacaoLeadLabel').innerHTML = `${escapeHtml(lead.Nome)} — cirurgia marcada pra <strong>${formatDate(lead.Data_Cirurgia)}</strong>`;
+      const dias = daysAgo(lead.Data_Cirurgia);
+      document.getElementById('cirurgiaConfirmacaoTempo').textContent = dias <= 0 ? 'A data marcada é hoje.' : dias === 1 ? 'Já se passou 1 dia desde a data marcada.' : `Já se passaram ${dias} dias desde a data marcada.`;
+      cirurgiaConfirmacaoModal.classList.add('open');
+      return;
+    }
+  }
+  if(lead.Etapa === 'Remarketing'){
+    openRemarketingDetalheModal(lead);
+    return;
+  }
+  if(lead.Etapa === 'Frio'){
+    openFrioDetalheModal(lead);
+    return;
+  }
+  // Fallback: abre a conversa, sempre útil independente da situação
+  openChatPanel(lead);
 }
 
 function daysAgo(dateStr){
@@ -3063,6 +3122,14 @@ function abrirProximaCirurgiaConfirmacao(){
   if(!lead || lead.Etapa !== 'Cirurgia' || lead.Status_Cirurgia === 'Concluída'){ abrirProximaCirurgiaConfirmacao(); return; }
   pendingCirurgiaConfirmacao = lead;
   document.getElementById('cirurgiaConfirmacaoLeadLabel').innerHTML = `${escapeHtml(lead.Nome)} — cirurgia marcada pra <strong>${formatDate(lead.Data_Cirurgia)}</strong>`;
+
+  const dias = daysAgo(lead.Data_Cirurgia);
+  const tempoTexto = dias === null ? 'A data já passou.'
+    : dias <= 0 ? 'A data marcada é hoje.'
+    : dias === 1 ? 'Já se passou 1 dia desde a data marcada.'
+    : `Já se passaram ${dias} dias desde a data marcada.`;
+  document.getElementById('cirurgiaConfirmacaoTempo').textContent = tempoTexto;
+
   cirurgiaConfirmacaoModal.classList.add('open');
 }
 
@@ -3129,7 +3196,7 @@ function launchConfetti(count){
   canvas.height = window.innerHeight;
   document.body.appendChild(canvas);
   const ctx = canvas.getContext('2d');
-  const colors = ['#4338ca','#f1f2f5','#16a34a','#818cf8','#f0abfc'];
+  const colors = ['#a8802e','#f1f2f5','#16a34a','#c9a869','#f0abfc'];
   const particles = Array.from({length:count}, () => ({
     x: Math.random()*canvas.width,
     y: -20 - Math.random()*canvas.height*0.3,
@@ -3215,10 +3282,10 @@ document.getElementById('btnEnviarConsultCard').addEventListener('click', () => 
 
 // ---------- PAINEL DE DESEMPENHO ----------
 const CHART_COLORS = {
-  gold:'#4338ca', goldDim:'#5b52d6', sage:'#16a34a', bordeaux:'#dc2626',
+  gold:'#a8802e', goldDim:'#8f6d28', sage:'#16a34a', bordeaux:'#dc2626',
   text:'#0f1117', muted:'#6b7280', grid:'rgba(15,17,23,.06)'
 };
-const CHART_PALETTE = ['#4338ca','#16a34a','#dc2626','#ca8a04','#0369a1','#c026d3'];
+const CHART_PALETTE = ['#a8802e','#16a34a','#dc2626','#ca8a04','#0369a1','#c026d3'];
 let DASH_CHARTS = {};
 
 function destroyChart(key){

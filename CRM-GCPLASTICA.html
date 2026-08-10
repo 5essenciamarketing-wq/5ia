@@ -1250,28 +1250,6 @@
   </div>
 </div>
 
-<!-- Data da revisão (quando marcado como retorno) -->
-<div class="modal-overlay" id="revisaoModalOverlay">
-  <div class="modal" style="max-width:420px;">
-    <h2>Data da Revisão</h2>
-    <div class="report-transition" id="revisaoLeadLabel" style="margin-bottom:16px;"></div>
-    <div class="field-row">
-      <div class="field">
-        <label>Data</label>
-        <input type="date" id="rv_data">
-      </div>
-      <div class="field">
-        <label>Hora</label>
-        <input type="time" id="rv_hora">
-      </div>
-    </div>
-    <div class="modal-actions">
-      <button type="button" class="btn-ghost" id="cancelRevisao">Cancelar</button>
-      <button type="button" class="btn-primary" id="confirmRevisao">Confirmar Revisão</button>
-    </div>
-  </div>
-</div>
-
 <div class="modal-overlay" id="consultaModalOverlay">
   <div class="modal" style="max-width:420px;">
     <h2>Consulta Confirmada</h2>
@@ -2992,45 +2970,15 @@ document.getElementById('btnEhRetorno').addEventListener('click', () => {
   if(!pendingPrimeiraOuRetorno) return;
   const lead = pendingPrimeiraOuRetorno;
   primeiraOuRetornoModal.classList.remove('open');
-  openRevisaoModal(lead);
-});
-
-// ---------- MODAL DATA DA REVISÃO (retorno de paciente — não conta como consulta nova) ----------
-const revisaoModal = document.getElementById('revisaoModalOverlay');
-let pendingRevisao = null;
-
-function openRevisaoModal(lead){
-  pendingRevisao = lead;
-  document.getElementById('revisaoLeadLabel').innerHTML = escapeHtml(lead.Nome);
-  document.getElementById('rv_data').value = '';
-  document.getElementById('rv_hora').value = '';
-  revisaoModal.classList.add('open');
-}
-
-document.getElementById('cancelRevisao').addEventListener('click', () => {
-  revisaoModal.classList.remove('open');
-  pendingRevisao = null;
   pendingPrimeiraOuRetorno = null;
-});
 
-document.getElementById('confirmRevisao').addEventListener('click', () => {
-  if(!pendingRevisao) return;
-  const lead = pendingRevisao;
-  const dataConsulta = document.getElementById('rv_data').value;
-  const horaConsulta = document.getElementById('rv_hora').value;
-
+  // Revisão não precisa de data — só sai da contabilidade de leads novos e vira Paciente.
   lead.Etapa = 'Revisão';
   lead.Tipo_Contato = 'Paciente';
-  if(dataConsulta) lead.Data_Consulta = dataConsulta;
-  if(horaConsulta) lead.Hora_Consulta = horaConsulta;
   render();
-  revisaoModal.classList.remove('open');
-  postAction({ action:'marcarComoRevisao', id: lead.ID, dataConsulta, horaConsulta })
+  postAction({ action:'marcarComoRevisao', id: lead.ID })
     .then(()=> setTimeout(loadData, 1200));
   showToast(`${lead.Nome} → Revisão (marcado como Paciente)`);
-
-  pendingRevisao = null;
-  pendingPrimeiraOuRetorno = null;
 });
 
 const consultaModal = document.getElementById('consultaModalOverlay');

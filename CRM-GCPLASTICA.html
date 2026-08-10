@@ -287,6 +287,28 @@
   .card.card-selected .card-select-checkbox{background:var(--gold); border-color:var(--gold);}
   .card.card-selected .card-select-checkbox svg{display:block;}
   .card.modo-selecao-ativo{padding-left:38px; cursor:pointer;}
+
+  /* ---------- SEGMENTAÇÃO — MODAL NOVA MENSAGEM ---------- */
+  .segmento-row{
+    padding:12px 0; border-bottom:1px solid var(--border);
+  }
+  .segmento-check{display:flex; align-items:center; gap:8px; font-size:13.5px; color:var(--text); cursor:pointer;}
+  .segmento-check input[type="checkbox"]{width:16px; height:16px; accent-color:var(--gold); cursor:pointer;}
+  .segmento-info{display:block; font-size:11.5px; color:var(--text-muted); margin-top:4px; margin-left:24px;}
+  .segmento-opcoes{margin-top:10px; margin-left:24px; display:flex; flex-direction:column; gap:8px;}
+  .segmento-opcoes label{font-size:12.5px; color:var(--text-muted); display:flex; align-items:center; gap:6px; cursor:pointer;}
+  .segmento-opcoes select{
+    background:var(--panel-alt); border:1px solid var(--border-strong); border-radius:var(--radius-sm);
+    padding:7px 10px; font-size:12.5px; color:var(--text); width:160px;
+  }
+  .segmento-lista{
+    margin-top:6px; max-height:150px; overflow-y:auto;
+    border:1px solid var(--border); border-radius:var(--radius-sm); padding:8px;
+    display:flex; flex-direction:column; gap:6px;
+  }
+  .segmento-lista label{font-size:12px; color:var(--text); display:flex; align-items:center; gap:7px;}
+  .segmento-lista input[type="checkbox"]{accent-color:var(--gold);}
+
   .quick-drop-backdrop{
     position:fixed; inset:0; z-index:44;
     background:rgba(15,17,23,.4);
@@ -857,6 +879,9 @@
       <button class="icon-btn" id="btnModoSelecao" title="Selecionar vários leads (envio em massa)">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M17 14l1.5 1.5L21 13"/></svg>
       </button>
+      <button class="icon-btn" id="btnNovaMensagem" title="Nova mensagem em massa (por etapa/filtro)">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 4h16v13H8l-4 4V4z"/><path d="M8 9h8M8 12h5"/></svg>
+      </button>
       <button class="icon-btn" id="btnTasks" title="Follow-ups">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
         <span class="badge" id="taskBadge" style="display:none;">0</span>
@@ -901,6 +926,66 @@
       <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.46 1.32 4.96L2.05 22l5.25-1.38c1.44.79 3.07 1.2 4.73 1.2h.01c5.46 0 9.91-4.45 9.91-9.91S17.5 2 12.04 2zm0 18.06h-.01c-1.47 0-2.91-.39-4.17-1.14l-.3-.18-3.11.82.83-3.03-.19-.31a8.03 8.03 0 01-1.24-4.31c0-4.44 3.62-8.06 8.06-8.06 2.15 0 4.17.84 5.7 2.36a8.02 8.02 0 012.36 5.7c0 4.44-3.62 8.06-8.06 8.06zm4.42-6.03c-.24-.12-1.43-.71-1.65-.79-.22-.08-.38-.12-.55.12-.16.24-.62.79-.76.95-.14.16-.28.18-.52.06-.24-.12-1.01-.37-1.92-1.18-.71-.63-1.19-1.42-1.33-1.66-.14-.24-.02-.37.11-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.55-1.32-.75-1.81-.2-.48-.4-.41-.55-.42h-.47c-.16 0-.42.06-.64.3-.22.24-.84.82-.84 2s.86 2.32.98 2.48c.12.16 1.7 2.6 4.13 3.64.58.25 1.03.4 1.38.51.58.18 1.11.16 1.53.1.47-.07 1.43-.58 1.63-1.15.2-.56.2-1.04.14-1.15-.06-.1-.22-.16-.46-.28z"/></svg>
       Enviar Mensagem
     </button>
+  </div>
+
+  <div class="modal-overlay" id="novaMensagemModalOverlay">
+    <div class="modal" style="max-width:560px;">
+      <h2>Nova Mensagem</h2>
+      <p style="font-size:13px; color:var(--text-muted); margin-bottom:18px;">Escolhe pra quem vai — pode combinar mais de uma etapa.</p>
+
+      <div class="segmento-row">
+        <label class="segmento-check"><input type="checkbox" id="seg_welcome" class="seg-toggle" data-stage="Welcome"> <strong>Welcome</strong></label>
+        <span class="segmento-info">Leads sem resposta ainda (todo mundo em Welcome, por definição)</span>
+      </div>
+
+      <div class="segmento-row">
+        <label class="segmento-check"><input type="checkbox" id="seg_dialogo" class="seg-toggle" data-stage="Diálogo"> <strong>Diálogo</strong></label>
+        <div class="segmento-opcoes" id="opcoes_dialogo" style="display:none;">
+          <label><input type="radio" name="modo_dialogo" value="todos" checked> Todos</label>
+          <label><input type="radio" name="modo_dialogo" value="especificos"> Selecionar específicos</label>
+          <div class="segmento-lista" id="lista_dialogo" style="display:none;"></div>
+        </div>
+      </div>
+
+      <div class="segmento-row">
+        <label class="segmento-check"><input type="checkbox" id="seg_consulta" class="seg-toggle" data-stage="Consulta"> <strong>Consulta</strong></label>
+        <div class="segmento-opcoes" id="opcoes_consulta" style="display:none;">
+          <label><input type="radio" name="modo_consulta" value="todos" checked> Todos</label>
+          <label><input type="radio" name="modo_consulta" value="especificos"> Selecionar específicos</label>
+          <div class="segmento-lista" id="lista_consulta" style="display:none;"></div>
+        </div>
+      </div>
+
+      <div class="segmento-row">
+        <label class="segmento-check"><input type="checkbox" id="seg_frio" class="seg-toggle" data-stage="Frio"> <strong>Frio</strong></label>
+        <div class="segmento-opcoes" id="opcoes_frio" style="display:none;">
+          <label style="display:block; margin-bottom:6px;">Registrados há pelo menos:</label>
+          <select id="frio_periodo">
+            <option value="7">7 dias</option>
+            <option value="14">14 dias</option>
+            <option value="30">30 dias</option>
+            <option value="45">45 dias</option>
+            <option value="60">60 dias</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="segmento-row">
+        <label class="segmento-check"><input type="checkbox" id="seg_remarketing" class="seg-toggle" data-stage="Remarketing"> <strong>Remarketing</strong></label>
+        <div class="segmento-opcoes" id="opcoes_remarketing" style="display:none;">
+          <label><input type="radio" name="modo_remarketing" value="todos" checked> Todos</label>
+          <label><input type="radio" name="modo_remarketing" value="especificos"> Selecionar específicos</label>
+          <div class="segmento-lista" id="lista_remarketing" style="display:none;"></div>
+        </div>
+      </div>
+
+      <p style="font-size:13px; font-weight:700; color:var(--gold); margin:16px 0 4px;" id="novaMensagemContagem">0 lead(s) selecionado(s)</p>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-ghost" id="cancelNovaMensagem">Cancelar</button>
+        <button type="button" class="btn-primary" id="continuarNovaMensagem">Continuar</button>
+      </div>
+    </div>
   </div>
 
   <div class="modal-overlay" id="bulkMessageModalOverlay">
@@ -2008,6 +2093,107 @@ document.getElementById('monthFilter').addEventListener('change', e => {
 // ---------- SELEÇÃO MÚLTIPLA + ENVIO EM MASSA ----------
 const btnModoSelecao = document.getElementById('btnModoSelecao');
 const bulkActionBar = document.getElementById('bulkActionBar');
+// ---------- NOVA MENSAGEM (segmentação por etapa/filtro) ----------
+const novaMensagemModal = document.getElementById('novaMensagemModalOverlay');
+const SEGMENTO_IDS = { 'Diálogo':'dialogo', 'Consulta':'consulta', 'Remarketing':'remarketing' };
+
+function popularListaSegmento(stage, containerId){
+  const container = document.getElementById(containerId);
+  const leadsDaEtapa = STATE.leads.filter(l => l.Etapa === stage);
+  container.innerHTML = leadsDaEtapa.length
+    ? leadsDaEtapa.map(l => `<label><input type="checkbox" value="${l.ID}" class="seg-lead-item"> ${escapeHtml(l.Nome || 'Sem nome')}</label>`).join('')
+    : '<span style="font-size:11px;color:var(--text-muted);">Nenhum lead nessa etapa.</span>';
+}
+
+function calcularLeadsSegmentados(){
+  const ids = new Set();
+
+  if(document.getElementById('seg_welcome').checked){
+    STATE.leads.filter(l => l.Etapa === 'Welcome').forEach(l => ids.add(l.ID));
+  }
+
+  ['Diálogo', 'Consulta', 'Remarketing'].forEach(stage => {
+    const key = SEGMENTO_IDS[stage];
+    const seg = document.getElementById('seg_' + key);
+    if(!seg || !seg.checked) return;
+    const modoEl = document.querySelector(`input[name="modo_${key}"]:checked`);
+    const modo = modoEl ? modoEl.value : 'todos';
+    if(modo === 'todos'){
+      STATE.leads.filter(l => l.Etapa === stage).forEach(l => ids.add(l.ID));
+    } else {
+      document.querySelectorAll(`#lista_${key} input:checked`).forEach(cb => ids.add(cb.value));
+    }
+  });
+
+  if(document.getElementById('seg_frio').checked){
+    const dias = parseInt(document.getElementById('frio_periodo').value, 10);
+    STATE.leads.filter(l => {
+      if(l.Etapa !== 'Frio') return false;
+      const d = daysAgo(l.Data_Criacao);
+      return d !== null && d >= dias;
+    }).forEach(l => ids.add(l.ID));
+  }
+
+  return ids;
+}
+
+function atualizarContagemSegmento(){
+  const n = calcularLeadsSegmentados().size;
+  document.getElementById('novaMensagemContagem').textContent = `${n} lead(s) selecionado(s)`;
+}
+
+document.getElementById('btnNovaMensagem').addEventListener('click', () => {
+  document.querySelectorAll('.seg-toggle').forEach(cb => cb.checked = false);
+  document.querySelectorAll('.segmento-opcoes').forEach(el => el.style.display = 'none');
+  document.querySelectorAll('.segmento-lista').forEach(el => el.style.display = 'none');
+  document.querySelectorAll('input[name="modo_dialogo"], input[name="modo_consulta"], input[name="modo_remarketing"]').forEach(r => { r.checked = r.value === 'todos'; });
+  atualizarContagemSegmento();
+  novaMensagemModal.classList.add('open');
+});
+
+document.querySelectorAll('.seg-toggle').forEach(cb => {
+  cb.addEventListener('change', () => {
+    const stage = cb.dataset.stage;
+    const key = SEGMENTO_IDS[stage];
+    if(key){
+      const opcoes = document.getElementById('opcoes_' + key);
+      opcoes.style.display = cb.checked ? 'flex' : 'none';
+      if(cb.checked){
+        popularListaSegmento(stage, 'lista_' + key);
+        const modoAtual = document.querySelector(`input[name="modo_${key}"]:checked`);
+        document.getElementById('lista_' + key).style.display = (modoAtual && modoAtual.value === 'especificos') ? 'flex' : 'none';
+      }
+    } else if(stage === 'Frio'){
+      document.getElementById('opcoes_frio').style.display = cb.checked ? 'flex' : 'none';
+    }
+  });
+});
+
+['dialogo', 'consulta', 'remarketing'].forEach(key => {
+  document.querySelectorAll(`input[name="modo_${key}"]`).forEach(radio => {
+    radio.addEventListener('change', () => {
+      document.getElementById('lista_' + key).style.display = radio.value === 'especificos' && radio.checked ? 'flex' : 'none';
+    });
+  });
+});
+
+novaMensagemModal.addEventListener('change', atualizarContagemSegmento);
+
+document.getElementById('cancelNovaMensagem').addEventListener('click', () => {
+  novaMensagemModal.classList.remove('open');
+});
+
+document.getElementById('continuarNovaMensagem').addEventListener('click', () => {
+  const ids = calcularLeadsSegmentados();
+  if(!ids.size){ showToast('Selecione pelo menos uma etapa ou lead.'); return; }
+  leadsSelecionados = ids;
+  novaMensagemModal.classList.remove('open');
+  document.getElementById('bulkMessageCountLabel').textContent = `Vai pra ${ids.size} lead(s) selecionado(s).`;
+  document.getElementById('bulk_mensagem').value = '';
+  document.getElementById('bulkSendProgress').style.display = 'none';
+  bulkMessageModal.classList.add('open');
+});
+
 const bulkMessageModal = document.getElementById('bulkMessageModalOverlay');
 
 function toggleSelecaoLead(id){

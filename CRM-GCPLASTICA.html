@@ -2155,6 +2155,7 @@ function renderMetaConsultas(){
   const pct = meta > 0 ? Math.min(100, Math.round((feitas / meta) * 100)) : 0;
 
   badge.style.display = 'flex';
+  badge.title = 'Conta toda consulta que aconteceu no mês, mesmo quem já avançou pra Cirurgia ou não converteu e foi pra Remarketing/Frio depois — não é só quem está parado na coluna Consulta hoje.';
   badge.innerHTML = `
     <span class="meta-consultas-label">${feitas}/${meta} Consultas planejadas <span class="meta-consultas-mes">— ${nomeMes}</span></span>
     <div class="meta-consultas-bar"><div class="meta-consultas-fill" style="width:${pct}%;"></div></div>

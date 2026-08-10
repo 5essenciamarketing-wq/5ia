@@ -1237,6 +1237,41 @@
   </div>
 </div>
 
+<!-- Escolha ao mover pra Consulta vindo de Welcome/Diálogo: consulta nova ou retorno de paciente? -->
+<div class="modal-overlay" id="primeiraOuRetornoModalOverlay">
+  <div class="modal" style="max-width:440px; text-align:center;">
+    <h2>Primeira consulta ou retorno?</h2>
+    <div class="report-transition" id="primeiraOuRetornoLeadLabel" style="margin-bottom:20px;"></div>
+    <p style="font-size:13px; color:var(--text-muted); margin-bottom:22px;">Isso define se conta como consulta nova (meta) ou como revisão de um paciente que já conhecemos.</p>
+    <div class="modal-actions" style="justify-content:center; flex-wrap:wrap;">
+      <button type="button" class="btn-ghost" id="btnEhRetorno">É retorno / revisão</button>
+      <button type="button" class="btn-primary" id="btnEhPrimeiraConsulta">É primeira consulta</button>
+    </div>
+  </div>
+</div>
+
+<!-- Data da revisão (quando marcado como retorno) -->
+<div class="modal-overlay" id="revisaoModalOverlay">
+  <div class="modal" style="max-width:420px;">
+    <h2>Data da Revisão</h2>
+    <div class="report-transition" id="revisaoLeadLabel" style="margin-bottom:16px;"></div>
+    <div class="field-row">
+      <div class="field">
+        <label>Data</label>
+        <input type="date" id="rv_data">
+      </div>
+      <div class="field">
+        <label>Hora</label>
+        <input type="time" id="rv_hora">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn-ghost" id="cancelRevisao">Cancelar</button>
+      <button type="button" class="btn-primary" id="confirmRevisao">Confirmar Revisão</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="consultaModalOverlay">
   <div class="modal" style="max-width:420px;">
     <h2>Consulta Confirmada</h2>
@@ -1613,7 +1648,7 @@ function getTransitionReasons(from, to){
    Frio/Remarketing são exceção: sempre acessíveis, e sempre podem voltar pro caminho principal.
    ============================================================ */
 const MAIN_PATH = ['Welcome', 'Diálogo', 'Consulta', 'Cirurgia'];
-const SIDE_STAGES = ['Frio', 'Remarketing'];
+const SIDE_STAGES = ['Frio', 'Remarketing', 'Revisão'];
 
 function canTransition(from, to){
   if(from === to) return false;
@@ -1645,7 +1680,11 @@ function executarTransicao(lead, newStage){
   if(newStage === 'Cirurgia'){
     openSurgeryModal(lead);
   } else if(newStage === 'Consulta'){
-    openConsultaModal(lead);
+    if(lead.Etapa === 'Welcome' || lead.Etapa === 'Diálogo'){
+      openPrimeiraOuRetornoModal(lead);
+    } else {
+      openConsultaModal(lead);
+    }
   } else if(lead.Etapa === 'Consulta' && newStage === 'Remarketing'){
     openConsultaRemarketingModal(lead);
   } else if(lead.Etapa === 'Welcome' && newStage === 'Diálogo'){
@@ -1663,7 +1702,7 @@ let STATE = { leads: [], tasks: [], stages: [], historico: [], metas: [] };
 let pendingLeadForTask = null;
 
 // Fallback: garante que o board sempre tenha as colunas, mesmo sem dados ainda
-const DEFAULT_STAGES = ['Welcome','Diálogo','Consulta','Cirurgia','Frio','Remarketing'];
+const DEFAULT_STAGES = ['Welcome','Diálogo','Consulta','Cirurgia','Frio','Remarketing','Revisão'];
 STATE.stages = DEFAULT_STAGES;
 
 function isConfigured(){
@@ -1911,6 +1950,7 @@ function getBoardColumns(){
       { stageKey:'Consulta', title:'Consulta' },
       { stageKey:'Cirurgia', title:'Cirurgia', filterFn: l => l.Status_Cirurgia !== 'Concluída' },
       { stageKey:'Cirurgia', title:'Concluídas', filterFn: l => l.Status_Cirurgia === 'Concluída', virtualAction:'markSurgeryComplete', minimized:true, minimizedType:'concluida' },
+      { stageKey:'Revisão', title:'Revisão', minimized:true, minimizedType:'revisao', isDropzone:false },
       { stageKey:'Remarketing', title:'Remarketing', minimized:true, filterFn: l => remarketingPertenceACristiane(l) }
     ];
   }
@@ -2111,7 +2151,7 @@ function abrirAcaoPrioridade(lead){
  * viram card de lead (ficam só na aba Contatos_Internos).
  */
 function tipoDeContato(lead){
-  return lead.Data_Cirurgia ? 'Paciente' : 'Lead';
+  return (lead.Tipo_Contato === 'Paciente' || lead.Data_Cirurgia) ? 'Paciente' : 'Lead';
 }
 
 /**
@@ -2256,6 +2296,7 @@ function renderBoard(){
           ? (col.minimized
               ? leads.map(l => {
                   if(col.minimizedType === 'concluida') return miniConcluidaRow(l);
+                  if(col.minimizedType === 'revisao') return miniRevisaoRow(l);
                   if(col.stageKey === 'Frio') return miniFrioRow(l);
                   if(col.stageKey === 'Remarketing') return miniRemarketingRow(l);
                   return miniConsultaRow(l);
@@ -2266,7 +2307,7 @@ function renderBoard(){
     </div>`;
   }).join('');
 
-  el.querySelectorAll('.mini-consulta:not(.mini-frio):not(.mini-remarketing):not(.mini-concluida)').forEach(item => {
+  el.querySelectorAll('.mini-consulta:not(.mini-frio):not(.mini-remarketing):not(.mini-concluida):not(.mini-revisao)').forEach(item => {
     item.addEventListener('click', () => {
       const lead = STATE.leads.find(l => l.ID === item.dataset.id);
       if(lead) openEditConsultaModal(lead);
@@ -2274,6 +2315,13 @@ function renderBoard(){
   });
 
   el.querySelectorAll('.mini-concluida').forEach(item => {
+    item.addEventListener('click', () => {
+      const lead = STATE.leads.find(l => l.ID === item.dataset.id);
+      if(lead) openChatPanel(lead);
+    });
+  });
+
+  el.querySelectorAll('.mini-revisao').forEach(item => {
     item.addEventListener('click', () => {
       const lead = STATE.leads.find(l => l.ID === item.dataset.id);
       if(lead) openChatPanel(lead);
@@ -2447,6 +2495,14 @@ function miniConcluidaRow(lead){
       </span>
     </div>
     <span class="mini-consulta-date" style="color:var(--sage);">${dataTxt}</span>
+  </div>`;
+}
+
+function miniRevisaoRow(lead){
+  const dataTxt = lead.Data_Consulta ? formatDate(lead.Data_Consulta) : 'sem data';
+  return `<div class="mini-consulta mini-revisao" data-id="${lead.ID}" title="Ver conversa — não conta como consulta nova">
+    <div class="mini-consulta-namewrap">${miniAvatarHtml(lead)}<span class="mini-consulta-name">${escapeHtml(lead.Nome || 'Sem nome')}</span></div>
+    <span class="mini-consulta-date">${dataTxt}</span>
   </div>`;
 }
 
@@ -2911,6 +2967,69 @@ qdFrioC.addEventListener('drop', e => {
   const id = e.dataTransfer.getData('text/plain');
   const lead = STATE.leads.find(l => l.ID === id);
   executarTransicao(lead, 'Frio');
+});
+
+// ---------- MODAL PRIMEIRA CONSULTA OU RETORNO (antes de virar Consulta de verdade) ----------
+const primeiraOuRetornoModal = document.getElementById('primeiraOuRetornoModalOverlay');
+let pendingPrimeiraOuRetorno = null;
+
+function openPrimeiraOuRetornoModal(lead){
+  pendingPrimeiraOuRetorno = lead;
+  document.getElementById('primeiraOuRetornoLeadLabel').innerHTML = escapeHtml(lead.Nome);
+  primeiraOuRetornoModal.classList.add('open');
+}
+
+document.getElementById('btnEhPrimeiraConsulta').addEventListener('click', () => {
+  if(!pendingPrimeiraOuRetorno) return;
+  const lead = pendingPrimeiraOuRetorno;
+  primeiraOuRetornoModal.classList.remove('open');
+  pendingPrimeiraOuRetorno = null;
+  openConsultaModal(lead); // fluxo normal — vira Consulta de verdade, conta na meta
+});
+
+document.getElementById('btnEhRetorno').addEventListener('click', () => {
+  if(!pendingPrimeiraOuRetorno) return;
+  const lead = pendingPrimeiraOuRetorno;
+  primeiraOuRetornoModal.classList.remove('open');
+  openRevisaoModal(lead);
+});
+
+// ---------- MODAL DATA DA REVISÃO (retorno de paciente — não conta como consulta nova) ----------
+const revisaoModal = document.getElementById('revisaoModalOverlay');
+let pendingRevisao = null;
+
+function openRevisaoModal(lead){
+  pendingRevisao = lead;
+  document.getElementById('revisaoLeadLabel').innerHTML = escapeHtml(lead.Nome);
+  document.getElementById('rv_data').value = '';
+  document.getElementById('rv_hora').value = '';
+  revisaoModal.classList.add('open');
+}
+
+document.getElementById('cancelRevisao').addEventListener('click', () => {
+  revisaoModal.classList.remove('open');
+  pendingRevisao = null;
+  pendingPrimeiraOuRetorno = null;
+});
+
+document.getElementById('confirmRevisao').addEventListener('click', () => {
+  if(!pendingRevisao) return;
+  const lead = pendingRevisao;
+  const dataConsulta = document.getElementById('rv_data').value;
+  const horaConsulta = document.getElementById('rv_hora').value;
+
+  lead.Etapa = 'Revisão';
+  lead.Tipo_Contato = 'Paciente';
+  if(dataConsulta) lead.Data_Consulta = dataConsulta;
+  if(horaConsulta) lead.Hora_Consulta = horaConsulta;
+  render();
+  revisaoModal.classList.remove('open');
+  postAction({ action:'marcarComoRevisao', id: lead.ID, dataConsulta, horaConsulta })
+    .then(()=> setTimeout(loadData, 1200));
+  showToast(`${lead.Nome} → Revisão (marcado como Paciente)`);
+
+  pendingRevisao = null;
+  pendingPrimeiraOuRetorno = null;
 });
 
 const consultaModal = document.getElementById('consultaModalOverlay');

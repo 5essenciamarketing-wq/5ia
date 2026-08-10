@@ -754,6 +754,10 @@
       <button class="icon-btn" id="btnLogout" title="Sair">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
       </button>
+      <button class="btn-ghost" id="btnDecididosDepois" style="display:none;" title="Reabrir leads marcados pra decidir depois">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="margin-right:6px;vertical-align:-2px;"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+        <span id="decididosDepoisCount">0</span> pra decidir
+      </button>
       <button class="icon-btn" id="btnDashboard" title="Painel de Desempenho">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
       </button>
@@ -1773,6 +1777,7 @@ function render(){
   renderBoard();
   renderTasks();
   renderPriorities();
+  atualizarContadorDecididosDepois();
   const filtered = getFilteredLeads();
   document.getElementById('monthFilterCount').textContent =
     selectedMonthFilter === 'all' ? '' : `${filtered.length} lead(s) nesse período`;
@@ -2802,6 +2807,23 @@ let destinoDialogoTravado = null; // 'Frio' | 'Remarketing'
 const leadsIgnoradosSessao = new Set(); // "decidir depois" — não pergunta de novo nessa sessão
 let filaDialogoTravado = [];
 
+function atualizarContadorDecididosDepois(){
+  const btn = document.getElementById('btnDecididosDepois');
+  const count = leadsIgnoradosSessao.size;
+  document.getElementById('decididosDepoisCount').textContent = count;
+  btn.style.display = count > 0 ? 'flex' : 'none';
+}
+
+document.getElementById('btnDecididosDepois').addEventListener('click', () => {
+  if(!leadsIgnoradosSessao.size) return;
+  leadsIgnoradosSessao.clear();
+  atualizarContadorDecididosDepois();
+  showToast('Reabrindo pendências...');
+  verificarDialogosTravados();
+  verificarConsultasVencidas();
+  verificarCirurgiasPendentesConfirmacao();
+});
+
 function verificarDialogosTravados(){
   // Só faz sentido pra quem cuida de Diálogo — Cristiane não vê essa etapa.
   if(SESSION.papel === 'Pos-Consulta') return;
@@ -2848,6 +2870,7 @@ document.querySelectorAll('#dialogoTravadoDestino .reason-chip').forEach(chip =>
 
 document.getElementById('adiarDialogoTravado').addEventListener('click', () => {
   if(pendingDialogoTravado) leadsIgnoradosSessao.add(pendingDialogoTravado.ID);
+  atualizarContadorDecididosDepois();
   dialogoTravadoModal.classList.remove('open');
   pendingDialogoTravado = null;
   setTimeout(abrirProximoDialogoTravado, 400);
@@ -2912,6 +2935,7 @@ function abrirProximaConsultaVencida(){
 
 document.getElementById('adiarConsultaVencida').addEventListener('click', () => {
   if(pendingConsultaVencida) leadsIgnoradosSessao.add(pendingConsultaVencida.ID);
+  atualizarContadorDecididosDepois();
   consultaVencidaModal.classList.remove('open');
   pendingConsultaVencida = null;
   setTimeout(abrirProximaConsultaVencida, 400);
@@ -2947,6 +2971,7 @@ document.querySelectorAll('#cnoPrazoChips .reason-chip').forEach(chip => {
 document.getElementById('cancelConsultaNaoOperou').addEventListener('click', () => {
   consultaNaoOperouModal.classList.remove('open');
   if(pendingConsultaVencida) leadsIgnoradosSessao.add(pendingConsultaVencida.ID);
+  atualizarContadorDecididosDepois();
   pendingConsultaVencida = null;
   setTimeout(abrirProximaConsultaVencida, 400);
 });
@@ -3005,6 +3030,7 @@ function abrirProximaCirurgiaConfirmacao(){
 
 document.getElementById('adiarCirurgiaConfirmacao').addEventListener('click', () => {
   if(pendingCirurgiaConfirmacao) leadsIgnoradosSessao.add(pendingCirurgiaConfirmacao.ID);
+  atualizarContadorDecididosDepois();
   cirurgiaConfirmacaoModal.classList.remove('open');
   pendingCirurgiaConfirmacao = null;
   setTimeout(abrirProximaCirurgiaConfirmacao, 400);
@@ -3034,6 +3060,7 @@ document.getElementById('cirurgiaConfirmacaoRemarcada').addEventListener('click'
 document.getElementById('cancelCirurgiaRemarcarData').addEventListener('click', () => {
   cirurgiaRemarcarDataModal.classList.remove('open');
   if(pendingCirurgiaConfirmacao) leadsIgnoradosSessao.add(pendingCirurgiaConfirmacao.ID);
+  atualizarContadorDecididosDepois();
   pendingCirurgiaConfirmacao = null;
   setTimeout(abrirProximaCirurgiaConfirmacao, 400);
 });

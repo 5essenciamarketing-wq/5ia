@@ -1041,6 +1041,7 @@
       <button type="button" class="btn-ghost" id="adiarDialogoTravado">Decidir depois</button>
       <button type="button" class="btn-primary" id="confirmDialogoTravado">Confirmar</button>
     </div>
+    <button type="button" class="btn-ghost" id="adiarTudoDialogo" style="width:100%; margin-top:8px; font-size:11.5px; color:var(--text-muted);">Adiar tudo por hoje</button>
   </div>
 </div>
 
@@ -1055,6 +1056,7 @@
       <button type="button" class="btn-primary" id="consultaVencidaSim">Sim, vai operar</button>
     </div>
     <button type="button" class="btn-ghost" id="adiarConsultaVencida" style="width:100%; margin-top:10px;">Decidir depois</button>
+    <button type="button" class="btn-ghost" id="adiarTudoConsulta" style="width:100%; margin-top:8px; font-size:11.5px; color:var(--text-muted);">Adiar tudo por hoje</button>
   </div>
 </div>
 
@@ -1094,6 +1096,7 @@
       <button type="button" class="btn-primary" id="cirurgiaConfirmacaoSucesso">Foi um sucesso</button>
     </div>
     <button type="button" class="btn-ghost" id="adiarCirurgiaConfirmacao" style="width:100%; margin-top:10px;">Decidir depois</button>
+    <button type="button" class="btn-ghost" id="adiarTudoCirurgia" style="width:100%; margin-top:8px; font-size:11.5px; color:var(--text-muted);">Adiar tudo por hoje</button>
   </div>
 </div>
 
@@ -2813,6 +2816,41 @@ function atualizarContadorDecididosDepois(){
   document.getElementById('decididosDepoisCount').textContent = count;
   btn.style.display = count > 0 ? 'flex' : 'none';
 }
+
+/**
+ * "Adiar tudo por hoje" — some com a fila inteira de uma vez (não precisa clicar
+ * lead por lead). Como leadsIgnoradosSessao só existe na memória da aba aberta,
+ * fechar e abrir o CRM de novo já reseta sozinho — a pergunta volta a aparecer,
+ * uma por uma, na próxima vez que ela entrar.
+ */
+function adiarTudoPorHoje(){
+  if(pendingDialogoTravado) leadsIgnoradosSessao.add(pendingDialogoTravado.ID);
+  if(pendingConsultaVencida) leadsIgnoradosSessao.add(pendingConsultaVencida.ID);
+  if(pendingCirurgiaConfirmacao) leadsIgnoradosSessao.add(pendingCirurgiaConfirmacao.ID);
+  filaDialogoTravado.forEach(id => leadsIgnoradosSessao.add(id));
+  filaConsultaVencida.forEach(id => leadsIgnoradosSessao.add(id));
+  filaCirurgiaConfirmacao.forEach(id => leadsIgnoradosSessao.add(id));
+
+  filaDialogoTravado = [];
+  filaConsultaVencida = [];
+  filaCirurgiaConfirmacao = [];
+  pendingDialogoTravado = null;
+  pendingConsultaVencida = null;
+  pendingCirurgiaConfirmacao = null;
+
+  dialogoTravadoModal.classList.remove('open');
+  consultaVencidaModal.classList.remove('open');
+  consultaNaoOperouModal.classList.remove('open');
+  cirurgiaConfirmacaoModal.classList.remove('open');
+  cirurgiaRemarcarDataModal.classList.remove('open');
+
+  atualizarContadorDecididosDepois();
+  showToast('Pendências adiadas por hoje — voltam a aparecer na próxima vez que você entrar.');
+}
+
+document.getElementById('adiarTudoDialogo').addEventListener('click', adiarTudoPorHoje);
+document.getElementById('adiarTudoConsulta').addEventListener('click', adiarTudoPorHoje);
+document.getElementById('adiarTudoCirurgia').addEventListener('click', adiarTudoPorHoje);
 
 document.getElementById('btnDecididosDepois').addEventListener('click', () => {
   if(!leadsIgnoradosSessao.size) return;

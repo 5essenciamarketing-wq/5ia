@@ -1760,11 +1760,12 @@ function postAction(params){
 }
 
 // ---------- RENDER ----------
-let selectedMonthFilter = 'all';
+let selectedMonthFilter = new Date().toISOString().slice(0, 7); // abre sempre no mês atual
 
 function populateMonthFilterOptions(){
   const select = document.getElementById('monthFilter');
   const monthsSet = new Set();
+  monthsSet.add(new Date().toISOString().slice(0, 7)); // garante o mês atual na lista mesmo sem lead nenhum ainda
   STATE.leads.forEach(l => {
     const d = new Date(l.Data_Criacao);
     if(!isNaN(d)) monthsSet.add(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);

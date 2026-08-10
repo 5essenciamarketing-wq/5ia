@@ -2354,8 +2354,35 @@ function calcularPrioridade(lead){
   const acao = getProximaAcao(lead);
   const sla = getSlaStatus(lead);
   let prioridade = score;
+
+  // Welcome "fresco" (SLA verde) não é prioridade de verdade — já está óbvio
+  // olhando pra própria coluna. Só entra na lista quando o prazo aperta de verdade.
+  if(lead.Etapa === 'Welcome'){
+    if(!sla || sla.label === 'Dentro do prazo') return 0;
+    if(sla.label === 'Próximo do limite') return score + 20;
+    return score + 80; // Prazo estourado
+  }
+
   if(acao.urgente) prioridade += 100;
   if(sla && sla.label === 'Prazo estourado') prioridade += 50;
+
+  // Os mesmos gatilhos dos relatórios automáticos (pop-up) — prioridade alta, porque
+  // exigem ação manual e não ficam visíveis olhando só pra coluna onde o lead está.
+  if(lead.Etapa === 'Diálogo'){
+    const dias = diasEmDialogo(lead);
+    if(dias !== null && dias >= 7) prioridade += 150;
+  }
+  if(lead.Etapa === 'Consulta' && lead.Data_Consulta){
+    const dias = daysAgo(lead.Data_Consulta);
+    if(dias !== null && dias >= 7) prioridade += 150;
+    else if(dias === 0) prioridade += 60; // consulta é hoje
+  }
+  if(lead.Etapa === 'Cirurgia' && lead.Status_Cirurgia !== 'Concluída' && lead.Data_Cirurgia){
+    const horas = (Date.now() - new Date(lead.Data_Cirurgia).getTime()) / 3600000;
+    if(horas >= 24) prioridade += 150;
+    if(daysAgo(lead.Data_Cirurgia) === 0) prioridade += 60; // cirurgia é hoje
+  }
+
   return prioridade;
 }
 
@@ -2375,6 +2402,7 @@ function renderPriorities(){
 
   const priorizados = candidatos
     .map(lead => ({ lead, prioridade: calcularPrioridade(lead), acao: getProximaAcao(lead) }))
+    .filter(p => p.prioridade > 0) // esconde Welcome fresco — sem sinal de urgência real
     .sort((a, b) => b.prioridade - a.prioridade)
     .slice(0, 8);
 

@@ -409,6 +409,24 @@
   .panel-head h2{font-family:'Inter',sans-serif; font-size:22px; font-weight:800; letter-spacing:-.01em;}
   .panel-close{background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer;}
   .panel-body{padding:16px 24px; overflow-y:auto; flex:1;}
+  .chat-compose{
+    display:flex; align-items:flex-end; gap:8px;
+    padding:14px 24px; border-top:1px solid var(--border); background:var(--panel);
+  }
+  .chat-compose textarea{
+    flex:1; resize:none; border:1px solid var(--border-strong); border-radius:var(--radius-sm);
+    padding:9px 12px; font-family:'Inter',sans-serif; font-size:13px; color:var(--text);
+    background:var(--panel-alt); max-height:100px;
+  }
+  .chat-compose textarea:focus{outline:none; border-color:var(--gold);}
+  .chat-compose-send{
+    width:38px; height:38px; border-radius:50%; border:none; flex-shrink:0;
+    background:var(--gold); color:#fff; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:background .15s, transform .15s;
+  }
+  .chat-compose-send:hover{background:var(--gold-dim); transform:translateY(-1px);}
+  .chat-compose-send:disabled{opacity:.5; cursor:default; transform:none;}
   .task-item{
     padding:14px 0; border-bottom:1px solid var(--border);
     display:flex; gap:12px; align-items:flex-start;
@@ -865,6 +883,12 @@
     <button class="panel-close" id="closeChatPanel">✕</button>
   </div>
   <div class="panel-body" id="chatList"></div>
+  <div class="chat-compose">
+    <textarea id="chatComposeInput" placeholder="Escreva uma mensagem..." rows="2"></textarea>
+    <button class="chat-compose-send" id="chatComposeSend" title="Enviar">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+    </button>
+  </div>
 </div>
 
 <!-- Modal novo lead -->
@@ -3551,8 +3575,10 @@ function closePanel(){ panel.classList.remove('open'); overlay.classList.remove(
 
 // ---------- PAINEL DE CONVERSA (WHATSAPP) ----------
 const chatPanel = document.getElementById('chatPanel');
+let pendingChatLead = null;
 
 async function openChatPanel(lead){
+  pendingChatLead = lead;
   document.getElementById('chatPanelName').textContent = `Conversa — ${lead.Nome}`;
   chatPanel.classList.add('open'); overlay.classList.add('open');
   const chatList = document.getElementById('chatList');
@@ -3568,6 +3594,56 @@ async function openChatPanel(lead){
     chatList.innerHTML = '<div class="empty-state">Erro ao carregar a conversa.</div>';
   }
 }
+
+async function enviarMensagemChat(){
+  const input = document.getElementById('chatComposeInput');
+  const mensagem = input.value.trim();
+  if(!mensagem || !pendingChatLead) return;
+  const lead = pendingChatLead;
+  const btn = document.getElementById('chatComposeSend');
+  btn.disabled = true;
+
+  // Feedback otimista — a bolha já aparece na hora, antes da confirmação do Z-API
+  const chatList = document.getElementById('chatList');
+  const vazio = chatList.querySelector('.empty-state');
+  if(vazio) vazio.remove();
+  const bolha = document.createElement('div');
+  bolha.className = 'chat-bubble-row enviada';
+  bolha.innerHTML = `<div class="chat-bubble">${escapeHtml(mensagem)}<span class="chat-bubble-time">enviando...</span></div>`;
+  chatList.appendChild(bolha);
+  chatList.scrollTop = chatList.scrollHeight;
+  input.value = '';
+  input.style.height = 'auto';
+
+  try{
+    const url = `${CRM_API_URL}?action=sendWhatsAppMessage&id=${encodeURIComponent(lead.ID)}&mensagem=${encodeURIComponent(mensagem)}&token=${encodeURIComponent(SESSION.token)}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if(!data.ok){
+      bolha.querySelector('.chat-bubble-time').textContent = '⚠ falhou ao enviar';
+      showToast('Não foi possível enviar: ' + (data.error || 'erro desconhecido'));
+    } else {
+      bolha.querySelector('.chat-bubble-time').textContent = 'enviado ✓';
+      // Recarrega a conversa de verdade em alguns segundos — dá tempo do webhook
+      // "Ao enviar" do Z-API confirmar e registrar oficialmente na planilha.
+      setTimeout(() => { if(pendingChatLead && pendingChatLead.ID === lead.ID) openChatPanel(lead); }, 3000);
+    }
+  }catch(err){
+    console.error('Erro ao enviar mensagem', err);
+    bolha.querySelector('.chat-bubble-time').textContent = '⚠ falhou ao enviar';
+    showToast('Erro de conexão ao enviar mensagem.');
+  }finally{
+    btn.disabled = false;
+  }
+}
+
+document.getElementById('chatComposeSend').addEventListener('click', enviarMensagemChat);
+document.getElementById('chatComposeInput').addEventListener('keydown', e => {
+  if(e.key === 'Enter' && !e.shiftKey){
+    e.preventDefault();
+    enviarMensagemChat();
+  }
+});
 
 function renderChatMessages(mensagens){
   const chatList = document.getElementById('chatList');
@@ -3590,7 +3666,7 @@ function renderChatMessages(mensagens){
 }
 
 document.getElementById('closeChatPanel').addEventListener('click', closeChatPanel);
-function closeChatPanel(){ chatPanel.classList.remove('open'); overlay.classList.remove('open'); }
+function closeChatPanel(){ chatPanel.classList.remove('open'); overlay.classList.remove('open'); pendingChatLead = null; }
 
 // ---------- AVATAR (foto de perfil) ----------
 function renderAvatar(){

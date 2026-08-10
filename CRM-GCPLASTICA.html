@@ -157,6 +157,15 @@
   }
   .month-filter-bar select:focus{outline:none; border-color:var(--gold);}
   .month-filter-count{font-size:12px; color:var(--gold-dim);}
+  .meta-consultas-badge{
+    display:flex; flex-direction:column; gap:5px;
+    background:var(--panel); border:1px solid var(--border-strong);
+    border-radius:999px; padding:8px 18px;
+  }
+  .meta-consultas-label{font-size:12px; font-weight:700; color:var(--text); white-space:nowrap;}
+  .meta-consultas-mes{font-weight:500; color:var(--text-muted); text-transform:capitalize;}
+  .meta-consultas-bar{width:100%; height:4px; background:var(--panel-alt); border-radius:999px; overflow:hidden;}
+  .meta-consultas-fill{height:100%; background:var(--gold); border-radius:999px; transition:width .5s ease;}
   .global-search-wrap{position:relative; margin-left:auto; width:280px;}
   .global-search-icon{position:absolute; left:11px; top:50%; transform:translateY(-50%); color:var(--text-muted); pointer-events:none;}
   .global-search-input{
@@ -840,6 +849,7 @@
     <span class="month-filter-label">Período</span>
     <select id="monthFilter"></select>
     <span class="month-filter-count" id="monthFilterCount"></span>
+    <div class="meta-consultas-badge" id="metaConsultasBadge" style="display:none;"></div>
     <div class="global-search-wrap">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="global-search-icon"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
       <input type="text" id="globalSearchInput" class="global-search-input" placeholder="Buscar por nome ou telefone...">
@@ -1649,7 +1659,7 @@ function executarTransicao(lead, newStage){
   }
 }
 
-let STATE = { leads: [], tasks: [], stages: [], historico: [] };
+let STATE = { leads: [], tasks: [], stages: [], historico: [], metas: [] };
 let pendingLeadForTask = null;
 
 // Fallback: garante que o board sempre tenha as colunas, mesmo sem dados ainda
@@ -1689,6 +1699,7 @@ async function loadData(){
     STATE.leads = data.leads || [];
     STATE.tasks = data.tasks || [];
     STATE.historico = data.historico || [];
+    STATE.metas = data.metas || [];
     STATE.stages = data.stages && data.stages.length ? data.stages : STATE.stages;
     verificarDialogosTravados();
     verificarConsultasVencidas();
@@ -1966,6 +1977,7 @@ function render(){
   renderBoard();
   renderTasks();
   renderPriorities();
+  renderMetaConsultas();
   atualizarContadorDecididosDepois();
   const filtered = getFilteredLeads();
   document.getElementById('monthFilterCount').textContent =
@@ -2100,6 +2112,53 @@ function abrirAcaoPrioridade(lead){
  */
 function tipoDeContato(lead){
   return lead.Data_Cirurgia ? 'Paciente' : 'Lead';
+}
+
+/**
+ * Meta de Consultas — conta só a PRIMEIRA vez que cada lead entrou em "Consulta",
+ * segundo o histórico. Se o mesmo lead voltar a entrar em Consulta depois (ex: já é
+ * paciente, retorno de revisão), essa segunda entrada NÃO conta — assim a meta nunca
+ * mistura consulta nova de negócio com revisão de paciente já operado.
+ */
+function consultasReaisDoMes(mesStr){
+  const primeiraConsultaPorLead = {};
+  STATE.historico
+    .filter(h => h.Para_Etapa === 'Consulta')
+    .sort((a, b) => new Date(a.Data) - new Date(b.Data))
+    .forEach(h => {
+      if(!primeiraConsultaPorLead[h.Lead_ID]) primeiraConsultaPorLead[h.Lead_ID] = h.Data;
+    });
+  return Object.values(primeiraConsultaPorLead).filter(data => String(data).slice(0, 7) === mesStr).length;
+}
+
+function metaDoMes(mesStr){
+  const registro = STATE.metas.find(m => String(m.Mes).slice(0, 7) === mesStr);
+  return registro ? Number(registro.Meta_Consultas) || 0 : null;
+}
+
+function renderMetaConsultas(){
+  const badge = document.getElementById('metaConsultasBadge');
+  if(!badge) return;
+
+  // Respeita o filtro de mês se um mês específico estiver selecionado; senão usa o mês corrente real
+  const mesAlvo = selectedMonthFilter !== 'all' ? selectedMonthFilter : new Date().toISOString().slice(0, 7);
+  const meta = metaDoMes(mesAlvo);
+
+  if(meta === null){
+    badge.style.display = 'none';
+    return;
+  }
+
+  const feitas = consultasReaisDoMes(mesAlvo);
+  const [ano, mes] = mesAlvo.split('-').map(Number);
+  const nomeMes = MONTH_NAMES ? MONTH_NAMES[mes - 1] : mesAlvo;
+  const pct = meta > 0 ? Math.min(100, Math.round((feitas / meta) * 100)) : 0;
+
+  badge.style.display = 'flex';
+  badge.innerHTML = `
+    <span class="meta-consultas-label">${feitas}/${meta} Consultas planejadas <span class="meta-consultas-mes">— ${nomeMes}</span></span>
+    <div class="meta-consultas-bar"><div class="meta-consultas-fill" style="width:${pct}%;"></div></div>
+  `;
 }
 
 function daysAgo(dateStr){

@@ -834,12 +834,48 @@ function proximosDiasUteis(qtd=6){
   return out;
 }
 
-function renderDatePicker(){
+// Guarda os horários já checados no pré-carregamento, pra não bater na
+// agenda de novo quando a cliente escolher um dos dias que a gente já
+// sabe que tem vaga.
+let cacheDisponibilidade = {};
+
+// Em vez de mostrar 6 dias genéricos e só descobrir depois que estão
+// lotados, a Iza checa a agenda ANTES e só oferece dias que realmente
+// têm horário livre pra esse serviço.
+async function renderDatePicker(){
   clearChoices();
-  const dias = proximosDiasUteis(6);
-  const options = dias.map(d=>({
-    label: d.toLocaleDateString('pt-BR', {weekday:'short', day:'2-digit', month:'2-digit'}),
-    value: d.toISOString().slice(0,10)
+  await bot(`Deixa eu ver os próximos dias com vaga, <b>${primeiroNome(state.nome)}</b>...`);
+
+  const agg = servicoAgregado();
+  const candidatos = proximosDiasUteis(14); // procura até 14 dias úteis à frente
+  const diasComVaga = [];
+  cacheDisponibilidade = {};
+
+  for(const d of candidatos){
+    const dataISO = d.toISOString().slice(0,10);
+    try{
+      const slots = await buscarHorariosDisponiveis(dataISO, agg.duracao);
+      if(slots.length > 0){
+        cacheDisponibilidade[dataISO] = slots;
+        diasComVaga.push({ data: d, dataISO });
+      }
+    }catch(e){
+      console.warn("Erro checando disponibilidade em", dataISO, e);
+    }
+    if(diasComVaga.length >= 6) break;
+  }
+
+  if(diasComVaga.length === 0){
+    await bot(`Não achei vaga nos próximos dias pra esse serviço 😕 Me chama direto no ${STUDIO.whatsappApoio} que a gente encaixa você.`);
+    renderChoices([{label:"Chamar no WhatsApp", value:"wpp"}], ()=>{
+      window.open(`https://wa.me/55${STUDIO.whatsappApoio.replace(/\D/g,'')}`, '_blank');
+    });
+    return;
+  }
+
+  const options = diasComVaga.map(({ data, dataISO }) => ({
+    label: data.toLocaleDateString('pt-BR', {weekday:'short', day:'2-digit', month:'2-digit'}),
+    value: dataISO
   }));
   renderChoices(options, async (dataISO)=>{
     pushHistory(stepConfirmaServico);
@@ -851,18 +887,20 @@ function renderDatePicker(){
 async function stepBuscarDisponibilidade(){
   await bot(`Peraí, <b>${primeiroNome(state.nome)}</b>, deixa eu ver aqui na agenda... 💅`);
   const agg = servicoAgregado();
-  let slots = [];
-  try{
-    slots = await buscarHorariosDisponiveis(state.data, agg.duracao);
-  }catch(e){
-    console.warn("Falha ao consultar agenda:", e);
-    await bot("Ih, não consegui ver a agenda agora 😕 Tenta de novo ou me chama direto no " + STUDIO.whatsappApoio);
-    renderChoices([{label:"Tentar de novo", value:"retry"}], stepBuscarDisponibilidade);
-    return;
+  let slots = cacheDisponibilidade[state.data];
+  if(!slots){
+    try{
+      slots = await buscarHorariosDisponiveis(state.data, agg.duracao);
+    }catch(e){
+      console.warn("Falha ao consultar agenda:", e);
+      await bot("Ih, não consegui ver a agenda agora 😕 Tenta de novo ou me chama direto no " + STUDIO.whatsappApoio);
+      renderChoices([{label:"Tentar de novo", value:"retry"}], stepBuscarDisponibilidade);
+      return;
+    }
   }
 
   if(slots.length === 0){
-    await bot("Esse dia já não tá com horário livre pra esse serviço 😕 Quer ver outra data?");
+    await bot("Esse horário acabou de ser ocupado 😕 Quer ver outra data?");
     renderChoices([{label:"Escolher outro dia", value:"back"}], renderDatePicker);
     return;
   }

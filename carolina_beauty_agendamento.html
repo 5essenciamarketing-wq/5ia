@@ -335,6 +335,41 @@
     font-size:.85rem;
     padding:8px 0 4px;
   }
+  .agenda-busca{
+    display:flex;
+    gap:8px;
+    margin-top:10px;
+  }
+  .agenda-busca input{
+    flex:1;
+    border:1.5px solid var(--blush-line);
+    border-radius:999px;
+    padding:10px 14px;
+    font-size:16px;
+    font-family:'Manrope',sans-serif;
+    outline:none;
+    background:var(--cream);
+    color:var(--ink);
+  }
+  .agenda-busca input:focus{ border-color:var(--wine); }
+  .agenda-busca button{
+    border:none;
+    background:var(--wine);
+    color:#fff;
+    font-weight:700;
+    font-size:.85rem;
+    font-family:'Manrope',sans-serif;
+    padding:0 18px;
+    border-radius:999px;
+    cursor:pointer;
+    flex-shrink:0;
+  }
+  .agenda-busca button:hover{ background:var(--wine-deep); }
+  .agenda-erro{
+    color:var(--wine);
+    font-size:.78rem;
+    margin-top:8px;
+  }
 
   /* ---- galeria de trabalhos (dentro do chat) ---- */
   .galeria-msg{
@@ -1199,7 +1234,7 @@ const fecharAgenda = document.getElementById('fecharAgenda');
 
 function renderAgendaLista(lista){
   if(!lista || lista.length === 0){
-    agendaLista.innerHTML = `<div class="agenda-empty">Você ainda não tem nenhum agendamento confirmado por aqui.</div>`;
+    agendaLista.innerHTML = `<div class="agenda-empty">Nenhum agendamento encontrado pra esse número.</div>`;
     return;
   }
   agendaLista.innerHTML = lista.map(a => `
@@ -1212,20 +1247,62 @@ function renderAgendaLista(lista){
   `).join('');
 }
 
-// Busca os agendamentos reais na planilha (aba "Agenda") pelo WhatsApp já
-// informado nesta conversa. Se ainda não tiver WhatsApp (cliente não
-// chegou nessa etapa), mostra só o que foi confirmado nesta sessão.
+// Formulário de busca por WhatsApp, mostrado dentro do próprio painel
+// quando ainda não sabemos o número da cliente nesta conversa.
+function renderBuscaWhatsapp(mensagemErro){
+  agendaLista.innerHTML = `
+    <div class="agenda-empty">Digite seu WhatsApp pra eu buscar seus agendamentos:</div>
+    <div class="agenda-busca">
+      <input type="tel" inputmode="tel" id="agendaWhatsappInput" placeholder="(00) 00000-0000">
+      <button type="button" id="agendaWhatsappBtn">Buscar</button>
+    </div>
+    ${mensagemErro ? `<div class="agenda-erro">${mensagemErro}</div>` : ""}
+  `;
+  const input = document.getElementById('agendaWhatsappInput');
+  const btn = document.getElementById('agendaWhatsappBtn');
+  const disparar = () => {
+    const val = input.value.trim();
+    if(val) buscarAgendamentosPorWhatsapp(val);
+  };
+  btn.addEventListener('click', disparar);
+  input.addEventListener('keydown', (e)=>{ if(e.key === 'Enter'){ e.preventDefault(); disparar(); } });
+  input.focus();
+}
+
+// Número já usado numa busca manual dentro do painel nesta sessão
+// (separado do state.whatsapp, que só existe depois que ela agenda).
+let whatsappConsultadoNoPainel = null;
+
+async function buscarAgendamentosPorWhatsapp(numero){
+  whatsappConsultadoNoPainel = numero;
+  agendaLista.innerHTML = `<div class="agenda-empty">Buscando...</div>`;
+  try{
+    const url = `${APPS_SCRIPT_URL}?action=meus_agendamentos&whatsapp=${encodeURIComponent(numero)}`;
+    const res = await fetch(url);
+    const json = await res.json();
+    if(!json.ok) throw new Error(json.error || "erro desconhecido");
+    renderAgendaLista(json.agendamentos);
+  }catch(e){
+    console.warn("Falha ao buscar agendamentos:", e);
+    renderBuscaWhatsapp("Não consegui buscar agora — confere o número e tenta de novo.");
+  }
+}
+
+// Busca os agendamentos reais na planilha (aba "Agenda") pelo WhatsApp:
+// usa o que já foi informado nesta conversa (ou já buscado manualmente
+// no painel); se ainda não tiver nenhum, pede o número ali mesmo.
 async function abrirPainelAgendamentos(){
   agendaOverlay.classList.add('open');
-  agendaLista.innerHTML = `<div class="agenda-empty">Buscando seus agendamentos...</div>`;
 
-  if(!state.whatsapp){
-    renderAgendaLista(state.agendamentos);
+  const numero = state.whatsapp || whatsappConsultadoNoPainel;
+  if(!numero){
+    renderBuscaWhatsapp();
     return;
   }
 
+  agendaLista.innerHTML = `<div class="agenda-empty">Buscando seus agendamentos...</div>`;
   try{
-    const url = `${APPS_SCRIPT_URL}?action=meus_agendamentos&whatsapp=${encodeURIComponent(state.whatsapp)}`;
+    const url = `${APPS_SCRIPT_URL}?action=meus_agendamentos&whatsapp=${encodeURIComponent(numero)}`;
     const res = await fetch(url);
     const json = await res.json();
     if(!json.ok) throw new Error(json.error || "erro desconhecido");

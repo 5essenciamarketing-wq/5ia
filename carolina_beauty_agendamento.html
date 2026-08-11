@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Carolina Beauty — Agendamento</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -20,7 +20,8 @@
     --shadow: 0 18px 50px -20px rgba(43,27,30,0.35);
   }
   *{box-sizing:border-box;}
-  html,body{height:100%;}
+  html,body{height:100%; overflow-x:hidden;}
+  html{ touch-action:manipulation; } /* evita zoom por duplo-toque, mantém scroll normal */
   body{
     margin:0;
     font-family:'Manrope',sans-serif;
@@ -102,7 +103,19 @@
     background:var(--wine);
     color:#fff;
     border-bottom-right-radius:4px;
+    display:flex;
+    align-items:flex-end;
+    gap:5px;
   }
+  .msg.user .msg-texto{ flex:1; }
+  .msg.user .ticks{
+    flex-shrink:0;
+    display:inline-flex;
+    color:rgba(255,255,255,.6);
+    transition:color .3s ease;
+    margin-bottom:1px;
+  }
+  .msg.user .ticks.lido{ color:#53BDEB; }
   .msg b{font-weight:700;}
   .msg .price{color:var(--wine-deep); font-weight:700;}
   .msg.bot .price{color:var(--wine);}
@@ -162,7 +175,7 @@
     border:1.5px solid var(--blush-line);
     border-radius:999px;
     padding:11px 16px;
-    font-size:.9rem;
+    font-size:16px; /* >=16px evita zoom automático do iOS ao focar o campo */
     font-family:'Manrope',sans-serif;
     outline:none;
     background:var(--cream);
@@ -571,10 +584,23 @@ function scrollBottom(){ thread.scrollTop = thread.scrollHeight; }
 function addMsg(text, who="bot"){
   const div = document.createElement('div');
   div.className = `msg ${who}`;
-  div.innerHTML = text;
-  thread.appendChild(div);
-  scrollBottom();
+
+  if(who === "user"){
+    // simula o "✓✓" de enviado/visto do WhatsApp: cinza ao mandar,
+    // vira azul um instante depois (como se a Iza tivesse acabado de ver)
+    div.innerHTML = `<span class="msg-texto">${text}</span><span class="ticks" aria-hidden="true">${TICKS_SVG}</span>`;
+    thread.appendChild(div);
+    scrollBottom();
+    const ticksEl = div.querySelector('.ticks');
+    setTimeout(()=> ticksEl.classList.add('lido'), 450 + Math.random() * 500);
+  } else {
+    div.innerHTML = text;
+    thread.appendChild(div);
+    scrollBottom();
+  }
 }
+
+const TICKS_SVG = `<svg viewBox="0 0 16 11" width="14" height="10"><path d="M1 5.6L4.2 8.8L10.4 1.8" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.6 5.6L8.8 8.8L15 1" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
 function showTyping(){
   const t = document.createElement('div');
@@ -677,25 +703,25 @@ async function start(){
   composer.style.display = 'none';
   await botSeq([
     "Oii, tudo bem?",
-    `Aqui é a Iza, da ${STUDIO.nome}. É um prazer falar com você 🙂`,
+    `Aqui é a <b>Iza</b>, da <b>${STUDIO.nome}</b>. É um prazer falar com você 🙂`,
     "Antes de mais nada, qual é o seu nome?"
   ]);
   askFreeText(async (texto)=>{
     state.nome = texto;
     await stepBoasVindasComNome();
-  });
+  }, { ehNome: true });
 }
 
 async function stepBoasVindasComNome(){
   await botSeq([
-    `Muito prazer, ${primeiroNome(state.nome)}!`,
+    `Muito prazer, <b>${primeiroNome(state.nome)}</b>!`,
     "Já consigo ver os horários livres e marcar direto por aqui, sem precisar ficar trocando mensagem"
   ]);
   await stepCategoria();
 }
 
 async function stepCategoria(){
-  await bot(`É pras mãos, pros pés, ou os dois, ${primeiroNome(state.nome)}?`);
+  await bot(`É pras mãos, pros pés, ou os dois, <b>${primeiroNome(state.nome)}</b>?`);
   renderChoices([
     {label:"Mãos", value:"maos"},
     {label:"Pés", value:"pes"},
@@ -743,7 +769,7 @@ async function stepTipoAlongamento(){
 // tradicional/unha natural), então não precisa de submenu — só confirma.
 async function stepListaPes(){
   const servicoPes = SERVICOS.find(s=>s.id==="unhas_pe_gel");
-  await bot(`${primeiroNome(state.nome)}, pros pés eu trabalho só com pedicure em gel (inclui esmaltação em gel)`);
+  await bot(`<b>${primeiroNome(state.nome)}</b>, pros pés eu trabalho só com pedicure em gel (inclui esmaltação em gel)`);
   state.servicos.push(servicoPes);
   await stepConfirmaServico();
 }
@@ -770,7 +796,7 @@ async function stepConfirmaServico(){
   const agg = servicoAgregado();
   const nota = agg.incluiEsmaltacao ? " (inclui esmaltação em gel)" : "";
   await botSeq([
-    `Perfeito, ${primeiroNome(state.nome)}!`,
+    `Perfeito, <b>${primeiroNome(state.nome)}</b>!`,
     `${agg.nome}${nota} — dá uns ${formatDuracao(agg.duracao)} de atendimento, e fica <span class="price">${BRL(agg.preco)}</span>`,
     "Pra qual dia fica bom pra você?"
   ]);
@@ -780,8 +806,8 @@ async function stepConfirmaServico(){
 async function stepHandoffServicoSemDados(naoConfirmados){
   const nomes = naoConfirmados.map(s=>s.nome.toLowerCase()).join(" e ");
   await botSeq([
-    `${primeiroNome(state.nome)}, o valor de ${nomes} eu ainda não tenho certinho aqui pra te passar 🙏`,
-    `Me chama direto no ${STUDIO.whatsappApoio} que a ${STUDIO.responsavel} (ou alguém da equipe) te passa na hora`
+    `<b>${primeiroNome(state.nome)}</b>, o valor de ${nomes} eu ainda não tenho certinho aqui pra te passar 🙏`,
+    `Me chama direto no ${STUDIO.whatsappApoio} que a <b>${STUDIO.responsavel}</b> (ou alguém da equipe) te passa na hora`
   ]);
   renderChoices([{label:"Escolher outro serviço", value:"outro"}], async ()=>{
     state.servicos = [];
@@ -823,7 +849,7 @@ function renderDatePicker(){
 }
 
 async function stepBuscarDisponibilidade(){
-  await bot(`Peraí, ${primeiroNome(state.nome)}, deixa eu ver aqui na agenda... 💅`);
+  await bot(`Peraí, <b>${primeiroNome(state.nome)}</b>, deixa eu ver aqui na agenda... 💅`);
   const agg = servicoAgregado();
   let slots = [];
   try{
@@ -847,12 +873,27 @@ async function stepBuscarDisponibilidade(){
     async (hora)=>{
       pushHistory(renderDatePicker);
       state.hora = hora;
-      mostrarPerfilProfissional();
-      await new Promise(r=>setTimeout(r, 500));
-      await stepWhatsapp();
+      await stepConfirmaHorario();
     },
     { ghostBack: renderDatePicker }
   );
+}
+
+async function stepConfirmaHorario(){
+  const agg = servicoAgregado();
+  await bot(`Fechado ${agg.nome.toLowerCase()} em ${formatDataLegivel(state.data)} às <b>${state.hora}</b>?`);
+  renderChoices([
+    {label:"Sim, esse horário", value:"sim"},
+    {label:"Escolher outro horário", value:"outro"}
+  ], async (v)=>{
+    if(v === "sim"){
+      mostrarPerfilProfissional();
+      await new Promise(r=>setTimeout(r, 500));
+      await stepWhatsapp();
+    } else {
+      await renderDatePicker();
+    }
+  }, { ghostBack: renderDatePicker });
 }
 
 // Mostra a foto/perfil de quem vai atender, como se tivesse "selecionado"
@@ -908,7 +949,7 @@ function toHHMM(min){
 
 async function stepWhatsapp(){
   await botSeq([
-    `Show, ${formatDataLegivel(state.data)} às <b>${state.hora}</b> então, ${primeiroNome(state.nome)}`,
+    `Show, ${formatDataLegivel(state.data)} às <b>${state.hora}</b> então, <b>${primeiroNome(state.nome)}</b>`,
     "Me passa seu WhatsApp? É esse número que vai ficar no seu cadastro aqui"
   ]);
   askFreeText(async (texto)=>{
@@ -916,7 +957,7 @@ async function stepWhatsapp(){
     // Salva lead parcial imediatamente (nome + whatsapp), mesmo antes de finalizar
     salvarLeadParcial(state).catch(e=>console.warn("lead parcial:", e));
     await stepConfirmacaoFinal();
-  });
+  }, { teclado: 'tel' });
 }
 
 // Mostra o portfólio de trabalhos (só uma vez por sessão, pra não repetir
@@ -946,7 +987,7 @@ function formatDataLegivel(dataISO){
 }
 
 async function stepConfirmacaoFinal(){
-  await bot(`Então tá aqui, ${primeiroNome(state.nome)}, só confere antes de eu confirmar:`);
+  await bot(`Então tá aqui, <b>${primeiroNome(state.nome)}</b>, só confere antes de eu confirmar:`);
   mostrarCartaoConfirmacao({ confirmado: false });
   renderChoices([
     {label:"Confirmar agendamento", value:"confirmar"},
@@ -967,7 +1008,7 @@ function capitalizar(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
 // fica no cartão aqui no site mesmo).
 function linkWhatsapp(agg){
   const texto =
-    `Oi! Confirmando meu agendamento na ${STUDIO.nome}:\n` +
+    `Oi! Confirmando meu agendamento na *${STUDIO.nome}*:\n` +
     `${agg.nome} — ${formatDataLegivel(state.data)} às ${state.hora}\n` +
     `Nome: ${state.nome}`;
   const numero = "55" + STUDIO.whatsappApoio.replace(/\D/g, "");
@@ -1029,12 +1070,12 @@ async function finalizarAgendamento(){
       hora: state.hora
     });
 
-    await bot(`Prontinho, ${primeiroNome(state.nome)}!`);
+    await bot(`Prontinho, <b>${primeiroNome(state.nome)}</b>!`);
     mostrarCartaoConfirmacao({ confirmado: true });
     renderChoices([{label:"Marcar outro horário", value:"novo"}], ()=>{ resetState(); start(); });
   }catch(e){
     console.warn("Erro ao agendar:", e);
-    await bot(`Deu um erro pra confirmar aqui pelo sistema 😕 Mas não se preocupa, ${primeiroNome(state.nome)} — me chama no WhatsApp de apoio (${STUDIO.whatsappApoio}) que a gente confirma na mão: <b>${agg.nome}</b>, ${formatDataLegivel(state.data)} às ${state.hora}.`);
+    await bot(`Deu um erro pra confirmar aqui pelo sistema 😕 Mas não se preocupa, <b>${primeiroNome(state.nome)}</b> — me chama no WhatsApp de apoio (${STUDIO.whatsappApoio}) que a gente confirma na mão: <b>${agg.nome}</b>, ${formatDataLegivel(state.data)} às ${state.hora}.`);
   }
 }
 
@@ -1069,18 +1110,31 @@ function resetState(){
 // botão + tecla Enter no campo funcionam em qualquer lugar.
 // ---------------------------------------------------------------------
 let pendingTextHandler = null;
+let pendingEhNome = false;
 const sendBtn = document.getElementById('sendBtn');
 
-function askFreeText(handler){
+// Deixa cada palavra do nome com inicial maiúscula (ex.: "ana paula" -> "Ana Paula")
+function capitalizarNome(str){
+  return str.trim().split(/\s+/).map(palavra =>
+    palavra.charAt(0).toLocaleUpperCase('pt-BR') + palavra.slice(1).toLocaleLowerCase('pt-BR')
+  ).join(' ');
+}
+
+function askFreeText(handler, { ehNome=false, teclado='text' } = {}){
   pendingTextHandler = handler;
+  pendingEhNome = ehNome;
   composer.style.display = 'flex';
   freeInput.value = '';
+  freeInput.setAttribute('inputmode', teclado === 'tel' ? 'tel' : 'text');
+  freeInput.setAttribute('type', teclado === 'tel' ? 'tel' : 'text');
+  freeInput.setAttribute('placeholder', teclado === 'tel' ? '(00) 00000-0000' : 'Digite aqui...');
   freeInput.focus();
 }
 
 async function enviarTextoLivre(){
-  const val = freeInput.value.trim();
+  let val = freeInput.value.trim();
   if(!val || !pendingTextHandler) return;
+  if(pendingEhNome) val = capitalizarNome(val);
   addMsg(val, "user");
   freeInput.value = '';
   composer.style.display = 'none';

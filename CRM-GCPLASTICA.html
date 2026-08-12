@@ -929,6 +929,10 @@
   <div class="bulk-action-bar" id="bulkActionBar">
     <span id="bulkActionCount">0 selecionados</span>
     <button type="button" class="btn-ghost" id="btnCancelarSelecao">Cancelar</button>
+    <button type="button" class="btn-ghost" id="btnMoverParaDialogoEmMassa">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;vertical-align:-2px;"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      Mover pra Diálogo
+    </button>
     <button type="button" class="btn-primary" id="btnEnviarEmMassa">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.46 1.32 4.96L2.05 22l5.25-1.38c1.44.79 3.07 1.2 4.73 1.2h.01c5.46 0 9.91-4.45 9.91-9.91S17.5 2 12.04 2zm0 18.06h-.01c-1.47 0-2.91-.39-4.17-1.14l-.3-.18-3.11.82.83-3.03-.19-.31a8.03 8.03 0 01-1.24-4.31c0-4.44 3.62-8.06 8.06-8.06 2.15 0 4.17.84 5.7 2.36a8.02 8.02 0 012.36 5.7c0 4.44-3.62 8.06-8.06 8.06zm4.42-6.03c-.24-.12-1.43-.71-1.65-.79-.22-.08-.38-.12-.55.12-.16.24-.62.79-.76.95-.14.16-.28.18-.52.06-.24-.12-1.01-.37-1.92-1.18-.71-.63-1.19-1.42-1.33-1.66-.14-.24-.02-.37.11-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.55-1.32-.75-1.81-.2-.48-.4-.41-.55-.42h-.47c-.16 0-.42.06-.64.3-.22.24-.84.82-.84 2s.86 2.32.98 2.48c.12.16 1.7 2.6 4.13 3.64.58.25 1.03.4 1.38.51.58.18 1.11.16 1.53.1.47-.07 1.43-.58 1.63-1.15.2-.56.2-1.04.14-1.15-.06-.1-.22-.16-.46-.28z"/></svg>
       Enviar Mensagem
@@ -2233,6 +2237,29 @@ document.getElementById('btnCancelarSelecao').addEventListener('click', () => {
   leadsSelecionados.clear();
   atualizarBarraSelecao();
   render();
+});
+
+document.getElementById('btnMoverParaDialogoEmMassa').addEventListener('click', () => {
+  if(!leadsSelecionados.size) return;
+  const ids = Array.from(leadsSelecionados);
+  let movidos = 0, ignorados = 0;
+
+  ids.forEach(id => {
+    const lead = STATE.leads.find(l => l.ID === id);
+    if(!lead){ ignorados++; return; }
+    if(lead.Etapa !== 'Welcome'){ ignorados++; return; } // essa ação é só pra corrigir Welcome parado, não força outras etapas
+    lead.Etapa = 'Diálogo';
+    postAction({ action:'moveStageWithReport', id: lead.ID, etapa:'Diálogo', relatorio: 'Correção manual em massa — lead já tinha sido respondido pela equipe antes da automação capturar isso.' });
+    movidos++;
+  });
+
+  render();
+  modoSelecaoAtivo = false;
+  btnModoSelecao.classList.remove('drag-over');
+  leadsSelecionados.clear();
+  atualizarBarraSelecao();
+  setTimeout(loadData, 1200);
+  showToast(`${movidos} lead(s) movido(s) pra Diálogo${ignorados ? ` (${ignorados} ignorado(s), não estavam em Welcome)` : ''}.`);
 });
 
 document.getElementById('btnEnviarEmMassa').addEventListener('click', () => {

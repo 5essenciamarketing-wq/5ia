@@ -117,6 +117,11 @@
   .priorities-head{display:flex; align-items:baseline; gap:10px; margin-bottom:14px;}
   .priorities-title{font-family:'Inter',sans-serif; font-weight:800; font-size:16px; color:var(--text);}
   .priorities-subtitle{font-size:12px; color:var(--text-muted);}
+  .novos-leads-badge{
+    margin-left:auto; display:flex; align-items:center; gap:6px;
+    background:var(--gold-glow); color:var(--gold-dim); border:1px solid var(--gold-glow);
+    font-size:12px; font-weight:700; padding:5px 12px; border-radius:999px;
+  }
   .priorities-list{display:flex; gap:12px; overflow-x:auto; padding-bottom:6px;}
   .priority-card{
     flex-shrink:0; width:250px;
@@ -768,39 +773,39 @@
   /* ---------- CARTÃO DE CONFIRMAÇÃO DE CONSULTA ---------- */
   .consult-card{
     position:relative;
-    background:var(--panel); border:1px solid var(--gold);
-    border-radius:var(--radius-lg);
-    box-shadow:0 20px 60px rgba(0,0,0,.5), 0 0 40px var(--gold-glow);
-    width:100%; max-width:440px; padding:40px 34px 30px;
+    background:#0f0e0c; border:1px solid rgba(198,166,100,.35);
+    border-radius:4px;
+    box-shadow:0 30px 80px rgba(0,0,0,.6);
+    width:100%; max-width:440px; padding:48px 38px 34px;
     text-align:center;
     transform:scale(.92) translateY(10px);
     transition:transform .4s cubic-bezier(.16,1,.3,1);
   }
   .modal-overlay.open .consult-card{transform:scale(1) translateY(0);}
   .consult-card-close{
-    position:absolute; top:14px; right:14px;
-    background:none; border:none; color:var(--text-muted);
+    position:absolute; top:16px; right:16px;
+    background:none; border:none; color:rgba(243,237,224,.45);
     font-size:16px; cursor:pointer;
   }
-  .consult-card-close:hover{color:var(--text);}
+  .consult-card-close:hover{color:#f3ede0;}
   .consult-card-eyebrow{
-    font-size:11px; text-transform:uppercase; letter-spacing:.18em;
-    color:var(--gold); margin-bottom:10px;
+    font-size:10px; text-transform:uppercase; letter-spacing:.28em;
+    color:#c6a664; margin-bottom:14px; font-weight:600;
   }
   .consult-card-name{
-    font-family:'Inter',sans-serif; font-size:26px; font-weight:800; letter-spacing:-.01em;
-    color:var(--text); margin-bottom:18px;
+    font-family:'Inter',sans-serif; font-size:27px; font-weight:300; letter-spacing:.01em;
+    color:#f3ede0; margin-bottom:24px;
   }
   .consult-card-row{
-    display:flex; align-items:flex-start; gap:8px; justify-content:center;
-    font-size:12.5px; color:var(--text-muted); margin-bottom:8px; text-align:left;
-    max-width:340px; margin-left:auto; margin-right:auto;
+    display:flex; align-items:flex-start; gap:9px; justify-content:center;
+    font-size:12px; color:rgba(243,237,224,.62); margin-bottom:9px; text-align:left;
+    max-width:340px; margin-left:auto; margin-right:auto; letter-spacing:.01em;
   }
-  .consult-card-row svg{flex-shrink:0; margin-top:1px; color:var(--gold-dim);}
+  .consult-card-row svg{flex-shrink:0; margin-top:1px; color:#c6a664;}
   .consult-card-message{
-    font-size:13.5px; line-height:1.7; color:var(--text);
-    margin:20px 0 4px; text-align:left;
-    border-top:1px solid var(--border); padding-top:18px;
+    font-size:13px; line-height:1.75; color:rgba(243,237,224,.85);
+    margin:22px 0 4px; text-align:left;
+    border-top:1px solid rgba(198,166,100,.25); padding-top:20px;
   }
 
   @media (max-width:900px){
@@ -910,6 +915,7 @@
     <div class="priorities-head">
       <span class="priorities-title">🎯 Prioridades de Hoje</span>
       <span class="priorities-subtitle">Quem precisa da sua atenção agora</span>
+      <span class="novos-leads-badge" id="novosLeadsBadge" style="display:none;"></span>
     </div>
     <div class="priorities-list" id="prioritiesList"></div>
   </div>
@@ -1524,7 +1530,7 @@
       <button type="button" class="btn-ghost" id="btnFecharConsultCard">Fechar</button>
       <button type="button" class="btn-primary" id="btnEnviarConsultCard">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.46 1.32 4.96L2.05 22l5.25-1.38c1.44.79 3.07 1.2 4.73 1.2h.01c5.46 0 9.91-4.45 9.91-9.91S17.5 2 12.04 2zm0 18.06h-.01c-1.47 0-2.91-.39-4.17-1.14l-.3-.18-3.11.82.83-3.03-.19-.31a8.03 8.03 0 01-1.24-4.31c0-4.44 3.62-8.06 8.06-8.06 2.15 0 4.17.84 5.7 2.36a8.02 8.02 0 012.36 5.7c0 4.44-3.62 8.06-8.06 8.06zm4.42-6.03c-.24-.12-1.43-.71-1.65-.79-.22-.08-.38-.12-.55.12-.16.24-.62.79-.76.95-.14.16-.28.18-.52.06-.24-.12-1.01-.37-1.92-1.18-.71-.63-1.19-1.42-1.33-1.66-.14-.24-.02-.37.11-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.55-1.32-.75-1.81-.2-.48-.4-.41-.55-.42h-.47c-.16 0-.42.06-.64.3-.22.24-.84.82-.84 2s.86 2.32.98 2.48c.12.16 1.7 2.6 4.13 3.64.58.25 1.03.4 1.38.51.58.18 1.11.16 1.53.1.47-.07 1.43-.58 1.63-1.15.2-.56.2-1.04.14-1.15-.06-.1-.22-.16-.46-.28z"/></svg>
-        Enviar no WhatsApp
+        Enviar Mensagem
       </button>
     </div>
   </div>
@@ -1574,12 +1580,12 @@ const DEFAULT_WHATSAPP_MESSAGE = 'Olá *{nome}*! Aqui é da equipe do Dr. Gibran
 const CLINIC_ADDRESS = 'Koerich Beiramar Office — Av. Mauro Ramos, 1970, sala 511, Centro, Florianópolis - SC';
 const CONSULTATION_MESSAGE_TEMPLATE = `*Consulta Confirmada* — {nome}
 
-📅 Data: *{data}* às *{hora}*
-📍 Endereço: ${CLINIC_ADDRESS}
+Data: *{data}* às *{hora}*
+Endereço: ${CLINIC_ADDRESS}
 
 Esse é o seu *primeiro passo* — e ele já começa com *segurança*. Na consulta, o Dr. Gibran vai te ouvir com atenção total, entender seus objetivos e explicar com transparência cada possibilidade, sempre com responsabilidade médica em primeiro lugar.
 
-Será um prazer te receber! ✨`;
+Será um prazer te receber.`;
 
 function cleanPhone(telefone){
   if(!telefone) return null;
@@ -1863,6 +1869,7 @@ async function loadData(){
     verificarDialogosTravados();
     verificarConsultasVencidas();
     verificarCirurgiasPendentesConfirmacao();
+    verificarSaudacaoDoDia();
   }catch(err){
     console.error('Erro ao carregar dados', err);
     showToast('Não foi possível carregar os dados. Confira a URL do App da Web.');
@@ -2338,6 +2345,7 @@ function render(){
   renderTasks();
   renderPriorities();
   renderMetaConsultas();
+  atualizarNovosLeadsBadge();
   atualizarContadorDecididosDepois();
   const filtered = getFilteredLeads();
   document.getElementById('monthFilterCount').textContent =
@@ -3673,6 +3681,47 @@ let destinoDialogoTravado = null; // 'Frio' | 'Remarketing'
 const leadsIgnoradosSessao = new Set(); // "decidir depois" — não pergunta de novo nessa sessão
 let filaDialogoTravado = [];
 
+/**
+ * Contador sempre visível de leads novos em Welcome — atualiza a cada render(),
+ * então nunca fica desatualizado enquanto o CRM está aberto.
+ */
+function atualizarNovosLeadsBadge(){
+  const badge = document.getElementById('novosLeadsBadge');
+  if(!badge) return;
+  const novos = STATE.leads.filter(l => l.Etapa === 'Welcome').length;
+  if(novos > 0){
+    badge.style.display = 'flex';
+    badge.textContent = `${novos} lead${novos === 1 ? '' : 's'} novo${novos === 1 ? '' : 's'} em Welcome esperando resposta`;
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+/**
+ * Saudação especial só na PRIMEIRA vez que abrir o CRM em cada dia (por pessoa logada) —
+ * guarda a data no localStorage do navegador, então some sozinha e só volta amanhã.
+ */
+function verificarSaudacaoDoDia(){
+  try{
+    const hojeStr = new Date().toISOString().slice(0, 10);
+    const chave = 'crm_ultima_saudacao_' + (SESSION.usuario || 'geral');
+    if(localStorage.getItem(chave) === hojeStr) return; // já saudou hoje, não repete
+
+    const novos = STATE.leads.filter(l => l.Etapa === 'Welcome').length;
+    const primeiroNome = (SESSION.nome || '').split(' ')[0];
+    setTimeout(() => {
+      if(novos > 0){
+        showToast(`Bom dia${primeiroNome ? ', ' + primeiroNome : ''}! ${novos} lead${novos === 1 ? '' : 's'} novo${novos === 1 ? '' : 's'} em Welcome esperando resposta.`);
+      } else {
+        showToast(`Bom dia${primeiroNome ? ', ' + primeiroNome : ''}! Nenhum lead novo esperando — tudo em dia.`);
+      }
+    }, 700);
+    localStorage.setItem(chave, hojeStr);
+  }catch(err){
+    console.error('Erro ao verificar saudação do dia (localStorage pode estar bloqueado)', err);
+  }
+}
+
 function atualizarContadorDecididosDepois(){
   const btn = document.getElementById('btnDecididosDepois');
   const count = leadsIgnoradosSessao.size;
@@ -4080,8 +4129,31 @@ function showConsultationCard(lead, dataConsulta, horaConsulta){
 
 document.getElementById('closeConsultCard').addEventListener('click', () => consultCardOverlay.classList.remove('open'));
 document.getElementById('btnFecharConsultCard').addEventListener('click', () => consultCardOverlay.classList.remove('open'));
-document.getElementById('btnEnviarConsultCard').addEventListener('click', () => {
-  if(currentConsultCardLead) openWhatsApp(currentConsultCardLead, currentConsultCardMessage);
+document.getElementById('btnEnviarConsultCard').addEventListener('click', async () => {
+  if(!currentConsultCardLead) return;
+  const btn = document.getElementById('btnEnviarConsultCard');
+  const textoOriginalBtn = btn.innerHTML;
+  btn.disabled = true;
+  btn.textContent = 'Enviando...';
+
+  try{
+    const url = `${CRM_API_URL}?action=sendWhatsAppMessage&id=${encodeURIComponent(currentConsultCardLead.ID)}&mensagem=${encodeURIComponent(currentConsultCardMessage)}&token=${encodeURIComponent(SESSION.token)}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if(data.ok){
+      showToast(`Mensagem enviada pra ${currentConsultCardLead.Nome}.`);
+      consultCardOverlay.classList.remove('open');
+      setTimeout(loadData, 1500);
+    } else {
+      showToast('Não foi possível enviar: ' + (data.error || 'erro desconhecido'));
+    }
+  }catch(err){
+    console.error('Erro ao enviar confirmação de consulta', err);
+    showToast('Erro de conexão ao enviar mensagem.');
+  }finally{
+    btn.disabled = false;
+    btn.innerHTML = textoOriginalBtn;
+  }
 });
 
 // ---------- PAINEL DE DESEMPENHO ----------

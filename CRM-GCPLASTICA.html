@@ -3437,22 +3437,37 @@ document.getElementById('cancelEditConsulta').addEventListener('click', () => {
   pendingEditConsulta = null;
 });
 
-document.getElementById('salvarEdicaoConsulta').addEventListener('click', () => {
+document.getElementById('salvarEdicaoConsulta').addEventListener('click', async () => {
   const dataConsulta = document.getElementById('ec_data').value;
   const horaConsulta = document.getElementById('ec_hora').value;
   if(!dataConsulta || !horaConsulta){ showToast('Preencha data e hora.'); return; }
   if(!pendingEditConsulta) return;
 
   const { lead } = pendingEditConsulta;
-  lead.Data_Consulta = dataConsulta;
-  lead.Hora_Consulta = horaConsulta;
-  render();
-  editConsultaModal.classList.remove('open');
-  postAction({ action:'updateConsultaDate', id: lead.ID, dataConsulta, horaConsulta })
-    .then(()=> setTimeout(loadData, 1200));
-  showToast(`Consulta de ${lead.Nome} atualizada.`);
+  const btn = document.getElementById('salvarEdicaoConsulta');
+  btn.disabled = true;
 
-  pendingEditConsulta = null;
+  try{
+    const url = `${CRM_API_URL}?action=updateConsultaDate&id=${encodeURIComponent(lead.ID)}&dataConsulta=${encodeURIComponent(dataConsulta)}&horaConsulta=${encodeURIComponent(horaConsulta)}&token=${encodeURIComponent(SESSION.token)}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if(data.ok){
+      lead.Data_Consulta = dataConsulta;
+      lead.Hora_Consulta = horaConsulta;
+      render();
+      editConsultaModal.classList.remove('open');
+      showToast(`Consulta de ${lead.Nome} atualizada.`);
+      pendingEditConsulta = null;
+      setTimeout(loadData, 1200);
+    } else {
+      showToast('Não foi possível salvar: ' + (data.error || 'erro desconhecido'));
+    }
+  }catch(err){
+    console.error('Erro ao atualizar consulta', err);
+    showToast('Erro de conexão ao salvar.');
+  }finally{
+    btn.disabled = false;
+  }
 });
 
 document.getElementById('removerConsultaBtn').addEventListener('click', () => {

@@ -4853,7 +4853,22 @@ document.getElementById('btnCloseLigacoes').addEventListener('click', () => {
 
 function renderLigacoesQueue(){
   const el = document.getElementById('ligacoesQueueList');
-  const fila = [...STATE.filaLigacoes].sort((a,b) => (b.Prioridade||0) - (a.Prioridade||0));
+  let fila = [...STATE.filaLigacoes].sort((a,b) => (b.Prioridade||0) - (a.Prioridade||0));
+
+  // Separação por papel: quem já passou por Consulta (mesmo que tenha voltado pra
+  // Remarketing/Frio depois) é ligação da Cristiane; quem nunca passou é da Nat.
+  // Admin vê a fila inteira, sem recorte.
+  if(SESSION.papel === 'Pos-Consulta'){
+    fila = fila.filter(item => {
+      const lead = STATE.leads.find(l => l.ID === item.Lead_ID);
+      return lead && remarketingPertenceACristiane(lead);
+    });
+  } else if(SESSION.papel === 'Pre-Consulta'){
+    fila = fila.filter(item => {
+      const lead = STATE.leads.find(l => l.ID === item.Lead_ID);
+      return lead && !remarketingPertenceACristiane(lead);
+    });
+  }
 
   if(!fila.length){
     el.innerHTML = '<div class="empty-state">Fila vazia — nada pendente pra ligar agora.</div>';

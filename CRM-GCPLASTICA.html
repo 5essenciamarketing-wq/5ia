@@ -882,6 +882,10 @@
       <button class="icon-btn" id="btnDashboard" title="Painel de Desempenho">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
       </button>
+      <button class="icon-btn" id="btnLigacoes" title="Central de Ligações">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+        <span class="badge" id="ligacoesBadge" style="display:none;">0</span>
+      </button>
       <button class="icon-btn" id="btnModoSelecao" title="Selecionar vários leads (envio em massa)">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M17 14l1.5 1.5L21 13"/></svg>
       </button>
@@ -924,6 +928,14 @@
   <div class="journey" id="journey"></div>
 
   <div class="board" id="board"></div>
+
+  <div class="dashboard" id="ligacoesView">
+    <div class="dashboard-head">
+      <h2>Central de Ligações</h2>
+      <button class="btn-ghost" id="btnCloseLigacoes">Voltar ao board</button>
+    </div>
+    <div id="ligacoesQueueList" style="display:flex;flex-direction:column;gap:10px;max-width:640px;"></div>
+  </div>
 
   <div class="quick-drop-backdrop" id="quickDropBackdrop"></div>
 
@@ -1551,6 +1563,67 @@
   </div>
 </div>
 
+<!-- Tela do "celular" — contato da fila de ligações -->
+<div class="modal-overlay" id="ligacaoContatoModalOverlay">
+  <div class="modal" style="max-width:400px; text-align:center; position:relative;">
+    <button type="button" class="consult-card-close" id="fecharLigacaoContato" style="position:absolute; top:14px; right:18px; color:var(--text-muted);">✕</button>
+    <div class="brand-eyebrow" style="margin-bottom:6px;">Ligação Comercial</div>
+    <h2 id="lc_nome" style="margin-bottom:4px;"></h2>
+    <p id="lc_telefone" style="font-size:22px; font-weight:700; color:var(--gold); margin-bottom:16px;"></p>
+    <div class="report-transition" id="lc_resumo" style="text-align:left; margin-bottom:20px;"></div>
+
+    <div id="lc_estadoInicial">
+      <button type="button" class="btn-primary" id="btnIniciarLigacao" style="width:100%; justify-content:center;">Iniciar Ligação</button>
+    </div>
+
+    <div id="lc_estadoAndamento" style="display:none;">
+      <p style="font-size:12.5px; color:var(--sage); margin-bottom:14px;">● Ligação em andamento — disque o número acima no telefone da empresa</p>
+      <button type="button" class="btn-primary" id="btnEncerrarLigacao" style="width:100%; justify-content:center; background:var(--bordeaux);">Encerrar Ligação</button>
+    </div>
+  </div>
+</div>
+
+<!-- Resultado rápido pós-ligação -->
+<div class="modal-overlay" id="ligacaoResultadoModalOverlay">
+  <div class="modal" style="max-width:420px;">
+    <h2>Como foi a ligação?</h2>
+    <div class="report-transition" id="lr_leadLabel" style="margin-bottom:16px;"></div>
+
+    <div class="field">
+      <label>Atendeu?</label>
+      <div class="reason-chips" id="lr_atendeuChips">
+        <button type="button" class="reason-chip" data-atendeu="sim">Sim</button>
+        <button type="button" class="reason-chip" data-atendeu="nao">Não atendeu</button>
+      </div>
+    </div>
+
+    <div id="lr_camposAtendeu" style="display:none;">
+      <div class="field">
+        <label>Interesse do lead</label>
+        <select id="lr_interesse">
+          <option value="Alto">Alto</option>
+          <option value="Médio">Médio</option>
+          <option value="Baixo">Baixo</option>
+          <option value="Sem interesse">Sem interesse</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Principal objeção / motivo</label>
+        <textarea id="lr_motivo" placeholder="Ex: achou caro, precisa pensar, ta decidido a fazer..." style="min-height:70px;"></textarea>
+      </div>
+      <div class="field">
+        <label>Follow-up — quando volta a ligar (se combinou algo)</label>
+        <input type="text" id="lr_followup" placeholder="Ex: hoje à tarde, quinta que vem, sem data definida...">
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="btn-ghost" id="cancelLigacaoResultado">Cancelar</button>
+      <button type="button" class="btn-primary" id="confirmLigacaoResultado">Salvar</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -1835,7 +1908,7 @@ function executarTransicao(lead, newStage){
   }
 }
 
-let STATE = { leads: [], tasks: [], stages: [], historico: [], metas: [] };
+let STATE = { leads: [], tasks: [], stages: [], historico: [], metas: [], filaLigacoes: [] };
 
 // ---------- MODO DE SELEÇÃO MÚLTIPLA (envio de mensagem em massa) ----------
 let modoSelecaoAtivo = false;
@@ -1880,6 +1953,7 @@ async function loadData(){
     STATE.tasks = data.tasks || [];
     STATE.historico = data.historico || [];
     STATE.metas = data.metas || [];
+    STATE.filaLigacoes = data.filaLigacoes || [];
     STATE.stages = data.stages && data.stages.length ? data.stages : STATE.stages;
     verificarDialogosTravados();
     verificarConsultasVencidas();
@@ -2417,6 +2491,8 @@ function render(){
   renderMetaConsultas();
   atualizarNovosLeadsBadge();
   atualizarContadorDecididosDepois();
+  if(document.getElementById('ligacoesView').classList.contains('open')) renderLigacoesQueue();
+  atualizarLigacoesBadge();
   const filtered = getFilteredLeads();
   document.getElementById('monthFilterCount').textContent =
     selectedMonthFilter === 'all' ? '' : `${filtered.length} lead(s) nesse período`;
@@ -4747,6 +4823,140 @@ loginForm.addEventListener('submit', async e => {
 document.getElementById('btnLogout').addEventListener('click', () => {
   showLogin();
   loginForm.reset();
+});
+
+// ============================================================
+// CENTRAL DE LIGAÇÕES
+// ============================================================
+let pendingLigacaoLead = null;
+let ligacaoEmAndamento = false;
+let lrAtendeuSelecionado = null;
+
+function atualizarLigacoesBadge(){
+  const badge = document.getElementById('ligacoesBadge');
+  const n = STATE.filaLigacoes.length;
+  badge.style.display = n > 0 ? 'flex' : 'none';
+  badge.textContent = n;
+}
+
+document.getElementById('btnLigacoes').addEventListener('click', () => {
+  document.getElementById('board').style.display = 'none';
+  document.getElementById('journey').style.display = 'none';
+  document.getElementById('ligacoesView').classList.add('open');
+  renderLigacoesQueue();
+});
+document.getElementById('btnCloseLigacoes').addEventListener('click', () => {
+  document.getElementById('ligacoesView').classList.remove('open');
+  document.getElementById('board').style.display = '';
+  document.getElementById('journey').style.display = '';
+});
+
+function renderLigacoesQueue(){
+  const el = document.getElementById('ligacoesQueueList');
+  const fila = [...STATE.filaLigacoes].sort((a,b) => (b.Prioridade||0) - (a.Prioridade||0));
+
+  if(!fila.length){
+    el.innerHTML = '<div class="empty-state">Fila vazia — nada pendente pra ligar agora.</div>';
+    return;
+  }
+
+  el.innerHTML = fila.map(item => {
+    const lead = STATE.leads.find(l => l.ID === item.Lead_ID);
+    if(!lead) return '';
+    const c = stageColor(lead.Etapa);
+    return `<div class="priority-card" style="width:100%; cursor:pointer; border-left-color:${c.text};" data-id="${lead.ID}">
+      <div class="priority-card-top">
+        <span class="priority-card-name">${escapeHtml(lead.Nome || 'Sem nome')}</span>
+        <span class="stage-tag" style="color:${c.text}; background:${c.bg}; border-color:${c.border};">${escapeHtml(lead.Etapa)}</span>
+      </div>
+      <div class="priority-card-action">${escapeHtml(item.Resumo || 'Sem resumo disponível ainda.')}</div>
+    </div>`;
+  }).join('');
+
+  el.querySelectorAll('.priority-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const lead = STATE.leads.find(l => l.ID === card.dataset.id);
+      const item = STATE.filaLigacoes.find(f => f.Lead_ID === card.dataset.id);
+      if(lead) openLigacaoContatoModal(lead, item ? item.Resumo : '');
+    });
+  });
+}
+
+const ligacaoContatoModal = document.getElementById('ligacaoContatoModalOverlay');
+const ligacaoResultadoModal = document.getElementById('ligacaoResultadoModalOverlay');
+
+function openLigacaoContatoModal(lead, resumo){
+  pendingLigacaoLead = lead;
+  ligacaoEmAndamento = false;
+  document.getElementById('lc_nome').textContent = lead.Nome || 'Sem nome';
+  document.getElementById('lc_telefone').textContent = lead.Telefone || 'sem telefone cadastrado';
+  document.getElementById('lc_resumo').textContent = resumo || 'Sem histórico resumido ainda.';
+  document.getElementById('lc_estadoInicial').style.display = '';
+  document.getElementById('lc_estadoAndamento').style.display = 'none';
+  ligacaoContatoModal.classList.add('open');
+}
+
+document.getElementById('fecharLigacaoContato').addEventListener('click', () => {
+  ligacaoContatoModal.classList.remove('open');
+  pendingLigacaoLead = null;
+});
+
+document.getElementById('btnIniciarLigacao').addEventListener('click', () => {
+  if(!pendingLigacaoLead) return;
+  ligacaoEmAndamento = true;
+  document.getElementById('lc_estadoInicial').style.display = 'none';
+  document.getElementById('lc_estadoAndamento').style.display = '';
+  postAction({ action:'iniciarLigacao', id: pendingLigacaoLead.ID });
+});
+
+document.getElementById('btnEncerrarLigacao').addEventListener('click', () => {
+  if(!pendingLigacaoLead) return;
+  const lead = pendingLigacaoLead;
+  ligacaoContatoModal.classList.remove('open');
+
+  document.getElementById('lr_leadLabel').innerHTML = escapeHtml(lead.Nome);
+  document.getElementById('lr_camposAtendeu').style.display = 'none';
+  document.getElementById('lr_interesse').value = 'Alto';
+  document.getElementById('lr_motivo').value = '';
+  document.getElementById('lr_followup').value = '';
+  document.querySelectorAll('#lr_atendeuChips .reason-chip').forEach(c => c.classList.remove('chip-selected'));
+  lrAtendeuSelecionado = null;
+  ligacaoResultadoModal.classList.add('open');
+});
+
+document.querySelectorAll('#lr_atendeuChips .reason-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    lrAtendeuSelecionado = chip.dataset.atendeu;
+    document.querySelectorAll('#lr_atendeuChips .reason-chip').forEach(c => c.classList.remove('chip-selected'));
+    chip.classList.add('chip-selected');
+    document.getElementById('lr_camposAtendeu').style.display = lrAtendeuSelecionado === 'sim' ? 'block' : 'none';
+  });
+});
+
+document.getElementById('cancelLigacaoResultado').addEventListener('click', () => {
+  ligacaoResultadoModal.classList.remove('open');
+  pendingLigacaoLead = null;
+});
+
+document.getElementById('confirmLigacaoResultado').addEventListener('click', () => {
+  if(!lrAtendeuSelecionado){ showToast('Marca se atendeu ou não.'); return; }
+  if(!pendingLigacaoLead) return;
+  const lead = pendingLigacaoLead;
+
+  const params = {
+    action:'registrarLigacao',
+    id: lead.ID,
+    atendeu: lrAtendeuSelecionado,
+    interesse: lrAtendeuSelecionado === 'sim' ? document.getElementById('lr_interesse').value : '',
+    motivo: lrAtendeuSelecionado === 'sim' ? document.getElementById('lr_motivo').value.trim() : '',
+    followup: lrAtendeuSelecionado === 'sim' ? document.getElementById('lr_followup').value.trim() : ''
+  };
+
+  ligacaoResultadoModal.classList.remove('open');
+  showToast(`Ligação registrada — ${lead.Nome}`);
+  postAction(params).then(() => setTimeout(loadData, 1200));
+
+  pendingLigacaoLead = null;
 });
 
 // ---------- INIT ----------

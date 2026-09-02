@@ -3,298 +3,169 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dra. Thais Prata — Diagnóstico, Mercado e Proposta de Branding</title>
+<title>Comparativo de Orçamentos — Dra. Thais Prata</title>
 <style>
   :root{
-    --ink:#12181A;
-    --ink-soft:#232C2E;
-    --paper:#EDE6D8;
-    --paper-dim:#E1D8C4;
-    --copper:#B0713D;
-    --copper-deep:#8A5527;
-    --sage:#5C7268;
-    --sage-deep:#3E524A;
-    --line: rgba(18,24,26,0.14);
-    --serif: 'Iowan Old Style','Palatino Linotype','Georgia', serif;
-    --sans: 'Helvetica Neue', Arial, sans-serif;
+    --bg:#08090A;
+    --surface: rgba(22,22,25,0.72);
+    --surface-solid:#131316;
+    --hair: rgba(255,255,255,0.08);
+    --hair-strong: rgba(255,255,255,0.14);
+    --gold:#D9B472;
+    --gold-soft:#C9A05E;
+    --gold-dim: rgba(217,180,114,0.35);
+    --ink:#F3EFE6;
+    --ink-dim:#8D8A82;
+    --ink-faint:#59564F;
+    --serif:'Iowan Old Style','Palatino Linotype','Georgia', serif;
+    --sans:'Helvetica Neue', Arial, sans-serif;
+    --s1:8px; --s2:16px; --s3:24px; --s4:32px; --s5:48px; --s6:64px; --s7:96px;
   }
   *{box-sizing:border-box;}
-  body{margin:0; background:var(--paper); color:var(--ink); font-family:var(--sans); line-height:1.6; font-size:16px;}
-  .wrap{max-width:920px;margin:0 auto;padding:0 32px;}
+  html,body{margin:0; padding:0;}
+  body{background:var(--bg); color:var(--ink); font-family:var(--sans); line-height:1.55; position:relative; overflow-x:hidden;}
 
-  .cover{
-    background:radial-gradient(120% 140% at 15% -10%, #1B2426 0%, var(--ink) 55%, #0B0F10 100%);
-    color:var(--paper); padding:110px 0 90px; position:relative; overflow:hidden;
+  body::before{
+    content:""; position:fixed; top:-260px; left:50%; transform:translateX(-50%);
+    width:1000px; height:900px;
+    background:radial-gradient(circle, rgba(217,180,114,0.14) 0%, rgba(217,180,114,0.04) 40%, transparent 70%);
+    pointer-events:none; z-index:0;
   }
-  .cover::after{content:""; position:absolute; right:-120px; top:-120px; width:480px; height:480px; border-radius:50%; border:1px solid rgba(176,113,61,0.35); opacity:.6;}
-  .cover::before{content:""; position:absolute; right:-40px; top:-40px; width:340px; height:340px; border-radius:50%; border:1px solid rgba(92,114,104,0.4);}
-  .eyebrow{font-size:13px; letter-spacing:.04em; color:var(--copper); margin-bottom:26px; position:relative; z-index:2;}
-  .cover h1{font-family:var(--serif); font-weight:400; font-size:50px; line-height:1.1; margin:0 0 22px; max-width:660px; position:relative; z-index:2;}
-  .cover h1 em{font-style:italic; color:var(--copper);}
-  .cover p.lede{font-size:18px; max-width:580px; color:#CFC7B4; margin:0 0 40px; position:relative; z-index:2;}
-  .cover-meta{display:flex; gap:44px; border-top:1px solid rgba(237,230,216,0.2); padding-top:22px; max-width:660px; position:relative; z-index:2; flex-wrap:wrap;}
-  .cover-meta .label{font-size:11px; color:#9C927B; margin-bottom:6px; display:block;}
-  .cover-meta .value{font-family:var(--serif); font-size:19px; color:var(--paper); display:block;}
 
-  section{padding:64px 0; border-bottom:1px solid var(--line);}
-  .kicker{font-size:12px; color:var(--copper-deep); margin-bottom:10px; font-weight:600;}
-  h2{font-family:var(--serif); font-weight:400; font-size:32px; margin:0 0 8px; color:var(--ink);}
-  .section-intro{max-width:660px; color:var(--ink-soft); font-size:16px; margin-bottom:38px;}
-  h3{font-family:var(--serif); font-weight:400; font-size:21px; margin:0 0 10px;}
-  p{max-width:680px;}
-  .col2{display:grid; grid-template-columns:1fr 1fr; gap:32px; margin-top:28px;}
-  @media(max-width:680px){.col2{grid-template-columns:1fr;} .cover h1{font-size:36px;}}
+  .page{max-width:980px; margin:0 auto; padding:var(--s7) var(--s4); position:relative; z-index:1;}
 
-  .diagnosis{background:var(--ink); color:var(--paper); padding:40px 44px; border-radius:2px; margin-top:8px;}
-  .diagnosis .tag{font-size:12px; color:var(--copper); margin-bottom:14px;}
-  .diagnosis blockquote{font-family:var(--serif); font-size:22px; line-height:1.5; margin:0 0 18px; font-style:italic;}
-  .diagnosis p{color:#C9C0AC; font-size:15px; max-width:none;}
+  .head{margin-bottom:var(--s6);}
+  .brand{font-size:11px; letter-spacing:.18em; color:var(--gold); margin-bottom:var(--s3); display:flex; align-items:center; gap:var(--s2);}
+  .brand::before{content:""; width:20px; height:1px; background:var(--gold-dim);}
+  .head h1{font-family:var(--serif); font-weight:400; font-size:40px; line-height:1.1; margin:0 0 var(--s3); max-width:600px;}
+  .head p{font-size:15px; color:var(--ink-dim); max-width:560px; margin:0;}
 
-  .three-pillars{display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--line); margin-top:32px; border:1px solid var(--line);}
-  .pillar{background:var(--paper); padding:26px 22px;}
-  .pillar .n{font-family:var(--serif); font-size:15px; color:var(--copper-deep); margin-bottom:10px;}
-  .pillar h4{margin:0 0 8px; font-size:16px; font-family:var(--sans); font-weight:700;}
-  .pillar p{font-size:14px; margin:0; color:var(--ink-soft);}
-  @media(max-width:680px){.three-pillars{grid-template-columns:1fr;}}
+  .cols{display:grid; grid-template-columns:1fr 1fr; gap:var(--s4); align-items:start;}
+  @media(max-width:760px){.cols{grid-template-columns:1fr;}}
 
-  .stats{display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--line); border:1px solid var(--line); margin-top:8px;}
-  .stat{background:var(--paper); padding:24px 20px;}
-  .stat .num{font-family:var(--serif); font-size:28px; color:var(--sage-deep); line-height:1;}
-  .stat .desc{font-size:12.5px; color:var(--ink-soft); margin-top:8px;}
-  @media(max-width:680px){.stats{grid-template-columns:1fr 1fr;}}
+  .plan{
+    background:var(--surface); backdrop-filter:blur(18px);
+    border:1px solid var(--hair-strong); border-radius:2px;
+    padding:var(--s5) var(--s4) var(--s4);
+    box-shadow: 0 40px 80px -30px rgba(0,0,0,0.6);
+    position:relative;
+  }
+  .plan.recommended{border-color:var(--gold-dim); box-shadow: 0 40px 80px -30px rgba(0,0,0,0.6), 0 0 50px -15px rgba(217,180,114,0.25);}
+  .plan-tag{font-size:11px; letter-spacing:.1em; color:var(--gold); margin-bottom:var(--s2);}
+  .plan-name{font-family:var(--serif); font-size:24px; margin:0 0 6px;}
+  .plan-scope{font-size:13px; color:var(--ink-faint); margin-bottom:var(--s4);}
 
-  table{width:100%; border-collapse:collapse; margin-top:20px; font-size:14.5px;}
-  th{text-align:left; font-size:11.5px; color:var(--copper-deep); padding:10px 14px; border-bottom:2px solid var(--ink);}
-  td{padding:12px 14px; border-bottom:1px solid var(--line); vertical-align:top;}
-  tr:last-child td{border-bottom:none;}
+  .plan-items{margin:var(--s4) 0; border-top:1px solid var(--hair); padding-top:var(--s3);}
+  .p-item{display:flex; justify-content:space-between; padding:10px 0; font-size:14px; border-bottom:1px solid var(--hair);}
+  .p-item:last-child{border-bottom:none;}
+  .p-item .p-name{color:var(--ink-dim);}
+  .p-item .p-qty{color:var(--ink); font-weight:600;}
 
-  .callout{border-left:3px solid var(--copper); padding:4px 0 4px 22px; margin:26px 0; max-width:680px;}
-  .callout p{margin:0; font-size:15px; color:var(--ink-soft);}
+  .plan-total{margin-top:var(--s4); padding-top:var(--s3); border-top:1px solid var(--hair-strong);}
+  .plan-total .tl{font-size:11px; color:var(--ink-faint); letter-spacing:.05em; margin-bottom:6px;}
+  .plan-total .tv{font-family:var(--serif); font-size:34px; color:var(--gold); text-shadow:0 0 24px rgba(217,180,114,0.4);}
+  .plan-install{font-size:13px; color:var(--ink-dim); margin-top:8px;}
+  .plan-install strong{color:var(--ink);}
 
-  .swot-grid{display:grid; grid-template-columns:1fr 1fr; gap:2px; margin-top:32px; background:var(--ink);}
-  .swot-cell{padding:30px 28px; background:var(--paper);}
-  .swot-cell.strengths{background:#DDE4DD;}
-  .swot-cell.weaknesses{background:var(--paper-dim);}
-  .swot-cell.opportunities{background:#E4DCC9;}
-  .swot-cell.threats{background:#E7D9CB;}
-  .swot-cell h4{font-family:var(--serif); font-size:19px; margin:0 0 4px; font-weight:400;}
-  .swot-cell .sub{font-size:11.5px; color:var(--ink-soft); margin-bottom:16px;}
-  .swot-cell ul{margin:0; padding-left:18px;}
-  .swot-cell li{font-size:14.5px; margin-bottom:9px; color:var(--ink-soft);}
-  @media(max-width:680px){.swot-grid{grid-template-columns:1fr;}}
+  .vs{
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--serif); font-size:15px; color:var(--ink-faint);
+    grid-column:1/-1; margin:0; text-align:center;
+  }
 
-  .phase-tag{display:inline-block; font-size:11px; padding:4px 10px; border:1px solid var(--copper); color:var(--copper-deep); margin-bottom:16px;}
-  .deliv-week{margin-top:26px;}
-  .deliv-week h4{font-family:var(--serif); font-size:18px; margin:0 0 12px; font-weight:400;}
-  .deliv-row{display:grid; grid-template-columns:110px 1fr; gap:16px; padding:10px 0; border-bottom:1px solid var(--line); font-size:14.5px;}
-  .deliv-row .type{color:var(--copper-deep); font-size:12px; padding-top:2px;}
-  .deliv-row:last-child{border-bottom:none;}
-  .lp-card{margin-top:30px; background:var(--ink); color:var(--paper); padding:30px 34px;}
-  .lp-card .tag{font-size:12px; color:var(--copper); margin-bottom:10px;}
-  .lp-card h4{font-family:var(--serif); font-size:20px; margin:0 0 10px; font-weight:400;}
-  .lp-card p{color:#C9C0AC; font-size:14.5px; max-width:none; margin:0;}
+  .compare-table{margin-top:var(--s6); border-top:1px solid var(--hair);}
+  .ct-row{display:grid; grid-template-columns:1fr 1fr 1fr; gap:var(--s3); padding:var(--s3) 0; border-bottom:1px solid var(--hair); align-items:baseline;}
+  .ct-row.header .ct-cell{font-size:11px; letter-spacing:.08em; color:var(--gold); text-transform:none;}
+  .ct-cell{font-size:14px; color:var(--ink-dim);}
+  .ct-cell:first-child{color:var(--ink-faint); font-size:12.5px;}
+  .ct-cell strong{color:var(--ink); font-weight:600;}
+  @media(max-width:760px){.ct-row{grid-template-columns:1fr 1fr 1fr; gap:var(--s2); font-size:12.5px;}}
 
-  .roadmap{margin-top:30px;}
-  .rm-item{display:grid; grid-template-columns:64px 1fr; gap:20px; padding:20px 0; border-bottom:1px solid var(--line);}
-  .rm-item:last-child{border-bottom:none;}
-  .rm-item .ph{font-family:var(--serif); font-size:15px; color:var(--copper-deep); padding-top:2px;}
-  .rm-item h4{margin:0 0 6px; font-size:16px;}
-  .rm-item p{margin:0; font-size:14.5px; color:var(--ink-soft);}
+  footer{margin-top:var(--s6); padding-top:var(--s3); border-top:1px solid var(--hair); font-size:11.5px; color:var(--ink-faint); display:flex; justify-content:space-between;}
 
-  footer{padding:50px 0 70px; text-align:left;}
-  footer .sign{font-family:var(--serif); font-size:15px; color:var(--ink-soft);}
+  @media print{ body::before{display:none;} body{background:#fff; color:#000;} }
 </style>
 </head>
 <body>
+<div class="page">
 
-<div class="cover">
-  <div class="wrap">
-    <div class="eyebrow">QUINTESSÊNCIA DIGITAL · DIAGNÓSTICO, MERCADO E PROPOSTA</div>
-    <h1>Dra. Thais Prata: construir a <em>imagem</em> antes de brigar por espaço</h1>
-    <p class="lede">Diagnóstico de posicionamento, panorama de mercado, análise FOFA e proposta de branding para os primeiros 60 dias — antes de entrar na disputa por leads de facelift e blefaroplastia.</p>
-    <div class="cover-meta">
-      <div><span class="label">Marca / clínica</span><span class="value">PrataMed — Dra. Thais Prata</span></div>
-      <div><span class="label">Escopo</span><span class="value">Branding &amp; Posicionamento — 60 dias</span></div>
-      <div><span class="label">Meta de fundo</span><span class="value">Cirurgiã de face reconhecível</span></div>
+  <div class="head">
+    <div class="brand">QUINTESSÊNCIA DIGITAL</div>
+    <h1>Comparativo de Orçamentos — Projeto de Branding</h1>
+    <p>Duas formas de estruturar os 60 dias de reforço de marca da Dra. Thais Prata — mesma landing page de base, volumes de conteúdo diferentes.</p>
+  </div>
+
+  <div class="cols">
+
+    <div class="plan">
+      <div class="plan-tag">OPÇÃO C · REDUZIDA</div>
+      <h2 class="plan-name">Pacote Enxuto</h2>
+      <div class="plan-scope">13 entregáveis · 60 dias</div>
+
+      <div class="plan-items">
+        <div class="p-item"><span class="p-name">Vídeos magnéticos</span><span class="p-qty">4</span></div>
+        <div class="p-item"><span class="p-name">Carrosséis inteligentes</span><span class="p-qty">8</span></div>
+        <div class="p-item"><span class="p-name">Landing page</span><span class="p-qty">1</span></div>
+      </div>
+
+      <div class="plan-total">
+        <div class="tl">VALOR TOTAL</div>
+        <div class="tv">R$ 4.950</div>
+        <div class="plan-install">2x de <strong>R$ 2.475</strong></div>
+      </div>
+    </div>
+
+    <div class="plan recommended">
+      <div class="plan-tag">OPÇÃO A · COMPLETA</div>
+      <h2 class="plan-name">Pacote Completo</h2>
+      <div class="plan-scope">25 entregáveis · 60 dias</div>
+
+      <div class="plan-items">
+        <div class="p-item"><span class="p-name">Vídeos magnéticos</span><span class="p-qty">8</span></div>
+        <div class="p-item"><span class="p-name">Carrosséis inteligentes</span><span class="p-qty">16</span></div>
+        <div class="p-item"><span class="p-name">Landing page</span><span class="p-qty">1</span></div>
+      </div>
+
+      <div class="plan-total">
+        <div class="tl">VALOR TOTAL</div>
+        <div class="tv">R$ 8.700</div>
+        <div class="plan-install">3x de <strong>R$ 3.000</strong></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="compare-table">
+    <div class="ct-row header">
+      <div class="ct-cell">Comparativo</div>
+      <div class="ct-cell">Pacote Enxuto</div>
+      <div class="ct-cell">Pacote Completo</div>
+    </div>
+    <div class="ct-row">
+      <div class="ct-cell">Cadência de conteúdo</div>
+      <div class="ct-cell">1 vídeo a cada 2 semanas + 1 carrossel/semana</div>
+      <div class="ct-cell">1 vídeo/semana + 2 carrosséis/semana</div>
+    </div>
+    <div class="ct-row">
+      <div class="ct-cell">Total de entregáveis</div>
+      <div class="ct-cell"><strong>13</strong></div>
+      <div class="ct-cell"><strong>25</strong></div>
+    </div>
+    <div class="ct-row">
+      <div class="ct-cell">Valor total</div>
+      <div class="ct-cell"><strong>R$ 4.950</strong></div>
+      <div class="ct-cell"><strong>R$ 8.700</strong></div>
+    </div>
+    <div class="ct-row">
+      <div class="ct-cell">Parcelamento</div>
+      <div class="ct-cell">2x R$ 2.475</div>
+      <div class="ct-cell">3x R$ 3.000</div>
     </div>
   </div>
-</div>
-
-<div class="wrap">
-
-  <!-- 1. DIAGNÓSTICO -->
-  <section>
-    <div class="kicker">01 — DIAGNÓSTICO</div>
-    <h2>Um perfil com autoridade real, mas sem eixo</h2>
-    <p class="section-intro">A Dra. Thais tem o que a maioria das concorrentes da região não tem: formação cirúrgica, atuação oncológica e vínculo com sociedades médicas de peso. O problema não é falta de credencial — é que essa credencial está diluída dentro de um feed que fala três línguas ao mesmo tempo.</p>
-
-    <div class="diagnosis">
-      <div class="tag">O QUE O PERFIL MOSTRA HOJE</div>
-      <blockquote>"Não trato tendências, trato anatomia. Dermatologia para quem pensa a longo prazo."</blockquote>
-      <p>É essa a frase na bio — precisa, técnica, de posicionamento científico. Mas o grid abaixo dela mistura iate, academia, still de bastidor cirúrgico e selfie de procedimento, sem hierarquia visual entre o que é vida pessoal, autoridade clínica e prova de resultado. Quem chega até o perfil não sabe, nos primeiros 3 segundos, se está diante de uma dermato clínica, uma esteticista de influência ou uma cirurgiã.</p>
-    </div>
-
-    <div class="three-pillars">
-      <div class="pillar">
-        <div class="n">Linha 1</div>
-        <h4>Lifestyle pessoal</h4>
-        <p>Barco, academia, moda — constrói proximidade e desejo de aspiração, mas não comunica nenhuma competência médica.</p>
-      </div>
-      <div class="pillar">
-        <div class="n">Linha 2</div>
-        <h4>Procedimento / bastidor</h4>
-        <p>Registros de cirurgia e aplicação de toxina — forte prova social, mas aparecem soltos, sem explicar critério clínico por trás.</p>
-      </div>
-      <div class="pillar">
-        <div class="n">Linha 3</div>
-        <h4>Dermatologia clínica</h4>
-        <p>O que sustenta a frase da bio e a diferencia de 90% da concorrência local — e é a linha menos presente das três.</p>
-      </div>
-    </div>
-
-    <div class="callout">
-      <p><strong>Consequência prática:</strong> a paciente que busca segurança técnica antes de estética não encontra sinal suficiente pra confiar. E quem chega buscando só o procedimento não entende por que pagaria mais por uma dermatologista-cirurgiã em vez de uma harmonizadora qualquer da região.</p>
-    </div>
-  </section>
-
-  <!-- 2. PANORAMA DE MERCADO -->
-  <section>
-    <div class="kicker">02 — PANORAMA DE MERCADO</div>
-    <h2>O setor nunca teve tanto vento a favor</h2>
-    <p class="section-intro">A dermatologia estética brasileira está numa das curvas de crescimento mais consistentes do país — e o consumidor está migrando de "estética por tendência" para "estética por ciência", o que joga direto a favor de um posicionamento como o da Dra. Thais.</p>
-
-    <div class="stats">
-      <div class="stat"><div class="num">R$ 186,7 bi</div><div class="desc">Faturamento do setor de estética e beleza no Brasil em 2024, alta de 15,7% sobre 2023</div></div>
-      <div class="stat"><div class="num">7–10%</div><div class="desc">Crescimento anual projetado para o setor em 2026</div></div>
-      <div class="stat"><div class="num">+20%</div><div class="desc">Fatia do Brasil nas vendas globais de dermocosméticos — o país lidera esse mercado no mundo</div></div>
-      <div class="stat"><div class="num">+500%</div><div class="desc">Crescimento acumulado do setor de estética nos últimos cinco anos no país</div></div>
-    </div>
-
-    <div class="callout">
-      <p><strong>Tendência relevante para o posicionamento:</strong> o movimento "Quiet Beauty" — lançado por dermatologistas no MAAC (Medical Advanced Aesthetic Congress) — é uma resposta direta à banalização de procedimentos invasivos e valoriza médicos que explicam risco, indicação e anatomia em vez de vender resultado. É exatamente a plataforma discursiva que a bio da Dra. Thais já anuncia e que a comunicação ainda não entrega de forma consistente.</p>
-    </div>
-  </section>
-
-  <!-- 3. FOFA -->
-  <section>
-    <div class="kicker">03 — ANÁLISE FOFA</div>
-    <h2>Forças, oportunidades, fraquezas e ameaças</h2>
-    <p class="section-intro">Cruzando o diagnóstico do perfil com o panorama de mercado.</p>
-
-    <div class="swot-grid">
-      <div class="swot-cell strengths">
-        <h4>Forças</h4>
-        <div class="sub">Internas · a favor</div>
-        <ul>
-          <li>Dupla formação rara na região: dermatologia clínica <em>e</em> cirurgia dermatológica/oncológica — a maioria das concorrentes locais só aplica procedimentos estéticos</li>
-          <li>Credenciais de peso pouco exploradas: membro da SBCD, do Grupo Brasileiro de Melanoma e da Academia Americana de Dermatologia</li>
-          <li>Localização premium — Riviera Business &amp; Mall, Praia Brava, entre Itajaí e BC</li>
-          <li>Base de seguidores já consolidada (mais de 15 mil) e produção de conteúdo de bastidor cirúrgico, ativo raro entre concorrentes</li>
-          <li>Portfólio técnico amplo: rinomodelação, blefaroplastia, laser CO2, Morpheus, Ultraformer, tricologia, cirurgias oncológicas</li>
-        </ul>
-      </div>
-      <div class="swot-cell opportunities">
-        <h4>Oportunidades</h4>
-        <div class="sub">Externas · a explorar</div>
-        <ul>
-          <li>Setor de estética em expansão de 7–10% ao ano no Brasil, com dermocosméticos liderados globalmente pelo país</li>
-          <li>Tendência "Quiet Beauty" valoriza exatamente o discurso técnico e anti-tendência que já está na bio da Dra. Thais</li>
-          <li>Região de alta renda e forte fluxo de público qualificado</li>
-          <li>Mercado de facelift/blefaro local sem uma autoridade científica dominante em comunicação digital — espaço aberto, mas que exige construção de imagem antes de disputa por performance</li>
-        </ul>
-      </div>
-      <div class="swot-cell weaknesses">
-        <h4>Fraquezas</h4>
-        <div class="sub">Internas · a resolver</div>
-        <ul>
-          <li>Comunicação sem linha editorial: lifestyle, procedimento e dermatologia clínica se alternam sem hierarquia nem contexto</li>
-          <li>A autoridade científica anunciada na bio não aparece de forma sistemática no conteúdo visual</li>
-          <li>Ausência de jornada clara para quem chega ao perfil — não fica óbvio "por que procurar a Dra. Thais primeiro"</li>
-          <li>Ainda não tem portfólio comunicado de facelift/blefaro — precisa ser construído antes de competir nesse nicho</li>
-        </ul>
-      </div>
-      <div class="swot-cell threats">
-        <h4>Ameaças</h4>
-        <div class="sub">Externas · a monitorar</div>
-        <ul>
-          <li>Concorrentes de facelift/blefaro já operam com anos de autoridade construída e prova social acumulada — competir agora por leads pagos significa CPL alto e conversão baixa</li>
-          <li>Banalização de procedimentos por harmonizadores não-médicos, competindo por preço</li>
-          <li>Restrições do CFM sobre antes/depois e promessa de resultado exigem comunicação mais sofisticada</li>
-          <li>Sazonalidade turística da região pode gerar oscilação de demanda fora de temporada alta</li>
-        </ul>
-      </div>
-    </div>
-  </section>
-
-  <!-- 4. PROPOSTA -->
-  <section>
-    <div class="kicker">04 — PROPOSTA</div>
-    <h2>60 dias de reforço de marca antes da virada para performance</h2>
-    <p class="section-intro">Mês 1 e Mês 2 seguem a mesma cadência: 1 vídeo + 2 carrosséis por semana, 12 entregáveis por mês, sempre amarrados ao eixo "dermatologista e cirurgiã de face" — mais uma landing page com formulário, base para a fase seguinte de captação.</p>
-
-    <span class="phase-tag">MÊS 1 — 12 ENTREGÁVEIS</span>
-
-    <div class="deliv-week">
-      <h4>Semana 1 · Fase de Reconhecimento</h4>
-      <div class="deliv-row"><div class="type">Vídeo</div><div>O que faz uma dermatologista virar cirurgiã de face — bastidor + explicação do raciocínio duplo</div></div>
-      <div class="deliv-row"><div class="type">Carrossel</div><div>5 sinais de que o problema é de pele, não de estrutura</div></div>
-      <div class="deliv-row"><div class="type">Carrossel</div><div>Bastidor de congresso e formação — SBCD, AAD, Grupo Brasileiro de Melanoma</div></div>
-    </div>
-
-    <div class="deliv-week">
-      <h4>Semana 2 · Fase de Reconhecimento</h4>
-      <div class="deliv-row"><div class="type">Vídeo</div><div>Blefaroplastia: o que realmente muda no olhar</div></div>
-      <div class="deliv-row"><div class="type">Carrossel</div><div>Perguntas que você deve fazer antes de decidir por uma blefaroplastia</div></div>
-      <div class="deliv-row"><div class="type">Carrossel</div><div>Bastidor cirúrgico com explicação técnica do procedimento</div></div>
-    </div>
-
-    <div class="deliv-week">
-      <h4>Semana 3 · Fase de Reconhecimento</h4>
-      <div class="deliv-row"><div class="type">Vídeo</div><div>Facelift: o procedimento mais mal-entendido da cirurgia facial</div></div>
-      <div class="deliv-row"><div class="type">Carrossel</div><div>Facelift não é só "puxar a pele" — entenda a técnica</div></div>
-      <div class="deliv-row"><div class="type">Carrossel</div><div>Lifestyle como prova de posicionamento — rotina, estudo, ambiente de trabalho</div></div>
-    </div>
-
-    <div class="deliv-week">
-      <h4>Semana 4 · Virada para Engajamento</h4>
-      <div class="deliv-row"><div class="type">Vídeo</div><div>Pergunte à Dra. Thais — dúvidas comuns sobre facelift, convocando comentário</div></div>
-      <div class="deliv-row"><div class="type">Carrossel</div><div>5 mitos sobre facelift que você precisa parar de acreditar</div></div>
-      <div class="deliv-row"><div class="type">Carrossel</div><div>Bastidor humano/marca, reforçando proximidade com a nova audiência</div></div>
-    </div>
-
-    <div class="lp-card">
-      <div class="tag">ENTREGÁVEL COMPLEMENTAR</div>
-      <h4>Landing page com formulário</h4>
-      <p>Página dedicada ao posicionamento de cirurgiã de face — não para captar lead de venda agora, mas para qualificar quem já chega buscando entender mais sobre facelift/blefaro, alimentando a base que será ativada na fase de performance.</p>
-    </div>
-
-    <p class="footnote" style="margin-top:24px; font-size:13px; color:var(--ink-soft);">Mês 2 replica a cadência (mais 12 entregáveis), aprofundando a fase de engajamento e preparando a transição para tráfego de conversão no mercado de facelift/blefaro.</p>
-  </section>
-
-  <!-- 5. TRÁFEGO -->
-  <section style="border-bottom:none;">
-    <div class="kicker">05 — TRÁFEGO PARA CRESCIMENTO DE NICHO, NÃO PARA VENDA</div>
-    <h2>Por que não vamos vender nesses 60 dias</h2>
-    <p class="section-intro">O mercado de facelift e blefaroplastia na região já tem players com anos de autoridade construída e prova social acumulada. Entrar agora com campanha de conversão significa pagar caro por lead e converter mal — porque quem pesquisa cirurgia facial compara portfólio, lê comentário e entra no perfil do médico antes de marcar consulta. Sem esse lastro, a verba de mídia vira gasto, não investimento.</p>
-
-    <div class="col2">
-      <div>
-        <h3>Dias 1–20 · Reconhecimento</h3>
-        <p>Objetivo de campanha é alcance, não clique. A mídia paga funciona só como megafone do conteúdo educativo/autoridade, levando-o ao público certo da região sem exigir nenhuma ação — o papel dela é gerar impressão de qualidade e recall.</p>
-      </div>
-      <div>
-        <h3>Dias 21–60 · Engajamento</h3>
-        <p>Objetivo muda para engajamento (comentário, salvar, visita ao perfil, seguir). O público deixa de ser frio: campanhas fazem retargeting de quem foi impactado na fase de reconhecimento, crescendo o perfil com seguidores qualificados do nicho de facelift/blefaro — não seguidor genérico.</p>
-      </div>
-    </div>
-
-    <div class="callout">
-      <p><strong>O que define quando entrar em tráfego de venda:</strong> não é número de seguidor — é a bio e o feed comunicarem sozinhos "cirurgiã de face" sem precisar de legenda explicando, e o público que já segue começar a comentar/perguntar sobre facelift e blefaro. Só aí faz sentido ligar a campanha de performance para brigar por espaço nesse mercado com uma marca que já significa alguma coisa.</p>
-    </div>
-  </section>
 
   <footer>
-    <div class="sign">Quintessência Digital — diagnóstico, mercado e proposta de branding para a Dra. Thais Prata.</div>
+    <div>Quintessência Digital</div>
+    <div>Orçamento válido por 15 dias</div>
   </footer>
 
 </div>

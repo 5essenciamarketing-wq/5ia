@@ -41,7 +41,6 @@ a:hover{text-decoration:underline}
 .sync.ok::before{background:var(--ok)}
 .sync.saving::before,.sync.loading::before{background:var(--gold)}
 .sync.erro::before{background:var(--bad)}
-.sync.demo::before{background:var(--info)}
 .primary{background:var(--gold);color:#241C10;border:0;padding:.55rem 1.05rem;border-radius:8px;font-weight:600}
 .primary:hover{filter:brightness(1.08)}
 .ghost{background:transparent;border:1px solid var(--line);padding:.5rem .9rem;border-radius:8px}
@@ -193,7 +192,6 @@ textarea{min-height:150px;resize:vertical}
   <div class="tools">
     <span id="sync" class="sync"></span>
     <button class="ghost sm" data-act="sync" title="Buscar dados da planilha">Sincronizar</button>
-    <button class="ghost sm" data-act="cfg">Configurar</button>
     <button class="primary" data-act="novo">Novo lead</button>
   </div>
 </header>
@@ -203,7 +201,6 @@ textarea{min-height:150px;resize:vertical}
 
 <dialog id="dlgLead"></dialog>
 <dialog id="dlgContato" class="sm2"></dialog>
-<dialog id="dlgCfg" class="sm2"></dialog>
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script>
@@ -264,20 +261,28 @@ const handle=s=>String(s||'').trim().replace(/^https?:\/\/(www\.)?instagram\.com
 const prio=(a,b)=>(fitRank[a.fit]-fitRank[b.fit])||(b.tentativas-a.tentativas);
 const cmpData=(a,b)=>(a.proximoFollowup||'9999').localeCompare(b.proximoFollowup||'9999')||prio(a,b);
 
+/* ============ conexão com a planilha (fixa) ============ */
+// Este CRM é ligado diretamente à planilha abaixo. Não há tela de configuração.
+// Capacidade e meta padrão; para mudar, use a aba "Config" da planilha
+// (linhas: capacidadeDiaria | 40 e metaNovosDia | 20).
+const CAP_PADRAO=30,META_PADRAO=15;
+const URL_PADRAO='https://script.google.com/macros/s/AKfycbwJkYGLoodc8vh_FX_QzHiVxMZfT16_HkSicEodmfFVHzLZvNkg4U7mQQ5R_RsR7DJL6A/exec';
+const TOKEN_PADRAO='';
+
 /* ============ estado ============ */
 const S={
+  erro:'',
   leads:[],
-  cfg:{capacidadeDiaria:30,metaNovosDia:15},
+  cfg:{capacidadeDiaria:CAP_PADRAO,metaNovosDia:META_PADRAO},
   view:store.get('crm_view','hoje'),
-  url:store.get('crm_url'),
-  token:store.get('crm_token'),
-  sdr:store.get('crm_sdr'),
+  url:URL_PADRAO,
+  token:TOKEN_PADRAO,
+  sdr:'',
   pend:new Map(),
   filtro:{q:'',etapa:'',fit:''},
   sort:{k:'proximoFollowup',dir:1},
   edit:null
 };
-const demo=()=>!S.url;
 
 function norm(l){
   let h=l.historico;
@@ -298,38 +303,19 @@ function novo(p={}){
   return norm({id:uid(),criadoEm:t,atualizadoEm:t,sdr:S.sdr,etapa:'prospectado',fit:'morno',proximoFollowup:proxUtil(hoje()),historico:[],...p});
 }
 
-/* ============ dados de exemplo (modo teste) ============ */
-function semente(){
-  const mk=(nome,ig,seg,fit,etapa,dias,tent,dor,diag)=>norm({
-    id:uid(),criadoEm:new Date().toISOString(),nome,instagram:ig,segmento:seg,fit,etapa,
-    proximoFollowup:dias===null?'':addDias(hoje(),dias),tentativas:tent,dor,diagnostico:diag,historico:[]
-  });
-  return [
-    mk('Clínica Aura','clinicaaura','Clínica de estética','quente','conversa',0,2,'Agenda vazia à tarde','Instagram com 8k seguidores, posts sem padrão visual, sem anúncio ativo e sem link de agendamento na bio. Responde direct só em horário comercial.'),
-    mk('Dra. Marina Prado','dramarinaprado','Cirurgião plástico','morno','abordado',-2,1,'Lead sem qualificação','Roda anúncio, mas manda tudo para o WhatsApp pessoal. Sem CRM. Secretária sobrecarregada.'),
-    mk('Studio Bella Nails','bellanailsbc','Studio de beleza','frio','prospectado',1,0,'','Perfil novo, 900 seguidores. Ainda sem estrutura de captação.'),
-    mk('Odonto Lume','odontolume','Clínica odontológica','quente','reuniao',2,3,'Alto no-show','Três unidades, 40k no Instagram. Agendamento manual e taxa alta de faltas. Reunião com o sócio marcada.'),
-    mk('Dr. Caio Ferraz','drcaioferraz','Cirurgião plástico','morno','abordado',0,1,'Baixa autoridade digital','Conteúdo técnico demais, pouco antes/depois. Sem prova social organizada.'),
-    mk('Espaço Renove','espacorenove','Clínica de estética','morno','prospectado',null,0,'','')
-  ];
-}
-function persistDemo(){
-  store.set('crm_demo',JSON.stringify(S.leads.map(ser)));
-  store.set('crm_demo_cfg',JSON.stringify(S.cfg));
-}
-function carregarDemo(){
-  const raw=store.get('crm_demo');
-  if(raw){try{S.leads=JSON.parse(raw).map(norm)}catch{S.leads=semente()}}
-  else{S.leads=semente();persistDemo()}
-  try{S.cfg={...S.cfg,...JSON.parse(store.get('crm_demo_cfg','{}'))}}catch{}
-}
-
 /* ============ sincronização com a planilha ============ */
 function setSync(st){
   const el=$('#sync');
-  const txt={ok:'Planilha sincronizada',saving:'Salvando…',loading:'Sincronizando…',erro:'Sem conexão com a planilha',demo:'Modo teste'}[st];
+  const txt={ok:'Planilha sincronizada',saving:'Salvando…',loading:'Sincronizando…',erro:'Sem conexão com a planilha'}[st];
   el.className='sync '+st;el.textContent=txt;
 }
+const msgErro=e=>{
+  const m=String(e&&e.message||e);
+  if(/failed to fetch|networkerror|load failed/i.test(m))return 'O navegador não conseguiu abrir o script. No Apps Script, confira em Implantar > Gerenciar implantações se o acesso está como "Qualquer pessoa".';
+  if(/unexpected token|json/i.test(m))return 'O script respondeu com uma página em vez de dados. Publique uma nova versão da implantação.';
+  if(/token/i.test(m))return 'Token inválido. O token do Code.gs não confere com o do CRM.';
+  return m;
+};
 async function post(payload){
   const r=await fetch(S.url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({...payload,token:S.token})});
   const j=await r.json();
@@ -338,15 +324,15 @@ async function post(payload){
 }
 async function salvar(arr){
   arr.forEach(l=>{l.atualizadoEm=new Date().toISOString()});
-  if(demo()){persistDemo();return}
   arr.forEach(l=>S.pend.set(l.id,l));
   setSync('saving');
   try{
     await post({acao:'salvarLote',leads:arr.map(ser)});
     arr.forEach(l=>{if(S.pend.get(l.id)===l)S.pend.delete(l.id)});
     setSync(S.pend.size?'erro':'ok');
+    S.erro='';
   }catch(e){
-    setSync('erro');
+    setSync('erro');S.erro=msgErro(e);
     toast('Não chegou na planilha. Toque em Sincronizar para tentar de novo.');
   }
   banner();
@@ -355,16 +341,10 @@ async function excluir(id){
   S.leads=S.leads.filter(l=>l.id!==id);
   S.pend.delete(id);
   render();
-  if(demo()){persistDemo();return}
   try{await post({acao:'excluir',id});toast('Lead excluído.')}
   catch{toast('Não foi possível excluir na planilha. Sincronize e tente de novo.')}
 }
-async function salvarCfgRemoto(){
-  if(demo()){persistDemo();return}
-  try{await post({acao:'config',config:S.cfg})}catch{toast('Configuração salva só neste navegador. Falha ao enviar para a planilha.')}
-}
 async function sincronizar(silencioso){
-  if(demo()){setSync('demo');render();return}
   setSync('loading');
   try{
     if(S.pend.size){await post({acao:'salvarLote',leads:[...S.pend.values()].map(ser)});S.pend.clear()}
@@ -375,10 +355,10 @@ async function sincronizar(silencioso){
     const c=j.config||{};
     if(Number(c.capacidadeDiaria))S.cfg.capacidadeDiaria=Number(c.capacidadeDiaria);
     if(c.metaNovosDia!==undefined&&c.metaNovosDia!=='')S.cfg.metaNovosDia=Number(c.metaNovosDia)||0;
-    setSync('ok');render();
+    S.erro='';setSync('ok');render();
   }catch(e){
-    setSync('erro');render();
-    if(!silencioso)toast('Falha ao sincronizar: '+e.message);
+    setSync('erro');S.erro=msgErro(e);render();
+    if(!silencioso)toast('Falha ao sincronizar.');
   }
 }
 
@@ -390,15 +370,15 @@ function toast(msg){
 }
 function banner(){
   const b=$('#banner');
-  if(demo()){
-    b.innerHTML=`<div class="banner"><span>Modo teste: os dados ficam só neste navegador. Conecte a planilha em Configurar para o SDR trabalhar de verdade.</span><button class="ghost sm" data-act="limparDemo">Limpar exemplos</button><button class="primary sm" data-act="cfg">Conectar planilha</button></div>`;
+  if(S.erro){
+    b.innerHTML=`<div class="banner warn"><span><b>Sem conexão com a planilha.</b> ${esc(S.erro)}</span><button class="primary sm" data-act="sync">Tentar de novo</button></div>`;
   }else if(S.pend.size){
     b.innerHTML=`<div class="banner warn"><span>${S.pend.size} alteração(ões) ainda não enviada(s) para a planilha.</span><button class="primary sm" data-act="sync">Tentar de novo</button></div>`;
   }else b.innerHTML='';
 }
 function render(){
   document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.view===S.view));
-  $('#sdrNome').textContent=S.sdr?`SDR: ${S.sdr}`:'Prospecção e follow-up';
+  $('#sdrNome').textContent='Prospecção e follow-up';
   ({hoje:vHoje,funil:vFunil,leads:vLeads,capacidade:vCap})[S.view]();
   banner();
 }
@@ -553,8 +533,8 @@ function vCap(){
   const reun=S.leads.filter(l=>l.etapa==='reuniao'||l.historico.some(e=>e.res==='reun')).length;
   const maxE=Math.max(1,...ETAPAS.map(e=>S.leads.filter(l=>l.etapa===e.id).length));
   const funil=ETAPAS.map(e=>{const n=S.leads.filter(l=>l.etapa===e.id).length;return `<div class="f"><span>${e.nome}</span><div class="track"><i style="width:${n/maxE*100}%"></i></div><b>${n}</b></div>`}).join('');
-  $('#main').innerHTML=`<div class="head"><div><h2>Capacidade</h2><span class="mu">Capacidade diária: ${cap} toques. Meta de novos leads: ${meta}/dia.</span></div>
-    <div style="display:flex;gap:.5rem"><button class="ghost sm" data-act="cfg">Ajustar capacidade</button><button class="primary sm" data-act="reorganizar">Reorganizar fila</button></div></div>
+  $('#main').innerHTML=`<div class="head"><div><h2>Capacidade</h2><span class="mu">Capacidade diária: ${cap} toques. Meta de novos leads: ${meta}/dia. Ajustes ficam na aba Config da planilha.</span></div>
+    <button class="primary sm" data-act="reorganizar">Reorganizar fila</button></div>
   <div class="two">
     <section><h3 style="margin-bottom:1.6rem">Follow-ups nos próximos 7 dias úteis</h3>${barras(prox,carga,cap)}
       <p class="mu" style="font-size:.86rem">${sobrecarga?`${sobrecarga} dia${sobrecarga>1?'s':''} acima da capacidade${atras?` e ${atras} atrasado${atras>1?'s':''} acumulado${atras>1?'s':''} em hoje`:''}. Use Reorganizar fila para distribuir os excedentes nos dias com vaga.`:'Nenhum dia acima da capacidade. O espaço restante de cada dia é vaga para prospecção nova.'}</p>
@@ -709,38 +689,6 @@ function confirmarContato(){
   $('#dlgContato').close();render();toast('Contato registrado.');
 }
 
-/* ============ configuração ============ */
-function abrirCfg(){
-  $('#dlgCfg').innerHTML=`
-  <div class="dh"><h2>Configurar</h2><button class="ghost sm" data-act="fechar">Fechar</button></div>
-  <div class="db">
-    <div class="fld"><label for="cSdr">Nome do SDR</label><input id="cSdr" value="${esc(S.sdr)}" autocomplete="off"></div>
-    <div class="grid2">
-      <div class="fld"><label for="cCap">Capacidade diária (toques por dia)</label><input type="number" min="1" id="cCap" value="${+S.cfg.capacidadeDiaria||30}"></div>
-      <div class="fld"><label for="cMeta">Meta de novos leads por dia</label><input type="number" min="0" id="cMeta" value="${+S.cfg.metaNovosDia||0}"></div>
-    </div>
-    <div class="fld"><label for="cUrl">URL da planilha (Apps Script)</label><input id="cUrl" value="${esc(S.url)}" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off"></div>
-    <div class="fld"><label for="cTok">Token de acesso (o mesmo do Code.gs, se você definiu)</label><input id="cTok" value="${esc(S.token)}" autocomplete="off"></div>
-    <p class="mu" style="font-size:.85rem;margin:0">Deixe a URL vazia para usar o modo teste, com dados só neste navegador.</p>
-  </div>
-  <div class="df"><span></span><div class="r"><button class="primary" data-act="salvarCfg">Salvar</button></div></div>`;
-  $('#dlgCfg').showModal();
-}
-function salvarCfg(){
-  const urlAntes=S.url+S.token;
-  S.sdr=$('#cSdr').value.trim();
-  S.cfg.capacidadeDiaria=Math.max(1,+$('#cCap').value||30);
-  S.cfg.metaNovosDia=Math.max(0,+$('#cMeta').value||0);
-  S.url=$('#cUrl').value.trim();S.token=$('#cTok').value.trim();
-  store.set('crm_sdr',S.sdr);store.set('crm_url',S.url);store.set('crm_token',S.token);
-  $('#dlgCfg').close();
-  if(S.url+S.token!==urlAntes){
-    if(demo()){carregarDemo();setSync('demo');render()}
-    else{S.leads=[];render();sincronizar().then(()=>salvarCfgRemoto())}
-  }else{salvarCfgRemoto();render()}
-  toast('Configuração salva.');
-}
-
 /* ============ eventos ============ */
 document.addEventListener('click',e=>{
   if(e.target.tagName==='DIALOG'){e.target.close();return}
@@ -758,14 +706,11 @@ document.addEventListener('click',e=>{
     case 'salvarLead':salvarLead();break;
     case 'excluirLead':if(confirm('Excluir este lead da planilha? Essa ação não pode ser desfeita.')){const i=S.edit.draft.id;$('#dlgLead').close();excluir(i)}break;
     case 'confirmarContato':confirmarContato();break;
-    case 'cfg':abrirCfg();break;
-    case 'salvarCfg':salvarCfg();break;
     case 'sync':sincronizar();break;
     case 'add':addRapido();break;
     case 'exportar':exportar();break;
     case 'reorganizar':reorganizar();break;
     case 'sortar':{const k=t.dataset.k;S.sort=S.sort.k===k?{k,dir:-S.sort.dir}:{k,dir:1};pintaTabela();break}
-    case 'limparDemo':if(confirm('Apagar os leads de exemplo deste navegador?')){S.leads=[];persistDemo();render()}break;
   }
 });
 document.addEventListener('input',e=>{
@@ -802,10 +747,10 @@ document.addEventListener('drop',e=>{
 document.addEventListener('dragend',()=>document.querySelectorAll('.colk.over').forEach(x=>x.classList.remove('over')));
 
 /* ============ início ============ */
-if(demo()){carregarDemo();setSync('demo');render()}
-else{render();sincronizar()}
+render();
+sincronizar();
 setInterval(()=>{
-  if(!demo()&&document.visibilityState==='visible'&&!document.querySelector('dialog[open]'))sincronizar(true);
+  if(document.visibilityState==='visible'&&!document.querySelector('dialog[open]'))sincronizar(true);
 },90000);
 </script>
 </body>

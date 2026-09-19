@@ -1,0 +1,812 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Central comercial · Quintessência</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#15111A;--s1:#1E1924;--s2:#272031;--line:#382F43;
+  --tx:#EFE8DD;--mu:#A197AB;--gold:#D9BC84;--goldd:#8F7A52;
+  --ok:#86C1A0;--bad:#E58A93;--hot:#E8976B;--info:#93A9E3;--r:10px;
+  --serif:'Fraunces',Georgia,'Times New Roman',serif;
+  --sans:'Instrument Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 var(--sans);min-height:100vh}
+h1,h2,h3{font-family:var(--serif);font-weight:600;margin:0}
+button{font:inherit;color:inherit;cursor:pointer}
+a{color:var(--gold);text-decoration:none}
+a:hover{text-decoration:underline}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.mu{color:var(--mu)}
+
+/* topo */
+.top{display:flex;align-items:center;gap:1.2rem;padding:.9rem 1.4rem;border-bottom:1px solid var(--line);flex-wrap:wrap;position:sticky;top:0;background:var(--bg);z-index:5}
+.brand{display:flex;align-items:center;gap:.7rem;margin-right:auto}
+.mark{width:36px;height:36px;border-radius:50%;border:1px solid var(--gold);display:grid;place-items:center;font-family:var(--serif);color:var(--gold);font-size:1.15rem}
+.brand h1{font-size:1.15rem;line-height:1.1}
+.brand p{margin:0;font-size:.8rem;color:var(--mu)}
+.tabs{display:flex;gap:.2rem;overflow-x:auto}
+.tabs button{background:none;border:0;padding:.5rem .95rem;border-radius:8px;color:var(--mu);font-weight:500}
+.tabs button[aria-selected=true]{color:var(--gold);background:var(--s1);box-shadow:inset 0 -2px 0 var(--gold)}
+.tools{display:flex;align-items:center;gap:.55rem}
+.sync{font-size:.8rem;color:var(--mu);display:flex;align-items:center;gap:.4rem}
+.sync::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--mu)}
+.sync.ok::before{background:var(--ok)}
+.sync.saving::before,.sync.loading::before{background:var(--gold)}
+.sync.erro::before{background:var(--bad)}
+.sync.demo::before{background:var(--info)}
+.primary{background:var(--gold);color:#241C10;border:0;padding:.55rem 1.05rem;border-radius:8px;font-weight:600}
+.primary:hover{filter:brightness(1.08)}
+.ghost{background:transparent;border:1px solid var(--line);padding:.5rem .9rem;border-radius:8px}
+.ghost:hover{border-color:var(--goldd)}
+.danger{color:var(--bad);border-color:#5a3540}
+.sm{padding:.32rem .7rem;font-size:.85rem}
+
+#banner:empty{display:none}
+.banner{margin:1rem 1.4rem 0;padding:.7rem 1rem;border:1px solid var(--line);border-left:3px solid var(--info);background:var(--s1);border-radius:var(--r);display:flex;gap:1rem;align-items:center;flex-wrap:wrap;font-size:.9rem}
+.banner.warn{border-left-color:var(--bad)}
+.banner span{flex:1 1 300px}
+
+main{padding:1.4rem;max-width:1280px;margin:0 auto}
+.head{display:flex;align-items:flex-end;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1.1rem}
+.head h2{font-size:1.7rem;text-transform:capitalize}
+.sec{margin-top:1.8rem}
+.sec>h3{font-size:1.1rem;display:flex;align-items:baseline;gap:.6rem;margin-bottom:.6rem}
+.sec>h3 small{font-family:var(--sans);font-weight:400;color:var(--mu);font-size:.85rem}
+.sec>h3.late{color:var(--bad)}
+
+/* régua de capacidade */
+.meter{display:flex;flex-wrap:wrap;gap:3px;margin:.7rem 0 .6rem}
+.cell{width:13px;height:22px;border-radius:3px;background:var(--s2);display:block}
+.cell.a{background:var(--bad)}
+.cell.h{background:var(--gold)}
+.cell.brk{margin-left:.7rem}
+.legend{display:flex;gap:1.3rem;flex-wrap:wrap;font-size:.85rem;color:var(--mu)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:.35rem;vertical-align:-1px}
+
+/* lista de follow-up */
+.list{list-style:none;margin:0;padding:0;background:var(--s1);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.row{display:grid;grid-template-columns:12px minmax(0,1.1fr) minmax(0,1.5fr) auto auto;gap:1rem;align-items:center;padding:.75rem 1rem;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.row:hover{background:var(--s2)}
+.who b{font-weight:600}
+.who .ig{font-size:.85rem;margin-left:.4rem}
+.chip{display:inline-block;font-size:.75rem;padding:.08rem .55rem;border-radius:999px;border:1px solid var(--line);color:var(--mu);margin-left:.5rem;white-space:nowrap}
+.snip{margin:0;color:var(--mu);font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meta{display:flex;flex-direction:column;align-items:flex-end;font-size:.82rem;color:var(--mu);white-space:nowrap}
+.late{color:var(--bad)}
+.acts{display:flex;gap:.4rem}
+.fit{width:10px;height:10px;border-radius:50%;background:var(--gold)}
+.fit.quente{background:var(--hot)}
+.fit.frio{background:var(--info)}
+.empty{padding:1.4rem 1rem;color:var(--mu);background:var(--s1);border:1px dashed var(--line);border-radius:var(--r)}
+
+/* funil */
+.board{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(230px,1fr);gap:.7rem;overflow-x:auto;padding-bottom:.6rem}
+.colk{background:var(--s1);border:1px solid var(--line);border-radius:var(--r);padding:.7rem;min-height:62vh}
+.colk.over{border-color:var(--gold);background:#231d2b}
+.colk h3{font-size:.98rem;display:flex;justify-content:space-between;align-items:baseline}
+.colk h3 span{font-family:var(--sans);font-size:.82rem;color:var(--mu);font-weight:400}
+.kcard{background:var(--s2);border-radius:8px;padding:.6rem .7rem;margin-top:.55rem;cursor:grab;border-left:3px solid var(--gold)}
+.kcard.quente{border-left-color:var(--hot)}
+.kcard.frio{border-left-color:var(--info)}
+.kcard:active{cursor:grabbing}
+.kcard b{display:block;font-weight:600}
+.kcard small{color:var(--mu)}
+.kcard .fu{display:block;margin-top:.3rem;font-size:.8rem;color:var(--mu)}
+
+/* leads */
+.quick{display:flex;gap:.6rem;flex-wrap:wrap;background:var(--s1);border:1px solid var(--line);border-radius:var(--r);padding:.8rem;margin-bottom:1rem}
+.quick input{flex:1 1 180px}
+.bar{display:flex;gap:.6rem;flex-wrap:wrap;margin-bottom:.8rem;align-items:center}
+.bar input[type=search]{flex:1 1 220px;max-width:340px}
+.bar select{width:auto}
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r);background:var(--s1)}
+table{width:100%;border-collapse:collapse;min-width:820px}
+th,td{padding:.6rem .8rem;text-align:left;border-bottom:1px solid var(--line);font-size:.9rem;vertical-align:top}
+th{font-weight:500;color:var(--mu);font-size:.82rem;cursor:pointer;white-space:nowrap;user-select:none}
+th[aria-sort]{color:var(--gold)}
+tr[data-act]{cursor:pointer}
+tbody tr:hover{background:var(--s2)}
+td.dg{max-width:340px;color:var(--mu)}
+td.dg div{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+/* capacidade */
+.two{display:grid;grid-template-columns:1.4fr 1fr;gap:1.6rem}
+.plot{position:relative;height:190px;display:flex;align-items:stretch;gap:.7rem;border-bottom:1px solid var(--line);padding:0 .2rem}
+.plot .col{flex:1;display:flex;flex-direction:column;justify-content:flex-end}
+.fill{background:var(--gold);border-radius:4px 4px 0 0;min-height:0}
+.fill.over{background:var(--bad)}
+.capline{position:absolute;left:0;right:0;border-top:1px dashed var(--mu)}
+.capline span{position:absolute;right:0;top:-1.25rem;font-size:.75rem;color:var(--mu)}
+.axis{display:flex;gap:.7rem;padding:.4rem .2rem 0}
+.axis div{flex:1;text-align:center;display:flex;flex-direction:column;font-size:.8rem;color:var(--mu)}
+.axis b{color:var(--tx);font-weight:600;font-size:.95rem}
+.funil div.f{display:grid;grid-template-columns:130px 1fr 32px;gap:.6rem;align-items:center;padding:.3rem 0;font-size:.9rem}
+.funil .track{height:8px;border-radius:4px;background:var(--s2);overflow:hidden}
+.funil .track i{display:block;height:100%;background:var(--goldd)}
+.nums{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem 1.4rem;margin-top:.4rem}
+.nums div{font-size:.85rem;color:var(--mu)}
+.nums b{display:block;font-family:var(--serif);font-size:1.7rem;color:var(--tx);font-weight:600;line-height:1.15}
+
+/* dialogs */
+dialog{background:var(--s1);color:var(--tx);border:1px solid var(--line);border-radius:14px;padding:0;width:min(940px,94vw);max-height:92vh;overflow:auto}
+dialog.sm2{width:min(560px,94vw)}
+dialog::backdrop{background:rgba(8,6,12,.72)}
+.dh{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1rem 1.3rem;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--s1);z-index:1}
+.dh h2{font-size:1.3rem}
+.db{padding:1.2rem 1.3rem}
+.df{display:flex;gap:.6rem;justify-content:space-between;align-items:center;flex-wrap:wrap;padding:1rem 1.3rem;border-top:1px solid var(--line);position:sticky;bottom:0;background:var(--s1)}
+.df .r{display:flex;gap:.6rem;margin-left:auto;flex-wrap:wrap}
+.lead-grid{display:grid;grid-template-columns:1.5fr 1fr;gap:1.6rem}
+label{display:block;font-size:.82rem;color:var(--mu);margin-bottom:.25rem}
+input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--tx);border-radius:8px;padding:.55rem .65rem;font:inherit}
+input::placeholder,textarea::placeholder{color:#6f657a}
+textarea{min-height:150px;resize:vertical}
+.fld{margin-bottom:.9rem}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}
+.pills{display:flex;flex-wrap:wrap;gap:.4rem}
+.pills input{position:absolute;opacity:0;pointer-events:none;width:1px}
+.pills label{margin:0;border:1px solid var(--line);border-radius:999px;padding:.35rem .85rem;cursor:pointer;color:var(--tx);font-size:.86rem}
+.pills input:checked+label{background:var(--gold);color:#241C10;border-color:var(--gold);font-weight:600}
+.pills input:focus-visible+label{outline:2px solid var(--gold);outline-offset:2px}
+.hist{list-style:none;margin:0;padding:0 0 0 .9rem;border-left:1px solid var(--line)}
+.hist li{margin-bottom:.8rem;font-size:.86rem;position:relative}
+.hist li::before{content:"";position:absolute;left:-1.2rem;top:.45rem;width:7px;height:7px;border-radius:50%;background:var(--goldd)}
+.hist small{display:block;color:var(--mu)}
+#toast{position:fixed;left:50%;bottom:1.4rem;transform:translateX(-50%);background:var(--tx);color:#241C10;padding:.6rem 1.1rem;border-radius:8px;font-weight:500;z-index:50;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw}
+#toast.on{opacity:1}
+[hidden]{display:none!important}
+
+@media (max-width:820px){
+  .row{grid-template-columns:12px 1fr;gap:.4rem .8rem}
+  .row .snip,.row .meta,.row .acts{grid-column:2}
+  .row .meta{align-items:flex-start;flex-direction:row;gap:.8rem}
+  .two,.lead-grid{grid-template-columns:1fr}
+  .grid2{grid-template-columns:1fr}
+  main{padding:1rem}
+  .top{padding:.7rem 1rem}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">
+    <div class="mark" aria-hidden="true">Q</div>
+    <div><h1>Central comercial</h1><p id="sdrNome"></p></div>
+  </div>
+  <nav class="tabs" aria-label="Seções">
+    <button data-act="tab" data-view="hoje">Hoje</button>
+    <button data-act="tab" data-view="funil">Funil</button>
+    <button data-act="tab" data-view="leads">Leads</button>
+    <button data-act="tab" data-view="capacidade">Capacidade</button>
+  </nav>
+  <div class="tools">
+    <span id="sync" class="sync"></span>
+    <button class="ghost sm" data-act="sync" title="Buscar dados da planilha">Sincronizar</button>
+    <button class="ghost sm" data-act="cfg">Configurar</button>
+    <button class="primary" data-act="novo">Novo lead</button>
+  </div>
+</header>
+
+<div id="banner"></div>
+<main id="main"></main>
+
+<dialog id="dlgLead"></dialog>
+<dialog id="dlgContato" class="sm2"></dialog>
+<dialog id="dlgCfg" class="sm2"></dialog>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ============ constantes ============ */
+const ETAPAS=[
+  {id:'prospectado',nome:'Prospectado'},
+  {id:'abordado',nome:'Abordado'},
+  {id:'conversa',nome:'Em conversa'},
+  {id:'reuniao',nome:'Reunião marcada'},
+  {id:'proposta',nome:'Proposta'},
+  {id:'ganho',nome:'Ganho'},
+  {id:'perdido',nome:'Perdido'}
+];
+const FECHADAS=['ganho','perdido'];
+const FITS={quente:'Quente',morno:'Morno',frio:'Frio'};
+const fitRank={quente:0,morno:1,frio:2};
+const CANAIS={instagram:'Instagram',whatsapp:'WhatsApp',ligacao:'Ligação',email:'E-mail'};
+const RES={
+  sem:{nome:'Sem resposta',etapa:'abordado',dias:2},
+  resp:{nome:'Respondeu',etapa:'conversa',dias:1},
+  reun:{nome:'Reunião marcada',etapa:'reuniao',dias:3},
+  prop:{nome:'Proposta enviada',etapa:'proposta',dias:3},
+  nao:{nome:'Sem interesse',etapa:'perdido',dias:0},
+  ganho:{nome:'Fechou',etapa:'ganho',dias:0}
+};
+const DIAS_CHIPS=[1,2,3,5,7];
+const idxEtapa=id=>ETAPAS.findIndex(e=>e.id===id);
+const nomeEtapa=id=>(ETAPAS[idxEtapa(id)]||{nome:id}).nome;
+
+/* ============ utilitários ============ */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const store={
+  get(k,d=''){try{const v=localStorage.getItem(k);return v===null?d:v}catch{return d}},
+  set(k,v){try{localStorage.setItem(k,v)}catch{}}
+};
+const pad=n=>String(n).padStart(2,'0');
+const ymd=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const hoje=()=>ymd(new Date());
+const parse=s=>{const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)};
+const addDias=(s,n)=>{const d=parse(s);d.setDate(d.getDate()+n);return ymd(d)};
+const proxUtil=s=>{const d=parse(s);while(d.getDay()%6===0)d.setDate(d.getDate()+1);return ymd(d)};
+const addUteis=(s,n)=>{const d=parse(s);let c=0;while(c<n){d.setDate(d.getDate()+1);if(d.getDay()%6)c++}return ymd(d)};
+const DN=['dom','seg','ter','qua','qui','sex','sáb'];
+const fmtData=s=>{
+  if(!s)return 'sem data';
+  const h=hoje();
+  if(s===h)return 'hoje';
+  if(s===addDias(h,1))return 'amanhã';
+  const d=parse(s);
+  return `${DN[d.getDay()]}, ${pad(d.getDate())}/${pad(d.getMonth()+1)}`;
+};
+const fmtCurto=s=>{const d=parse(s);return `${DN[d.getDay()]} ${pad(d.getDate())}`};
+const fmtHora=iso=>{const d=new Date(iso);return isNaN(d)?'':`${pad(d.getDate())}/${pad(d.getMonth()+1)} ${pad(d.getHours())}:${pad(d.getMinutes())}`};
+const diaDe=iso=>{const d=new Date(iso);return isNaN(d)?'':ymd(d)};
+const uid=()=>'L'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const handle=s=>String(s||'').trim().replace(/^https?:\/\/(www\.)?instagram\.com\//i,'').replace(/[/?#].*$/,'').replace(/^@/,'').toLowerCase();
+const prio=(a,b)=>(fitRank[a.fit]-fitRank[b.fit])||(b.tentativas-a.tentativas);
+const cmpData=(a,b)=>(a.proximoFollowup||'9999').localeCompare(b.proximoFollowup||'9999')||prio(a,b);
+
+/* ============ estado ============ */
+const S={
+  leads:[],
+  cfg:{capacidadeDiaria:30,metaNovosDia:15},
+  view:store.get('crm_view','hoje'),
+  url:store.get('crm_url'),
+  token:store.get('crm_token'),
+  sdr:store.get('crm_sdr'),
+  pend:new Map(),
+  filtro:{q:'',etapa:'',fit:''},
+  sort:{k:'proximoFollowup',dir:1},
+  edit:null
+};
+const demo=()=>!S.url;
+
+function norm(l){
+  let h=l.historico;
+  if(typeof h==='string'){try{h=JSON.parse(h||'[]')}catch{h=[]}}
+  return {
+    id:l.id,criadoEm:l.criadoEm||'',atualizadoEm:l.atualizadoEm||'',sdr:l.sdr||'',
+    nome:l.nome||'',instagram:handle(l.instagram),empresa:l.empresa||'',segmento:l.segmento||'',
+    cidade:l.cidade||'',whatsapp:l.whatsapp||'',fit:FITS[l.fit]?l.fit:'morno',
+    etapa:idxEtapa(l.etapa)>=0?l.etapa:'prospectado',dor:l.dor||'',diagnostico:l.diagnostico||'',
+    proximoFollowup:l.proximoFollowup||'',tentativas:Number(l.tentativas)||0,
+    ultimoContato:l.ultimoContato||'',motivoPerda:l.motivoPerda||'',
+    historico:Array.isArray(h)?h:[]
+  };
+}
+const ser=l=>({...l,historico:JSON.stringify(l.historico)});
+function novo(p={}){
+  const t=new Date().toISOString();
+  return norm({id:uid(),criadoEm:t,atualizadoEm:t,sdr:S.sdr,etapa:'prospectado',fit:'morno',proximoFollowup:proxUtil(hoje()),historico:[],...p});
+}
+
+/* ============ dados de exemplo (modo teste) ============ */
+function semente(){
+  const mk=(nome,ig,seg,fit,etapa,dias,tent,dor,diag)=>norm({
+    id:uid(),criadoEm:new Date().toISOString(),nome,instagram:ig,segmento:seg,fit,etapa,
+    proximoFollowup:dias===null?'':addDias(hoje(),dias),tentativas:tent,dor,diagnostico:diag,historico:[]
+  });
+  return [
+    mk('Clínica Aura','clinicaaura','Clínica de estética','quente','conversa',0,2,'Agenda vazia à tarde','Instagram com 8k seguidores, posts sem padrão visual, sem anúncio ativo e sem link de agendamento na bio. Responde direct só em horário comercial.'),
+    mk('Dra. Marina Prado','dramarinaprado','Cirurgião plástico','morno','abordado',-2,1,'Lead sem qualificação','Roda anúncio, mas manda tudo para o WhatsApp pessoal. Sem CRM. Secretária sobrecarregada.'),
+    mk('Studio Bella Nails','bellanailsbc','Studio de beleza','frio','prospectado',1,0,'','Perfil novo, 900 seguidores. Ainda sem estrutura de captação.'),
+    mk('Odonto Lume','odontolume','Clínica odontológica','quente','reuniao',2,3,'Alto no-show','Três unidades, 40k no Instagram. Agendamento manual e taxa alta de faltas. Reunião com o sócio marcada.'),
+    mk('Dr. Caio Ferraz','drcaioferraz','Cirurgião plástico','morno','abordado',0,1,'Baixa autoridade digital','Conteúdo técnico demais, pouco antes/depois. Sem prova social organizada.'),
+    mk('Espaço Renove','espacorenove','Clínica de estética','morno','prospectado',null,0,'','')
+  ];
+}
+function persistDemo(){
+  store.set('crm_demo',JSON.stringify(S.leads.map(ser)));
+  store.set('crm_demo_cfg',JSON.stringify(S.cfg));
+}
+function carregarDemo(){
+  const raw=store.get('crm_demo');
+  if(raw){try{S.leads=JSON.parse(raw).map(norm)}catch{S.leads=semente()}}
+  else{S.leads=semente();persistDemo()}
+  try{S.cfg={...S.cfg,...JSON.parse(store.get('crm_demo_cfg','{}'))}}catch{}
+}
+
+/* ============ sincronização com a planilha ============ */
+function setSync(st){
+  const el=$('#sync');
+  const txt={ok:'Planilha sincronizada',saving:'Salvando…',loading:'Sincronizando…',erro:'Sem conexão com a planilha',demo:'Modo teste'}[st];
+  el.className='sync '+st;el.textContent=txt;
+}
+async function post(payload){
+  const r=await fetch(S.url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({...payload,token:S.token})});
+  const j=await r.json();
+  if(!j.ok)throw new Error(j.erro||'resposta inválida');
+  return j;
+}
+async function salvar(arr){
+  arr.forEach(l=>{l.atualizadoEm=new Date().toISOString()});
+  if(demo()){persistDemo();return}
+  arr.forEach(l=>S.pend.set(l.id,l));
+  setSync('saving');
+  try{
+    await post({acao:'salvarLote',leads:arr.map(ser)});
+    arr.forEach(l=>{if(S.pend.get(l.id)===l)S.pend.delete(l.id)});
+    setSync(S.pend.size?'erro':'ok');
+  }catch(e){
+    setSync('erro');
+    toast('Não chegou na planilha. Toque em Sincronizar para tentar de novo.');
+  }
+  banner();
+}
+async function excluir(id){
+  S.leads=S.leads.filter(l=>l.id!==id);
+  S.pend.delete(id);
+  render();
+  if(demo()){persistDemo();return}
+  try{await post({acao:'excluir',id});toast('Lead excluído.')}
+  catch{toast('Não foi possível excluir na planilha. Sincronize e tente de novo.')}
+}
+async function salvarCfgRemoto(){
+  if(demo()){persistDemo();return}
+  try{await post({acao:'config',config:S.cfg})}catch{toast('Configuração salva só neste navegador. Falha ao enviar para a planilha.')}
+}
+async function sincronizar(silencioso){
+  if(demo()){setSync('demo');render();return}
+  setSync('loading');
+  try{
+    if(S.pend.size){await post({acao:'salvarLote',leads:[...S.pend.values()].map(ser)});S.pend.clear()}
+    const r=await fetch(S.url+(S.url.includes('?')?'&':'?')+'token='+encodeURIComponent(S.token));
+    const j=await r.json();
+    if(!j.ok)throw new Error(j.erro||'resposta inválida');
+    S.leads=(j.leads||[]).map(norm);
+    const c=j.config||{};
+    if(Number(c.capacidadeDiaria))S.cfg.capacidadeDiaria=Number(c.capacidadeDiaria);
+    if(c.metaNovosDia!==undefined&&c.metaNovosDia!=='')S.cfg.metaNovosDia=Number(c.metaNovosDia)||0;
+    setSync('ok');render();
+  }catch(e){
+    setSync('erro');render();
+    if(!silencioso)toast('Falha ao sincronizar: '+e.message);
+  }
+}
+
+/* ============ interface: geral ============ */
+let tt;
+function toast(msg){
+  const t=$('#toast');t.textContent=msg;t.classList.add('on');
+  clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('on'),3400);
+}
+function banner(){
+  const b=$('#banner');
+  if(demo()){
+    b.innerHTML=`<div class="banner"><span>Modo teste: os dados ficam só neste navegador. Conecte a planilha em Configurar para o SDR trabalhar de verdade.</span><button class="ghost sm" data-act="limparDemo">Limpar exemplos</button><button class="primary sm" data-act="cfg">Conectar planilha</button></div>`;
+  }else if(S.pend.size){
+    b.innerHTML=`<div class="banner warn"><span>${S.pend.size} alteração(ões) ainda não enviada(s) para a planilha.</span><button class="primary sm" data-act="sync">Tentar de novo</button></div>`;
+  }else b.innerHTML='';
+}
+function render(){
+  document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.view===S.view));
+  $('#sdrNome').textContent=S.sdr?`SDR: ${S.sdr}`:'Prospecção e follow-up';
+  ({hoje:vHoje,funil:vFunil,leads:vLeads,capacidade:vCap})[S.view]();
+  banner();
+}
+const ativos=()=>S.leads.filter(l=>!FECHADAS.includes(l.etapa));
+
+function regua(atras,hj,cap){
+  const total=atras+hj,n=Math.max(cap,total);let s='';
+  for(let i=0;i<n;i++){
+    const c=i<atras?'a':i<total?'h':'l';
+    s+=`<i class="cell ${c}${i===cap&&n>cap?' brk':''}"></i>`;
+  }
+  return `<div class="meter" role="img" aria-label="${total} de ${cap} toques do dia">${s}</div>`;
+}
+function linha(l){
+  const h=hoje(),late=l.proximoFollowup&&l.proximoFollowup<h;
+  const diff=late?Math.round((parse(h)-parse(l.proximoFollowup))/864e5):0;
+  const fu=late?`atrasado ${diff} dia${diff>1?'s':''}`:fmtData(l.proximoFollowup);
+  return `<li class="row" data-id="${l.id}">
+    <span class="fit ${l.fit}" title="Fit ${FITS[l.fit].toLowerCase()}"></span>
+    <div class="who"><b>${esc(l.nome)}</b><a class="ig" href="https://instagram.com/${esc(l.instagram)}" target="_blank" rel="noopener">@${esc(l.instagram)}</a><span class="chip">${nomeEtapa(l.etapa)}</span></div>
+    <p class="snip">${esc(l.dor||l.diagnostico||'Sem diagnóstico ainda')}</p>
+    <div class="meta"><span class="${late?'late':''}">${fu}</span><span>${l.tentativas} toque${l.tentativas===1?'':'s'}</span></div>
+    <div class="acts"><button class="primary sm" data-act="contato">Registrar contato</button><button class="ghost sm" data-act="abrir">Abrir</button></div>
+  </li>`;
+}
+const lista=arr=>`<ul class="list">${arr.map(linha).join('')}</ul>`;
+
+/* ============ view: Hoje ============ */
+function vHoje(){
+  const h=hoje(),at=ativos(),cap=+S.cfg.capacidadeDiaria||30,meta=+S.cfg.metaNovosDia||0;
+  const atras=at.filter(l=>l.proximoFollowup&&l.proximoFollowup<h).sort(cmpData);
+  const hj=at.filter(l=>l.proximoFollowup===h).sort(prio);
+  const prox=at.filter(l=>l.proximoFollowup>h&&l.proximoFollowup<=addDias(h,7)).sort(cmpData);
+  const sem=at.filter(l=>!l.proximoFollowup);
+  const carga=atras.length+hj.length,livres=Math.max(0,cap-carga);
+  const novosHoje=S.leads.filter(l=>diaDe(l.criadoEm)===h).length;
+  const dataLonga=new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'});
+  let html=`<div class="head"><div><h2>${esc(dataLonga)}</h2>
+    <span class="mu">${carga} follow-up${carga===1?'':'s'} na fila. ${livres} vaga${livres===1?'':'s'} para prospecção nova.${meta?` Novos leads hoje: ${novosHoje} de ${meta}.`:''}</span></div></div>
+    ${regua(atras.length,hj.length,cap)}
+    <div class="legend"><span><i style="background:var(--bad)"></i>${atras.length} atrasado${atras.length===1?'':'s'}</span><span><i style="background:var(--gold)"></i>${hj.length} para hoje</span><span><i style="background:var(--s2)"></i>${livres} livre${livres===1?'':'s'} de ${cap}</span>${carga>cap?`<span class="late">${carga-cap} acima da capacidade. Reorganize na aba Capacidade.</span>`:''}</div>`;
+  if(atras.length)html+=`<section class="sec"><h3 class="late">Atrasados <small>${atras.length}</small></h3>${lista(atras)}</section>`;
+  html+=`<section class="sec"><h3>Para hoje <small>${hj.length}</small></h3>${hj.length?lista(hj):`<div class="empty">Nenhum follow-up marcado para hoje. Use as vagas para prospectar: cadastre novos leads na aba Leads.</div>`}</section>`;
+  if(prox.length)html+=`<section class="sec"><h3>Próximos 7 dias <small>${prox.length}</small></h3>${lista(prox)}</section>`;
+  if(sem.length)html+=`<section class="sec"><h3>Sem data de follow-up <small>${sem.length}</small></h3>${lista(sem)}</section>`;
+  $('#main').innerHTML=html;
+}
+
+/* ============ view: Funil ============ */
+function vFunil(){
+  const cols=ETAPAS.map(e=>{
+    const ls=S.leads.filter(l=>l.etapa===e.id).sort(cmpData);
+    return `<div class="colk" data-etapa="${e.id}"><h3>${e.nome}<span>${ls.length}</span></h3>${
+      ls.map(l=>`<div class="kcard ${l.fit}" draggable="true" data-act="abrir" data-id="${l.id}">
+        <b>${esc(l.nome)}</b><small>@${esc(l.instagram)}</small>
+        ${l.proximoFollowup?`<span class="fu ${l.proximoFollowup<hoje()?'late':''}">Follow-up: ${fmtData(l.proximoFollowup)}</span>`:''}
+      </div>`).join('')}</div>`;
+  }).join('');
+  $('#main').innerHTML=`<div class="head"><div><h2>Funil</h2><span class="mu">Arraste o cartão para mudar de etapa. No celular, abra o lead e troque a etapa.</span></div></div><div class="board">${cols}</div>`;
+}
+function mover(id,et){
+  const l=S.leads.find(x=>x.id===id);
+  if(!l||l.etapa===et)return;
+  const antes=l.etapa;l.etapa=et;
+  l.historico.push({data:new Date().toISOString(),tipo:'etapa',nota:`${nomeEtapa(antes)} para ${nomeEtapa(et)}`});
+  if(FECHADAS.includes(et))l.proximoFollowup='';
+  else if(!l.proximoFollowup)l.proximoFollowup=proxUtil(hoje());
+  if(et==='perdido'){const m=prompt('Motivo da perda (opcional):');if(m)l.motivoPerda=m}
+  salvar([l]);render();
+}
+
+/* ============ view: Leads ============ */
+function vLeads(){
+  const f=S.filtro;
+  $('#main').innerHTML=`<div class="head"><div><h2>Leads</h2><span class="mu" id="cont"></span></div><button class="ghost sm" data-act="exportar">Exportar CSV</button></div>
+  <div class="quick">
+    <input id="qNome" placeholder="Nome do lead" autocomplete="off" aria-label="Nome do lead">
+    <input id="qIg" placeholder="@instagram" autocomplete="off" aria-label="Instagram">
+    <button class="primary" data-act="add">Adicionar rápido</button>
+  </div>
+  <div class="bar">
+    <input type="search" id="fq" placeholder="Buscar por nome, @, dor ou diagnóstico" value="${esc(f.q)}" aria-label="Buscar">
+    <select id="fe" aria-label="Filtrar por etapa"><option value="">Todas as etapas</option>${ETAPAS.map(e=>`<option value="${e.id}" ${f.etapa===e.id?'selected':''}>${e.nome}</option>`).join('')}</select>
+    <select id="ff" aria-label="Filtrar por fit"><option value="">Todos os fits</option>${Object.entries(FITS).map(([k,v])=>`<option value="${k}" ${f.fit===k?'selected':''}>${v}</option>`).join('')}</select>
+  </div>
+  <div class="tw"><table><thead><tr id="thead"></tr></thead><tbody id="tbody"></tbody></table></div>`;
+  pintaTabela();
+}
+function pintaTabela(){
+  const f=S.filtro,q=f.q.toLowerCase();
+  const cols=[['nome','Nome'],['instagram','Instagram'],['etapa','Etapa'],['fit','Fit'],['tentativas','Toques'],['proximoFollowup','Follow-up'],['diagnostico','Diagnóstico'],['atualizadoEm','Atualizado']];
+  $('#thead').innerHTML=cols.map(([k,n])=>`<th data-act="sortar" data-k="${k}" ${S.sort.k===k?`aria-sort="${S.sort.dir>0?'ascending':'descending'}"`:''}>${n}${S.sort.k===k?(S.sort.dir>0?' ▲':' ▼'):''}</th>`).join('');
+  let ls=S.leads.filter(l=>
+    (!q||[l.nome,l.instagram,l.empresa,l.cidade,l.dor,l.diagnostico].join(' ').toLowerCase().includes(q))&&
+    (!f.etapa||l.etapa===f.etapa)&&(!f.fit||l.fit===f.fit));
+  const {k,dir}=S.sort;
+  const val=l=>k==='etapa'?idxEtapa(l.etapa):k==='fit'?fitRank[l.fit]:k==='proximoFollowup'?(l.proximoFollowup||'9999'):(l[k]??'');
+  ls.sort((a,b)=>{const x=val(a),y=val(b);return (typeof x==='number'?x-y:String(x).localeCompare(String(y),'pt-BR'))*dir});
+  $('#cont').textContent=`${ls.length} de ${S.leads.length} lead${S.leads.length===1?'':'s'}`;
+  $('#tbody').innerHTML=ls.length?ls.map(l=>{
+    const late=l.proximoFollowup&&l.proximoFollowup<hoje()&&!FECHADAS.includes(l.etapa);
+    return `<tr data-act="abrir" data-id="${l.id}">
+      <td><b>${esc(l.nome)}</b></td>
+      <td><a href="https://instagram.com/${esc(l.instagram)}" target="_blank" rel="noopener">@${esc(l.instagram)}</a></td>
+      <td>${nomeEtapa(l.etapa)}</td>
+      <td><span class="fit ${l.fit}" style="display:inline-block;margin-right:.4rem"></span>${FITS[l.fit]}</td>
+      <td>${l.tentativas}</td>
+      <td class="${late?'late':''}">${FECHADAS.includes(l.etapa)?'-':fmtData(l.proximoFollowup)}</td>
+      <td class="dg"><div>${esc(l.diagnostico||l.dor||'')}</div></td>
+      <td class="mu">${fmtHora(l.atualizadoEm)}</td></tr>`;
+  }).join(''):`<tr><td colspan="8" class="mu" style="padding:1.4rem">Nenhum lead encontrado. Use a barra acima para adicionar o primeiro.</td></tr>`;
+}
+function addRapido(){
+  const nome=$('#qNome').value.trim(),ig=handle($('#qIg').value);
+  if(!nome||!ig){toast('Preencha o nome e o @ do Instagram.');return}
+  const dup=S.leads.find(l=>l.instagram===ig);
+  if(dup){toast(`@${ig} já está na lista (${dup.nome}).`);abrirLead(dup.id);return}
+  const l=novo({nome,instagram:ig});
+  S.leads.push(l);salvar([l]);
+  $('#qNome').value='';$('#qIg').value='';$('#qNome').focus();
+  pintaTabela();toast('Lead adicionado. Abra para registrar o diagnóstico.');
+}
+function exportar(){
+  const cols=['nome','instagram','empresa','segmento','cidade','whatsapp','fit','etapa','tentativas','proximoFollowup','dor','diagnostico'];
+  const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
+  const csv='\ufeff'+[cols.join(';'),...S.leads.map(l=>cols.map(c=>q(c==='etapa'?nomeEtapa(l.etapa):l[c])).join(';'))].join('\r\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  a.download='leads-'+hoje()+'.csv';a.click();
+}
+
+/* ============ view: Capacidade ============ */
+function barras(dias,vals,cap){
+  const max=Math.max(cap,...vals,1)*1.15;
+  const cols=vals.map(v=>`<div class="col"><div class="fill over" style="height:${Math.max(0,v-cap)/max*100}%"></div><div class="fill" style="height:${Math.min(v,cap)/max*100}%"></div></div>`).join('');
+  const axis=dias.map((d,i)=>`<div><b>${vals[i]}</b><span>${fmtCurto(d)}</span></div>`).join('');
+  return `<div class="plot">${cols}<div class="capline" style="bottom:${cap/max*100}%"><span>capacidade ${cap}</span></div></div><div class="axis">${axis}</div>`;
+}
+function vCap(){
+  const h=hoje(),at=ativos(),cap=+S.cfg.capacidadeDiaria||30,meta=+S.cfg.metaNovosDia||0;
+  const prox=[];let d=proxUtil(h);
+  while(prox.length<7){prox.push(d);d=addUteis(d,1)}
+  const carga=prox.map((dia,i)=>at.filter(l=>l.proximoFollowup&&(i===0?l.proximoFollowup<=dia:l.proximoFollowup===dia)).length);
+  const atras=at.filter(l=>l.proximoFollowup&&l.proximoFollowup<h).length;
+  const hj=at.filter(l=>l.proximoFollowup===h).length;
+  const passados=[];d=h;
+  while(passados.length<7){if(parse(d).getDay()%6)passados.unshift(d);d=addDias(d,-1)}
+  const feitos=passados.map(dia=>{let n=0;S.leads.forEach(l=>l.historico.forEach(e=>{if(e.tipo==='contato'&&diaDe(e.data)===dia)n++}));return n});
+  const sobrecarga=carga.filter(c=>c>cap).length;
+  const total=S.leads.length,abordados=S.leads.filter(l=>l.tentativas>0).length;
+  const resp=S.leads.filter(l=>l.historico.some(e=>e.tipo==='contato'&&['resp','reun','prop','ganho'].includes(e.res))).length;
+  const reun=S.leads.filter(l=>l.etapa==='reuniao'||l.historico.some(e=>e.res==='reun')).length;
+  const maxE=Math.max(1,...ETAPAS.map(e=>S.leads.filter(l=>l.etapa===e.id).length));
+  const funil=ETAPAS.map(e=>{const n=S.leads.filter(l=>l.etapa===e.id).length;return `<div class="f"><span>${e.nome}</span><div class="track"><i style="width:${n/maxE*100}%"></i></div><b>${n}</b></div>`}).join('');
+  $('#main').innerHTML=`<div class="head"><div><h2>Capacidade</h2><span class="mu">Capacidade diária: ${cap} toques. Meta de novos leads: ${meta}/dia.</span></div>
+    <div style="display:flex;gap:.5rem"><button class="ghost sm" data-act="cfg">Ajustar capacidade</button><button class="primary sm" data-act="reorganizar">Reorganizar fila</button></div></div>
+  <div class="two">
+    <section><h3 style="margin-bottom:1.6rem">Follow-ups nos próximos 7 dias úteis</h3>${barras(prox,carga,cap)}
+      <p class="mu" style="font-size:.86rem">${sobrecarga?`${sobrecarga} dia${sobrecarga>1?'s':''} acima da capacidade${atras?` e ${atras} atrasado${atras>1?'s':''} acumulado${atras>1?'s':''} em hoje`:''}. Use Reorganizar fila para distribuir os excedentes nos dias com vaga.`:'Nenhum dia acima da capacidade. O espaço restante de cada dia é vaga para prospecção nova.'}</p>
+      <h3 style="margin:1.8rem 0 1.6rem">Contatos feitos nos últimos 7 dias úteis</h3>${barras(passados,feitos,cap)}
+    </section>
+    <section>
+      <h3 style="margin-bottom:.3rem">Panorama</h3>
+      <div class="nums"><div><b>${total}</b>leads na base</div><div><b>${abordados}</b>já abordados</div><div><b>${abordados?Math.round(resp/abordados*100):0}%</b>taxa de resposta</div><div><b>${reun}</b>reuniões geradas</div></div>
+      <h3 style="margin:1.8rem 0 .6rem">Leads por etapa</h3><div class="funil">${funil}</div>
+    </section>
+  </div>`;
+}
+function reorganizar(){
+  const cap=+S.cfg.capacidadeDiaria||30,h=hoje();
+  const dias=[];let d=proxUtil(h);
+  while(dias.length<15){dias.push(d);d=addUteis(d,1)}
+  const por={};dias.forEach(x=>por[x]=[]);
+  const fila=[];
+  ativos().filter(l=>l.proximoFollowup).forEach(l=>{
+    if(l.proximoFollowup<h)fila.push(l);
+    else if(por[l.proximoFollowup])por[l.proximoFollowup].push(l);
+  });
+  dias.forEach(x=>{const a=por[x];if(a.length>cap){a.sort(prio);fila.push(...a.splice(cap))}});
+  fila.sort(prio);
+  const mudou=[];
+  fila.forEach(l=>{
+    const alvo=dias.find(x=>por[x].length<cap);
+    if(!alvo)return;
+    por[alvo].push(l);
+    if(l.proximoFollowup!==alvo){l.proximoFollowup=alvo;mudou.push(l)}
+  });
+  if(!mudou.length){toast('Nada para reorganizar. A fila cabe na capacidade.');return}
+  salvar(mudou);render();
+  toast(`${mudou.length} follow-up${mudou.length>1?'s':''} redistribuído${mudou.length>1?'s':''}, leads quentes primeiro.`);
+}
+
+/* ============ lead: abrir, editar, salvar ============ */
+function abrirLead(id){
+  const l=id?S.leads.find(x=>x.id===id):novo();
+  if(!l)return;
+  S.edit={draft:l,novo:!id};
+  const pills=Object.entries(FITS).map(([k,v])=>`<input type="radio" name="fFit" id="fit-${k}" value="${k}" ${l.fit===k?'checked':''}><label for="fit-${k}">${v}</label>`).join('');
+  const hist=[...l.historico].reverse().map(e=>{
+    const t=e.tipo==='contato'?`${CANAIS[e.canal]||'Contato'}: ${(RES[e.res]||{}).nome||''}`:e.nota;
+    return `<li>${esc(t)}${e.tipo==='contato'&&e.nota?`<small>${esc(e.nota)}</small>`:''}<small>${fmtHora(e.data)}</small></li>`;
+  }).join('');
+  $('#dlgLead').innerHTML=`
+  <div class="dh"><h2>${id?esc(l.nome||'Lead'):'Novo lead'}</h2><button class="ghost sm" data-act="fechar">Fechar</button></div>
+  <div class="db lead-grid">
+    <div>
+      <div class="grid2">
+        <div class="fld"><label for="fNome">Nome</label><input id="fNome" value="${esc(l.nome)}" autocomplete="off"></div>
+        <div class="fld"><label for="fIg">Instagram</label><input id="fIg" value="${l.instagram?'@'+esc(l.instagram):''}" placeholder="@usuario" autocomplete="off"></div>
+        <div class="fld"><label for="fEmpresa">Empresa</label><input id="fEmpresa" value="${esc(l.empresa)}" autocomplete="off"></div>
+        <div class="fld"><label for="fSeg">Segmento</label><input id="fSeg" list="segs" value="${esc(l.segmento)}" autocomplete="off"><datalist id="segs"><option>Clínica de estética</option><option>Cirurgião plástico</option><option>Clínica odontológica</option><option>Studio de beleza</option><option>Harmonização facial</option></datalist></div>
+        <div class="fld"><label for="fCidade">Cidade</label><input id="fCidade" value="${esc(l.cidade)}" autocomplete="off"></div>
+        <div class="fld"><label for="fWpp">WhatsApp</label><input id="fWpp" value="${esc(l.whatsapp)}" placeholder="(47) 99999-9999" autocomplete="off"></div>
+      </div>
+      <div class="fld"><label>Fit com a Quintessência</label><div class="pills">${pills}</div></div>
+      <div class="grid2">
+        <div class="fld"><label for="fEtapa">Etapa</label><select id="fEtapa">${ETAPAS.map(e=>`<option value="${e.id}" ${l.etapa===e.id?'selected':''}>${e.nome}</option>`).join('')}</select></div>
+        <div class="fld"><label for="fData">Próximo follow-up</label><input type="date" id="fData" value="${l.proximoFollowup}"></div>
+      </div>
+      <div class="fld" id="fMotivoW" ${l.etapa==='perdido'?'':'hidden'}><label for="fMotivo">Motivo da perda</label><input id="fMotivo" value="${esc(l.motivoPerda)}"></div>
+      <div class="fld"><label for="fDor">Dor principal</label><input id="fDor" value="${esc(l.dor)}" placeholder="Em uma frase: o que mais trava o crescimento deles" autocomplete="off"></div>
+      <div class="fld"><label for="fDiag">Diagnóstico</label><textarea id="fDiag" placeholder="O que você viu: presença no Instagram, anúncios, atendimento no direct/WhatsApp, agendamento, prova social, concorrência local.">${esc(l.diagnostico)}</textarea></div>
+    </div>
+    <div><h3 style="font-size:1rem;margin-bottom:.8rem">Histórico</h3>${hist?`<ul class="hist">${hist}</ul>`:'<p class="mu" style="font-size:.88rem">Nenhum contato registrado ainda.</p>'}</div>
+  </div>
+  <div class="df">
+    ${id?`<button class="ghost sm danger" data-act="excluirLead">Excluir</button>`:'<span></span>'}
+    <div class="r">
+      ${l.instagram?`<a class="ghost sm" style="padding:.35rem .8rem;border-radius:8px" href="https://instagram.com/${esc(l.instagram)}" target="_blank" rel="noopener">Abrir Instagram</a>`:''}
+      ${l.whatsapp?`<a class="ghost sm" style="padding:.35rem .8rem;border-radius:8px" href="https://wa.me/${'55'+l.whatsapp.replace(/\D/g,'').replace(/^55/,'')}" target="_blank" rel="noopener">Abrir WhatsApp</a>`:''}
+      ${id?`<button class="ghost" data-act="contatoDoLead">Registrar contato</button>`:''}
+      <button class="primary" data-act="salvarLead">Salvar</button>
+    </div>
+  </div>`;
+  $('#dlgLead').showModal();
+}
+function salvarLead(){
+  const g=i=>$('#'+i).value.trim();
+  const nome=g('fNome'),ig=handle(g('fIg'));
+  if(!nome||!ig){toast('Preencha o nome e o @ do Instagram.');return}
+  const {draft,novo:isNovo}=S.edit;
+  const dup=S.leads.find(x=>x.instagram===ig&&x.id!==draft.id);
+  if(dup){toast(`@${ig} já está cadastrado (${dup.nome}).`);return}
+  const antes=draft.etapa,depois=$('#fEtapa').value;
+  Object.assign(draft,{
+    nome,instagram:ig,empresa:g('fEmpresa'),segmento:g('fSeg'),cidade:g('fCidade'),whatsapp:g('fWpp'),
+    fit:document.querySelector('input[name=fFit]:checked').value,etapa:depois,
+    dor:g('fDor'),diagnostico:$('#fDiag').value.trim(),proximoFollowup:$('#fData').value,motivoPerda:g('fMotivo')
+  });
+  if(FECHADAS.includes(depois))draft.proximoFollowup='';
+  if(!isNovo&&antes!==depois)draft.historico.push({data:new Date().toISOString(),tipo:'etapa',nota:`${nomeEtapa(antes)} para ${nomeEtapa(depois)}`});
+  if(isNovo)S.leads.push(draft);
+  salvar([draft]);
+  $('#dlgLead').close();render();toast('Lead salvo.');
+}
+
+/* ============ registrar contato ============ */
+function abrirContato(id){
+  const l=S.leads.find(x=>x.id===id);
+  if(!l)return;
+  S.ct={id};
+  $('#dlgLead').close();
+  const canais=Object.entries(CANAIS).map(([k,v],i)=>`<input type="radio" name="cCanal" id="ca-${k}" value="${k}" ${i===0?'checked':''}><label for="ca-${k}">${v}</label>`).join('');
+  const resl=Object.entries(RES).map(([k,v],i)=>`<input type="radio" name="cRes" id="cr-${k}" value="${k}" ${i===0?'checked':''}><label for="cr-${k}">${v.nome}</label>`).join('');
+  const dias=DIAS_CHIPS.map(n=>`<input type="radio" name="cDias" id="cd-${n}" value="${n}" ${n===2?'checked':''}><label for="cd-${n}">${n===7?'1 semana':n+(n===1?' dia':' dias')}</label>`).join('');
+  $('#dlgContato').innerHTML=`
+  <div class="dh"><div><h2>Registrar contato</h2><span class="mu" style="font-size:.88rem">${esc(l.nome)} (@${esc(l.instagram)})</span></div><button class="ghost sm" data-act="fechar">Fechar</button></div>
+  <div class="db">
+    <div class="fld"><label>Canal</label><div class="pills">${canais}</div></div>
+    <div class="fld"><label>Resultado</label><div class="pills">${resl}</div></div>
+    <div class="fld"><label for="cNota" id="cNotaL">Nota</label><textarea id="cNota" style="min-height:90px" placeholder="O que foi dito, objeção, próximo passo combinado"></textarea></div>
+    <div id="cFu"><div class="fld"><label>Próximo follow-up em dias úteis</label><div class="pills">${dias}</div></div>
+    <div class="fld"><label for="cData">Ou escolha uma data</label><input type="date" id="cData"></div></div>
+    <p id="cPrev" class="mu" style="margin:0"></p>
+  </div>
+  <div class="df"><span></span><div class="r"><button class="primary" data-act="confirmarContato">Salvar contato</button></div></div>`;
+  $('#dlgContato').showModal();
+  ctAtualiza(true);
+}
+function ctAtualiza(deRes){
+  const res=document.querySelector('input[name=cRes]:checked').value,R=RES[res];
+  if(deRes){
+    const chip=document.querySelector(`input[name=cDias][value="${R.dias}"]`);
+    if(chip)chip.checked=true;
+    $('#cData').value='';
+  }
+  $('#cFu').hidden=R.dias===0;
+  $('#cNotaL').textContent=res==='nao'?'Motivo':'Nota';
+  const dias=+(document.querySelector('input[name=cDias]:checked')||{}).value||1;
+  const data=$('#cData').value||addUteis(hoje(),dias);
+  $('#cPrev').textContent=R.dias===0?'Este lead sai da fila de follow-up.':'Próximo follow-up: '+fmtData(data);
+}
+function confirmarContato(){
+  const l=S.leads.find(x=>x.id===S.ct.id);
+  if(!l)return;
+  const canal=document.querySelector('input[name=cCanal]:checked').value;
+  const res=document.querySelector('input[name=cRes]:checked').value,R=RES[res];
+  const nota=$('#cNota').value.trim();
+  l.tentativas++;l.ultimoContato=hoje();
+  l.historico.push({data:new Date().toISOString(),tipo:'contato',canal,res,nota});
+  l.etapa=(res==='sem'&&idxEtapa(l.etapa)>=idxEtapa('abordado')&&!FECHADAS.includes(l.etapa))?l.etapa:R.etapa;
+  if(R.dias===0){l.proximoFollowup='';if(res==='nao')l.motivoPerda=nota}
+  else{
+    const dias=+(document.querySelector('input[name=cDias]:checked')||{}).value||1;
+    l.proximoFollowup=$('#cData').value||addUteis(hoje(),dias);
+  }
+  salvar([l]);
+  $('#dlgContato').close();render();toast('Contato registrado.');
+}
+
+/* ============ configuração ============ */
+function abrirCfg(){
+  $('#dlgCfg').innerHTML=`
+  <div class="dh"><h2>Configurar</h2><button class="ghost sm" data-act="fechar">Fechar</button></div>
+  <div class="db">
+    <div class="fld"><label for="cSdr">Nome do SDR</label><input id="cSdr" value="${esc(S.sdr)}" autocomplete="off"></div>
+    <div class="grid2">
+      <div class="fld"><label for="cCap">Capacidade diária (toques por dia)</label><input type="number" min="1" id="cCap" value="${+S.cfg.capacidadeDiaria||30}"></div>
+      <div class="fld"><label for="cMeta">Meta de novos leads por dia</label><input type="number" min="0" id="cMeta" value="${+S.cfg.metaNovosDia||0}"></div>
+    </div>
+    <div class="fld"><label for="cUrl">URL da planilha (Apps Script)</label><input id="cUrl" value="${esc(S.url)}" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off"></div>
+    <div class="fld"><label for="cTok">Token de acesso (o mesmo do Code.gs, se você definiu)</label><input id="cTok" value="${esc(S.token)}" autocomplete="off"></div>
+    <p class="mu" style="font-size:.85rem;margin:0">Deixe a URL vazia para usar o modo teste, com dados só neste navegador.</p>
+  </div>
+  <div class="df"><span></span><div class="r"><button class="primary" data-act="salvarCfg">Salvar</button></div></div>`;
+  $('#dlgCfg').showModal();
+}
+function salvarCfg(){
+  const urlAntes=S.url+S.token;
+  S.sdr=$('#cSdr').value.trim();
+  S.cfg.capacidadeDiaria=Math.max(1,+$('#cCap').value||30);
+  S.cfg.metaNovosDia=Math.max(0,+$('#cMeta').value||0);
+  S.url=$('#cUrl').value.trim();S.token=$('#cTok').value.trim();
+  store.set('crm_sdr',S.sdr);store.set('crm_url',S.url);store.set('crm_token',S.token);
+  $('#dlgCfg').close();
+  if(S.url+S.token!==urlAntes){
+    if(demo()){carregarDemo();setSync('demo');render()}
+    else{S.leads=[];render();sincronizar().then(()=>salvarCfgRemoto())}
+  }else{salvarCfgRemoto();render()}
+  toast('Configuração salva.');
+}
+
+/* ============ eventos ============ */
+document.addEventListener('click',e=>{
+  if(e.target.tagName==='DIALOG'){e.target.close();return}
+  if(e.target.closest('a'))return;
+  const t=e.target.closest('[data-act]');
+  if(!t)return;
+  const a=t.dataset.act,id=t.dataset.id||(t.closest('[data-id]')||{dataset:{}}).dataset.id;
+  switch(a){
+    case 'tab':S.view=t.dataset.view;store.set('crm_view',S.view);render();break;
+    case 'novo':abrirLead();break;
+    case 'abrir':abrirLead(id);break;
+    case 'contato':abrirContato(id);break;
+    case 'contatoDoLead':abrirContato(S.edit.draft.id);break;
+    case 'fechar':t.closest('dialog').close();break;
+    case 'salvarLead':salvarLead();break;
+    case 'excluirLead':if(confirm('Excluir este lead da planilha? Essa ação não pode ser desfeita.')){const i=S.edit.draft.id;$('#dlgLead').close();excluir(i)}break;
+    case 'confirmarContato':confirmarContato();break;
+    case 'cfg':abrirCfg();break;
+    case 'salvarCfg':salvarCfg();break;
+    case 'sync':sincronizar();break;
+    case 'add':addRapido();break;
+    case 'exportar':exportar();break;
+    case 'reorganizar':reorganizar();break;
+    case 'sortar':{const k=t.dataset.k;S.sort=S.sort.k===k?{k,dir:-S.sort.dir}:{k,dir:1};pintaTabela();break}
+    case 'limparDemo':if(confirm('Apagar os leads de exemplo deste navegador?')){S.leads=[];persistDemo();render()}break;
+  }
+});
+document.addEventListener('input',e=>{
+  if(e.target.id==='fq'){S.filtro.q=e.target.value;pintaTabela()}
+  if(e.target.id==='cData')ctAtualiza(false);
+});
+document.addEventListener('change',e=>{
+  const t=e.target;
+  if(t.id==='fe'){S.filtro.etapa=t.value;pintaTabela()}
+  if(t.id==='ff'){S.filtro.fit=t.value;pintaTabela()}
+  if(t.id==='fEtapa')$('#fMotivoW').hidden=t.value!=='perdido';
+  if(t.name==='cRes')ctAtualiza(true);
+  if(t.name==='cDias'){$('#cData').value='';ctAtualiza(false)}
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&(e.target.id==='qNome'||e.target.id==='qIg')){e.preventDefault();addRapido()}
+});
+/* arrastar e soltar no funil */
+document.addEventListener('dragstart',e=>{
+  const c=e.target.closest&&e.target.closest('.kcard');if(!c)return;
+  e.dataTransfer.setData('text/plain',c.dataset.id);e.dataTransfer.effectAllowed='move';
+});
+document.addEventListener('dragover',e=>{
+  const c=e.target.closest&&e.target.closest('.colk');if(!c)return;
+  e.preventDefault();
+  document.querySelectorAll('.colk.over').forEach(x=>x!==c&&x.classList.remove('over'));
+  c.classList.add('over');
+});
+document.addEventListener('drop',e=>{
+  const c=e.target.closest&&e.target.closest('.colk');if(!c)return;
+  e.preventDefault();c.classList.remove('over');
+  mover(e.dataTransfer.getData('text/plain'),c.dataset.etapa);
+});
+document.addEventListener('dragend',()=>document.querySelectorAll('.colk.over').forEach(x=>x.classList.remove('over')));
+
+/* ============ início ============ */
+if(demo()){carregarDemo();setSync('demo');render()}
+else{render();sincronizar()}
+setInterval(()=>{
+  if(!demo()&&document.visibilityState==='visible'&&!document.querySelector('dialog[open]'))sincronizar(true);
+},90000);
+</script>
+</body>
+</html>

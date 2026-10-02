@@ -311,6 +311,48 @@
             }
         }
         
+        .cta-section {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(244, 208, 63, 0.05));
+            border-top: 2px solid #d4af37;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        
+        .cta-text {
+            font-size: 13px;
+            color: #a0a0a0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 20px;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #d4af37, #f4d03f);
+            color: #0a0a0a;
+            padding: 16px 50px;
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            box-shadow: 0 10px 30px rgba(212, 175, 55, 0.3);
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(212, 175, 55, 0.5);
+            background: linear-gradient(135deg, #f4d03f, #d4af37);
+        }
+        
+        .cta-button:active {
+            transform: translateY(-1px);
+        }
+        
         @media (max-width: 768px) {
             .content {
                 padding: 20px;
@@ -324,6 +366,12 @@
             .service-value {
                 margin-top: 8px;
                 text-align: left;
+            }
+            .cta-section {
+                padding: 30px 20px;
+            }
+            .cta-button {
+                width: 100%;
             }
         }
     </style>
@@ -414,6 +462,12 @@
                 <div style="margin: 8px 0;">• <strong>Entrega:</strong> Arquivos em alta resolução + links de download</div>
                 <div style="margin: 8px 0;">• <strong>Segmentação:</strong> Anúncios direcionados ao bairro Santa Regina e arredores</div>
             </div>
+        </div>
+        
+        <!-- CTA Section -->
+        <div class="cta-section">
+            <div class="cta-text">⏰ Essa oferta é limitada — não perca!</div>
+            <a href="https://wa.me/5547991075451?text=Oi%20Patrick%2C%20tenho%20interesse%20em%20fechar%20o%20pacote%20de%20v%C3%ADdeos%20e%20tr%C3%A1fego%20da%20Pingo%20Douro.%20Quero%20garantir%20o%20desconto%20de%20R%24%20900%2C00!" class="cta-button">✨ Garantir o Desconto Agora</a>
         </div>
         
         <!-- Footer -->

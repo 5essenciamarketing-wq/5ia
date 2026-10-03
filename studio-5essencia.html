@@ -451,13 +451,13 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); font-family:
         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
       </svg>
     </div>
-    <div class="sb-btn active" title="Dashboard" onclick="setView('home')">
+    <div class="sb-btn active" id="sb-home" title="Dashboard" onclick="setView('home')">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
         <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
       </svg>
     </div>
-    <div class="sb-btn" title="Clientes" onclick="setView('clientes')">
+    <div class="sb-btn" id="sb-clientes" title="Clientes" onclick="setView('clientes')">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
         <circle cx="9" cy="7" r="4"/>
@@ -465,12 +465,12 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); font-family:
         <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
       </svg>
     </div>
-    <div class="sb-btn" title="Projetos">
+    <div class="sb-btn" id="sb-projetos" title="Projetos" onclick="setView('projetos')">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
       </svg>
     </div>
-    <div class="sb-btn" title="Relatórios">
+    <div class="sb-btn" id="sb-relatorios" title="Relatórios" onclick="setView('relatorios')">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
         <line x1="6" y1="20" x2="6" y2="14"/>
@@ -482,7 +482,7 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); font-family:
         <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
       </svg>
     </div>
-    <div class="sb-btn" title="Notificações">
+    <div class="sb-btn" id="sb-notifs" title="Notificações" onclick="setView('notificacoes')">
       <div class="badge"></div>
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
@@ -1030,9 +1030,201 @@ async function enviarChat(){
 function abrirWorkflow(){ window.open('workflow-5essencia.html','_blank'); }
 
 // ── VIEWS (NAV) ───────────────────────────────────────────────────
-function setView(v){
-  document.getElementById('tb-section').textContent = {home:'Dashboard',clientes:'Clientes'}[v]||v;
-  document.querySelectorAll('.sb-btn').forEach(b=>b.classList.remove('active'));
+let viewAtual = 'home';
+
+async function setView(v){
+  viewAtual = v;
+  const labels = {home:'Dashboard',clientes:'Clientes',projetos:'Projetos',relatorios:'Relatórios',notificacoes:'Notificações'};
+  document.getElementById('tb-section').textContent = labels[v]||v;
+
+  // Atualiza sidebar active
+  document.querySelectorAll('.sb-btn[id^="sb-"]').forEach(b=>b.classList.remove('active'));
+  document.getElementById('sb-'+v)?.classList.add('active');
+
+  const colMain = document.getElementById('col-main');
+  const colSide = document.querySelector('.col-side');
+
+  if(v==='home'){
+    colMain.innerHTML = `
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">Tarefas do dia</span>
+          <span class="card-action" onclick="abrirEscopoPicker()">+ Do escopo</span>
+        </div>
+        <div class="card-body">
+          <div id="tasks-list"></div>
+          <div class="add-task">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--ink4);flex-shrink:0"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <input class="at-input" id="at-input" placeholder="Adicionar tarefa…" onkeydown="if(event.key==='Enter')addTask()">
+            <select class="at-cat" id="at-cat">
+              <option value="geral">Geral</option><option value="design">Design</option>
+              <option value="edicao">Edição</option><option value="captacao">Captação</option>
+              <option value="trafego">Tráfego</option><option value="reuniao">Reunião</option>
+              <option value="pesquisa">Pesquisa</option><option value="copy">Copy</option><option value="dev">Dev</option>
+            </select>
+            <div class="at-add" onclick="addTask()">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">Agenda hoje</span></div>
+        <div class="card-body" id="agenda-body"><div class="empty-msg">Carregando…</div></div>
+      </div>`;
+    colSide.style.display = '';
+    renderTasks();
+    await carregarAgenda();
+    return;
+  }
+
+  colSide.style.display = 'none';
+
+  if(v==='clientes'){
+    colMain.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <h2 style="font-size:18px;font-weight:700;letter-spacing:-0.4px">Clientes</h2>
+        <button class="btn primary" style="font-size:12px;padding:7px 14px" onclick="toast('Em breve','ok')">+ Novo cliente</button>
+      </div>
+      <div class="card">
+        <table style="width:100%;border-collapse:collapse">
+          <thead>
+            <tr style="border-bottom:1px solid var(--border)">
+              <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:0.05em">Nome</th>
+              <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:0.05em">Empresa</th>
+              <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:0.05em">Status</th>
+              <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:0.05em">WhatsApp</th>
+              <th style="padding:10px 4px"></th>
+            </tr>
+          </thead>
+          <tbody id="clientes-table">
+            ${clientes.map(c=>{
+              const c_cor=cor(c.nome_completo);
+              return`<tr style="border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.1s" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''" onclick="abrirCliente('${c.id}')">
+                <td style="padding:12px 16px">
+                  <div style="display:flex;align-items:center;gap:10px">
+                    <div style="width:28px;height:28px;border-radius:7px;background:${c_cor};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:white;flex-shrink:0">${ini(c.nome_completo)}</div>
+                    <span style="font-size:13px;font-weight:600">${c.nome_completo}</span>
+                  </div>
+                </td>
+                <td style="padding:12px 16px;font-size:13px;color:var(--ink2)">${c.empresa||'—'}</td>
+                <td style="padding:12px 16px"><span class="badge badge-green">Ativo</span></td>
+                <td style="padding:12px 16px;font-size:13px;color:var(--ink3)">${c.whatsapp||'—'}</td>
+                <td style="padding:12px 4px;text-align:right">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--ink4)"><polyline points="9 18 15 12 9 6"/></svg>
+                </td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>`;
+    return;
+  }
+
+  if(v==='projetos'){
+    const projetos = await api('projetos?select=*,clientes(nome_completo)&order=created_at.desc')||[];
+    const colunas = [
+      {id:'briefing',label:'Briefing',cor:'var(--ink3)'},
+      {id:'em_andamento',label:'Em andamento',cor:'var(--accent)'},
+      {id:'revisao',label:'Em revisão',cor:'var(--purple)'},
+      {id:'entregue',label:'Entregue',cor:'var(--green)'},
+    ];
+    colMain.innerHTML=`
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <h2 style="font-size:18px;font-weight:700;letter-spacing:-0.4px">Projetos</h2>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;align-items:start">
+        ${colunas.map(col=>{
+          const itens=projetos.filter(p=>p.status===col.id);
+          return`<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r3);overflow:hidden">
+            <div style="padding:11px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+              <div style="display:flex;align-items:center;gap:7px">
+                <div style="width:7px;height:7px;border-radius:50%;background:${col.cor}"></div>
+                <span style="font-size:11.5px;font-weight:600;color:var(--ink2)">${col.label}</span>
+              </div>
+              <span style="font-size:11px;background:var(--surface2);border-radius:20px;padding:2px 7px;color:var(--ink3)">${itens.length}</span>
+            </div>
+            <div style="padding:10px">
+              ${itens.map(p=>`
+                <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;margin-bottom:7px;cursor:pointer;transition:all 0.1s" onclick="abrirCliente('${p.cliente_id}')">
+                  <div style="font-size:12.5px;font-weight:600;margin-bottom:4px">${p.titulo}</div>
+                  <div style="font-size:11px;color:var(--ink3)">${p.clientes?.nome_completo?.split(' ')[0]||'—'}</div>
+                  ${p.prazo?`<div style="font-size:10.5px;color:var(--ink3);margin-top:4px">${new Date(p.prazo+'T00:00:00').toLocaleDateString('pt-BR',{day:'numeric',month:'short'})}</div>`:''}
+                </div>`).join('')}
+              ${!itens.length?'<div style="text-align:center;padding:16px;font-size:12px;color:var(--ink4)">Vazio</div>':''}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>`;
+    return;
+  }
+
+  if(v==='relatorios'){
+    colMain.innerHTML=`
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <h2 style="font-size:18px;font-weight:700;letter-spacing:-0.4px">Relatórios</h2>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="card" style="cursor:pointer" onclick="abrirWorkflow()">
+          <div class="card-body" style="padding:20px">
+            <div style="width:36px;height:36px;border-radius:9px;background:var(--accent-l);display:flex;align-items:center;justify-content:center;margin-bottom:12px">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            </div>
+            <div style="font-size:14px;font-weight:700;margin-bottom:4px">Report diário</div>
+            <div style="font-size:12px;color:var(--ink3)">Envia atualização de processo via WhatsApp para o cliente</div>
+          </div>
+        </div>
+        <div class="card" style="cursor:pointer" onclick="abrirWorkflow()">
+          <div class="card-body" style="padding:20px">
+            <div style="width:36px;height:36px;border-radius:9px;background:var(--green-l);display:flex;align-items:center;justify-content:center;margin-bottom:12px">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+            </div>
+            <div style="font-size:14px;font-weight:700;margin-bottom:4px">Relatório mensal</div>
+            <div style="font-size:12px;color:var(--ink3)">Compilado de entregas e métricas do mês para o cliente</div>
+          </div>
+        </div>
+        <div class="card" style="cursor:pointer" onclick="abrirWorkflow()">
+          <div class="card-body" style="padding:20px">
+            <div style="width:36px;height:36px;border-radius:9px;background:var(--orange-l);display:flex;align-items:center;justify-content:center;margin-bottom:12px">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            </div>
+            <div style="font-size:14px;font-weight:700;margin-bottom:4px">Métricas Meta Ads</div>
+            <div style="font-size:12px;color:var(--ink3)">Resultado de campanhas com análise de IA</div>
+          </div>
+        </div>
+        <div class="card" style="cursor:pointer" onclick="abrirWorkflow()">
+          <div class="card-body" style="padding:20px">
+            <div style="width:36px;height:36px;border-radius:9px;background:var(--red-l);display:flex;align-items:center;justify-content:center;margin-bottom:12px">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+            </div>
+            <div style="font-size:14px;font-weight:700;margin-bottom:4px">Cobrança</div>
+            <div style="font-size:12px;color:var(--ink3)">Lembrete de pagamento com Pix</div>
+          </div>
+        </div>
+      </div>`;
+    return;
+  }
+
+  if(v==='notificacoes'){
+    const notifs = await api('notificacoes?select=*&order=created_at.desc&limit=30')||[];
+    colMain.innerHTML=`
+      <h2 style="font-size:18px;font-weight:700;letter-spacing:-0.4px;margin-bottom:12px">Notificações</h2>
+      <div class="card">
+        <div class="card-body" style="padding:0">
+          ${notifs.length
+            ? notifs.map(n=>`
+              <div style="padding:13px 16px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:12px">
+                <div style="width:7px;height:7px;border-radius:50%;background:${n.lida?'var(--ink4)':'var(--accent)'};flex-shrink:0;margin-top:5px"></div>
+                <div style="flex:1">
+                  <div style="font-size:13px;font-weight:${n.lida?'400':'600'};margin-bottom:3px">${n.mensagem||n.titulo||'—'}</div>
+                  <div style="font-size:11px;color:var(--ink3)">${new Date(n.created_at).toLocaleDateString('pt-BR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</div>
+                </div>
+              </div>`).join('')
+            :'<div class="empty-msg" style="padding:32px">Nenhuma notificação</div>'}
+        </div>
+      </div>`;
+    return;
+  }
 }
 
 // ── TOAST ─────────────────────────────────────────────────────────

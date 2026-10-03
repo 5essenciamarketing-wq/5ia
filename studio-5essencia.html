@@ -773,21 +773,119 @@ function renderClientes(){
   }).join('');
 }
 
-// ── AGENDA ────────────────────────────────────────────────────────
+// ── AGENDA — GOOGLE CALENDAR iCal ─────────────────────────────────
+const ICAL_URL = 'https://calendar.google.com/calendar/ical/319c09f1ab92f44990467cdf5957331495faa738a20c01735175ab0cb8a9ca71%40group.calendar.google.com/private-6375eb673d8f36a800d19e88237a6add/basic.ics';
+
+function parseIcal(texto){
+  const eventos = [];
+  const blocos  = texto.split('BEGIN:VEVENT');
+  for(let i = 1; i < blocos.length; i++){
+    const b    = blocos[i];
+    const get  = (key) => { const m = b.match(new RegExp(key + '[^:]*:(.+)')); return m ? m[1].trim().replace(/\\n/g,'\n').replace(/\\,/g,',') : ''; };
+    const titulo = get('SUMMARY');
+    const local  = get('LOCATION');
+    const desc   = get('DESCRIPTION');
+    const dtRaw  = get('DTSTART');
+    const dtEnd  = get('DTEND');
+    if(!titulo || !dtRaw) continue;
+
+    // Parse da data
+    let data, hora = '';
+    if(dtRaw.includes('T')){
+      // Com horário — pode ser UTC (Z) ou local
+      const s = dtRaw.replace('Z','').replace(/[^0-9T]/g,'');
+      const y=s.slice(0,4), mo=s.slice(4,6), d=s.slice(6,8);
+      const h=s.slice(9,11), mi=s.slice(11,13);
+      data = `${y}-${mo}-${d}`;
+      // Ajusta UTC-3 (Brasil)
+      if(dtRaw.endsWith('Z')){
+        const dt = new Date(`${y}-${mo}-${d}T${h}:${mi}:00Z`);
+        data = dt.toLocaleDateString('sv-SE');
+        hora = dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',timeZone:'America/Sao_Paulo'});
+      } else {
+        data = `${y}-${mo}-${d}`;
+        hora = `${h}:${mi}`;
+      }
+    } else {
+      // Dia inteiro
+      const s = dtRaw.replace(/[^0-9]/g,'');
+      data = `${s.slice(0,4)}-${s.slice(4,6)}-${s.slice(6,8)}`;
+      hora = '';
+    }
+
+    // Link Meet
+    const meetLink = (desc + local).match(/https:\/\/meet\.google\.com\/[a-z0-9-]+/)?.[0] || '';
+    const zoomLink = (desc + local).match(/https:\/\/[a-z0-9.]+\.zoom\.us\/[^\s]+/)?.[0] || '';
+    const link = meetLink || zoomLink || '';
+
+    eventos.push({ titulo, data, hora, link, local });
+  }
+  return eventos;
+}
+
 async function carregarAgenda(){
-  const d = await api(`agenda?select=id,titulo,tipo,hora,meet_link&data=eq.${hoje()}&order=hora`)||[];
   const body = document.getElementById('agenda-body');
-  const cores = {captacao:'var(--accent)',entrega:'var(--green)',reuniao:'var(--purple)',outro:'var(--ink3)'};
-  if(!d.length){ body.innerHTML='<div class="empty-msg">Nenhum compromisso para hoje</div>'; return; }
-  body.innerHTML = d.map(e=>`
-    <div class="agenda-item" ${e.meet_link?`style="cursor:pointer" onclick="window.open('${e.meet_link}','_blank')"`:''}>
-      <span class="ag-time">${e.hora?e.hora.slice(0,5):'—'}</span>
-      <div class="ag-dot" style="background:${cores[e.tipo]||cores.outro}"></div>
-      <div class="ag-info">
-        <div class="ag-titulo">${e.titulo}</div>
-        <div class="ag-meta">${e.tipo||''}${e.meet_link?' · Meet':''}</div>
-      </div>
-    </div>`).join('');
+  if(!body) return;
+  body.innerHTML = '<div class="empty-msg">Carregando Google Calendar…</div>';
+
+  try{
+    // Tenta múltiplos proxies CORS
+    let txt = '';
+    const proxies = [
+      `https://corsproxy.io/?${encodeURIComponent(ICAL_URL)}`,
+      `https://api.allorigins.win/get?url=${encodeURIComponent(ICAL_URL)}`,
+      `https://cors-anywhere.herokuapp.com/${ICAL_URL}`,
+    ];
+    for(const proxy of proxies){
+      try{
+        const r = await fetch(proxy, {signal: AbortSignal.timeout(5000)});
+        if(!r.ok) continue;
+        const ct = r.headers.get('content-type')||'';
+        txt = ct.includes('json') ? (await r.json()).contents || '' : await r.text();
+        if(txt.includes('VCALENDAR')) break;
+        txt = '';
+      }catch(e){ continue; }
+    }
+
+    if(!txt){ body.innerHTML='<div class="empty-msg">Não foi possível carregar o calendário</div>'; return; }
+
+    const todos  = parseIcal(txt);
+    const hj     = hoje();
+    const eventos = todos
+      .filter(e => e.data === hj)
+      .sort((a,b) => (a.hora||'99:99').localeCompare(b.hora||'99:99'));
+
+    if(!eventos.length){
+      body.innerHTML='<div class="empty-msg">Nenhum evento hoje no Google Calendar</div>';
+      return;
+    }
+
+    body.innerHTML = eventos.map(e=>`
+      <div class="agenda-item" ${e.link?`style="cursor:pointer" onclick="window.open('${e.link}','_blank')"`:''}>
+        <span class="ag-time">${e.hora||'Dia todo'}</span>
+        <div class="ag-dot" style="background:${e.link?'var(--accent)':'var(--ink3)'}"></div>
+        <div class="ag-info">
+          <div class="ag-titulo">${e.titulo}</div>
+          <div class="ag-meta">${e.local||''}${e.link?' · Meet/Zoom':''}</div>
+        </div>
+      </div>`).join('');
+
+  }catch(err){
+    console.warn('Agenda erro:', err);
+    // Fallback para Supabase
+    const d = await api(`agenda?select=id,titulo,tipo,hora,meet_link&data=eq.${hoje()}&order=hora`)||[];
+    if(!d.length){ body.innerHTML='<div class="empty-msg">Nenhum compromisso hoje</div>'; return; }
+    const cores={captacao:'var(--accent)',entrega:'var(--green)',reuniao:'var(--purple)',outro:'var(--ink3)'};
+    body.innerHTML = d.map(e=>`
+      <div class="agenda-item" ${e.meet_link?`style="cursor:pointer" onclick="window.open('${e.meet_link}','_blank')"`:''}>
+        <span class="ag-time">${e.hora?e.hora.slice(0,5):'—'}</span>
+        <div class="ag-dot" style="background:${cores[e.tipo]||cores.outro}"></div>
+        <div class="ag-info">
+          <div class="ag-titulo">${e.titulo}</div>
+          <div class="ag-meta">${e.tipo||''}${e.meet_link?' · Meet':''}</div>
+        </div>
+      </div>`).join('');
+  }
 }
 
 // ── TASKS ─────────────────────────────────────────────────────────

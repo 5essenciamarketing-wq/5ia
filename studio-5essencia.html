@@ -280,40 +280,36 @@ body{background:var(--bg-grad);}
 .btn.primary{background:var(--blue-g);color:white;border-color:transparent;box-shadow:0 2px 12px var(--blue-glow);}
 .btn.primary:hover{opacity:0.9;}
 
-/* ── CHAT ── */
-.chatbar{grid-column:2;background:rgba(255,255,255,0.75);border-top:1px solid var(--glass-border);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);display:flex;flex-direction:column;position:relative;z-index:10;}
-.chat-history{display:none;flex-direction:column;overflow-y:auto;height:320px;max-height:40vh;border-bottom:1px solid var(--glass-border);background:rgba(250,249,247,0.8);}
-.chat-history.open{display:flex;}
-.chat-msg-row{display:flex;gap:10px;padding:10px 16px;border-bottom:1px solid var(--glass-border);animation:msgSlide 0.18s ease both;}
-@keyframes msgSlide{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
-.chat-msg-row:last-child{border-bottom:none;}
-.chat-msg-row.user{flex-direction:row-reverse;}
-.chat-bubble-av{width:24px;height:24px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;margin-top:1px;}
-.chat-bubble-av.ai{background:var(--blue-g);color:white;}
-.chat-bubble-av.user{background:rgba(0,0,0,0.08);color:var(--ink2);}
-.chat-bubble{max-width:80%;padding:8px 12px;border-radius:12px;font-size:13px;line-height:1.6;}
-.chat-bubble.ai{background:white;border:1px solid var(--glass-border);color:var(--ink);border-bottom-left-radius:3px;box-shadow:var(--sh);}
-.chat-bubble.user{background:var(--blue-g);color:white;border-bottom-right-radius:3px;box-shadow:0 2px 10px var(--blue-glow);}
-.chat-bubble b,.chat-bubble strong{font-weight:700;}
-.chat-bubble code{background:rgba(0,0,0,0.06);padding:1px 5px;border-radius:4px;font-size:12px;}
-.chat-bubble ul,.chat-bubble ol{padding-left:16px;margin:4px 0;}
-.chat-bubble li{margin-bottom:3px;}
-.chat-typing{display:flex;gap:4px;align-items:center;padding:4px 0;}
-.chat-typing span{width:5px;height:5px;border-radius:50%;background:var(--ink3);animation:dot 1.2s ease infinite;}
-.chat-typing span:nth-child(2){animation-delay:0.2s;}
-.chat-typing span:nth-child(3){animation-delay:0.4s;}
-@keyframes dot{0%,60%,100%{opacity:0.2;transform:scale(0.8);}30%{opacity:1;transform:scale(1.2);}}
-.chat-input-row{display:flex;align-items:center;gap:10px;padding:9px 16px;}
-.chat-toggle-btn{width:22px;height:22px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--ink3);cursor:pointer;transition:color 0.1s;}
-.chat-toggle-btn:hover{color:var(--blue);}
-.chatbar input{flex:1;border:none;outline:none;font-family:var(--font);font-size:13px;color:var(--ink);background:transparent;}
-.chatbar input::placeholder{color:var(--ink4);}
-.chat-send{width:28px;height:28px;border-radius:6px;border:none;background:var(--blue-g);color:white;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all 0.12s;box-shadow:0 2px 8px var(--blue-glow);}
-.chat-send:hover{opacity:0.88;}
-.chat-send:disabled{opacity:0.3;cursor:not-allowed;}
-.chat-actions{display:flex;align-items:center;gap:5px;}
-.chat-chip{font-size:11px;font-weight:500;color:var(--ink3);padding:3px 9px;border-radius:20px;border:1px solid var(--glass-border);background:var(--glass);cursor:pointer;white-space:nowrap;transition:all 0.1s;}
-.chat-chip:hover{border-color:rgba(28,78,216,0.3);color:var(--blue);background:rgba(28,78,216,0.06);}
+/* ── BARRA DE COMANDO ── */
+.cmdbar{
+  grid-column:2;
+  background:rgba(255,255,255,0.82);
+  border-top:1px solid var(--glass-border);
+  backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);
+  display:flex;flex-direction:column;
+  position:relative;z-index:10;
+}
+.cmd-confirm{
+  display:none;padding:10px 16px;
+  background:rgba(28,78,216,0.05);
+  border-bottom:1px solid rgba(28,78,216,0.12);
+  animation:slideDown 0.18s ease;
+}
+.cmd-confirm.show{display:flex;align-items:center;gap:10px;}
+@keyframes slideDown{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:none;}}
+.cmd-confirm-text{flex:1;font-size:13px;color:var(--ink2);line-height:1.5;}
+.cmd-confirm-text strong{color:var(--ink);font-weight:600;}
+.cmd-confirm-btns{display:flex;gap:7px;flex-shrink:0;}
+.cmd-yes{padding:6px 14px;border-radius:var(--r);border:none;background:var(--blue-g);color:white;font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px var(--blue-glow);}
+.cmd-no{padding:6px 14px;border-radius:var(--r);border:1px solid var(--glass-border);background:transparent;color:var(--ink3);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;}
+.cmd-input-row{display:flex;align-items:center;gap:10px;padding:9px 16px;}
+.cmd-prefix{font-size:13px;font-weight:600;color:var(--blue);flex-shrink:0;}
+.cmd-input{flex:1;border:none;outline:none;font-family:var(--font);font-size:13px;color:var(--ink);background:transparent;}
+.cmd-input::placeholder{color:var(--ink4);}
+.cmd-hint{font-size:11px;color:var(--ink4);flex-shrink:0;}
+.cmd-send{width:28px;height:28px;border-radius:6px;border:none;background:var(--blue-g);color:white;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;box-shadow:0 2px 8px var(--blue-glow);transition:opacity 0.12s;}
+.cmd-send:hover{opacity:0.85;}
+.cmd-send:disabled{opacity:0.3;cursor:not-allowed;}
 
 /* ── EMPTY ── */
 .empty-msg{text-align:center;padding:24px 16px;color:var(--ink3);font-size:12.5px;}
@@ -526,22 +522,20 @@ body{background:var(--bg-grad);}
     </div>
   </div>
 
-  <!-- CHAT BAR -->
-  <div class="chatbar">
-    <div class="chat-history" id="chat-history"></div>
-    <div class="chat-input-row">
-      <div class="chat-toggle-btn" onclick="toggleChat()" title="Ver conversa">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-        </svg>
+  <!-- BARRA DE COMANDO -->
+  <div class="cmdbar">
+    <div class="cmd-confirm" id="cmd-confirm">
+      <div class="cmd-confirm-text" id="cmd-confirm-text"></div>
+      <div class="cmd-confirm-btns">
+        <button class="cmd-no" onclick="cancelarCmd()">Cancelar</button>
+        <button class="cmd-yes" id="cmd-yes-btn">Confirmar</button>
       </div>
-      <input id="chat-in" placeholder="Pergunte ou peça algo… ex: 'resumo da semana', 'enviar report para Cicatri'" onkeydown="if(event.key==='Enter')enviarChat()">
-      <div class="chat-actions">
-        <div class="chat-chip" onclick="quickChat('Qual o resumo da semana?')">Resumo</div>
-        <div class="chat-chip" onclick="quickChat('Quais cobranças estão pendentes?')">Cobranças</div>
-        <div class="chat-chip" onclick="quickChat('Quais clientes não receberam update hoje?')">Updates</div>
-      </div>
-      <button class="chat-send" id="chat-send-btn" onclick="enviarChat()">
+    </div>
+    <div class="cmd-input-row">
+      <span class="cmd-prefix">/</span>
+      <input class="cmd-input" id="cmd-input" placeholder="Comando… ex: criar tarefa, report Cicatri, marcar entregue" onkeydown="if(event.key==='Enter')processarCmd()">
+      <span class="cmd-hint" id="cmd-hint"></span>
+      <button class="cmd-send" id="cmd-send-btn" onclick="processarCmd()">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
         </svg>
@@ -1071,24 +1065,39 @@ function renderCpBody(){
 }
 
 function renderEscopo(body){
-  const statusCor={entregue:'var(--green)',em_andamento:'var(--accent)',briefing:'var(--orange)',revisao:'var(--purple)',pausado:'var(--ink3)'};
-  body.innerHTML=`<div class="cp-section">
-    <div class="cp-section-title">Serviços <span class="cp-add-btn" onclick="abrirNovoServico()">+ Adicionar</span></div>
-    ${cpServicos.length
-      ? cpServicos.map(s=>{
-          const prazo=s.prazo?new Date(s.prazo+'T00:00:00').toLocaleDateString('pt-BR',{day:'numeric',month:'short',year:'numeric'}):'Sem prazo';
-          const c=statusCor[s.status]||'var(--ink3)';
-          return`<div class="service-item">
-            <div class="si-status" style="background:${c}"></div>
-            <div class="si-info">
-              <div class="si-titulo">${s.titulo}</div>
-              <div class="si-prazo">${prazo}</div>
-            </div>
-            <div class="si-add" onclick="addServicoDia('${s.id}')">+ Hoje</div>
-          </div>`;
-        }).join('')
-      :'<div class="empty-msg">Nenhum serviço cadastrado</div>'}
-  </div>`;
+  const statusCor={entregue:'var(--green)',em_andamento:'var(--blue)',briefing:'var(--orange)',revisao:'var(--purple)',pausado:'var(--ink3)',rascunho:'var(--ink3)'};
+  const statusLabel={entregue:'Entregue',em_andamento:'Em andamento',briefing:'Briefing',revisao:'Em revisão',pausado:'Pausado'};
+
+  const ativos    = cpServicos.filter(s=>s.status!=='entregue');
+  const entregues = cpServicos.filter(s=>s.status==='entregue');
+
+  const renderItem = (s, showAdd=true) => {
+    const prazo = s.prazo ? new Date(s.prazo+'T00:00:00').toLocaleDateString('pt-BR',{day:'numeric',month:'short'}) : '';
+    const c     = statusCor[s.status]||'var(--ink3)';
+    const lbl   = statusLabel[s.status]||s.status;
+    return `<div class="service-item">
+      <div class="si-status" style="background:${c}"></div>
+      <div class="si-info">
+        <div class="si-titulo">${s.titulo}</div>
+        <div class="si-prazo" style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:10px;font-weight:600;padding:1px 6px;border-radius:4px;background:${c}18;color:${c}">${lbl}</span>
+          ${prazo?`<span>${prazo}</span>`:''}
+        </div>
+      </div>
+      ${showAdd&&s.status!=='entregue'?`<div class="si-add" onclick="addServicoDia('${s.id}')">+ Hoje</div>`:''}
+    </div>`;
+  };
+
+  body.innerHTML=`
+    <div class="cp-section">
+      <div class="cp-section-title">Em andamento <span class="cp-add-btn" onclick="abrirNovoServico()">+ Novo</span></div>
+      ${ativos.length ? ativos.map(s=>renderItem(s)).join('') : '<div class="empty-msg">Nenhum serviço ativo</div>'}
+    </div>
+    ${entregues.length?`
+    <div class="cp-section">
+      <div class="cp-section-title" style="color:var(--green)">Entregues (${entregues.length})</div>
+      ${entregues.map(s=>renderItem(s,false)).join('')}
+    </div>`:''}`;
 }
 
 function renderCpTarefas(body){
@@ -1160,141 +1169,152 @@ document.querySelectorAll('.modal-overlay').forEach(m=>{
   m.addEventListener('click',e=>{ if(e.target===m) m.classList.remove('open'); });
 });
 
-// ── CHAT EXECUTIVO ─────────────────────────────────────────────────
-let chatHistorico = [];
-let chatAberto    = false;
+// ── BARRA DE COMANDO ─────────────────────────────────────────────
+let cmdPendente = null; // {fn, label}
 
-function toggleChat(){
-  chatAberto = !chatAberto;
-  const h = document.getElementById('chat-history');
-  h.classList.toggle('open', chatAberto);
-  if(chatAberto){ h.scrollTop=h.scrollHeight; document.getElementById('chat-in').focus(); }
-}
+async function processarCmd(){
+  const input  = document.getElementById('cmd-input');
+  const sendBtn= document.getElementById('cmd-send-btn');
+  const hint   = document.getElementById('cmd-hint');
+  const msg    = input.value.trim();
+  if(!msg || sendBtn.disabled) return;
 
-function quickChat(msg){ document.getElementById('chat-in').value=msg; enviarChat(); }
+  sendBtn.disabled = true;
+  hint.textContent = '…';
 
-function markdownToHtml(txt){
-  return txt
-    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
-    .replace(/\*([^*\n]+?)\*/g,'<em>$1</em>')
-    .replace(/`(.+?)`/g,'<code style="background:rgba(0,0,0,0.06);padding:1px 5px;border-radius:4px;font-size:12px">$1</code>')
-    .replace(/^#{1,3} (.+)$/gm,'<strong>$1</strong>')
-    .replace(/^[-•] (.+)$/gm,'<li>$1</li>')
-    .replace(/(<li>[\s\S]+?<\/li>)/g,'<ul style="padding-left:16px;margin:4px 0">$1</ul>')
-    .replace(/\n\n/g,'<br><br>')
-    .replace(/\n/g,'<br>');
-}
-
-function adicionarMensagem(role, html){
-  const hist = document.getElementById('chat-history');
-  if(!chatAberto) toggleChat();
-  const isAI = role==='assistant';
-  const row  = document.createElement('div');
-  row.className = `chat-msg-row ${isAI?'':'user'}`;
-  row.innerHTML = `
-    <div class="chat-bubble-av ${isAI?'ai':'user'}">${isAI?'5':'P'}</div>
-    <div class="chat-bubble ${isAI?'ai':'user'}">${html}</div>`;
-  hist.appendChild(row);
-  hist.scrollTop = hist.scrollHeight;
-}
-
-function adicionarTyping(){
-  const hist = document.getElementById('chat-history');
-  const row  = document.createElement('div');
-  row.className='chat-msg-row'; row.id='chat-typing-row';
-  row.innerHTML=`<div class="chat-bubble-av ai">5</div><div class="chat-bubble ai"><div class="chat-typing"><span></span><span></span><span></span></div></div>`;
-  hist.appendChild(row); hist.scrollTop=hist.scrollHeight;
-}
-
-// Executa ações diretas antes de chamar a IA
-async function executarAcao(msg){
   const m = msg.toLowerCase();
 
-  // CRIAR TAREFA
-  const criarMatch = m.match(/(?:criar?|adicionar?|add|nova?) tarefa[:\s]+(.+)/i) || (m.startsWith('tarefa:') && [null, msg.replace(/tarefa[:\s]*/i,'')]);
+  // ── CRIAR TAREFA
+  const criarMatch = m.match(/(?:criar?|add|nova?|adicionar?)\s+tarefa[:\s]+(.+)/i)
+    || (m.startsWith('tarefa:') ? [null, msg.slice(7)] : null);
   if(criarMatch){
     const titulo = (criarMatch[1]||'').trim();
     if(titulo.length > 1){
-      const r = await fetch(`${SB}/rest/v1/tarefas`,{
-        method:'POST',
-        headers:{'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json','Prefer':'return=representation'},
-        body:JSON.stringify(Object.assign({titulo,categoria:'geral',status:'pendente',tempo_total:0,created_at:new Date().toISOString()},clienteAtual?.id?{cliente_id:clienteAtual.id}:{}))
-      }).then(r=>r.json());
-      if(r?.[0]){
-        tasks.unshift({...r[0],clientes:clienteAtual?{nome_completo:clienteAtual.nome_completo}:null});
-        renderTasks();
-        return `Tarefa **"${titulo}"** criada e adicionada ao seu dia!`;
-      }
+      pedirConfirmacao(
+        `Criar tarefa <strong>"${titulo}"</strong>${clienteAtual?' para '+clienteAtual.nome_completo.split(' ')[0]:''}?`,
+        async ()=>{
+          const r = await fetch(`${SB}/rest/v1/tarefas`,{
+            method:'POST',
+            headers:{'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json','Prefer':'return=representation'},
+            body:JSON.stringify(Object.assign({titulo,categoria:'geral',status:'pendente',tempo_total:0,created_at:new Date().toISOString()},clienteAtual?.id?{cliente_id:clienteAtual.id}:{}))
+          }).then(r=>r.json());
+          if(r?.[0]){
+            tasks.unshift({...r[0],clientes:clienteAtual?{nome_completo:clienteAtual.nome_completo}:null});
+            renderTasks(); toast('Tarefa criada');
+          }
+        }
+      );
+      input.value=''; sendBtn.disabled=false; hint.textContent=''; return;
     }
   }
 
-  // ABRIR REPORT / COMUNICAÇÃO
-  if(m.match(/report|enviar|mensagem|notificar|whatsapp|cobrança|relat/)){
+  // ── CONCLUIR TAREFA
+  if(m.match(/conclu|marcar.*feito|fechar tarefa|done/)){
+    const palavras = m.split(' ');
+    const tarefa   = tasks.find(t=>palavras.some(p=>p.length>3&&t.titulo.toLowerCase().includes(p)));
+    if(tarefa){
+      pedirConfirmacao(
+        `Marcar <strong>"${tarefa.titulo}"</strong> como concluída?`,
+        async ()=>{ await concluirTask(tarefa.id); }
+      );
+      input.value=''; sendBtn.disabled=false; hint.textContent=''; return;
+    }
+    toast('Qual tarefa? Seja mais específico.','er');
+    sendBtn.disabled=false; hint.textContent=''; return;
+  }
+
+  // ── MARCAR PROJETO COMO ENTREGUE
+  if(m.match(/entregue|entregar|finalizar/)){
+    const cli  = clientes.find(c=>m.includes(c.nome_completo.split(' ')[0].toLowerCase())) || clienteAtual;
+    const proj = cpServicos.find(s=>s.status!=='entregue');
+    if(cli && proj){
+      pedirConfirmacao(
+        `Marcar <strong>"${proj.titulo}"</strong> como entregue para ${cli.nome_completo.split(' ')[0]}?`,
+        async ()=>{
+          await fetch(`${SB}/rest/v1/projetos?id=eq.${proj.id}`,{
+            method:'PATCH',
+            headers:{'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json'},
+            body:JSON.stringify({status:'entregue'})
+          });
+          const idx=cpServicos.findIndex(s=>s.id===proj.id);
+          if(idx>=0) cpServicos[idx].status='entregue';
+          if(clienteAtual) renderCpBody();
+          toast('Projeto marcado como entregue');
+        }
+      );
+      input.value=''; sendBtn.disabled=false; hint.textContent=''; return;
+    }
+  }
+
+  // ── REPORT / COMUNICAÇÃO
+  if(m.match(/report|enviar|whatsapp|cobr|relat|mensagem/)){
     const cli = clientes.find(c=>m.includes(c.nome_completo.split(' ')[0].toLowerCase())) || clienteAtual;
-    if(cli){ setTimeout(()=>abrirComm(cli),200); return `Abrindo comunicação para **${cli.nome_completo.split(' ')[0]}**…`; }
-    return `Para qual cliente? ${clientes.slice(0,5).map(c=>'**'+c.nome_completo.split(' ')[0]+'**').join(', ')}`;
+    if(cli){
+      pedirConfirmacao(
+        `Abrir painel de comunicação para <strong>${cli.nome_completo.split(' ')[0]}</strong>?`,
+        ()=>abrirComm(cli)
+      );
+      input.value=''; sendBtn.disabled=false; hint.textContent=''; return;
+    }
+    toast(`Para qual cliente?`,'er');
+    sendBtn.disabled=false; hint.textContent=''; return;
   }
 
-  // ABRIR CLIENTE
-  if(m.match(/abrir?|ver|abre/)){
+  // ── ABRIR CLIENTE
+  if(m.match(/abri|ver |abre|cliente/)){
     const cli = clientes.find(c=>m.includes(c.nome_completo.split(' ')[0].toLowerCase()));
-    if(cli){ setTimeout(()=>abrirCliente(cli.id),200); return `Abrindo **${cli.nome_completo.split(' ')[0]}**…`; }
+    if(cli){
+      pedirConfirmacao(
+        `Abrir ficha de <strong>${cli.nome_completo.split(' ')[0]}</strong>?`,
+        ()=>abrirCliente(cli.id)
+      );
+      input.value=''; sendBtn.disabled=false; hint.textContent=''; return;
+    }
   }
 
-  return null;
-}
-
-async function enviarChat(){
-  const input   = document.getElementById('chat-in');
-  const sendBtn = document.getElementById('chat-send-btn');
-  const msg     = input.value.trim();
-  if(!msg||sendBtn.disabled) return;
-  input.value=''; sendBtn.disabled=true;
-
-  adicionarMensagem('user', msg);
-  chatHistorico.push({role:'user',content:msg});
-  adicionarTyping();
-
-  // Tenta ação direta primeiro
-  const acaoDireta = await executarAcao(msg);
-
-  const tarefasLista = tasks.slice(0,10).map(t=>`- ${t.titulo} [${t.categoria}]${t.clientes?.nome_completo?' · '+t.clientes.nome_completo.split(' ')[0]:''}`).join('\n')||'Nenhuma';
-  const clienteCtx  = clienteAtual?`\nCliente em foco: ${clienteAtual.nome_completo} (${clienteAtual.empresa||'—'}).`:'';
-  const sistema = `Você é o assistente executivo de Patrick, CEO da 5essência Marketing (agência premium, Balneário Camboriú, SC).
-
-SISTEMA:
-- Clientes (${clientes.length}): ${clientes.map(c=>c.nome_completo.split(' ')[0]).join(', ')}${clienteCtx}
-- Tarefas pendentes: ${tasks.length}\n${tarefasLista}
-- Timer: ${timerTarefaId?tasks.find(t=>t.id===timerTarefaId)?.titulo||'rodando':'inativo'}
-
-AÇÕES DISPONÍVEIS (o sistema já executou se aplicável):
-- "criar tarefa [nome]" → cria tarefa no dia
-- "report para [cliente]" → abre painel de comunicação
-- "abrir [cliente]" → abre ficha do cliente
-- Perguntas → responda com os dados do sistema
-
-Responda em português, direto, com markdown. Máximo 4 linhas para respostas simples.`;
-
+  // ── PERGUNTA GERAL — chama IA só para responder, não age
   try{
+    const tarefasLista = tasks.slice(0,8).map(t=>`${t.titulo}${t.clientes?.nome_completo?' ('+t.clientes.nome_completo.split(' ')[0]+')':''}`).join(', ')||'Nenhuma';
+    const sistema = `Você é o assistente da 5essência Marketing. Responda em 1-2 frases diretas. Contexto: ${clientes.length} clientes (${clientes.map(c=>c.nome_completo.split(' ')[0]).join(', ')}). Tarefas hoje: ${tarefasLista}.`;
     const r = await fetch(`${SB}/functions/v1/chat-assistant`,{
       method:'POST',
       headers:{'Content-Type':'application/json','apikey':KEY,'Authorization':'Bearer '+KEY},
-      body:JSON.stringify({system:sistema, messages:chatHistorico})
+      body:JSON.stringify({system:sistema, messages:[{role:'user',content:msg}]})
     });
     const d = await r.json();
-    const resposta = acaoDireta || d.resposta || 'Não consegui processar.';
-    document.getElementById('chat-typing-row')?.remove();
-    adicionarMensagem('assistant', markdownToHtml(resposta));
-    chatHistorico.push({role:'assistant',content:resposta});
-    if(chatHistorico.length>20) chatHistorico=chatHistorico.slice(-20);
-  }catch(e){
-    document.getElementById('chat-typing-row')?.remove();
-    adicionarMensagem('assistant','Erro de conexão.');
-  }finally{
-    sendBtn.disabled=false;
-    document.getElementById('chat-in').focus();
-  }
+    const resp = d.resposta||'';
+    if(resp) hint.textContent = resp.slice(0,80)+(resp.length>80?'…':'');
+    else hint.textContent='';
+  }catch(e){ hint.textContent=''; }
+
+  input.value='';
+  sendBtn.disabled=false;
 }
+
+function pedirConfirmacao(texto, fn){
+  cmdPendente = fn;
+  const box  = document.getElementById('cmd-confirm');
+  const txt  = document.getElementById('cmd-confirm-text');
+  const btn  = document.getElementById('cmd-yes-btn');
+  txt.innerHTML = texto;
+  btn.onclick   = async ()=>{ await fn(); cancelarCmd(); };
+  box.classList.add('show');
+}
+
+function cancelarCmd(){
+  document.getElementById('cmd-confirm').classList.remove('show');
+  document.getElementById('cmd-confirm-text').innerHTML='';
+  cmdPendente = null;
+}
+
+// Mantém compatibilidade com código antigo
+function quickChat(msg){ document.getElementById('cmd-input').value=msg; processarCmd(); }
+function enviarChat(){ processarCmd(); }
+function toggleChat(){}
+function adicionarMensagem(){}
+function adicionarTyping(){}
+function markdownToHtml(t){ return t; }
+let chatHistorico=[], chatAberto=false;
 
 // ── COMUNICAÇÃO (Workflow integrado) ──────────────────────────────
 const SIGN   = localStorage.getItem('assinatura') || 'Equipe 5essência Marketing';

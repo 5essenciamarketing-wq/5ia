@@ -262,34 +262,63 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); font-family:
   border-top: 1px solid var(--border);
   display: flex; flex-direction: column;
   position: relative; z-index: 10;
+  transition: height 0.25s ease;
 }
-.chat-response {
-  display: none; padding: 10px 18px 8px 18px;
+.chat-history {
+  display: none; flex-direction: column; gap: 0;
+  overflow-y: auto; max-height: 280px;
   border-bottom: 1px solid var(--border);
-  background: var(--accent-l);
+  background: var(--bg);
 }
-.chat-response.show { display: block; }
-.chat-response-label {
-  font-size: 10px; font-weight: 600; color: var(--accent);
-  text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 5px;
+.chat-history.open { display: flex; }
+.chat-msg-row {
+  display: flex; gap: 10px; padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  animation: msgSlide 0.18s ease both;
 }
-.chat-response-text {
-  font-size: 13px; color: var(--ink); line-height: 1.6;
-  max-height: 120px; overflow-y: auto;
+@keyframes msgSlide { from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;} }
+.chat-msg-row:last-child { border-bottom: none; }
+.chat-msg-row.user { flex-direction: row-reverse; }
+.chat-bubble-av {
+  width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 700; margin-top: 1px;
 }
-.chat-response-close {
-  float: right; font-size: 12px; color: var(--ink3);
-  cursor: pointer; margin-left: 8px; margin-top: -2px;
+.chat-bubble-av.ai { background: var(--ink); color: white; }
+.chat-bubble-av.user { background: var(--accent); color: white; }
+.chat-bubble {
+  max-width: 80%; padding: 8px 12px; border-radius: 12px;
+  font-size: 13px; line-height: 1.6;
 }
+.chat-bubble.ai {
+  background: var(--surface); border: 1px solid var(--border);
+  color: var(--ink); border-bottom-left-radius: 3px;
+}
+.chat-bubble.user {
+  background: var(--accent); color: white;
+  border-bottom-right-radius: 3px;
+}
+.chat-bubble b, .chat-bubble strong { font-weight: 700; }
+.chat-bubble p { margin-bottom: 6px; }
+.chat-bubble p:last-child { margin-bottom: 0; }
+.chat-bubble ul, .chat-bubble ol { padding-left: 16px; margin: 4px 0; }
+.chat-bubble li { margin-bottom: 3px; }
+.chat-bubble code { background: rgba(0,0,0,0.08); padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+.chat-typing { display: flex; gap: 4px; align-items: center; padding: 4px 0; }
+.chat-typing span { width: 5px; height: 5px; border-radius: 50%; background: var(--ink3); animation: dot 1.2s ease infinite; }
+.chat-typing span:nth-child(2) { animation-delay: 0.2s; }
+.chat-typing span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes dot { 0%,60%,100%{opacity:0.2;transform:scale(0.8);}30%{opacity:1;transform:scale(1.2);} }
 .chat-input-row {
   display: flex; align-items: center; gap: 10px;
-  padding: 10px 18px 10px 18px; position: relative;
+  padding: 9px 16px; position: relative;
 }
-.chat-icon {
+.chat-toggle-btn {
   width: 22px; height: 22px; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
-  color: var(--ink3);
+  color: var(--ink3); cursor: pointer; transition: color 0.1s;
 }
+.chat-toggle-btn:hover { color: var(--accent); }
 .chatbar input {
   flex: 1; border: none; outline: none; font-family: var(--font);
   font-size: 13px; color: var(--ink); background: transparent;
@@ -302,7 +331,8 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); font-family:
   cursor: pointer; flex-shrink: 0; transition: all 0.12s;
 }
 .chat-send:hover { opacity: 0.88; }
-.chat-actions { display: flex; align-items: center; gap: 6px; }
+.chat-send:disabled { opacity: 0.4; cursor: not-allowed; }
+.chat-actions { display: flex; align-items: center; gap: 5px; }
 .chat-chip {
   font-size: 11px; font-weight: 500; color: var(--ink3);
   padding: 3px 9px; border-radius: 20px;
@@ -446,6 +476,11 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); font-family:
       <div class="fg">
         <label>Chave Pix</label>
         <input id="cfg-pix" value="ce89b6e3-951a-4485-aff7-5663c3a7d5e1" placeholder="Chave Pix">
+      </div>
+      <div style="background:var(--orange-l);border:1px solid #FDE68A;border-radius:var(--r);padding:12px">
+        <div style="font-size:12px;font-weight:600;color:var(--orange);margin-bottom:6px">Limpar títulos longos</div>
+        <div style="font-size:12px;color:var(--ink2);margin-bottom:10px">Os projetos no portal do cliente estão mostrando texto completo. A IA vai resumir cada título em até 5 palavras.</div>
+        <button class="btn" style="font-size:12px;padding:7px 14px" onclick="fecharModal('modal-config');limparTitulosProjetos()">Corrigir títulos com IA</button>
       </div>
     </div>
     <div class="modal-foot">
@@ -633,24 +668,20 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); font-family:
 
   <!-- CHAT BAR -->
   <div class="chatbar">
-    <div class="chat-response" id="chat-response">
-      <span class="chat-response-close" onclick="document.getElementById('chat-response').classList.remove('show')">✕</span>
-      <div class="chat-response-label">Assistente</div>
-      <div class="chat-response-text" id="chat-response-text"></div>
-    </div>
+    <div class="chat-history" id="chat-history"></div>
     <div class="chat-input-row">
-      <div class="chat-icon">
+      <div class="chat-toggle-btn" onclick="toggleChat()" title="Ver conversa">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
         </svg>
       </div>
-      <input id="chat-in" placeholder="Pergunte ou comande… ex: 'enviar report para Cicatri', 'resumo da semana'" onkeydown="if(event.key==='Enter')enviarChat()">
+      <input id="chat-in" placeholder="Pergunte ou peça algo… ex: 'resumo da semana', 'enviar report para Cicatri'" onkeydown="if(event.key==='Enter')enviarChat()">
       <div class="chat-actions">
-        <div class="chat-chip" onclick="quickChat('Resumo da semana')">Resumo</div>
-        <div class="chat-chip" onclick="quickChat('Cobranças pendentes')">Cobranças</div>
-        <div class="chat-chip" onclick="quickChat('Quais tarefas estão atrasadas?')">Atrasadas</div>
+        <div class="chat-chip" onclick="quickChat('Qual o resumo da semana?')">Resumo</div>
+        <div class="chat-chip" onclick="quickChat('Quais cobranças estão pendentes?')">Cobranças</div>
+        <div class="chat-chip" onclick="quickChat('Quais clientes não receberam update hoje?')">Updates</div>
       </div>
-      <button class="chat-send" onclick="enviarChat()">
+      <button class="chat-send" id="chat-send-btn" onclick="enviarChat()">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
         </svg>
@@ -804,52 +835,99 @@ function taskHTML(t){
   </div>`;
 }
 
-// ── IA: RESUME TEXTO EM TÍTULO CURTO ────────────────────────────────
+// ── IA: RESUME TEXTO EM TÍTULO CURTO (não bloqueia) ─────────────────
 async function resumirEmTitulo(texto){
   try{
     const r = await fetch(`${SB}/functions/v1/chat-assistant`,{
       method:'POST',
       headers:{'Content-Type':'application/json','apikey':KEY,'Authorization':'Bearer '+KEY},
       body:JSON.stringify({
-        system:'Você resume textos em títulos curtos (máximo 5 palavras) para um sistema de gestão de agência de marketing. Responda APENAS com o título, sem ponto final, sem aspas.',
+        system:'Você resume textos em títulos curtos para um kanban de agência de marketing. Máximo 5 palavras. Responda APENAS com o título, sem ponto final, sem aspas, sem explicações.',
         messages:[{role:'user',content:`Resuma em até 5 palavras: "${texto}"`}]
       })
     });
-    const d = await r.json();
-    const titulo = d.resposta?.trim();
-    return (titulo && titulo.length < 60) ? titulo : texto.slice(0,50);
+    const d  = await r.json();
+    const t  = d.resposta?.trim().replace(/["'.]/g,'');
+    return (t && t.length > 2 && t.length < 60) ? t : texto.slice(0,50);
   }catch(e){ return texto.slice(0,50); }
 }
 
 async function addTask(){
-  const input = document.getElementById('at-input');
+  // Pega o campo certo dependendo da view atual
+  const input = document.getElementById('at-input') || document.getElementById('cv-nt-in');
+  const catEl = document.getElementById('at-cat')   || document.getElementById('cv-nt-cat');
+  if(!input) { toast('Selecione a tela inicial primeiro','er'); return; }
+
   const textoOriginal = input.value.trim();
-  const cat = document.getElementById('at-cat').value;
+  const cat = catEl?.value || 'geral';
   if(!textoOriginal) return;
   input.value = '';
 
-  // Se texto longo (> 8 palavras), usa IA para resumir
+  // Salva imediatamente com texto como título
   const palavras = textoOriginal.split(' ').length;
-  const titulo = palavras > 8 ? await resumirEmTitulo(textoOriginal) : textoOriginal;
+  const titulo   = palavras <= 6 ? textoOriginal : textoOriginal.slice(0,50);
 
   const res = await fetch(`${SB}/rest/v1/tarefas`,{
     method:'POST',
     headers:{'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json','Prefer':'return=representation'},
     body:JSON.stringify({
+      cliente_id: clienteAtual?.id||null,
       titulo,
-      descricao: palavras > 8 ? textoOriginal : null, // guarda texto original na descrição
-      categoria:cat,
-      status:'pendente',
-      tempo_total:0,
-      created_at:new Date().toISOString()
+      descricao: palavras > 6 ? textoOriginal : null,
+      categoria: cat,
+      status: 'pendente',
+      tempo_total: 0,
+      created_at: new Date().toISOString()
     })
   }).then(r=>r.json());
 
   if(res?.[0]){
-    tasks.unshift({...res[0],clientes:null});
+    tasks.unshift({...res[0], clientes: clienteAtual?{nome_completo:clienteAtual.nome_completo}:null});
     renderTasks();
-    toast(palavras > 8 ? `"${titulo}" adicionado` : 'Tarefa adicionada');
+    toast('Tarefa adicionada');
+
+    // Em background, se texto longo, melhora o título com IA
+    if(palavras > 6){
+      resumirEmTitulo(textoOriginal).then(async tituloIA => {
+        if(tituloIA !== titulo){
+          await fetch(`${SB}/rest/v1/tarefas?id=eq.${res[0].id}`,{
+            method:'PATCH',
+            headers:{'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json'},
+            body:JSON.stringify({titulo:tituloIA})
+          });
+          // Atualiza UI
+          const idx = tasks.findIndex(t=>t.id===res[0].id);
+          if(idx>=0){ tasks[idx].titulo = tituloIA; renderTasks(); }
+        }
+      });
+    }
+  } else {
+    toast('Erro ao adicionar tarefa — verifique a conexão','er');
   }
+}
+
+// ── LIMPA TÍTULOS LONGOS DOS PROJETOS EXISTENTES ────────────────────
+async function limparTitulosProjetos(){
+  toast('Iniciando limpeza de títulos...');
+  const projetos = await api('projetos?select=id,titulo&order=created_at.desc')||[];
+  const longos   = projetos.filter(p => p.titulo && p.titulo.split(' ').length > 6);
+
+  if(!longos.length){ toast('Todos os títulos já estão limpos!'); return; }
+
+  let corrigidos = 0;
+  for(const p of longos){
+    const tituloLimpo = await resumirEmTitulo(p.titulo);
+    if(tituloLimpo !== p.titulo){
+      await fetch(`${SB}/rest/v1/projetos?id=eq.${p.id}`,{
+        method:'PATCH',
+        headers:{'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json'},
+        body:JSON.stringify({titulo:tituloLimpo, descricao:p.titulo})
+      });
+      corrigidos++;
+    }
+    await new Promise(r=>setTimeout(r,600)); // Pausa entre chamadas
+  }
+  toast(`${corrigidos} títulos corrigidos pela IA!`);
 }
 
 async function concluirTask(id){
@@ -1091,55 +1169,149 @@ document.querySelectorAll('.modal-overlay').forEach(m=>{
 });
 
 // ── CHAT ──────────────────────────────────────────────────────────
-function quickChat(msg){ document.getElementById('chat-in').value=msg; enviarChat(); }
+// ── CHAT ──────────────────────────────────────────────────────────
+let chatHistorico = []; // {role, content}
+let chatAberto    = false;
+
+function toggleChat(){
+  chatAberto = !chatAberto;
+  const h = document.getElementById('chat-history');
+  h.classList.toggle('open', chatAberto);
+  if(chatAberto) h.scrollTop = h.scrollHeight;
+}
+
+function quickChat(msg){
+  document.getElementById('chat-in').value = msg;
+  enviarChat();
+}
+
+// Converte markdown simples em HTML
+function markdownToHtml(txt){
+  return txt
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/`(.+?)`/g, '<code>$1</code>')
+    .replace(/^### (.+)$/gm, '<strong>$1</strong>')
+    .replace(/^## (.+)$/gm, '<strong>$1</strong>')
+    .replace(/^# (.+)$/gm, '<strong>$1</strong>')
+    .replace(/^- (.+)$/gm, '<li>$1</li>')
+    .replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>')
+    .replace(/\n{2,}/g, '</p><p>')
+    .replace(/^(.+)$/gm, (m) => m.startsWith('<') ? m : m)
+    .replace(/\n/g, '<br>')
+    .replace(/<\/p><p>/g, '</p><p>');
+}
+
+function adicionarMensagem(role, html){
+  const hist = document.getElementById('chat-history');
+  const isAI = role === 'assistant';
+  const row  = document.createElement('div');
+  row.className = `chat-msg-row ${isAI ? '' : 'user'}`;
+  row.innerHTML = `
+    <div class="chat-bubble-av ${isAI?'ai':'user'}">${isAI?'5':'P'}</div>
+    <div class="chat-bubble ${isAI?'ai':'user'}">${html}</div>`;
+  hist.appendChild(row);
+  hist.scrollTop = hist.scrollHeight;
+}
+
+function adicionarTyping(){
+  const hist = document.getElementById('chat-history');
+  const row  = document.createElement('div');
+  row.className = 'chat-msg-row';
+  row.id = 'chat-typing-row';
+  row.innerHTML = `
+    <div class="chat-bubble-av ai">5</div>
+    <div class="chat-bubble ai"><div class="chat-typing"><span></span><span></span><span></span></div></div>`;
+  hist.appendChild(row);
+  hist.scrollTop = hist.scrollHeight;
+}
 
 async function enviarChat(){
-  const input = document.getElementById('chat-in');
-  const msg = input.value.trim(); if(!msg) return;
-  input.value='';
+  const input  = document.getElementById('chat-in');
+  const sendBtn= document.getElementById('chat-send-btn');
+  const msg    = input.value.trim();
+  if(!msg || sendBtn.disabled) return;
+  input.value = '';
+  sendBtn.disabled = true;
 
-  const respEl  = document.getElementById('chat-response');
-  const textEl  = document.getElementById('chat-response-text');
-  textEl.textContent = 'Processando…';
-  respEl.classList.add('show');
+  // Abre o histórico automaticamente
+  if(!chatAberto) toggleChat();
 
+  // Mostra mensagem do usuário
+  adicionarMensagem('user', msg);
+  chatHistorico.push({role:'user', content:msg});
+
+  // Typing indicator
+  adicionarTyping();
+
+  // Contexto rico
   const tarefasPend = tasks.length;
-  const clienteCtx  = clienteAtual?`Cliente em foco: ${clienteAtual.nome_completo} (${clienteAtual.empresa||'—'}). `:'';
-  const sistema = `Você é o assistente de Patrick, CEO da 5essência Marketing (agência premium, Balneário Camboriú, SC). ${clienteCtx}Tarefas hoje: ${tarefasPend}. Clientes: ${clientes.length}. Responda de forma direta e prática em português. Quando solicitado enviar mensagem ou report, confirme e oriente o usuário a usar o Workflow.`;
+  const clienteCtx  = clienteAtual ? `Cliente em foco: ${clienteAtual.nome_completo} (${clienteAtual.empresa||'—'}). ` : '';
+  const sistema = `Você é o assistente pessoal de Patrick, CEO da 5essência Marketing (agência premium, Balneário Camboriú, SC, Brasil). ${clienteCtx}Tarefas pendentes hoje: ${tarefasPend}. Clientes ativos: ${clientes.length}. Responda sempre em português brasileiro. Seja direto, prático e útil. Formate bem a resposta usando markdown quando necessário (negrito para destacar, listas para itens). Quando o usuário pedir para enviar mensagem ou report, diga para usar o Workflow (botão de atividade na barra lateral).`;
 
   try{
-    const r = await fetch(`${SB}/functions/v1/chat-assistant`,{method:'POST',headers:{'Content-Type':'application/json','apikey':KEY,'Authorization':'Bearer '+KEY},body:JSON.stringify({system:sistema,messages:[{role:'user',content:msg}]})});
+    const r = await fetch(`${SB}/functions/v1/chat-assistant`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':KEY,'Authorization':'Bearer '+KEY},
+      body:JSON.stringify({
+        system: sistema,
+        messages: chatHistorico // Envia todo o histórico
+      })
+    });
     const d = await r.json();
-    textEl.textContent = d.resposta||'Não consegui processar.';
-  }catch(e){ textEl.textContent='Erro de conexão.'; }
+    const resposta = d.resposta || 'Não consegui processar. Tente novamente.';
+
+    // Remove typing e adiciona resposta
+    document.getElementById('chat-typing-row')?.remove();
+    adicionarMensagem('assistant', markdownToHtml(resposta));
+    chatHistorico.push({role:'assistant', content:resposta});
+
+    // Limita histórico a 20 mensagens para não pesar
+    if(chatHistorico.length > 20) chatHistorico = chatHistorico.slice(-20);
+
+  }catch(e){
+    document.getElementById('chat-typing-row')?.remove();
+    adicionarMensagem('assistant', 'Erro de conexão. Verifique sua internet.');
+  }finally{
+    sendBtn.disabled = false;
+    document.getElementById('chat-in').focus();
+  }
 }
 
 // ── WORKFLOW ──────────────────────────────────────────────────────
 function abrirWorkflow(){
-  // Detecta URL base para funcionar em qualquer hospedagem
-  const base = window.location.href.replace(/[^/]*$/, '');
-  window.open(base + 'workflow-5essencia.html', '_blank');
+  // Pega URL salva nas configurações
+  const saved = localStorage.getItem('workflowUrl') || 'https://5essenciamarketing-wq.github.io/5ia/workflow-5essencia.html';
+  if(saved){ window.open(saved, '_blank'); return; }
+  // Tenta URL relativa — abre em nova aba forçado
+  const base = window.location.href.split('/').slice(0,-1).join('/');
+  const url  = base + '/workflow-5essencia.html';
+  const w    = window.open(url, '_blank');
+  // Se popup bloqueado, navega na mesma aba
+  if(!w || w.closed){ window.location.href = url; }
 }
 
 // ── CONFIGURAÇÕES ─────────────────────────────────────────────────
 function abrirConfiguracoes(){
+  // Preenche campos com valores salvos
+  const saved = localStorage.getItem('workflowUrl')||'';
+  setTimeout(()=>{
+    const el = document.getElementById('cfg-workflow-url');
+    if(el) el.value = saved;
+  },100);
   document.getElementById('modal-config').classList.add('open');
 }
 
 function salvarConfiguracoes(){
-  const url = document.getElementById('cfg-workflow-url').value.trim();
-  if(url) localStorage.setItem('workflowUrl', url);
+  const url  = document.getElementById('cfg-workflow-url')?.value.trim();
+  const ass  = document.getElementById('cfg-assinatura')?.value.trim();
+  const pix  = document.getElementById('cfg-pix')?.value.trim();
+  if(url)  localStorage.setItem('workflowUrl', url);
+  if(ass)  localStorage.setItem('assinatura', ass);
+  if(pix)  localStorage.setItem('pixKey', pix);
   toast('Configurações salvas');
   fecharModal('modal-config');
 }
-
-// Override abrirWorkflow para usar URL salva
-const _abrirWorkflowOrig = abrirWorkflow;
-window.abrirWorkflow = function(){
-  const savedUrl = localStorage.getItem('workflowUrl');
-  if(savedUrl){ window.open(savedUrl, '_blank'); return; }
-  _abrirWorkflowOrig();
-};
 
 // ── VIEWS (NAV) ───────────────────────────────────────────────────
 let viewAtual = 'home';

@@ -413,6 +413,56 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); font-family:
 /* ── EMPTY ── */
 .empty-msg { text-align: center; padding: 24px 16px; color: var(--ink3); font-size: 12.5px; }
 
+/* ── PAINEL COMUNICAÇÃO (Workflow integrado) ── */
+.comm-overlay {
+  position: fixed; inset: 0; z-index: 400;
+  background: rgba(0,0,0,0.4); backdrop-filter: blur(6px);
+  display: none; align-items: flex-end; justify-content: center;
+}
+.comm-overlay.open { display: flex; }
+.comm-panel {
+  width: 100%; max-width: 600px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 20px 20px 0 0;
+  max-height: 90vh; display: flex; flex-direction: column;
+  transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.32,0.72,0,1);
+  box-shadow: 0 -8px 40px rgba(0,0,0,0.15);
+}
+.comm-overlay.open .comm-panel { transform: translateY(0); }
+.comm-handle { width: 32px; height: 3px; background: var(--border); border-radius: 2px; margin: 10px auto 0; flex-shrink: 0; }
+.comm-head { padding: 14px 20px 0; flex-shrink: 0; }
+.comm-cliente { font-size: 11px; font-weight: 600; color: var(--ink3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; }
+.comm-modes { display: flex; gap: 0; border-bottom: 1px solid var(--border); overflow-x: auto; scrollbar-width: none; }
+.comm-modes::-webkit-scrollbar { display: none; }
+.comm-mode { flex-shrink: 0; padding: 9px 16px; font-size: 12px; font-weight: 600; color: var(--ink3); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.12s; white-space: nowrap; }
+.comm-mode.active { color: var(--accent); border-bottom-color: var(--accent); }
+.comm-body { flex: 1; overflow-y: auto; padding: 16px 20px; }
+.comm-foot { padding: 12px 20px; border-top: 1px solid var(--border); display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+.comm-wpp { display: flex; align-items: center; gap: 8px; flex: 1; cursor: pointer; padding: 8px 12px; border-radius: var(--r); border: 1px solid var(--border); transition: all 0.12s; }
+.comm-wpp:hover { background: var(--surface2); }
+.comm-wpp.on { background: #DCFCE7; border-color: #BBF7D0; }
+.comm-wpp-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border2); transition: background 0.15s; flex-shrink: 0; }
+.comm-wpp.on .comm-wpp-dot { background: var(--green); }
+.comm-wpp-label { font-size: 12.5px; font-weight: 600; color: var(--ink2); }
+.comm-wpp.on .comm-wpp-label { color: var(--green); }
+.preview-box {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--r2); padding: 13px; margin-top: 14px;
+  min-height: 80px; font-size: 13px; color: var(--ink2);
+  line-height: 1.7; white-space: pre-wrap; cursor: pointer;
+  transition: border-color 0.15s;
+}
+.preview-box:hover { border-color: var(--accent-m); }
+.preview-box.empty { color: var(--ink4); font-style: italic; }
+.preview-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.preview-lbl { font-size: 10px; font-weight: 600; color: var(--ink3); text-transform: uppercase; letter-spacing: 0.06em; }
+.preview-badge { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px; background: var(--accent-l); color: var(--accent); }
+.preview-badge.ia { background: #EDE9FE; color: var(--purple); }
+.btn-ia-sm { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; border: 1px solid #DDD6FE; background: #EDE9FE; color: var(--purple); font-family: var(--font); font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.12s; }
+.btn-ia-sm:hover { background: #DDD6FE; }
+.btn-ia-sm:disabled { opacity: 0.4; cursor: not-allowed; }
+.comm-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
 /* ── OVERLAY ── */
 .overlay-bg { position: fixed; inset: 0; z-index: 99; background: rgba(0,0,0,0.15); backdrop-filter: blur(2px); display: none; }
 .overlay-bg.show { display: block; }
@@ -552,7 +602,7 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); font-family:
       </svg>
     </div>
     <div class="sb-divider"></div>
-    <div class="sb-btn" title="Workflow" onclick="window.open('https://5essenciamarketing-wq.github.io/5ia/workflow-5essencia.html','_blank')" >
+    <div class="sb-btn" title="Workflow" onclick="abrirComm(clienteAtual)" >
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
       </svg>
@@ -686,6 +736,31 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); font-family:
           <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
         </svg>
       </button>
+    </div>
+  </div>
+</div>
+
+<!-- PAINEL COMUNICAÇÃO -->
+<div class="comm-overlay" id="comm-overlay" onclick="fecharComm(event)">
+  <div class="comm-panel">
+    <div class="comm-handle"></div>
+    <div class="comm-head">
+      <div class="comm-cliente" id="comm-cliente-label">Selecione um cliente</div>
+      <div class="comm-modes">
+        <div class="comm-mode active" onclick="setCommMode('report')">Report</div>
+        <div class="comm-mode" onclick="setCommMode('entregavel')">Entregável</div>
+        <div class="comm-mode" onclick="setCommMode('metricas')">Métricas</div>
+        <div class="comm-mode" onclick="setCommMode('cobranca')">Cobrança</div>
+        <div class="comm-mode" onclick="setCommMode('relatorio')">Relatório</div>
+      </div>
+    </div>
+    <div class="comm-body" id="comm-body"></div>
+    <div class="comm-foot">
+      <div class="comm-wpp" id="comm-wpp" onclick="toggleCommWpp()">
+        <div class="comm-wpp-dot"></div>
+        <span class="comm-wpp-label" id="comm-wpp-label">Enviar WhatsApp</span>
+      </div>
+      <button class="btn primary" id="comm-send-btn" onclick="enviarComm()" style="padding:9px 20px;font-size:13px">Enviar</button>
     </div>
   </div>
 </div>
@@ -1115,11 +1190,11 @@ async function abrirCliente(id){
 
   // Actions
   document.getElementById('cp-actions').innerHTML=`
-    <button class="cp-action" onclick="window.open('https://5essenciamarketing-wq.github.io/5ia/workflow-5essencia.html','_blank')" >
+    <button class="cp-action" onclick="abrirComm(clienteAtual)" >
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
       Report
     </button>
-    <button class="cp-action" onclick="window.open('https://5essenciamarketing-wq.github.io/5ia/workflow-5essencia.html','_blank')" >
+    <button class="cp-action" onclick="abrirComm(clienteAtual)" >
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 9.81 19.79 19.79 0 0 1 1.17 4.14 2 2 0 0 1 3.12 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21 16.92z"/></svg>
       WhatsApp
     </button>
@@ -1393,17 +1468,304 @@ INSTRUÇÕES:
   }
 }
 
-// ── WORKFLOW ──────────────────────────────────────────────────────
-function abrirWorkflow(){
-  const url = localStorage.getItem('workflowUrl') || 'https://5essenciamarketing-wq.github.io/5ia/workflow-5essencia.html';
-  const a = document.createElement('a');
-  a.href = url;
-  a.target = '_blank';
-  a.rel = 'noopener noreferrer';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+// ── COMUNICAÇÃO (Workflow integrado) ──────────────────────────────
+const SIGN   = localStorage.getItem('assinatura') || 'Equipe 5essência Marketing';
+const PIX    = localStorage.getItem('pixKey')      || 'ce89b6e3-951a-4485-aff7-5663c3a7d5e1';
+const ZAPI_I = '3F5C34424A94529FAEF902DFFFEFDAC7';
+const ZAPI_T = '7E3E002717ABB45986650021';
+const ZAPI_C = 'Fb9f1dad5634343098c2506ee81f99e2eS';
+
+let commMode    = 'report';
+let commWpp     = false;
+let commMsgFinal= '';
+let commMsgIsIA = false;
+let commClienteLocal = null;
+
+const rand = arr => arr[Math.floor(Math.random()*arr.length)];
+const ABERTURAS = [
+  n=>`Olá, ${n}!`, n=>`Oi, ${n}!`, n=>`${n}, tudo certo?`, n=>`Boa tarde, ${n}!`
+];
+const ENCERRAMENTOS = [
+  'Qualquer dúvida, estamos aqui!',
+  'Seguimos trabalhando. Qualquer ajuste é só falar!',
+  'Estamos no detalhe. Dúvidas, é só chamar!',
+];
+
+function tplReport(ctx){
+  const etapaLabel = {iniciando:'Iniciamos',em_desenvolvimento:'Em desenvolvimento','50':'50% concluído —',finalizando:'Finalizando',revisao:'Em revisão',aguardando:'Aguardando aprovação'}[ctx.etapa]||'Em andamento';
+  const prevLabel  = {hoje:'entrega prevista hoje.',amanha:'entrega amanhã.',essa_semana:'entrega essa semana.',proximos_dias:'nos próximos dias.'}[ctx.prev]||'';
+  return `${rand(ABERTURAS)(ctx.alias)}\n\n${etapaLabel} *${ctx.acao}*${prevLabel?' — '+prevLabel:''}\n\n${ctx.link?'Confere quando puder: '+ctx.link:rand(ENCERRAMENTOS)}\n\n— ${SIGN}`;
 }
+function tplEntregavel(ctx){
+  return `${rand(ABERTURAS)(ctx.alias)}\n\n*${ctx.entrega}* está pronto!\n\n${ctx.link?'Disponível aqui: '+ctx.link:rand(ENCERRAMENTOS)}\n\n— ${SIGN}`;
+}
+function tplMetricas(ctx){
+  const destaques=[];
+  if(ctx.leads)   destaques.push(`*${ctx.leads} leads* gerados`);
+  if(ctx.alcance) destaques.push(`alcance de *${parseInt(ctx.alcance).toLocaleString('pt-BR')} pessoas*`);
+  if(ctx.ctr)     destaques.push(`CTR de *${ctx.ctr}%*`);
+  if(ctx.cpl)     destaques.push(`CPL de *R$ ${parseFloat(ctx.cpl).toFixed(2).replace('.',',')}*`);
+  const mes = ctx.mes ? new Date(ctx.mes+'-01').toLocaleDateString('pt-BR',{month:'long',year:'numeric'}) : '';
+  return `${rand(ABERTURAS)(ctx.alias)}\n\nResultados de *${mes}* prontos!\n\n${destaques.join(' · ')}${ctx.inv?'\n\nInvestimento: *R$ '+parseFloat(ctx.inv).toFixed(2).replace('.',',')+'*':''}\n\nSeguimos avançando com consistência!\n\n— ${SIGN}`;
+}
+function tplCobranca(ctx){
+  const val = ctx.valor ? `*R$ ${parseFloat(ctx.valor).toFixed(2).replace('.',',')}*` : '';
+  const venc = ctx.venc ? new Date(ctx.venc+'T00:00:00').toLocaleDateString('pt-BR',{day:'numeric',month:'long'}) : '';
+  return `${rand(ABERTURAS)(ctx.alias)}\n\nPassando para lembrar sobre:\n\n📌 *${ctx.desc}*${val?'\nValor: '+val:''}${venc?'\nVencimento: *'+venc+'*':''}\n\n🔑 Pix: \`${PIX}\`\n\nSe já realizou o pagamento, pode desconsiderar! 😊\n\n— ${SIGN}`;
+}
+function tplRelatorio(ctx){
+  return `${rand(ABERTURAS)(ctx.alias)}\n\n📋 *Relatório — ${ctx.periodo||'do período'}*\n\n${ctx.intro||'Segue um resumo das atividades.'}\n${ctx.projetos?'\n'+ctx.projetos:''}${ctx.next?'\n\n*Próximos passos:*\n'+ctx.next:''}\n\n— ${SIGN}`;
+}
+
+function getCommTemplate(ctx){
+  switch(commMode){
+    case 'report':     return tplReport(ctx);
+    case 'entregavel': return tplEntregavel(ctx);
+    case 'metricas':   return tplMetricas(ctx);
+    case 'cobranca':   return tplCobranca(ctx);
+    case 'relatorio':  return tplRelatorio(ctx);
+  }
+  return '';
+}
+
+function getCommCtx(){
+  const alias = commClienteLocal?.nome_completo?.split(' ')[0] || 'Cliente';
+  return {
+    alias,
+    // report
+    acao:     document.getElementById('cm-acao')?.value.trim()||'',
+    etapa:    document.getElementById('cm-etapa')?.value||'',
+    prev:     document.getElementById('cm-prev')?.value||'',
+    link:     document.getElementById('cm-link')?.value.trim()||'',
+    // entregavel
+    entrega:  document.getElementById('cm-entrega')?.value.trim()||'',
+    // metricas
+    mes:      document.getElementById('cm-mes')?.value||'',
+    leads:    document.getElementById('cm-leads')?.value||'',
+    alcance:  document.getElementById('cm-alcance')?.value||'',
+    ctr:      document.getElementById('cm-ctr')?.value||'',
+    cpl:      document.getElementById('cm-cpl')?.value||'',
+    inv:      document.getElementById('cm-inv')?.value||'',
+    // cobranca
+    desc:     document.getElementById('cm-desc')?.value.trim()||'',
+    valor:    document.getElementById('cm-valor')?.value||'',
+    venc:     document.getElementById('cm-venc')?.value||'',
+    // relatorio
+    periodo:  document.getElementById('cm-periodo')?.value||'',
+    intro:    document.getElementById('cm-intro')?.value||'',
+    projetos: document.getElementById('cm-projetos')?.value||'',
+    next:     document.getElementById('cm-next')?.value||'',
+  };
+}
+
+function atualizarPreviewComm(){
+  const ctx = getCommCtx();
+  if(commMsgIsIA) return;
+  const campoMain = {report:'acao',entregavel:'entrega',metricas:'leads',cobranca:'desc',relatorio:'periodo'}[commMode]||'acao';
+  if(!ctx[campoMain]){ commMsgFinal=''; renderPreviewComm('',false); return; }
+  commMsgFinal = getCommTemplate(ctx);
+  renderPreviewComm(commMsgFinal, false);
+}
+
+function renderPreviewComm(msg, isIA){
+  const box   = document.getElementById('preview-box');
+  const badge = document.getElementById('preview-badge');
+  if(!box) return;
+  if(!msg){ box.textContent='Preencha os campos para ver o preview…'; box.className='preview-box empty'; return; }
+  box.textContent    = msg;
+  box.className      = 'preview-box';
+  badge.textContent  = isIA ? '✦ IA' : 'Template';
+  badge.className    = 'preview-badge' + (isIA?' ia':'');
+}
+
+async function gerarIAComm(){
+  const ctx = getCommCtx();
+  const campoMain = {report:'acao',entregavel:'entrega',metricas:'leads',cobranca:'desc',relatorio:'periodo'}[commMode]||'acao';
+  if(!ctx[campoMain]){ toast('Preencha os campos primeiro','er'); return; }
+
+  const btn = document.getElementById('btn-ia-comm');
+  btn.disabled=true; btn.textContent='Gerando…';
+
+  const prompts = {
+    report:`Escreva um report de WhatsApp para ${ctx.alias} sobre: ${ctx.acao}. Etapa: ${ctx.etapa||'em andamento'}. Previsão: ${ctx.prev||'não informada'}. ${ctx.link?'Link: '+ctx.link:'Sem link — nunca mencione portal ou acesse aqui.'}`,
+    entregavel:`Escreva uma mensagem WhatsApp comunicando que "${ctx.entrega}" foi entregue para ${ctx.alias}.`,
+    metricas:`Escreva um report de métricas Meta Ads para ${ctx.alias}. Mês: ${ctx.mes}. Leads: ${ctx.leads}. Alcance: ${ctx.alcance}. CTR: ${ctx.ctr}%. CPL: R$${ctx.cpl}. Investimento: R$${ctx.inv}.`,
+    cobranca:`Escreva uma mensagem cordial de cobrança para ${ctx.alias} sobre "${ctx.desc}" no valor de R$${ctx.valor}, vencimento ${ctx.venc}. Inclua a chave Pix: ${PIX}.`,
+    relatorio:`Escreva um relatório mensal de WhatsApp para ${ctx.alias}. Período: ${ctx.periodo}. ${ctx.intro} Entregas: ${ctx.projetos}. Próximos passos: ${ctx.next}.`,
+  };
+
+  try{
+    const r = await fetch(`${SB}/functions/v1/chat-assistant`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':KEY,'Authorization':'Bearer '+KEY},
+      body:JSON.stringify({
+        system:`Você escreve mensagens de WhatsApp profissionais e humanizadas para a agência 5essência Marketing. Tom: parceiro estratégico premium — próximo e confiante. Máximo 7 linhas. Termine com: — ${SIGN}. Responda APENAS com a mensagem.`,
+        messages:[{role:'user',content:prompts[commMode]}]
+      })
+    });
+    const d = await r.json();
+    commMsgFinal = d.resposta||'';
+    commMsgIsIA  = true;
+    renderPreviewComm(commMsgFinal, true);
+  }catch(e){ toast('Erro ao gerar com IA','er'); }
+  finally{ btn.disabled=false; btn.textContent='✦ Gerar com IA'; }
+}
+
+const COMM_FORMS = {
+  report:`
+    <div class="fg"><label>O que está sendo feito</label>
+      <textarea id="cm-acao" rows="2" style="height:64px;resize:none" placeholder="Ex: Criando a linha editorial de outubro, editando vídeo do produto X…" oninput="commMsgIsIA=false;atualizarPreviewComm()"></textarea>
+    </div>
+    <div class="comm-row2">
+      <div class="fg"><label>Etapa</label>
+        <select id="cm-etapa" onchange="commMsgIsIA=false;atualizarPreviewComm()">
+          <option value="">— Selecionar —</option>
+          <option value="iniciando">Iniciando</option>
+          <option value="em_desenvolvimento">Em desenvolvimento</option>
+          <option value="50">50% concluído</option>
+          <option value="finalizando">Finalizando</option>
+          <option value="revisao">Em revisão</option>
+          <option value="aguardando">Aguardando aprovação</option>
+        </select>
+      </div>
+      <div class="fg"><label>Previsão</label>
+        <select id="cm-prev" onchange="commMsgIsIA=false;atualizarPreviewComm()">
+          <option value="">— Selecionar —</option>
+          <option value="hoje">Hoje</option>
+          <option value="amanha">Amanhã</option>
+          <option value="essa_semana">Essa semana</option>
+          <option value="proximos_dias">Próximos dias</option>
+        </select>
+      </div>
+    </div>
+    <div class="fg"><label>Link (opcional)</label><input id="cm-link" placeholder="https://drive.google.com/…" oninput="commMsgIsIA=false;atualizarPreviewComm()"></div>`,
+  entregavel:`
+    <div class="fg"><label>O que foi entregue</label><input id="cm-entrega" placeholder="Ex: Carrossel 6 slides, Layout campanha Black Friday…" oninput="commMsgIsIA=false;atualizarPreviewComm()"></div>
+    <div class="fg"><label>Link (opcional)</label><input id="cm-link" placeholder="https://…" oninput="commMsgIsIA=false;atualizarPreviewComm()"></div>`,
+  metricas:`
+    <div class="fg"><label>Mês de referência</label><input id="cm-mes" type="month" onchange="commMsgIsIA=false;atualizarPreviewComm()"></div>
+    <div class="comm-row2">
+      <div class="fg"><label>Leads</label><input id="cm-leads" type="number" placeholder="0" oninput="commMsgIsIA=false;atualizarPreviewComm()"></div>
+      <div class="fg"><label>Alcance</label><input id="cm-alcance" type="number" placeholder="0" oninput="commMsgIsIA=false;atualizarPreviewComm()"></div>
+    </div>
+    <div class="comm-row2">
+      <div class="fg"><label>CTR (%)</label><input id="cm-ctr" type="number" step="0.01" placeholder="0.00" oninput="commMsgIsIA=false;atualizarPreviewComm()"></div>
+      <div class="fg"><label>CPL (R$)</label><input id="cm-cpl" type="number" step="0.01" placeholder="0.00" oninput="commMsgIsIA=false;atualizarPreviewComm()"></div>
+    </div>
+    <div class="fg"><label>Investimento (R$)</label><input id="cm-inv" type="number" placeholder="0.00" oninput="commMsgIsIA=false;atualizarPreviewComm()"></div>`,
+  cobranca:`
+    <div class="fg"><label>Descrição</label><input id="cm-desc" placeholder="Ex: Mensalidade gestão de redes — Outubro" oninput="commMsgIsIA=false;atualizarPreviewComm()"></div>
+    <div class="comm-row2">
+      <div class="fg"><label>Valor (R$)</label><input id="cm-valor" type="number" placeholder="0.00" oninput="commMsgIsIA=false;atualizarPreviewComm()"></div>
+      <div class="fg"><label>Vencimento</label><input id="cm-venc" type="date" onchange="commMsgIsIA=false;atualizarPreviewComm()"></div>
+    </div>`,
+  relatorio:`
+    <div class="fg"><label>Período</label><input id="cm-periodo" placeholder="Ex: Setembro 2026" oninput="commMsgIsIA=false;atualizarPreviewComm()"></div>
+    <div class="fg"><label>Abertura</label><textarea id="cm-intro" style="height:60px;resize:none" placeholder="Foi um mês de muito trabalho e resultados expressivos…" oninput="commMsgIsIA=false;atualizarPreviewComm()"></textarea></div>
+    <div class="fg"><label>Entregas</label><textarea id="cm-projetos" style="height:70px;resize:none" placeholder="- Landing Page concluída&#10;- Campanha Black Friday ativa&#10;- Vídeo institucional em edição" oninput="commMsgIsIA=false;atualizarPreviewComm()"></textarea></div>
+    <div class="fg"><label>Próximos passos</label><input id="cm-next" placeholder="Novembro: foco em Black Friday…" oninput="commMsgIsIA=false;atualizarPreviewComm()"></div>`,
+};
+
+function renderCommBody(){
+  document.getElementById('comm-body').innerHTML = `
+    ${COMM_FORMS[commMode]||''}
+    <div class="preview-head" style="margin-top:14px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="preview-lbl">Preview WhatsApp</span>
+        <span class="preview-badge" id="preview-badge">Template</span>
+      </div>
+      <button class="btn-ia-sm" id="btn-ia-comm" onclick="gerarIAComm()">✦ Gerar com IA</button>
+    </div>
+    <div class="preview-box empty" id="preview-box" onclick="editarPreview()">Preencha os campos para ver o preview…</div>`;
+}
+
+function setCommMode(mode){
+  commMode    = mode;
+  commMsgFinal= '';
+  commMsgIsIA = false;
+  document.querySelectorAll('.comm-mode').forEach(m => m.classList.toggle('active', m.textContent.toLowerCase()===mode||(mode==='entregavel'&&m.textContent==='Entregável')||(mode==='relatorio'&&m.textContent==='Relatório')||(mode==='cobranca'&&m.textContent==='Cobrança')));
+  renderCommBody();
+}
+
+function editarPreview(){
+  if(!commMsgFinal) return;
+  const box = document.getElementById('preview-box');
+  const ta  = document.createElement('textarea');
+  ta.value  = commMsgFinal;
+  ta.style.cssText='width:100%;height:140px;resize:none;background:var(--surface2);border:1px solid var(--accent-m);border-radius:var(--r);padding:10px;font-family:var(--font);font-size:13px;color:var(--ink);outline:none;line-height:1.7';
+  ta.oninput = ()=>{ commMsgFinal=ta.value; commMsgIsIA=false; document.getElementById('preview-badge').textContent='Editado'; };
+  box.replaceWith(ta); ta.focus();
+}
+
+function abrirComm(cliente){
+  commClienteLocal = cliente || clienteAtual;
+  commMode    = 'report';
+  commMsgFinal= '';
+  commMsgIsIA = false;
+  commWpp     = false;
+
+  const nome = commClienteLocal?.nome_completo || '—';
+  const wpp  = commClienteLocal?.whatsapp || '';
+  document.getElementById('comm-cliente-label').textContent = nome + (wpp?' · '+wpp:'· sem WhatsApp');
+  document.querySelectorAll('.comm-mode').forEach((m,i)=>m.classList.toggle('active',i===0));
+  document.getElementById('comm-wpp').classList.remove('on');
+  document.getElementById('comm-wpp-label').textContent = 'Enviar WhatsApp';
+  renderCommBody();
+  document.getElementById('comm-overlay').classList.add('open');
+}
+
+function fecharComm(e){ if(e.target===document.getElementById('comm-overlay')) document.getElementById('comm-overlay').classList.remove('open'); }
+function fecharCommForce(){ document.getElementById('comm-overlay').classList.remove('open'); }
+
+function toggleCommWpp(){
+  commWpp = !commWpp;
+  const wpp = commClienteLocal?.whatsapp;
+  document.getElementById('comm-wpp').classList.toggle('on', commWpp);
+  document.getElementById('comm-wpp-label').textContent = commWpp && wpp ? `Enviará para ${commClienteLocal.nome_completo.split(' ')[0]}` : commWpp && !wpp ? 'Sem WhatsApp cadastrado' : 'Enviar WhatsApp';
+}
+
+async function enviarComm(){
+  const ctx = getCommCtx();
+  const campoMain = {report:'acao',entregavel:'entrega',metricas:'leads',cobranca:'desc',relatorio:'periodo'}[commMode];
+  if(!ctx[campoMain]){ toast('Preencha os campos','er'); return; }
+
+  const msg  = commMsgFinal || getCommTemplate(ctx);
+  const btn  = document.getElementById('comm-send-btn');
+  btn.disabled = true; btn.textContent = 'Enviando…';
+
+  // Salva no Supabase
+  if(commMode==='report'||commMode==='entregavel'){
+    await fetch(`${SB}/rest/v1/projetos`,{
+      method:'POST',
+      headers:{'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+      body:JSON.stringify({
+        cliente_id: commClienteLocal?.id||null,
+        titulo: ctx[campoMain],
+        status: commMode==='entregavel'?'entregue':'em_andamento',
+        prazo: hoje(), created_at: new Date().toISOString()
+      })
+    });
+  }
+
+  // WhatsApp
+  let wppOk = false;
+  if(commWpp && commClienteLocal?.whatsapp){
+    const wpp = commClienteLocal.whatsapp.replace(/\D/g,'');
+    const rw  = await fetch(`https://api.z-api.io/instances/${ZAPI_I}/token/${ZAPI_T}/send-text`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Client-Token':ZAPI_C},
+      body:JSON.stringify({phone:'55'+wpp, message:msg})
+    }).then(r=>r.json()).catch(()=>({}));
+    wppOk = !!(rw.zaapId||rw.messageId||rw.id);
+  }
+
+  toast(wppOk ? `Enviado para ${commClienteLocal.nome_completo.split(' ')[0]}!` : 'Registrado!');
+  fecharCommForce();
+  btn.disabled=false; btn.textContent='Enviar';
+}
+
+// ── WORKFLOW (mantido para compatibilidade, agora abre o comm interno) ──
+function abrirWorkflow(cliente){ abrirComm(cliente||clienteAtual); }
 
 // ── CONFIGURAÇÕES ─────────────────────────────────────────────────
 function abrirConfiguracoes(){
@@ -1563,7 +1925,7 @@ async function setView(v){
         <h2 style="font-size:18px;font-weight:700;letter-spacing:-0.4px">Relatórios</h2>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="card" style="cursor:pointer" onclick="window.open('https://5essenciamarketing-wq.github.io/5ia/workflow-5essencia.html','_blank')" >
+        <div class="card" style="cursor:pointer" onclick="abrirComm(clienteAtual)" >
           <div class="card-body" style="padding:20px">
             <div style="width:36px;height:36px;border-radius:9px;background:var(--accent-l);display:flex;align-items:center;justify-content:center;margin-bottom:12px">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
@@ -1572,7 +1934,7 @@ async function setView(v){
             <div style="font-size:12px;color:var(--ink3)">Envia atualização de processo via WhatsApp para o cliente</div>
           </div>
         </div>
-        <div class="card" style="cursor:pointer" onclick="window.open('https://5essenciamarketing-wq.github.io/5ia/workflow-5essencia.html','_blank')" >
+        <div class="card" style="cursor:pointer" onclick="abrirComm(clienteAtual)" >
           <div class="card-body" style="padding:20px">
             <div style="width:36px;height:36px;border-radius:9px;background:var(--green-l);display:flex;align-items:center;justify-content:center;margin-bottom:12px">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
@@ -1581,7 +1943,7 @@ async function setView(v){
             <div style="font-size:12px;color:var(--ink3)">Compilado de entregas e métricas do mês para o cliente</div>
           </div>
         </div>
-        <div class="card" style="cursor:pointer" onclick="window.open('https://5essenciamarketing-wq.github.io/5ia/workflow-5essencia.html','_blank')" >
+        <div class="card" style="cursor:pointer" onclick="abrirComm(clienteAtual)" >
           <div class="card-body" style="padding:20px">
             <div style="width:36px;height:36px;border-radius:9px;background:var(--orange-l);display:flex;align-items:center;justify-content:center;margin-bottom:12px">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
@@ -1590,7 +1952,7 @@ async function setView(v){
             <div style="font-size:12px;color:var(--ink3)">Resultado de campanhas com análise de IA</div>
           </div>
         </div>
-        <div class="card" style="cursor:pointer" onclick="window.open('https://5essenciamarketing-wq.github.io/5ia/workflow-5essencia.html','_blank')" >
+        <div class="card" style="cursor:pointer" onclick="abrirComm(clienteAtual)" >
           <div class="card-body" style="padding:20px">
             <div style="width:36px;height:36px;border-radius:9px;background:var(--red-l);display:flex;align-items:center;justify-content:center;margin-bottom:12px">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>

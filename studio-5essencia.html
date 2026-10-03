@@ -262,11 +262,10 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); font-family:
   border-top: 1px solid var(--border);
   display: flex; flex-direction: column;
   position: relative; z-index: 10;
-  transition: height 0.25s ease;
 }
 .chat-history {
   display: none; flex-direction: column; gap: 0;
-  overflow-y: auto; max-height: 280px;
+  overflow-y: auto; height: 320px; max-height: 40vh;
   border-bottom: 1px solid var(--border);
   background: var(--bg);
 }
@@ -1338,45 +1337,37 @@ document.querySelectorAll('.modal-overlay').forEach(m=>{
   m.addEventListener('click',e=>{ if(e.target===m) m.classList.remove('open'); });
 });
 
-// ── CHAT ──────────────────────────────────────────────────────────
-// ── CHAT ──────────────────────────────────────────────────────────
-let chatHistorico = []; // {role, content}
+// ── CHAT EXECUTIVO ─────────────────────────────────────────────────
+let chatHistorico = [];
 let chatAberto    = false;
 
 function toggleChat(){
   chatAberto = !chatAberto;
   const h = document.getElementById('chat-history');
   h.classList.toggle('open', chatAberto);
-  if(chatAberto) h.scrollTop = h.scrollHeight;
+  if(chatAberto){ h.scrollTop=h.scrollHeight; document.getElementById('chat-in').focus(); }
 }
 
-function quickChat(msg){
-  document.getElementById('chat-in').value = msg;
-  enviarChat();
-}
+function quickChat(msg){ document.getElementById('chat-in').value=msg; enviarChat(); }
 
-// Converte markdown simples em HTML
 function markdownToHtml(txt){
   return txt
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    .replace(/`(.+?)`/g, '<code>$1</code>')
-    .replace(/^### (.+)$/gm, '<strong>$1</strong>')
-    .replace(/^## (.+)$/gm, '<strong>$1</strong>')
-    .replace(/^# (.+)$/gm, '<strong>$1</strong>')
-    .replace(/^- (.+)$/gm, '<li>$1</li>')
-    .replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>')
-    .replace(/\n{2,}/g, '</p><p>')
-    .replace(/^(.+)$/gm, (m) => m.startsWith('<') ? m : m)
-    .replace(/\n/g, '<br>')
-    .replace(/<\/p><p>/g, '</p><p>');
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .replace(/\*([^*\n]+?)\*/g,'<em>$1</em>')
+    .replace(/`(.+?)`/g,'<code style="background:rgba(0,0,0,0.06);padding:1px 5px;border-radius:4px;font-size:12px">$1</code>')
+    .replace(/^#{1,3} (.+)$/gm,'<strong>$1</strong>')
+    .replace(/^[-•] (.+)$/gm,'<li>$1</li>')
+    .replace(/(<li>[\s\S]+?<\/li>)/g,'<ul style="padding-left:16px;margin:4px 0">$1</ul>')
+    .replace(/\n\n/g,'<br><br>')
+    .replace(/\n/g,'<br>');
 }
 
 function adicionarMensagem(role, html){
   const hist = document.getElementById('chat-history');
-  const isAI = role === 'assistant';
+  if(!chatAberto) toggleChat();
+  const isAI = role==='assistant';
   const row  = document.createElement('div');
-  row.className = `chat-msg-row ${isAI ? '' : 'user'}`;
+  row.className = `chat-msg-row ${isAI?'':'user'}`;
   row.innerHTML = `
     <div class="chat-bubble-av ${isAI?'ai':'user'}">${isAI?'5':'P'}</div>
     <div class="chat-bubble ${isAI?'ai':'user'}">${html}</div>`;
@@ -1387,83 +1378,97 @@ function adicionarMensagem(role, html){
 function adicionarTyping(){
   const hist = document.getElementById('chat-history');
   const row  = document.createElement('div');
-  row.className = 'chat-msg-row';
-  row.id = 'chat-typing-row';
-  row.innerHTML = `
-    <div class="chat-bubble-av ai">5</div>
-    <div class="chat-bubble ai"><div class="chat-typing"><span></span><span></span><span></span></div></div>`;
-  hist.appendChild(row);
-  hist.scrollTop = hist.scrollHeight;
+  row.className='chat-msg-row'; row.id='chat-typing-row';
+  row.innerHTML=`<div class="chat-bubble-av ai">5</div><div class="chat-bubble ai"><div class="chat-typing"><span></span><span></span><span></span></div></div>`;
+  hist.appendChild(row); hist.scrollTop=hist.scrollHeight;
+}
+
+// Executa ações diretas antes de chamar a IA
+async function executarAcao(msg){
+  const m = msg.toLowerCase();
+
+  // CRIAR TAREFA
+  const criarMatch = m.match(/(?:criar?|adicionar?|add|nova?) tarefa[:\s]+(.+)/i) || (m.startsWith('tarefa:') && [null, msg.replace(/tarefa[:\s]*/i,'')]);
+  if(criarMatch){
+    const titulo = (criarMatch[1]||'').trim();
+    if(titulo.length > 1){
+      const r = await fetch(`${SB}/rest/v1/tarefas`,{
+        method:'POST',
+        headers:{'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json','Prefer':'return=representation'},
+        body:JSON.stringify(Object.assign({titulo,categoria:'geral',status:'pendente',tempo_total:0,created_at:new Date().toISOString()},clienteAtual?.id?{cliente_id:clienteAtual.id}:{}))
+      }).then(r=>r.json());
+      if(r?.[0]){
+        tasks.unshift({...r[0],clientes:clienteAtual?{nome_completo:clienteAtual.nome_completo}:null});
+        renderTasks();
+        return `Tarefa **"${titulo}"** criada e adicionada ao seu dia!`;
+      }
+    }
+  }
+
+  // ABRIR REPORT / COMUNICAÇÃO
+  if(m.match(/report|enviar|mensagem|notificar|whatsapp|cobrança|relat/)){
+    const cli = clientes.find(c=>m.includes(c.nome_completo.split(' ')[0].toLowerCase())) || clienteAtual;
+    if(cli){ setTimeout(()=>abrirComm(cli),200); return `Abrindo comunicação para **${cli.nome_completo.split(' ')[0]}**…`; }
+    return `Para qual cliente? ${clientes.slice(0,5).map(c=>'**'+c.nome_completo.split(' ')[0]+'**').join(', ')}`;
+  }
+
+  // ABRIR CLIENTE
+  if(m.match(/abrir?|ver|abre/)){
+    const cli = clientes.find(c=>m.includes(c.nome_completo.split(' ')[0].toLowerCase()));
+    if(cli){ setTimeout(()=>abrirCliente(cli.id),200); return `Abrindo **${cli.nome_completo.split(' ')[0]}**…`; }
+  }
+
+  return null;
 }
 
 async function enviarChat(){
-  const input  = document.getElementById('chat-in');
-  const sendBtn= document.getElementById('chat-send-btn');
-  const msg    = input.value.trim();
-  if(!msg || sendBtn.disabled) return;
-  input.value = '';
-  sendBtn.disabled = true;
+  const input   = document.getElementById('chat-in');
+  const sendBtn = document.getElementById('chat-send-btn');
+  const msg     = input.value.trim();
+  if(!msg||sendBtn.disabled) return;
+  input.value=''; sendBtn.disabled=true;
 
-  // Abre o histórico automaticamente
-  if(!chatAberto) toggleChat();
-
-  // Mostra mensagem do usuário
   adicionarMensagem('user', msg);
-  chatHistorico.push({role:'user', content:msg});
-
-  // Typing indicator
+  chatHistorico.push({role:'user',content:msg});
   adicionarTyping();
 
-  // Contexto rico
-  // Contexto rico do sistema
-  const tarefasPend   = tasks.filter(t=>t.status!=='concluida');
-  const tarefasConc   = tasks.filter(t=>t.status==='concluida');
-  const clienteCtx    = clienteAtual ? `\nCliente em foco: ${clienteAtual.nome_completo} (${clienteAtual.empresa||'—'}, WhatsApp: ${clienteAtual.whatsapp||'não cadastrado'}).` : '';
-  const tarefasCtx    = tarefasPend.length
-    ? `\nTarefas pendentes hoje (${tarefasPend.length}):\n${tarefasPend.map(t=>`- ${t.titulo} [${t.categoria}]${t.clientes?.nome_completo?' · '+t.clientes.nome_completo.split(' ')[0]:''}`).join('\n')}`
-    : '\nNenhuma tarefa pendente hoje.';
-  const clientesNomes = clientes.map(c=>c.nome_completo).join(', ');
+  // Tenta ação direta primeiro
+  const acaoDireta = await executarAcao(msg);
 
-  const sistema = `Você é o assistente pessoal de Patrick, CEO da 5essência Marketing (agência premium, Balneário Camboriú, SC, Brasil).
+  const tarefasLista = tasks.slice(0,10).map(t=>`- ${t.titulo} [${t.categoria}]${t.clientes?.nome_completo?' · '+t.clientes.nome_completo.split(' ')[0]:''}`).join('\n')||'Nenhuma';
+  const clienteCtx  = clienteAtual?`\nCliente em foco: ${clienteAtual.nome_completo} (${clienteAtual.empresa||'—'}).`:'';
+  const sistema = `Você é o assistente executivo de Patrick, CEO da 5essência Marketing (agência premium, Balneário Camboriú, SC).
 
-DADOS DO SISTEMA AGORA:
-- Clientes ativos (${clientes.length}): ${clientesNomes}${clienteCtx}${tarefasCtx}
-- Tarefas concluídas hoje: ${tarefasConc.length}
-- Timer ativo: ${timerTarefaId ? 'Sim — ' + (tasks.find(t=>t.id===timerTarefaId)?.titulo||'tarefa') : 'Nenhum'}
+SISTEMA:
+- Clientes (${clientes.length}): ${clientes.map(c=>c.nome_completo.split(' ')[0]).join(', ')}${clienteCtx}
+- Tarefas pendentes: ${tasks.length}\n${tarefasLista}
+- Timer: ${timerTarefaId?tasks.find(t=>t.id===timerTarefaId)?.titulo||'rodando':'inativo'}
 
-INSTRUÇÕES:
-- Responda sempre em português brasileiro
-- Seja direto, prático e útil — como um assistente executivo
-- Use markdown para formatar (negrito, listas)
-- Você CONHECE os clientes e tarefas listados acima — use esse contexto nas respostas
-- Para enviar WhatsApp ou report: oriente o usuário a usar o Workflow (ícone de atividade na barra lateral)
-- Pode sugerir próximas ações, prioridades, organizar o dia`;
+AÇÕES DISPONÍVEIS (o sistema já executou se aplicável):
+- "criar tarefa [nome]" → cria tarefa no dia
+- "report para [cliente]" → abre painel de comunicação
+- "abrir [cliente]" → abre ficha do cliente
+- Perguntas → responda com os dados do sistema
+
+Responda em português, direto, com markdown. Máximo 4 linhas para respostas simples.`;
 
   try{
     const r = await fetch(`${SB}/functions/v1/chat-assistant`,{
       method:'POST',
       headers:{'Content-Type':'application/json','apikey':KEY,'Authorization':'Bearer '+KEY},
-      body:JSON.stringify({
-        system: sistema,
-        messages: chatHistorico // Envia todo o histórico
-      })
+      body:JSON.stringify({system:sistema, messages:chatHistorico})
     });
     const d = await r.json();
-    const resposta = d.resposta || 'Não consegui processar. Tente novamente.';
-
-    // Remove typing e adiciona resposta
+    const resposta = acaoDireta || d.resposta || 'Não consegui processar.';
     document.getElementById('chat-typing-row')?.remove();
     adicionarMensagem('assistant', markdownToHtml(resposta));
-    chatHistorico.push({role:'assistant', content:resposta});
-
-    // Limita histórico a 20 mensagens para não pesar
-    if(chatHistorico.length > 20) chatHistorico = chatHistorico.slice(-20);
-
+    chatHistorico.push({role:'assistant',content:resposta});
+    if(chatHistorico.length>20) chatHistorico=chatHistorico.slice(-20);
   }catch(e){
     document.getElementById('chat-typing-row')?.remove();
-    adicionarMensagem('assistant', 'Erro de conexão. Verifique sua internet.');
+    adicionarMensagem('assistant','Erro de conexão.');
   }finally{
-    sendBtn.disabled = false;
+    sendBtn.disabled=false;
     document.getElementById('chat-in').focus();
   }
 }

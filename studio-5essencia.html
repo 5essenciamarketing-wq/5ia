@@ -829,23 +829,12 @@ async function carregarAgenda(){
   body.innerHTML = '<div class="empty-msg">Carregando Google Calendar…</div>';
 
   try{
-    // Tenta múltiplos proxies CORS
-    let txt = '';
-    const proxies = [
-      `https://corsproxy.io/?${encodeURIComponent(ICAL_URL)}`,
-      `https://api.allorigins.win/get?url=${encodeURIComponent(ICAL_URL)}`,
-      `https://cors-anywhere.herokuapp.com/${ICAL_URL}`,
-    ];
-    for(const proxy of proxies){
-      try{
-        const r = await fetch(proxy, {signal: AbortSignal.timeout(5000)});
-        if(!r.ok) continue;
-        const ct = r.headers.get('content-type')||'';
-        txt = ct.includes('json') ? (await r.json()).contents || '' : await r.text();
-        if(txt.includes('VCALENDAR')) break;
-        txt = '';
-      }catch(e){ continue; }
-    }
+    // Usa Edge Function do Supabase (sem CORS)
+    const r   = await fetch(`${SB}/functions/v1/ical-proxy`, {
+      headers: { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY }
+    });
+    const json = await r.json();
+    let txt = json.ical || '';
 
     if(!txt){ body.innerHTML='<div class="empty-msg">Não foi possível carregar o calendário</div>'; return; }
 
@@ -1351,9 +1340,29 @@ async function enviarChat(){
   adicionarTyping();
 
   // Contexto rico
-  const tarefasPend = tasks.length;
-  const clienteCtx  = clienteAtual ? `Cliente em foco: ${clienteAtual.nome_completo} (${clienteAtual.empresa||'—'}). ` : '';
-  const sistema = `Você é o assistente pessoal de Patrick, CEO da 5essência Marketing (agência premium, Balneário Camboriú, SC, Brasil). ${clienteCtx}Tarefas pendentes hoje: ${tarefasPend}. Clientes ativos: ${clientes.length}. Responda sempre em português brasileiro. Seja direto, prático e útil. Formate bem a resposta usando markdown quando necessário (negrito para destacar, listas para itens). Quando o usuário pedir para enviar mensagem ou report, diga para usar o Workflow (botão de atividade na barra lateral).`;
+  // Contexto rico do sistema
+  const tarefasPend   = tasks.filter(t=>t.status!=='concluida');
+  const tarefasConc   = tasks.filter(t=>t.status==='concluida');
+  const clienteCtx    = clienteAtual ? `\nCliente em foco: ${clienteAtual.nome_completo} (${clienteAtual.empresa||'—'}, WhatsApp: ${clienteAtual.whatsapp||'não cadastrado'}).` : '';
+  const tarefasCtx    = tarefasPend.length
+    ? `\nTarefas pendentes hoje (${tarefasPend.length}):\n${tarefasPend.map(t=>`- ${t.titulo} [${t.categoria}]${t.clientes?.nome_completo?' · '+t.clientes.nome_completo.split(' ')[0]:''}`).join('\n')}`
+    : '\nNenhuma tarefa pendente hoje.';
+  const clientesNomes = clientes.map(c=>c.nome_completo).join(', ');
+
+  const sistema = `Você é o assistente pessoal de Patrick, CEO da 5essência Marketing (agência premium, Balneário Camboriú, SC, Brasil).
+
+DADOS DO SISTEMA AGORA:
+- Clientes ativos (${clientes.length}): ${clientesNomes}${clienteCtx}${tarefasCtx}
+- Tarefas concluídas hoje: ${tarefasConc.length}
+- Timer ativo: ${timerTarefaId ? 'Sim — ' + (tasks.find(t=>t.id===timerTarefaId)?.titulo||'tarefa') : 'Nenhum'}
+
+INSTRUÇÕES:
+- Responda sempre em português brasileiro
+- Seja direto, prático e útil — como um assistente executivo
+- Use markdown para formatar (negrito, listas)
+- Você CONHECE os clientes e tarefas listados acima — use esse contexto nas respostas
+- Para enviar WhatsApp ou report: oriente o usuário a usar o Workflow (ícone de atividade na barra lateral)
+- Pode sugerir próximas ações, prioridades, organizar o dia`;
 
   try{
     const r = await fetch(`${SB}/functions/v1/chat-assistant`,{
@@ -1386,15 +1395,14 @@ async function enviarChat(){
 
 // ── WORKFLOW ──────────────────────────────────────────────────────
 function abrirWorkflow(){
-  // Pega URL salva nas configurações
-  const saved = localStorage.getItem('workflowUrl') || 'https://5essenciamarketing-wq.github.io/5ia/workflow-5essencia.html';
-  if(saved){ window.open(saved, '_blank'); return; }
-  // Tenta URL relativa — abre em nova aba forçado
-  const base = window.location.href.split('/').slice(0,-1).join('/');
-  const url  = base + '/workflow-5essencia.html';
-  const w    = window.open(url, '_blank');
-  // Se popup bloqueado, navega na mesma aba
-  if(!w || w.closed){ window.location.href = url; }
+  const url = localStorage.getItem('workflowUrl') || 'https://5essenciamarketing-wq.github.io/5ia/workflow-5essencia.html';
+  const a = document.createElement('a');
+  a.href = url;
+  a.target = '_blank';
+  a.rel = 'noopener noreferrer';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 }
 
 // ── CONFIGURAÇÕES ─────────────────────────────────────────────────

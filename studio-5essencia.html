@@ -260,30 +260,41 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); font-family:
   grid-column: 2;
   background: var(--surface);
   border-top: 1px solid var(--border);
-  padding: 10px 18px 10px 70px;
-  display: flex; align-items: center; gap: 10px;
+  display: flex; flex-direction: column;
   position: relative; z-index: 10;
 }
+.chat-response {
+  display: none; padding: 10px 18px 8px 18px;
+  border-bottom: 1px solid var(--border);
+  background: var(--accent-l);
+}
+.chat-response.show { display: block; }
+.chat-response-label {
+  font-size: 10px; font-weight: 600; color: var(--accent);
+  text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 5px;
+}
+.chat-response-text {
+  font-size: 13px; color: var(--ink); line-height: 1.6;
+  max-height: 120px; overflow-y: auto;
+}
+.chat-response-close {
+  float: right; font-size: 12px; color: var(--ink3);
+  cursor: pointer; margin-left: 8px; margin-top: -2px;
+}
+.chat-input-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 18px 10px 18px; position: relative;
+}
 .chat-icon {
-  position: absolute; left: 68px;
-  width: 22px; height: 22px;
+  width: 22px; height: 22px; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
-  color: var(--ink3); pointer-events: none;
+  color: var(--ink3);
 }
 .chatbar input {
   flex: 1; border: none; outline: none; font-family: var(--font);
   font-size: 13px; color: var(--ink); background: transparent;
-  padding-left: 24px;
 }
 .chatbar input::placeholder { color: var(--ink4); }
-.chat-result {
-  font-size: 12px; color: var(--ink2);
-  padding: 4px 10px; border-radius: 20px;
-  background: var(--surface2); border: 1px solid var(--border);
-  display: none; max-width: 400px; white-space: nowrap;
-  overflow: hidden; text-overflow: ellipsis;
-}
-.chat-result.show { display: block; }
 .chat-send {
   width: 28px; height: 28px; border-radius: 6px; border: none;
   background: var(--accent); color: white;
@@ -291,7 +302,7 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); font-family:
   cursor: pointer; flex-shrink: 0; transition: all 0.12s;
 }
 .chat-send:hover { opacity: 0.88; }
-.chat-actions { display: flex; align-items: center; gap: 6px; margin-right: 6px; }
+.chat-actions { display: flex; align-items: center; gap: 6px; }
 .chat-chip {
   font-size: 11px; font-weight: 500; color: var(--ink3);
   padding: 3px 9px; border-radius: 20px;
@@ -415,6 +426,35 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); font-family:
 <div id="toasts"></div>
 <div class="overlay-bg" id="overlay-bg" onclick="fecharClientePanel()"></div>
 
+<!-- MODAL CONFIGURAÇÕES -->
+<div class="modal-overlay" id="modal-config">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title">Configurações</span>
+      <button class="modal-x" onclick="fecharModal('modal-config')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="fg">
+        <label>URL do Workflow (no Netlify)</label>
+        <input id="cfg-workflow-url" placeholder="https://seu-site.netlify.app/workflow-5essencia.html">
+        <span style="font-size:11px;color:var(--ink3)">Use quando o botão de workflow não abrir a página correta</span>
+      </div>
+      <div class="fg">
+        <label>Assinatura WhatsApp</label>
+        <input id="cfg-assinatura" value="Equipe 5essência Marketing" placeholder="Equipe 5essência Marketing">
+      </div>
+      <div class="fg">
+        <label>Chave Pix</label>
+        <input id="cfg-pix" value="ce89b6e3-951a-4485-aff7-5663c3a7d5e1" placeholder="Chave Pix">
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="fecharModal('modal-config')">Cancelar</button>
+      <button class="btn primary" onclick="salvarConfiguracoes()">Salvar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL NOVO SERVIÇO -->
 <div class="modal-overlay" id="modal-servico">
   <div class="modal">
@@ -490,7 +530,7 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); font-family:
       </svg>
     </div>
     <div class="sb-bottom">
-      <div class="sb-btn" title="Configurações">
+      <div class="sb-btn" title="Configurações" onclick="abrirConfiguracoes()">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="3"/>
           <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
@@ -593,23 +633,29 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); font-family:
 
   <!-- CHAT BAR -->
   <div class="chatbar">
-    <div class="chat-icon">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-      </svg>
+    <div class="chat-response" id="chat-response">
+      <span class="chat-response-close" onclick="document.getElementById('chat-response').classList.remove('show')">✕</span>
+      <div class="chat-response-label">Assistente</div>
+      <div class="chat-response-text" id="chat-response-text"></div>
     </div>
-    <input id="chat-in" placeholder="Pergunte, comande ou peça um report… ex: 'enviar report para Cicatri'" onkeydown="if(event.key==='Enter')enviarChat()">
-    <div class="chat-actions">
-      <div class="chat-chip" onclick="quickChat('Resumo da semana')">Resumo</div>
-      <div class="chat-chip" onclick="quickChat('Cobranças pendentes')">Cobranças</div>
-      <div class="chat-chip" onclick="quickChat('Quais tarefas estão atrasadas?')">Atrasadas</div>
+    <div class="chat-input-row">
+      <div class="chat-icon">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+      </div>
+      <input id="chat-in" placeholder="Pergunte ou comande… ex: 'enviar report para Cicatri', 'resumo da semana'" onkeydown="if(event.key==='Enter')enviarChat()">
+      <div class="chat-actions">
+        <div class="chat-chip" onclick="quickChat('Resumo da semana')">Resumo</div>
+        <div class="chat-chip" onclick="quickChat('Cobranças pendentes')">Cobranças</div>
+        <div class="chat-chip" onclick="quickChat('Quais tarefas estão atrasadas?')">Atrasadas</div>
+      </div>
+      <button class="chat-send" onclick="enviarChat()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+        </svg>
+      </button>
     </div>
-    <div class="chat-result" id="chat-result"></div>
-    <button class="chat-send" onclick="enviarChat()">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-        <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
-      </svg>
-    </button>
   </div>
 </div>
 
@@ -758,13 +804,52 @@ function taskHTML(t){
   </div>`;
 }
 
+// ── IA: RESUME TEXTO EM TÍTULO CURTO ────────────────────────────────
+async function resumirEmTitulo(texto){
+  try{
+    const r = await fetch(`${SB}/functions/v1/chat-assistant`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':KEY,'Authorization':'Bearer '+KEY},
+      body:JSON.stringify({
+        system:'Você resume textos em títulos curtos (máximo 5 palavras) para um sistema de gestão de agência de marketing. Responda APENAS com o título, sem ponto final, sem aspas.',
+        messages:[{role:'user',content:`Resuma em até 5 palavras: "${texto}"`}]
+      })
+    });
+    const d = await r.json();
+    const titulo = d.resposta?.trim();
+    return (titulo && titulo.length < 60) ? titulo : texto.slice(0,50);
+  }catch(e){ return texto.slice(0,50); }
+}
+
 async function addTask(){
-  const titulo = document.getElementById('at-input').value.trim();
+  const input = document.getElementById('at-input');
+  const textoOriginal = input.value.trim();
   const cat = document.getElementById('at-cat').value;
-  if(!titulo) return;
-  document.getElementById('at-input').value = '';
-  const res = await fetch(`${SB}/rest/v1/tarefas`,{method:'POST',headers:{'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify({titulo,categoria:cat,status:'pendente',tempo_total:0,created_at:new Date().toISOString()})}).then(r=>r.json());
-  if(res?.[0]){ tasks.unshift({...res[0],clientes:null}); renderTasks(); toast('Tarefa adicionada'); }
+  if(!textoOriginal) return;
+  input.value = '';
+
+  // Se texto longo (> 8 palavras), usa IA para resumir
+  const palavras = textoOriginal.split(' ').length;
+  const titulo = palavras > 8 ? await resumirEmTitulo(textoOriginal) : textoOriginal;
+
+  const res = await fetch(`${SB}/rest/v1/tarefas`,{
+    method:'POST',
+    headers:{'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json','Prefer':'return=representation'},
+    body:JSON.stringify({
+      titulo,
+      descricao: palavras > 8 ? textoOriginal : null, // guarda texto original na descrição
+      categoria:cat,
+      status:'pendente',
+      tempo_total:0,
+      created_at:new Date().toISOString()
+    })
+  }).then(r=>r.json());
+
+  if(res?.[0]){
+    tasks.unshift({...res[0],clientes:null});
+    renderTasks();
+    toast(palavras > 8 ? `"${titulo}" adicionado` : 'Tarefa adicionada');
+  }
 }
 
 async function concluirTask(id){
@@ -1012,22 +1097,49 @@ async function enviarChat(){
   const input = document.getElementById('chat-in');
   const msg = input.value.trim(); if(!msg) return;
   input.value='';
-  const result = document.getElementById('chat-result');
-  result.textContent = 'Processando…'; result.classList.add('show');
+
+  const respEl  = document.getElementById('chat-response');
+  const textEl  = document.getElementById('chat-response-text');
+  textEl.textContent = 'Processando…';
+  respEl.classList.add('show');
 
   const tarefasPend = tasks.length;
-  const clienteCtx = clienteAtual?`Cliente em foco: ${clienteAtual.nome_completo} (${clienteAtual.empresa||'—'}). `:'';
-  const sistema = `Você é o assistente de Patrick, CEO da 5essência Marketing (agência premium, Balneário Camboriú, SC). ${clienteCtx}Tarefas hoje: ${tarefasPend}. Clientes: ${clientes.length}. Responda de forma direta, máximo 2 frases. Em português.`;
+  const clienteCtx  = clienteAtual?`Cliente em foco: ${clienteAtual.nome_completo} (${clienteAtual.empresa||'—'}). `:'';
+  const sistema = `Você é o assistente de Patrick, CEO da 5essência Marketing (agência premium, Balneário Camboriú, SC). ${clienteCtx}Tarefas hoje: ${tarefasPend}. Clientes: ${clientes.length}. Responda de forma direta e prática em português. Quando solicitado enviar mensagem ou report, confirme e oriente o usuário a usar o Workflow.`;
 
   try{
     const r = await fetch(`${SB}/functions/v1/chat-assistant`,{method:'POST',headers:{'Content-Type':'application/json','apikey':KEY,'Authorization':'Bearer '+KEY},body:JSON.stringify({system:sistema,messages:[{role:'user',content:msg}]})});
     const d = await r.json();
-    result.textContent = d.resposta||'Não consegui processar.';
-  }catch(e){ result.textContent='Erro de conexão.'; }
+    textEl.textContent = d.resposta||'Não consegui processar.';
+  }catch(e){ textEl.textContent='Erro de conexão.'; }
 }
 
 // ── WORKFLOW ──────────────────────────────────────────────────────
-function abrirWorkflow(){ window.open('workflow-5essencia.html','_blank'); }
+function abrirWorkflow(){
+  // Detecta URL base para funcionar em qualquer hospedagem
+  const base = window.location.href.replace(/[^/]*$/, '');
+  window.open(base + 'workflow-5essencia.html', '_blank');
+}
+
+// ── CONFIGURAÇÕES ─────────────────────────────────────────────────
+function abrirConfiguracoes(){
+  document.getElementById('modal-config').classList.add('open');
+}
+
+function salvarConfiguracoes(){
+  const url = document.getElementById('cfg-workflow-url').value.trim();
+  if(url) localStorage.setItem('workflowUrl', url);
+  toast('Configurações salvas');
+  fecharModal('modal-config');
+}
+
+// Override abrirWorkflow para usar URL salva
+const _abrirWorkflowOrig = abrirWorkflow;
+window.abrirWorkflow = function(){
+  const savedUrl = localStorage.getItem('workflowUrl');
+  if(savedUrl){ window.open(savedUrl, '_blank'); return; }
+  _abrirWorkflowOrig();
+};
 
 // ── VIEWS (NAV) ───────────────────────────────────────────────────
 let viewAtual = 'home';

@@ -3,796 +3,1046 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>5essência · Studio</title>
+<title>Quintessência · Studio</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
-:root{
-  --bg:#06060C;--bg1:#0C0C16;--bg2:#111119;--bg3:#17172200;
-  --b1:rgba(255,255,255,0.055);--b2:rgba(255,255,255,0.1);--b3:rgba(255,255,255,0.17);
-  --ink:#EFEFFF;--ink2:#9090B0;--ink3:#48486A;--ink4:#252538;
-  --blue:#4C82FB;--blue-g:linear-gradient(135deg,#4C82FB,#7C3AED);
-  --green:#2DD47A;--orange:#FF9A0A;--red:#FF3B45;--purple:#A855F7;--teal:#22D3EE;--gold:#FBBF24;
-  --font:'Inter',-apple-system,sans-serif;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+/* ── TOKENS ── */
+:root {
+  --bg:       #F7F6F3;
+  --surface:  #FFFFFF;
+  --surface2: #F2F1EE;
+  --surface3: #ECEAE6;
+  --border:   #E4E2DD;
+  --border2:  #D4D2CB;
+
+  --ink:      #18181B;
+  --ink2:     #52525B;
+  --ink3:     #A1A1AA;
+  --ink4:     #D4D4D8;
+
+  --accent:   #1C4ED8;
+  --accent-l: #EEF2FF;
+  --accent-m: #C7D2FE;
+
+  --green:    #16A34A;
+  --green-l:  #DCFCE7;
+  --orange:   #D97706;
+  --orange-l: #FEF3C7;
+  --red:      #DC2626;
+  --red-l:    #FEE2E2;
+  --purple:   #7C3AED;
+  --purple-l: #EDE9FE;
+
+  --r:  8px;
+  --r2: 12px;
+  --r3: 16px;
+  --font: 'Inter', -apple-system, sans-serif;
+  --sh: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --sh2: 0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04);
 }
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-html,body{height:100%;overflow:hidden;background:var(--bg);font-family:var(--font);color:var(--ink);-webkit-font-smoothing:antialiased;}
+
+*,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; background: var(--bg); font-family: var(--font); color: var(--ink); -webkit-font-smoothing: antialiased; font-size: 13px; }
 
 /* ── LAYOUT ── */
-.app{display:flex;flex-direction:column;height:100dvh;overflow:hidden;position:relative;}
+.app { display: grid; grid-template-columns: 52px 1fr; grid-template-rows: 1fr auto; height: 100dvh; }
 
-/* ── FAIXA CLIENTES ── */
-.strip{
-  flex-shrink:0;padding:10px 0 8px;
-  background:rgba(6,6,12,0.95);
-  border-bottom:1px solid var(--b1);
-  position:relative;z-index:10;
+/* ── SIDEBAR ── */
+.sidebar {
+  grid-row: 1 / 3;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  align-items: center;
+  padding: 12px 0;
+  gap: 2px;
+  z-index: 20;
 }
-.strip::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(76,130,251,0.3),transparent);}
-.strip-scroll{display:flex;gap:9px;overflow-x:auto;padding:0 14px;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
-.strip-scroll::-webkit-scrollbar{display:none;}
+.sb-logo {
+  width: 32px; height: 32px; border-radius: var(--r);
+  background: var(--ink); display: flex; align-items: center;
+  justify-content: center; margin-bottom: 14px; flex-shrink: 0;
+}
+.sb-logo svg { color: white; }
+.sb-btn {
+  width: 36px; height: 36px; border-radius: var(--r);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--ink3); transition: all 0.12s;
+  position: relative; flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.sb-btn:hover { background: var(--surface2); color: var(--ink2); }
+.sb-btn.active { background: var(--accent-l); color: var(--accent); }
+.sb-btn .badge {
+  position: absolute; top: 4px; right: 4px;
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--red); border: 1.5px solid var(--surface);
+}
+.sb-divider { width: 24px; height: 1px; background: var(--border); margin: 6px 0; }
+.sb-bottom { margin-top: auto; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.sb-avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--ink); color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; cursor: pointer;
+}
 
-.c-card{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all 0.18s;}
-.c-card:active{transform:scale(0.93);}
-.c-av{
-  width:48px;height:48px;border-radius:15px;
-  display:flex;align-items:center;justify-content:center;
-  font-size:15px;font-weight:800;color:#fff;
-  border:2px solid transparent;
-  transition:all 0.22s cubic-bezier(0.34,1.56,0.64,1);
-  position:relative;overflow:hidden;
+/* ── MAIN ── */
+.main {
+  overflow: hidden; display: flex; flex-direction: column;
+  background: var(--bg);
 }
-.c-card.sel .c-av{border-color:#fff;transform:scale(1.1);box-shadow:0 6px 20px rgba(0,0,0,0.5);}
-.c-timer{position:absolute;top:2px;right:2px;width:7px;height:7px;border-radius:50%;background:var(--green);border:1.5px solid var(--bg);display:none;animation:pulse 1.5s ease infinite;}
-.c-timer.on{display:block;}
-.c-label{font-size:9.5px;font-weight:600;color:var(--ink3);transition:color 0.18s;width:52px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.c-card.sel .c-label{color:var(--ink);}
-.c-add-btn{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
-.c-add-circle{width:48px;height:48px;border-radius:15px;border:1.5px dashed var(--b2);display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--ink3);transition:all 0.15s;}
-.c-add-btn:active .c-add-circle{border-color:var(--blue);color:var(--blue);}
-.c-add-lbl{font-size:9.5px;color:var(--ink4);}
 
-/* ── MAIN SCROLL ── */
-.main{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;}
+/* ── TOPBAR ── */
+.topbar {
+  height: 48px; flex-shrink: 0;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  padding: 0 18px; gap: 16px;
+  position: relative; z-index: 10;
+}
+.tb-section { font-size: 13px; font-weight: 600; color: var(--ink); }
+.tb-sep { width: 1px; height: 14px; background: var(--border); }
+.tb-date { font-size: 12px; color: var(--ink3); font-weight: 400; }
+.tb-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.tb-weather {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; color: var(--ink2); font-weight: 500;
+  padding: 4px 10px; border-radius: 20px;
+  background: var(--surface2); border: 1px solid var(--border);
+}
+.tb-btn {
+  width: 28px; height: 28px; border-radius: var(--r);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--ink3); transition: all 0.12s;
+  border: 1px solid transparent;
+}
+.tb-btn:hover { background: var(--surface2); color: var(--ink2); }
+.timer-pill {
+  display: none; align-items: center; gap: 7px;
+  padding: 5px 12px 5px 9px; border-radius: 20px;
+  background: var(--green-l); border: 1px solid #BBF7D0;
+  font-size: 12px; font-weight: 600; color: var(--green);
+  cursor: pointer; transition: all 0.15s;
+}
+.timer-pill.on { display: flex; }
+.timer-pill-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: blink 1.5s ease infinite; }
+@keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+.timer-pill-stop {
+  width: 20px; height: 20px; border-radius: 4px;
+  background: var(--red); display: flex; align-items: center;
+  justify-content: center; margin-left: 4px; flex-shrink: 0;
+}
 
-/* ── CHAT CENTRAL ── */
-.chat-section{padding:14px 14px 0;}
-.chat-box{
-  background:var(--bg1);border:1px solid var(--b1);
-  border-radius:20px;overflow:hidden;
-  box-shadow:0 4px 24px rgba(0,0,0,0.4);
+/* ── CONTENT ── */
+.content {
+  flex: 1; overflow: hidden;
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 0;
 }
-.chat-header{
-  display:flex;align-items:center;gap:9px;
-  padding:12px 15px;border-bottom:1px solid var(--b1);
-}
-.chat-header-icon{
-  width:28px;height:28px;border-radius:9px;
-  background:rgba(168,85,247,0.15);
-  display:flex;align-items:center;justify-content:center;
-  font-size:14px;
-}
-.chat-header-info{flex:1;}
-.chat-header-nome{font-size:13px;font-weight:700;color:var(--purple);}
-.chat-header-status{font-size:10px;color:var(--ink3);margin-top:1px;}
-.chat-msgs{
-  height:180px;overflow-y:auto;padding:12px;
-  display:flex;flex-direction:column;gap:8px;
-}
-.chat-msg{max-width:85%;padding:9px 13px;border-radius:16px;font-size:13px;line-height:1.55;animation:msgIn 0.2s ease both;}
-@keyframes msgIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
-.chat-msg.ai{background:var(--bg2);color:var(--ink2);align-self:flex-start;border-bottom-left-radius:4px;}
-.chat-msg.user{background:var(--blue-g);color:#fff;align-self:flex-end;border-bottom-right-radius:4px;}
-.chat-msg.typing{color:var(--ink3);font-size:20px;letter-spacing:4px;}
-.chat-input-row{display:flex;gap:8px;padding:10px;border-top:1px solid var(--b1);}
-.chat-input{
-  flex:1;background:var(--bg2);border:1px solid var(--b1);
-  border-radius:12px;padding:10px 13px;color:var(--ink);
-  font-family:var(--font);font-size:14px;outline:none;
-  transition:all 0.15s;-webkit-appearance:none;
-}
-.chat-input:focus{border-color:rgba(168,85,247,0.5);background:var(--bg3);}
-.chat-input::placeholder{color:var(--ink4);}
-.chat-send{
-  width:38px;height:38px;border-radius:11px;border:none;
-  background:rgba(168,85,247,0.18);color:var(--purple);
-  font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;
-  flex-shrink:0;transition:all 0.15s;
-}
-.chat-send:active{transform:scale(0.93);}
 
-/* Sugestões rápidas */
-.quick-chips{display:flex;gap:7px;padding:10px 14px 0;overflow-x:auto;scrollbar-width:none;}
-.quick-chips::-webkit-scrollbar{display:none;}
-.chip{
-  flex-shrink:0;padding:6px 12px;border-radius:20px;
-  border:1px solid var(--b2);background:var(--bg1);
-  color:var(--ink2);font-family:var(--font);font-size:12px;font-weight:600;
-  cursor:pointer;transition:all 0.15s;white-space:nowrap;
-  -webkit-tap-highlight-color:transparent;
-}
-.chip:active{background:rgba(76,130,251,0.12);border-color:rgba(76,130,251,0.3);color:var(--blue);}
+.col-main { overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+.col-side { overflow-y: auto; border-left: 1px solid var(--border); background: var(--surface); }
 
-/* ── SEÇÕES DO DIA ── */
-.day-section{padding:16px 14px 0;}
-.day-section-title{
-  font-size:10px;font-weight:700;text-transform:uppercase;
-  letter-spacing:0.1em;color:var(--ink3);margin-bottom:9px;
-  display:flex;align-items:center;justify-content:space-between;
+/* ── CARD ── */
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r3); overflow: hidden;
+  box-shadow: var(--sh);
 }
-.day-section-title span{font-size:10px;background:var(--bg2);border-radius:20px;padding:2px 8px;color:var(--ink3);font-weight:600;text-transform:none;letter-spacing:0;}
+.card-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 13px 16px 11px;
+  border-bottom: 1px solid var(--border);
+}
+.card-title { font-size: 12px; font-weight: 600; color: var(--ink2); text-transform: uppercase; letter-spacing: 0.05em; }
+.card-action { font-size: 12px; font-weight: 500; color: var(--accent); cursor: pointer; }
+.card-body { padding: 12px 16px; }
 
-/* Timer em destaque */
-.timer-banner{
-  background:rgba(45,212,122,0.06);
-  border:1px solid rgba(45,212,122,0.22);
-  border-radius:16px;padding:13px 15px;
-  display:none;align-items:center;gap:12px;
-  margin:14px 14px 0;
+/* ── PRIORITIES ── */
+.priority-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 0; border-bottom: 1px solid var(--border);
+  cursor: pointer; transition: all 0.1s;
 }
-.timer-banner.on{display:flex;}
-.tb-pulse{width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0;animation:pulse 1.5s ease infinite;}
-@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.4;transform:scale(1.5);}}
-.tb-info{flex:1;min-width:0;}
-.tb-cliente{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--green);margin-bottom:2px;}
-.tb-titulo{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.tb-time{font-size:24px;font-weight:900;letter-spacing:-1px;color:var(--green);font-variant-numeric:tabular-nums;flex-shrink:0;}
-.tb-stop{width:32px;height:32px;border-radius:9px;background:rgba(255,59,69,0.12);border:1px solid rgba(255,59,69,0.22);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--red);cursor:pointer;flex-shrink:0;-webkit-tap-highlight-color:transparent;}
+.priority-item:last-child { border-bottom: none; }
+.priority-item:hover { opacity: 0.8; }
+.pi-check {
+  width: 16px; height: 16px; border-radius: 4px;
+  border: 1.5px solid var(--border2); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.12s; cursor: pointer;
+}
+.pi-check.done { background: var(--green); border-color: var(--green); }
+.pi-check svg { display: none; }
+.pi-check.done svg { display: block; color: white; }
+.pi-info { flex: 1; min-width: 0; }
+.pi-titulo { font-size: 13px; font-weight: 500; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pi-titulo.done { text-decoration: line-through; color: var(--ink3); }
+.pi-meta { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
+.pi-client { font-size: 11px; color: var(--ink3); }
+.pi-cat { font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 4px; }
+.pi-timer-btn {
+  width: 26px; height: 26px; border-radius: 6px; border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--ink3); transition: all 0.12s; flex-shrink: 0;
+}
+.pi-timer-btn:hover { background: var(--green-l); border-color: #BBF7D0; color: var(--green); }
+.pi-timer-btn.running { background: var(--red-l); border-color: #FECACA; color: var(--red); }
+.pi-tempo { font-size: 11px; font-weight: 600; color: var(--ink3); min-width: 36px; text-align: right; font-variant-numeric: tabular-nums; }
+.pi-tempo.running { color: var(--green); }
 
-/* Compromissos */
-.comp-card{
-  background:var(--bg1);border:1px solid var(--b1);border-radius:14px;
-  padding:11px 13px;margin-bottom:7px;
-  display:flex;align-items:center;gap:11px;cursor:pointer;
-  transition:all 0.15s;-webkit-tap-highlight-color:transparent;
+/* Add task */
+.add-task {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 0; border-top: 1px solid var(--border); margin-top: 4px;
 }
-.comp-card:active{transform:scale(0.98);}
-.comp-hora{font-size:12px;font-weight:700;color:var(--blue);flex-shrink:0;min-width:40px;}
-.comp-info{flex:1;min-width:0;}
-.comp-titulo{font-size:13px;font-weight:600;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.comp-meta{font-size:11px;color:var(--ink3);}
-.comp-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.at-input {
+  flex: 1; border: none; outline: none; font-family: var(--font);
+  font-size: 13px; color: var(--ink); background: transparent;
+}
+.at-input::placeholder { color: var(--ink4); }
+.at-cat {
+  border: 1px solid var(--border); border-radius: 6px;
+  font-family: var(--font); font-size: 12px; color: var(--ink2);
+  padding: 4px 6px; outline: none; -webkit-appearance: none;
+  background: var(--surface); cursor: pointer;
+}
+.at-add {
+  width: 26px; height: 26px; border-radius: 6px; border: 1px solid var(--border);
+  background: var(--surface2); color: var(--ink2); font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all 0.12s;
+}
+.at-add:hover { background: var(--accent); border-color: var(--accent); color: white; }
 
-/* Tarefas do dia */
-.tarefa-row{
-  background:var(--bg1);border:1px solid var(--b1);border-radius:14px;
-  padding:11px 13px;margin-bottom:7px;
-  display:flex;align-items:center;gap:11px;
-  transition:all 0.15s;
+/* ── AGENDA ── */
+.agenda-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 10px 0; border-bottom: 1px solid var(--border);
 }
-.tarefa-row.running{background:rgba(45,212,122,0.04);border-color:rgba(45,212,122,0.22);}
-.tarefa-row.concluida{opacity:0.4;}
-.tr-play{
-  width:36px;height:36px;border-radius:10px;flex-shrink:0;
-  background:var(--bg2);border:1px solid var(--b2);
-  display:flex;align-items:center;justify-content:center;
-  font-size:12px;color:var(--ink3);cursor:pointer;
-  transition:all 0.15s;-webkit-tap-highlight-color:transparent;
-}
-.tr-play:active{transform:scale(0.9);}
-.tr-play.running{background:rgba(255,59,69,0.1);border-color:rgba(255,59,69,0.22);color:var(--red);}
-.tr-play.done{background:rgba(45,212,122,0.08);border-color:rgba(45,212,122,0.2);color:var(--green);cursor:default;}
-.tr-info{flex:1;min-width:0;}
-.tr-titulo{font-size:13.5px;font-weight:600;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.tr-meta{display:flex;align-items:center;gap:6px;}
-.tr-cliente{font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;background:var(--bg2);color:var(--ink3);}
-.tr-cat{font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;}
-.tr-tempo{font-size:11px;color:var(--ink3);font-weight:600;font-variant-numeric:tabular-nums;}
-.tr-tempo.running{color:var(--green);}
-.tr-check{width:28px;height:28px;border-radius:8px;border:1px solid var(--b1);background:transparent;color:var(--ink3);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;flex-shrink:0;-webkit-tap-highlight-color:transparent;}
-.tr-check:active{background:rgba(45,212,122,0.1);color:var(--green);}
+.agenda-item:last-child { border-bottom: none; }
+.ag-time { font-size: 11px; font-weight: 600; color: var(--ink3); min-width: 38px; margin-top: 1px; }
+.ag-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+.ag-info { flex: 1; min-width: 0; }
+.ag-titulo { font-size: 13px; font-weight: 500; margin-bottom: 2px; }
+.ag-meta { font-size: 11px; color: var(--ink3); }
 
-/* Nova tarefa */
-.nova-row{
-  display:flex;gap:7px;align-items:center;
-  margin:0 14px 8px;
+/* ── CLIENTS SIDE ── */
+.side-section { padding: 14px 16px; }
+.side-title { font-size: 11px; font-weight: 600; color: var(--ink3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
+.client-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; border-radius: var(--r); cursor: pointer;
+  transition: all 0.1s; -webkit-tap-highlight-color: transparent;
+  margin-bottom: 2px;
 }
-.nova-input{
-  flex:1;background:var(--bg1);border:1px solid var(--b1);
-  border-radius:12px;color:var(--ink);font-family:var(--font);
-  font-size:14px;padding:12px 13px;outline:none;transition:all 0.15s;
-  -webkit-appearance:none;
+.client-row:hover { background: var(--surface2); }
+.client-row.active { background: var(--accent-l); }
+.cr-av {
+  width: 28px; height: 28px; border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700; color: white; flex-shrink: 0;
 }
-.nova-input:focus{border-color:rgba(76,130,251,0.45);background:var(--bg2);}
-.nova-input::placeholder{color:var(--ink4);}
-.nova-cat{
-  background:var(--bg1);border:1px solid var(--b1);border-radius:12px;
-  color:var(--ink2);font-family:var(--font);font-size:14px;
-  padding:12px 8px;outline:none;-webkit-appearance:none;cursor:pointer;flex-shrink:0;
-}
-.nova-add{
-  width:44px;height:44px;border-radius:12px;border:none;
-  background:var(--blue-g);color:#fff;font-size:20px;
-  display:flex;align-items:center;justify-content:center;
-  cursor:pointer;flex-shrink:0;transition:all 0.15s;
-  box-shadow:0 3px 12px rgba(76,130,251,0.3);
-}
-.nova-add:active{transform:scale(0.94);}
+.cr-info { flex: 1; min-width: 0; }
+.cr-nome { font-size: 12.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cr-meta { font-size: 11px; color: var(--ink3); }
+.cr-timer { width: 6px; height: 6px; border-radius: 50%; background: var(--green); flex-shrink: 0; animation: blink 1.5s ease infinite; display: none; }
+.cr-timer.on { display: block; }
+.cr-open { color: var(--ink4); flex-shrink: 0; opacity: 0; transition: opacity 0.1s; }
+.client-row:hover .cr-open { opacity: 1; }
 
-/* Selecionar do escopo */
-.escopo-btn{
-  display:flex;align-items:center;gap:8px;
-  padding:10px 13px;margin:0 14px 14px;
-  background:transparent;border:1px dashed var(--b2);
-  border-radius:12px;color:var(--ink3);font-family:var(--font);
-  font-size:13px;cursor:pointer;transition:all 0.15s;width:calc(100% - 28px);
-  -webkit-tap-highlight-color:transparent;
+/* ── CHAT BAR ── */
+.chatbar {
+  grid-column: 2;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: 10px 18px 10px 70px;
+  display: flex; align-items: center; gap: 10px;
+  position: relative; z-index: 10;
 }
-.escopo-btn:active{border-color:var(--blue);color:var(--blue);}
-
-/* Cats */
-.cat-design{background:rgba(168,85,247,0.12);color:#A855F7;}
-.cat-edicao{background:rgba(34,211,238,0.12);color:#22D3EE;}
-.cat-captacao{background:rgba(251,191,36,0.12);color:#FBBF24;}
-.cat-trafego{background:rgba(76,130,251,0.12);color:#4C82FB;}
-.cat-reuniao{background:rgba(255,154,10,0.12);color:#FF9A0A;}
-.cat-pesquisa{background:rgba(45,212,122,0.12);color:#2DD47A;}
-.cat-copy{background:rgba(255,59,69,0.12);color:#FF3B45;}
-.cat-dev{background:rgba(76,130,251,0.12);color:#4C82FB;}
-.cat-geral{background:rgba(255,255,255,0.05);color:#48486A;}
-
-/* ── MODAL ESCOPO ── */
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(10px);z-index:500;opacity:0;pointer-events:none;transition:opacity 0.22s;display:flex;align-items:flex-end;}
-.overlay.open{opacity:1;pointer-events:all;}
-.sheet{
-  width:100%;background:var(--bg1);border:1px solid var(--b2);border-bottom:none;
-  border-radius:24px 24px 0 0;
-  transform:translateY(100%);transition:transform 0.32s cubic-bezier(0.32,0.72,0,1);
-  max-height:85dvh;display:flex;flex-direction:column;
-  padding-bottom:env(safe-area-inset-bottom);
+.chat-icon {
+  position: absolute; left: 68px;
+  width: 22px; height: 22px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--ink3); pointer-events: none;
 }
-.overlay.open .sheet{transform:translateY(0);}
-.sheet-handle{width:32px;height:3px;border-radius:2px;background:var(--b2);margin:11px auto 0;}
-.sheet-head{padding:14px 18px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--b1);}
-.sheet-title{font-size:16px;font-weight:800;letter-spacing:-0.4px;}
-.sheet-x{width:26px;height:26px;border-radius:50%;background:var(--bg2);border:none;color:var(--ink2);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
-.sheet-body{flex:1;overflow-y:auto;padding:14px 18px;}
-.sheet-foot{padding:12px 18px;border-top:1px solid var(--b1);display:flex;gap:8px;}
-
-/* Escopo cliente seletor */
-.escopo-cliente-sel{
-  display:flex;gap:8px;overflow-x:auto;margin-bottom:14px;
-  scrollbar-width:none;-webkit-overflow-scrolling:touch;
+.chatbar input {
+  flex: 1; border: none; outline: none; font-family: var(--font);
+  font-size: 13px; color: var(--ink); background: transparent;
+  padding-left: 24px;
 }
-.escopo-cliente-sel::-webkit-scrollbar{display:none;}
-.ec-chip{
-  flex-shrink:0;padding:7px 14px;border-radius:20px;
-  border:1px solid var(--b1);background:var(--bg2);
-  color:var(--ink3);font-size:12px;font-weight:600;
-  cursor:pointer;transition:all 0.15s;-webkit-tap-highlight-color:transparent;
+.chatbar input::placeholder { color: var(--ink4); }
+.chat-result {
+  font-size: 12px; color: var(--ink2);
+  padding: 4px 10px; border-radius: 20px;
+  background: var(--surface2); border: 1px solid var(--border);
+  display: none; max-width: 400px; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;
 }
-.ec-chip.active{background:rgba(76,130,251,0.15);border-color:rgba(76,130,251,0.3);color:var(--blue);}
-
-/* Serviços do escopo */
-.servico-card{
-  background:var(--bg2);border:1px solid var(--b1);border-radius:14px;
-  padding:12px 14px;margin-bottom:8px;cursor:pointer;
-  display:flex;align-items:center;gap:12px;
-  transition:all 0.15s;-webkit-tap-highlight-color:transparent;
+.chat-result.show { display: block; }
+.chat-send {
+  width: 28px; height: 28px; border-radius: 6px; border: none;
+  background: var(--accent); color: white;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0; transition: all 0.12s;
 }
-.servico-card:active{transform:scale(0.98);}
-.servico-card.selected{background:rgba(76,130,251,0.08);border-color:rgba(76,130,251,0.3);}
-.sc-info{flex:1;min-width:0;}
-.sc-titulo{font-size:13.5px;font-weight:700;margin-bottom:3px;}
-.sc-prazo{font-size:11px;color:var(--ink3);}
-.sc-status{font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;}
-.sc-check{width:20px;height:20px;border-radius:50%;border:2px solid var(--b2);display:flex;align-items:center;justify-content:center;transition:all 0.15s;flex-shrink:0;}
-.servico-card.selected .sc-check{background:var(--blue);border-color:var(--blue);color:#fff;font-size:10px;}
-
-/* Form novo serviço */
-.fg{display:flex;flex-direction:column;gap:6px;margin-bottom:13px;}
-.fg label{font-size:10px;font-weight:700;color:var(--ink3);letter-spacing:0.08em;text-transform:uppercase;}
-.fg input,.fg select,.fg textarea{
-  background:var(--bg2);border:1px solid var(--b1);border-radius:11px;
-  color:var(--ink);font-family:var(--font);font-size:15px;
-  padding:11px 13px;outline:none;transition:all 0.15s;width:100%;-webkit-appearance:none;
+.chat-send:hover { opacity: 0.88; }
+.chat-actions { display: flex; align-items: center; gap: 6px; margin-right: 6px; }
+.chat-chip {
+  font-size: 11px; font-weight: 500; color: var(--ink3);
+  padding: 3px 9px; border-radius: 20px;
+  border: 1px solid var(--border); background: var(--surface2);
+  cursor: pointer; white-space: nowrap; transition: all 0.1s;
 }
-.fg input:focus,.fg select:focus{border-color:rgba(76,130,251,0.5);background:var(--bg3);}
-.fg input::placeholder{color:var(--ink4);}
-.fg select option{background:var(--bg2);}
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.chat-chip:hover { border-color: var(--accent-m); color: var(--accent); background: var(--accent-l); }
 
-/* Botões */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:11px 18px;border-radius:11px;border:none;cursor:pointer;font-family:var(--font);font-size:13.5px;font-weight:700;transition:all 0.15s;-webkit-tap-highlight-color:transparent;}
-.btn:active{transform:scale(0.96);}
-.btn-primary{background:var(--blue-g);color:#fff;box-shadow:0 3px 14px rgba(76,130,251,0.3);}
-.btn-ghost{background:var(--bg2);border:1px solid var(--b2);color:var(--ink2);}
-.btn-full{width:100%;justify-content:center;}
+/* ── CLIENTE PANEL (slide-in) ── */
+.client-panel {
+  position: fixed; top: 0; right: 0; bottom: 0; width: 420px;
+  background: var(--surface); border-left: 1px solid var(--border);
+  box-shadow: var(--sh2); z-index: 100;
+  transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.32,0.72,0,1);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.client-panel.open { transform: translateX(0); }
+.cp-header {
+  padding: 16px 20px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 14px; flex-shrink: 0;
+}
+.cp-av { width: 44px; height: 44px; border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; color: white; flex-shrink: 0; }
+.cp-info { flex: 1; min-width: 0; }
+.cp-nome { font-size: 16px; font-weight: 700; letter-spacing: -0.3px; margin-bottom: 2px; }
+.cp-empresa { font-size: 12px; color: var(--ink3); }
+.cp-close { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--border); background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--ink3); transition: all 0.1s; }
+.cp-close:hover { background: var(--surface2); }
 
-/* Empty */
-.empty{display:flex;flex-direction:column;align-items:center;padding:24px 16px;color:var(--ink3);font-size:13px;text-align:center;gap:7px;}
-.empty-icon{font-size:26px;opacity:0.2;}
+.cp-tabs { display: flex; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.cp-tab { flex: 1; padding: 10px; text-align: center; font-size: 12px; font-weight: 600; color: var(--ink3); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.1s; }
+.cp-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
 
-/* Toasts */
-#toasts{position:fixed;top:calc(12px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:6px;align-items:center;pointer-events:none;}
-.toast{background:rgba(8,8,16,0.98);border:1px solid var(--b2);border-radius:22px;padding:9px 16px;font-size:12.5px;font-weight:600;backdrop-filter:blur(24px);box-shadow:0 4px 24px rgba(0,0,0,0.6);display:flex;align-items:center;gap:8px;white-space:nowrap;animation:tIn 0.28s cubic-bezier(0.34,1.56,0.64,1) both,tOut 0.2s 2.7s ease both;}
-.tdot{width:5px;height:5px;border-radius:50%;}
-@keyframes tIn{from{opacity:0;transform:translateY(-10px) scale(0.88);}to{opacity:1;transform:none;}}
-@keyframes tOut{to{opacity:0;transform:translateY(-8px);}}
-::-webkit-scrollbar{width:0;height:0;}
+.cp-body { flex: 1; overflow-y: auto; }
+.cp-section { padding: 14px 20px; border-bottom: 1px solid var(--border); }
+.cp-section-title { font-size: 11px; font-weight: 600; color: var(--ink3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
+.cp-add-btn { font-size: 11px; font-weight: 500; color: var(--accent); cursor: pointer; }
+
+.service-item { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); }
+.service-item:last-child { border-bottom: none; }
+.si-status { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.si-info { flex: 1; min-width: 0; }
+.si-titulo { font-size: 13px; font-weight: 500; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.si-prazo { font-size: 11px; color: var(--ink3); }
+.si-add { font-size: 11px; font-weight: 600; color: var(--accent); cursor: pointer; padding: 3px 8px; border-radius: 4px; background: var(--accent-l); white-space: nowrap; }
+.si-add:hover { background: var(--accent-m); }
+
+.cp-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; padding: 14px 20px; border-bottom: 1px solid var(--border); }
+.cp-stat { background: var(--surface2); border-radius: var(--r); padding: 10px; }
+.cp-stat-v { font-size: 18px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 2px; }
+.cp-stat-l { font-size: 10px; font-weight: 600; color: var(--ink3); text-transform: uppercase; letter-spacing: 0.05em; }
+
+/* Actions no cp */
+.cp-actions { display: flex; gap: 8px; padding: 14px 20px; }
+.cp-action { flex: 1; padding: 8px; border-radius: var(--r); border: 1px solid var(--border); background: transparent; font-family: var(--font); font-size: 12px; font-weight: 600; color: var(--ink2); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.1s; }
+.cp-action:hover { background: var(--surface2); }
+.cp-action.primary { background: var(--accent); color: white; border-color: var(--accent); }
+.cp-action.primary:hover { opacity: 0.9; }
+
+/* ── STATUS BADGES ── */
+.badge { display: inline-flex; align-items: center; padding: 2px 7px; border-radius: 4px; font-size: 10.5px; font-weight: 600; }
+.badge-green { background: var(--green-l); color: var(--green); }
+.badge-blue { background: var(--accent-l); color: var(--accent); }
+.badge-orange { background: var(--orange-l); color: var(--orange); }
+.badge-red { background: var(--red-l); color: var(--red); }
+.badge-gray { background: var(--surface3); color: var(--ink3); }
+
+/* ── CAT BADGES ── */
+.cat-design { background: #F3E8FF; color: #7C3AED; }
+.cat-edicao { background: #E0F2FE; color: #0369A1; }
+.cat-captacao { background: #FEF9C3; color: #854D0E; }
+.cat-trafego { background: #EEF2FF; color: #3730A3; }
+.cat-reuniao { background: #FFF7ED; color: #C2410C; }
+.cat-pesquisa { background: #DCFCE7; color: #15803D; }
+.cat-copy { background: #FFE4E6; color: #BE123C; }
+.cat-dev { background: #F0F9FF; color: #0C4A6E; }
+.cat-geral { background: var(--surface3); color: var(--ink3); }
+
+/* ── EMPTY ── */
+.empty-msg { text-align: center; padding: 24px 16px; color: var(--ink3); font-size: 12.5px; }
+
+/* ── OVERLAY ── */
+.overlay-bg { position: fixed; inset: 0; z-index: 99; background: rgba(0,0,0,0.15); backdrop-filter: blur(2px); display: none; }
+.overlay-bg.show { display: block; }
+
+/* ── SCROLLBARS ── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+/* ── TOASTS ── */
+#toasts { position: fixed; bottom: 56px; left: 72px; z-index: 9999; display: flex; flex-direction: column; gap: 6px; pointer-events: none; }
+.toast { background: var(--ink); color: white; border-radius: var(--r2); padding: 9px 14px; font-size: 12.5px; font-weight: 500; box-shadow: var(--sh2); animation: tIn 0.2s ease both, tOut 0.2s 2.5s ease both; display: flex; align-items: center; gap: 8px; }
+.toast.ok::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+.toast.er::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--red); flex-shrink: 0; }
+@keyframes tIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+@keyframes tOut { to { opacity:0; transform:translateY(-4px); } }
+
+/* ── MODAL ── */
+.modal-overlay { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.3); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; }
+.modal-overlay.open { display: flex; }
+.modal { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r3); width: 400px; max-width: 90vw; box-shadow: 0 20px 60px rgba(0,0,0,0.15); overflow: hidden; }
+.modal-head { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.modal-title { font-size: 14px; font-weight: 700; }
+.modal-x { width: 24px; height: 24px; border-radius: 6px; border: 1px solid var(--border); background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--ink3); }
+.modal-body { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+.modal-foot { padding: 14px 20px; border-top: 1px solid var(--border); display: flex; gap: 8px; justify-content: flex-end; }
+.fg { display: flex; flex-direction: column; gap: 5px; }
+.fg label { font-size: 11px; font-weight: 600; color: var(--ink3); letter-spacing: 0.03em; }
+.fg input, .fg select, .fg textarea { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r); color: var(--ink); font-family: var(--font); font-size: 13px; padding: 8px 11px; outline: none; transition: all 0.12s; width: 100%; -webkit-appearance: none; }
+.fg input:focus, .fg select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(28,78,216,0.1); }
+.fg input::placeholder { color: var(--ink4); }
+.fg select option { background: white; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 16px; border-radius: var(--r); border: 1px solid var(--border); cursor: pointer; font-family: var(--font); font-size: 13px; font-weight: 600; transition: all 0.12s; background: var(--surface2); color: var(--ink2); }
+.btn:hover { background: var(--surface3); }
+.btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+.btn.primary:hover { opacity: 0.9; }
 </style>
 </head>
 <body>
 <div id="toasts"></div>
+<div class="overlay-bg" id="overlay-bg" onclick="fecharClientePanel()"></div>
 
-<!-- OVERLAY ESCOPO -->
-<div class="overlay" id="overlay-escopo" onclick="fecharEscopo(event)">
-  <div class="sheet" id="sheet-escopo">
-    <div class="sheet-handle"></div>
-    <div class="sheet-head">
-      <span class="sheet-title" id="sheet-titulo">Escopo</span>
-      <button class="sheet-x" onclick="fecharEscopoForce()">✕</button>
+<!-- MODAL NOVO SERVIÇO -->
+<div class="modal-overlay" id="modal-servico">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title">Novo serviço</span>
+      <button class="modal-x" onclick="fecharModal('modal-servico')">✕</button>
     </div>
-    <div class="sheet-body" id="sheet-body"></div>
-    <div class="sheet-foot" id="sheet-foot"></div>
+    <div class="modal-body">
+      <div class="fg"><label>Serviço / entregável</label><input id="ms-titulo" placeholder="Ex: Landing Page, Gestão Meta Ads…"></div>
+      <div class="row2">
+        <div class="fg"><label>Prazo</label><input id="ms-prazo" type="date"></div>
+        <div class="fg"><label>Status</label>
+          <select id="ms-status">
+            <option value="briefing">Briefing</option>
+            <option value="em_andamento">Em andamento</option>
+            <option value="revisao">Em revisão</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg"><label>Observações</label><input id="ms-obs" placeholder="Detalhes, escopo…"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="fecharModal('modal-servico')">Cancelar</button>
+      <button class="btn primary" onclick="salvarServico()">Salvar</button>
+    </div>
   </div>
 </div>
 
 <div class="app">
-  <!-- FAIXA CLIENTES -->
-  <div class="strip">
-    <div class="strip-scroll" id="strip-scroll">
-      <div style="padding:12px 0;color:var(--ink3);font-size:12px">Carregando…</div>
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="sb-logo">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+      </svg>
     </div>
-  </div>
+    <div class="sb-btn active" title="Dashboard" onclick="setView('home')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+        <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+      </svg>
+    </div>
+    <div class="sb-btn" title="Clientes" onclick="setView('clientes')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+        <circle cx="9" cy="7" r="4"/>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      </svg>
+    </div>
+    <div class="sb-btn" title="Projetos">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+      </svg>
+    </div>
+    <div class="sb-btn" title="Relatórios">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
+        <line x1="6" y1="20" x2="6" y2="14"/>
+      </svg>
+    </div>
+    <div class="sb-divider"></div>
+    <div class="sb-btn" title="Workflow" onclick="abrirWorkflow()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+      </svg>
+    </div>
+    <div class="sb-btn" title="Notificações">
+      <div class="badge"></div>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+      </svg>
+    </div>
+    <div class="sb-bottom">
+      <div class="sb-btn" title="Configurações">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </div>
+      <div class="sb-avatar" id="sb-avatar">P</div>
+    </div>
+  </nav>
 
   <!-- MAIN -->
-  <div class="main" id="main">
-
-    <!-- TIMER BANNER -->
-    <div class="timer-banner" id="timer-banner">
-      <div class="tb-pulse"></div>
-      <div class="tb-info">
-        <div class="tb-cliente" id="tb-cliente"></div>
-        <div class="tb-titulo" id="tb-titulo"></div>
-      </div>
-      <div class="tb-time" id="tb-time">00:00:00</div>
-      <div class="tb-stop" onclick="pararTimer()">■</div>
-    </div>
-
-    <!-- CHAT -->
-    <div class="chat-section">
-      <div class="chat-box">
-        <div class="chat-header">
-          <div class="chat-header-icon">✦</div>
-          <div class="chat-header-info">
-            <div class="chat-header-nome">Assistente 5essência</div>
-            <div class="chat-header-status" id="chat-status">Online · pronto para ajudar</div>
+  <div class="main">
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <span class="tb-section" id="tb-section">Dashboard</span>
+      <div class="tb-sep"></div>
+      <span class="tb-date" id="tb-date"></span>
+      <div class="tb-right">
+        <!-- Timer -->
+        <div class="timer-pill" id="timer-pill" onclick="irParaClienteTimer()">
+          <div class="timer-pill-dot"></div>
+          <span id="timer-pill-label">00:00:00</span>
+          <div class="timer-pill-stop" onclick="event.stopPropagation();pararTimer()">
+            <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor" color="white"><rect x="3" y="3" width="18" height="18"/></svg>
           </div>
         </div>
-        <div class="chat-msgs" id="chat-msgs">
-          <div class="chat-msg ai">Olá, Patrick! 👋 Posso enviar reports, notificar clientes, organizar suas tarefas ou analisar seu tempo. O que você precisa hoje?</div>
-        </div>
-        <div class="chat-input-row">
-          <input class="chat-input" id="chat-input" placeholder="Digite um comando… ex: report para Cicatri" onkeydown="if(event.key==='Enter')enviarChat()">
-          <button class="chat-send" onclick="enviarChat()">↑</button>
+        <!-- Clima -->
+        <div class="tb-weather" id="tb-weather">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/>
+            <line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/>
+            <line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+          </svg>
+          <span id="weather-txt">—</span>
         </div>
       </div>
     </div>
 
-    <!-- CHIPS RÁPIDOS -->
-    <div class="quick-chips" id="quick-chips">
-      <div class="chip" onclick="chipCmd('Quais clientes não receberam update hoje?')">⚠️ Sem update hoje</div>
-      <div class="chip" onclick="chipCmd('Resumo das horas dessa semana')">⏱ Horas da semana</div>
-      <div class="chip" onclick="chipCmd('Gerar report semanal')">📋 Report semanal</div>
-      <div class="chip" onclick="chipCmd('Quais cobranças vencem essa semana?')">💰 Cobranças</div>
-    </div>
+    <!-- CONTENT -->
+    <div class="content">
+      <!-- COL MAIN -->
+      <div class="col-main" id="col-main">
 
-    <!-- COMPROMISSOS DO DIA -->
-    <div class="day-section">
-      <div class="day-section-title">Compromissos <span id="comp-count">0</span></div>
-      <div id="comp-lista"></div>
-    </div>
+        <!-- CARD PRIORIDADES -->
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">Tarefas do dia</span>
+            <span class="card-action" onclick="abrirEscopoPicker()">+ Do escopo</span>
+          </div>
+          <div class="card-body">
+            <div id="tasks-list"></div>
+            <div class="add-task">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--ink4);flex-shrink:0">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              <input class="at-input" id="at-input" placeholder="Adicionar tarefa…" onkeydown="if(event.key==='Enter')addTask()">
+              <select class="at-cat" id="at-cat">
+                <option value="geral">Geral</option>
+                <option value="design">Design</option>
+                <option value="edicao">Edição</option>
+                <option value="captacao">Captação</option>
+                <option value="trafego">Tráfego</option>
+                <option value="reuniao">Reunião</option>
+                <option value="pesquisa">Pesquisa</option>
+                <option value="copy">Copy</option>
+                <option value="dev">Dev</option>
+              </select>
+              <div class="at-add" onclick="addTask()">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
 
-    <!-- TAREFAS DO DIA -->
-    <div class="day-section" style="padding-bottom:14px">
-      <div class="day-section-title">Tarefas do dia <span id="tarefas-count">0</span></div>
+        <!-- CARD AGENDA -->
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">Agenda hoje</span>
+            <span class="card-action">Ver semana</span>
+          </div>
+          <div class="card-body" id="agenda-body">
+            <div class="empty-msg">Carregando…</div>
+          </div>
+        </div>
 
-      <!-- Nova tarefa -->
-      <div class="nova-row">
-        <input class="nova-input" id="nova-input" placeholder="Adicionar tarefa rápida…" onkeydown="if(event.key==='Enter')adicionarTarefa()">
-        <select class="nova-cat" id="nova-cat">
-          <option value="geral">📌</option>
-          <option value="design">🎨</option>
-          <option value="edicao">🎬</option>
-          <option value="captacao">📸</option>
-          <option value="trafego">📊</option>
-          <option value="reuniao">📅</option>
-          <option value="pesquisa">🔍</option>
-          <option value="copy">✍️</option>
-          <option value="dev">💻</option>
-        </select>
-        <button class="nova-add" onclick="adicionarTarefa()">+</button>
       </div>
 
-      <!-- Selecionar do escopo -->
-      <button class="escopo-btn" onclick="abrirEscopo()">
-        📋 Selecionar do escopo do cliente
-      </button>
-
-      <!-- Lista tarefas -->
-      <div id="tarefas-lista"></div>
+      <!-- COL SIDE (clientes) -->
+      <div class="col-side">
+        <div class="side-section">
+          <div class="side-title">Clientes</div>
+          <div id="clients-list"></div>
+        </div>
+      </div>
     </div>
-
   </div>
+
+  <!-- CHAT BAR -->
+  <div class="chatbar">
+    <div class="chat-icon">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+    </div>
+    <input id="chat-in" placeholder="Pergunte, comande ou peça um report… ex: 'enviar report para Cicatri'" onkeydown="if(event.key==='Enter')enviarChat()">
+    <div class="chat-actions">
+      <div class="chat-chip" onclick="quickChat('Resumo da semana')">Resumo</div>
+      <div class="chat-chip" onclick="quickChat('Cobranças pendentes')">Cobranças</div>
+      <div class="chat-chip" onclick="quickChat('Quais tarefas estão atrasadas?')">Atrasadas</div>
+    </div>
+    <div class="chat-result" id="chat-result"></div>
+    <button class="chat-send" onclick="enviarChat()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+      </svg>
+    </button>
+  </div>
+</div>
+
+<!-- CLIENTE PANEL -->
+<div class="client-panel" id="client-panel">
+  <div class="cp-header" id="cp-header"></div>
+  <div class="cp-tabs">
+    <div class="cp-tab active" onclick="cpSetTab('escopo')">Escopo</div>
+    <div class="cp-tab" onclick="cpSetTab('tarefas')">Tarefas</div>
+    <div class="cp-tab" onclick="cpSetTab('tempo')">Tempo</div>
+  </div>
+  <div class="cp-stats" id="cp-stats"></div>
+  <div class="cp-actions" id="cp-actions"></div>
+  <div class="cp-body" id="cp-body"></div>
 </div>
 
 <script>
 const SB  = 'https://zebudefzhakitwjswvkl.supabase.co';
 const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InplYnVkZWZ6aGFraXR3anN3dmtsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MTE1MDksImV4cCI6MjA5MTQ4NzUwOX0.uKRcENdJFNirbC84qG7uIkkDFbn4McQ4DGxh3CKAyPM';
-const SIGN= 'Equipe 5essência Marketing';
+const CAT = {geral:'Geral',design:'Design',edicao:'Edição',captacao:'Captação',trafego:'Tráfego',reuniao:'Reunião',pesquisa:'Pesquisa',copy:'Copy',dev:'Dev'};
+const CORES = ['#1C4ED8','#7C3AED','#16A34A','#D97706','#0891B2','#DC2626','#CA8A04','#EA580C'];
+const cor = n=>{let h=0;for(const c of n)h=(h*31+c.charCodeAt(0))&0xFFFF;return CORES[h%CORES.length];};
+const ini = n=>n?.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase()||'?';
+const fmtS= s=>{s=Math.floor(s||0);const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),ss=s%60;return h>0?`${h}h${m>0?' '+m+'m':''}`:`${m.toString().padStart(2,'0')}:${ss.toString().padStart(2,'0')}`;};
+const fmtL= s=>{s=Math.floor(s||0);return`${String(Math.floor(s/3600)).padStart(2,'0')}:${String(Math.floor((s%3600)/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;};
+const hoje= ()=>new Date().toISOString().split('T')[0];
+const semI= ()=>{const d=new Date();d.setDate(d.getDate()-d.getDay());return d.toISOString().split('T')[0];};
+const api = (p,o={})=>fetch(`${SB}/rest/v1/${p}`,{headers:{'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json',...(o.headers||{})},...o}).then(r=>r.json()).catch(()=>null);
 
-const CAT={geral:{e:'📌',l:'Geral'},design:{e:'🎨',l:'Design'},edicao:{e:'🎬',l:'Edição'},captacao:{e:'📸',l:'Captação'},trafego:{e:'📊',l:'Tráfego'},reuniao:{e:'📅',l:'Reunião'},pesquisa:{e:'🔍',l:'Pesquisa'},copy:{e:'✍️',l:'Copy'},dev:{e:'💻',l:'Dev'}};
-const CORES=['#4C82FB','#A855F7','#2DD47A','#FF9A0A','#22D3EE','#FF3B45','#FBBF24','#F97316'];
-const cor=n=>{let h=0;for(const c of n)h=(h*31+c.charCodeAt(0))&0xFFFF;return CORES[h%CORES.length];};
-const ini=n=>n?.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase()||'?';
-const fmtS=s=>{s=Math.floor(s||0);const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),ss=s%60;return h>0?`${h}h${m>0?' '+m+'m':''}`:`${m.toString().padStart(2,'0')}:${ss.toString().padStart(2,'0')}`;};
-const fmtL=s=>{s=Math.floor(s||0);return`${String(Math.floor(s/3600)).padStart(2,'0')}:${String(Math.floor((s%3600)/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;};
-const hoje=()=>new Date().toISOString().split('T')[0];
-const api=(p,o={})=>fetch(`${SB}/rest/v1/${p}`,{headers:{'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json',...(o.headers||{})},...o}).then(r=>r.json()).catch(()=>null);
+let clientes=[], tasks=[], clienteAtual=null, cpTabAtiva='escopo';
+let cpServicos=[], cpTarefas=[];
+let timerInterval=null, timerTarefaId=null, timerInicio=null, timerSeg=0;
 
-// ESTADO
-let clientes=[],clienteSel=null,tarefas=[],servicosSel=[];
-let timerInterval=null,timerTarefaId=null,timerInicio=null,timerSeg=0;
+// ── INIT ──────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async()=>{
+  const d = new Date();
+  document.getElementById('tb-date').textContent =
+    d.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).replace(/^\w/,c=>c.toUpperCase());
 
-// ── INIT ────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded',async()=>{
-  const saved=localStorage.getItem('timer5');
-  if(saved){const t=JSON.parse(saved);timerTarefaId=t.tarefaId;timerInicio=new Date(t.inicio);timerSeg=(t.base||0)+Math.floor((Date.now()-timerInicio.getTime())/1000);iniciarInterval();atualizarBanner(t);}
+  // Timer restaurado
+  const sv = localStorage.getItem('timer5');
+  if(sv){ const t=JSON.parse(sv); timerTarefaId=t.tarefaId; timerInicio=new Date(t.inicio); timerSeg=(t.base||0)+Math.floor((Date.now()-timerInicio.getTime())/1000); iniciarInterval(); atualizarTimerPill(t); }
+
+  carregarClima();
   await carregarClientes();
-  await Promise.all([carregarAgenda(),carregarTarefasHoje()]);
+  await Promise.all([carregarAgenda(), carregarTasks()]);
 });
 
-// ── CLIENTES ────────────────────────────────────────────────────────
+// ── CLIMA ─────────────────────────────────────────────────────────
+async function carregarClima(){
+  try{
+    const r = await fetch('https://api.open-meteo.com/v1/forecast?latitude=-26.99&longitude=-48.63&current_weather=true&temperature_unit=celsius');
+    const d = await r.json();
+    const t = d?.current_weather?.temperature;
+    if(t!==undefined) document.getElementById('weather-txt').textContent = `${Math.round(t)}°C — Balneário Camboriú`;
+  }catch(e){ document.getElementById('weather-txt').textContent = 'Balneário Camboriú'; }
+}
+
+// ── CLIENTES ──────────────────────────────────────────────────────
 async function carregarClientes(){
-  const data=await api('clientes?select=id,nome_completo,empresa,whatsapp&order=nome_completo');
-  clientes=Array.isArray(data)?data:[];
-  renderStrip();
+  const d = await api('clientes?select=id,nome_completo,empresa,whatsapp&order=nome_completo');
+  clientes = Array.isArray(d) ? d : [];
+  renderClientes();
 }
 
-function renderStrip(){
-  const saved=JSON.parse(localStorage.getItem('timer5')||'{}');
-  document.getElementById('strip-scroll').innerHTML=
-    clientes.map(c=>{
-      const c_cor=cor(c.nome_completo);
-      const isSel=clienteSel?.id===c.id;
-      const isTimer=saved.clienteId===c.id;
-      return`<div class="c-card ${isSel?'sel':''}" id="cc-${c.id}" onclick="selecionarCliente('${c.id}')">
-        <div class="c-av" style="background:${c_cor}22;color:${c_cor};border-color:${isSel?'#fff':c_cor+'33'}">
-          ${ini(c.nome_completo)}
-          <div class="c-timer ${isTimer?'on':''}" id="ctimer-${c.id}"></div>
-        </div>
-        <div class="c-label">${c.nome_completo.split(' ')[0]}</div>
-      </div>`;
-    }).join('')+
-    `<div class="c-add-btn" onclick="adicionarEventual()">
-      <div class="c-add-circle">+</div>
-      <div class="c-add-lbl">Eventual</div>
+function renderClientes(){
+  const saved = JSON.parse(localStorage.getItem('timer5')||'{}');
+  document.getElementById('clients-list').innerHTML = clientes.map(c=>{
+    const c_cor = cor(c.nome_completo);
+    const hasTimer = saved.clienteId === c.id;
+    return`<div class="client-row" id="cr-${c.id}" onclick="abrirCliente('${c.id}')">
+      <div class="cr-av" style="background:${c_cor}">${ini(c.nome_completo)}</div>
+      <div class="cr-info">
+        <div class="cr-nome">${c.nome_completo}</div>
+        <div class="cr-meta">${c.empresa||'—'}</div>
+      </div>
+      <div class="cr-timer ${hasTimer?'on':''}" id="crt-${c.id}"></div>
+      <div class="cr-open">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </div>
     </div>`;
+  }).join('');
 }
 
-function selecionarCliente(id){
-  document.querySelectorAll('.c-card').forEach(c=>c.classList.remove('sel'));
-  document.getElementById('cc-'+id)?.classList.add('sel');
-  clienteSel=clientes.find(c=>c.id===id)||null;
-  // Scroll para o card selecionado
-  document.getElementById('cc-'+id)?.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});
-  toast(`${clienteSel?.nome_completo.split(' ')[0]} selecionado`);
-}
-
-function adicionarEventual(){
-  const nome=prompt('Nome do projeto ou cliente eventual:');
-  if(!nome)return;
-  const temp={id:'temp-'+Date.now(),nome_completo:nome,empresa:'Eventual',whatsapp:''};
-  clientes.unshift(temp);
-  renderStrip();
-  selecionarCliente(temp.id);
-}
-
-// ── AGENDA ─────────────────────────────────────────────────────────
+// ── AGENDA ────────────────────────────────────────────────────────
 async function carregarAgenda(){
-  const data=await api(`agenda?select=id,titulo,tipo,hora,meet_link&data=eq.${hoje()}&order=hora`)||[];
-  const lista=document.getElementById('comp-lista');
-  document.getElementById('comp-count').textContent=data.length;
-  if(!data.length){lista.innerHTML='<div class="empty" style="padding:14px"><div class="empty-icon">📅</div><p>Nenhum compromisso hoje</p></div>';return;}
-  const cores={captacao:'var(--blue)',entrega:'var(--green)',reuniao:'var(--purple)',outro:'var(--ink3)'};
-  lista.innerHTML=data.map(e=>`
-    <div class="comp-card" ${e.meet_link?`onclick="window.open('${e.meet_link}','_blank')"`:''}>
-      <div class="comp-hora">${e.hora?e.hora.slice(0,5):'—'}</div>
-      <div class="comp-dot" style="background:${cores[e.tipo]||cores.outro}"></div>
-      <div class="comp-info">
-        <div class="comp-titulo">${e.titulo}</div>
-        <div class="comp-meta">${e.tipo||''}${e.meet_link?' · 🔗 Meet':''}</div>
+  const d = await api(`agenda?select=id,titulo,tipo,hora,meet_link&data=eq.${hoje()}&order=hora`)||[];
+  const body = document.getElementById('agenda-body');
+  const cores = {captacao:'var(--accent)',entrega:'var(--green)',reuniao:'var(--purple)',outro:'var(--ink3)'};
+  if(!d.length){ body.innerHTML='<div class="empty-msg">Nenhum compromisso para hoje</div>'; return; }
+  body.innerHTML = d.map(e=>`
+    <div class="agenda-item" ${e.meet_link?`style="cursor:pointer" onclick="window.open('${e.meet_link}','_blank')"`:''}>
+      <span class="ag-time">${e.hora?e.hora.slice(0,5):'—'}</span>
+      <div class="ag-dot" style="background:${cores[e.tipo]||cores.outro}"></div>
+      <div class="ag-info">
+        <div class="ag-titulo">${e.titulo}</div>
+        <div class="ag-meta">${e.tipo||''}${e.meet_link?' · Meet':''}</div>
       </div>
     </div>`).join('');
 }
 
-// ── TAREFAS DO DIA ──────────────────────────────────────────────────
-async function carregarTarefasHoje(){
-  // Pega tarefas criadas hoje ou em andamento
-  const data=await api(`tarefas?select=*,clientes(nome_completo)&status=neq.concluida&order=created_at.desc`)||[];
-  tarefas=Array.isArray(data)?data:[];
-  renderTarefas();
+// ── TASKS ─────────────────────────────────────────────────────────
+async function carregarTasks(){
+  const d = await api(`tarefas?select=*,clientes(nome_completo)&status=neq.concluida&order=created_at.desc`)||[];
+  tasks = Array.isArray(d) ? d : [];
+  renderTasks();
 }
 
-function renderTarefas(){
-  const lista=document.getElementById('tarefas-lista');
-  document.getElementById('tarefas-count').textContent=tarefas.length;
-  if(!tarefas.length){
-    lista.innerHTML='<div class="empty"><div class="empty-icon">◫</div><p>Nenhuma tarefa. Adicione acima ou selecione do escopo!</p></div>';
-    return;
-  }
-  lista.innerHTML=tarefas.map(t=>{
-    const running=timerTarefaId===t.id;
-    const catInfo=CAT[t.categoria]||CAT.geral;
-    const clienteNome=t.clientes?.nome_completo?.split(' ')[0]||'';
-    const tempo=running?`<span class="tr-tempo running" id="tt-${t.id}">${fmtL(timerSeg)}</span>`:t.tempo_total>0?`<span class="tr-tempo">${fmtS(t.tempo_total)}</span>`:'';
-    return`
-      <div class="tarefa-row ${running?'running':''}" id="tr-${t.id}">
-        <div class="tr-play ${running?'running':''}" onclick="${running?'pararTimer()':'iniciarTimer(\''+t.id+'\')'}">
-          ${running?'■':'▶'}
-        </div>
-        <div class="tr-info">
-          <div class="tr-titulo">${t.titulo}</div>
-          <div class="tr-meta">
-            ${clienteNome?`<span class="tr-cliente">${clienteNome}</span>`:''}
-            <span class="tr-cat cat-${t.categoria}">${catInfo.e} ${catInfo.l}</span>
-            ${tempo}
-          </div>
-        </div>
-        <div class="tr-check" onclick="concluirTarefa('${t.id}')">✓</div>
-      </div>`;
-  }).join('');
+function renderTasks(){
+  const lista = document.getElementById('tasks-list');
+  if(!tasks.length){ lista.innerHTML='<div class="empty-msg">Nenhuma tarefa ainda. Adicione abaixo.</div>'; return; }
+  lista.innerHTML = tasks.map(t => taskHTML(t)).join('');
 }
 
-// ── NOVA TAREFA ─────────────────────────────────────────────────────
-async function adicionarTarefa(){
-  const titulo=document.getElementById('nova-input').value.trim();
-  const cat=document.getElementById('nova-cat').value;
-  if(!titulo){toast('Preencha o nome da tarefa','er');return;}
-  document.getElementById('nova-input').value='';
-  const res=await fetch(`${SB}/rest/v1/tarefas`,{
-    method:'POST',
-    headers:{'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json','Prefer':'return=representation'},
-    body:JSON.stringify({cliente_id:clienteSel?.id||null,titulo,categoria:cat,status:'pendente',tempo_total:0,created_at:new Date().toISOString()})
-  }).then(r=>r.json());
-  if(res?.[0]){tarefas.unshift({...res[0],clientes:clienteSel?{nome_completo:clienteSel.nome_completo}:null});renderTarefas();toast(`Tarefa adicionada!`);}
+function taskHTML(t){
+  const running = timerTarefaId === t.id;
+  const done = t.status === 'concluida';
+  const catLabel = CAT[t.categoria]||'Geral';
+  const clienteNome = t.clientes?.nome_completo?.split(' ')[0]||'';
+  const tempo = running
+    ? `<span class="pi-tempo running" id="pit-${t.id}">${fmtL(timerSeg)}</span>`
+    : t.tempo_total > 0 ? `<span class="pi-tempo">${fmtS(t.tempo_total)}</span>` : '';
+
+  return `<div class="priority-item" id="pi-${t.id}">
+    <div class="pi-check ${done?'done':''}" onclick="concluirTask('${t.id}')">
+      <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+    </div>
+    <div class="pi-info">
+      <div class="pi-titulo ${done?'done':''}">${t.titulo}</div>
+      <div class="pi-meta">
+        ${clienteNome?`<span class="pi-client">${clienteNome}</span>`:''}
+        <span class="pi-cat cat-${t.categoria}">${catLabel}</span>
+      </div>
+    </div>
+    ${tempo}
+    <div class="pi-timer-btn ${running?'running':''}" onclick="${running?'pararTimer()':'iniciarTimer(\''+t.id+'\')'}">
+      ${running
+        ? `<svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="18" height="18"/></svg>`
+        : `<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>`
+      }
+    </div>
+  </div>`;
 }
 
-// ── TIMER ───────────────────────────────────────────────────────────
-async function iniciarTimer(tarefaId){
-  if(timerTarefaId&&timerTarefaId!==tarefaId)await pararTimer();
-  const t=tarefas.find(x=>x.id===tarefaId);
-  if(!t)return;
-  timerTarefaId=tarefaId;timerInicio=new Date();timerSeg=t.tempo_total||0;
-  const cli=clienteSel||clientes.find(c=>c.id===t.cliente_id);
-  const sessao=await fetch(`${SB}/rest/v1/tempo_sessoes`,{
-    method:'POST',headers:{'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json','Prefer':'return=representation'},
-    body:JSON.stringify({tarefa_id:tarefaId,cliente_id:t.cliente_id||null,inicio:timerInicio.toISOString(),categoria:t.categoria})
-  }).then(r=>r.json());
-  const saved={tarefaId,sessaoId:sessao?.[0]?.id,clienteId:t.cliente_id,clienteNome:cli?.nome_completo?.split(' ')[0]||'',tarefaTitulo:t.titulo,categoria:t.categoria,inicio:timerInicio.toISOString(),base:t.tempo_total||0};
-  localStorage.setItem('timer5',JSON.stringify(saved));
-  await fetch(`${SB}/rest/v1/tarefas?id=eq.${tarefaId}`,{method:'PATCH',headers:{'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json'},body:JSON.stringify({status:'em_andamento'})});
-  const idx=tarefas.findIndex(x=>x.id===tarefaId);if(idx>=0)tarefas[idx].status='em_andamento';
-  iniciarInterval();atualizarBanner(saved);renderTarefas();
-  if(t.cliente_id)document.getElementById('ctimer-'+t.cliente_id)?.classList.add('on');
-  toast(`▶ ${CAT[t.categoria]?.e||'📌'} ${t.titulo}`);
+async function addTask(){
+  const titulo = document.getElementById('at-input').value.trim();
+  const cat = document.getElementById('at-cat').value;
+  if(!titulo) return;
+  document.getElementById('at-input').value = '';
+  const res = await fetch(`${SB}/rest/v1/tarefas`,{method:'POST',headers:{'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify({titulo,categoria:cat,status:'pendente',tempo_total:0,created_at:new Date().toISOString()})}).then(r=>r.json());
+  if(res?.[0]){ tasks.unshift({...res[0],clientes:null}); renderTasks(); toast('Tarefa adicionada'); }
+}
+
+async function concluirTask(id){
+  if(timerTarefaId===id) await pararTimer();
+  await fetch(`${SB}/rest/v1/tarefas?id=eq.${id}`,{method:'PATCH',headers:{'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json'},body:JSON.stringify({status:'concluida',concluida_em:new Date().toISOString()})});
+  tasks = tasks.filter(t=>t.id!==id);
+  renderTasks();
+}
+
+// ── TIMER ─────────────────────────────────────────────────────────
+async function iniciarTimer(id){
+  if(timerTarefaId&&timerTarefaId!==id) await pararTimer();
+  const t = tasks.find(x=>x.id===id)||cpTarefas.find(x=>x.id===id);
+  if(!t) return;
+  timerTarefaId=id; timerInicio=new Date(); timerSeg=t.tempo_total||0;
+  const cli = clienteAtual||clientes.find(c=>c.id===t.cliente_id);
+  const sessao = await fetch(`${SB}/rest/v1/tempo_sessoes`,{method:'POST',headers:{'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify({tarefa_id:id,cliente_id:t.cliente_id||null,inicio:timerInicio.toISOString(),categoria:t.categoria})}).then(r=>r.json());
+  const sv = {tarefaId:id,sessaoId:sessao?.[0]?.id,clienteId:t.cliente_id,clienteNome:cli?.nome_completo?.split(' ')[0]||'',tarefaTitulo:t.titulo,inicio:timerInicio.toISOString(),base:t.tempo_total||0};
+  localStorage.setItem('timer5',JSON.stringify(sv));
+  await fetch(`${SB}/rest/v1/tarefas?id=eq.${id}`,{method:'PATCH',headers:{'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json'},body:JSON.stringify({status:'em_andamento'})});
+  [tasks,cpTarefas].forEach(arr=>{const i=arr.findIndex(x=>x.id===id);if(i>=0)arr[i].status='em_andamento';});
+  iniciarInterval(); atualizarTimerPill(sv); renderTasks();
+  if(t.cliente_id){ document.getElementById('crt-'+t.cliente_id)?.classList.add('on'); renderClientes(); }
+  toast(`Cronômetro iniciado — ${t.titulo}`,'ok');
 }
 
 async function pararTimer(){
-  if(!timerTarefaId)return;
-  clearInterval(timerInterval);timerInterval=null;
-  const saved=JSON.parse(localStorage.getItem('timer5')||'{}');
-  const duracao=Math.floor((Date.now()-new Date(saved.inicio).getTime())/1000);
-  const totalNovo=(saved.base||0)+duracao;
-  if(saved.sessaoId)await fetch(`${SB}/rest/v1/tempo_sessoes?id=eq.${saved.sessaoId}`,{method:'PATCH',headers:{'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json'},body:JSON.stringify({fim:new Date().toISOString(),duracao})});
-  await fetch(`${SB}/rest/v1/tarefas?id=eq.${timerTarefaId}`,{method:'PATCH',headers:{'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json'},body:JSON.stringify({tempo_total:totalNovo})});
-  const idx=tarefas.findIndex(x=>x.id===timerTarefaId);if(idx>=0)tarefas[idx].tempo_total=totalNovo;
+  if(!timerTarefaId) return;
+  clearInterval(timerInterval); timerInterval=null;
+  const sv = JSON.parse(localStorage.getItem('timer5')||'{}');
+  const duracao = Math.floor((Date.now()-new Date(sv.inicio).getTime())/1000);
+  const total = (sv.base||0)+duracao;
+  if(sv.sessaoId) await fetch(`${SB}/rest/v1/tempo_sessoes?id=eq.${sv.sessaoId}`,{method:'PATCH',headers:{'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json'},body:JSON.stringify({fim:new Date().toISOString(),duracao})});
+  await fetch(`${SB}/rest/v1/tarefas?id=eq.${timerTarefaId}`,{method:'PATCH',headers:{'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json'},body:JSON.stringify({tempo_total:total})});
+  [tasks,cpTarefas].forEach(arr=>{const i=arr.findIndex(x=>x.id===timerTarefaId);if(i>=0)arr[i].tempo_total=total;});
   localStorage.removeItem('timer5');
-  document.querySelectorAll('.c-timer').forEach(d=>d.classList.remove('on'));
-  timerTarefaId=null;timerInicio=null;timerSeg=0;
-  document.getElementById('timer-banner').classList.remove('on');
-  renderTarefas();toast(`■ ${fmtS(duracao)} registrados`);
+  document.querySelectorAll('.cr-timer').forEach(d=>d.classList.remove('on'));
+  timerTarefaId=null; timerInicio=null; timerSeg=0;
+  document.getElementById('timer-pill').classList.remove('on');
+  renderTasks(); renderClientes();
+  toast(`${fmtS(duracao)} registrados`,'ok');
 }
 
 function iniciarInterval(){
   clearInterval(timerInterval);
-  timerInterval=setInterval(()=>{
+  timerInterval = setInterval(()=>{
     timerSeg++;
-    document.getElementById('tb-time').textContent=fmtL(timerSeg);
-    const el=document.getElementById('tt-'+timerTarefaId);
-    if(el)el.textContent=fmtL(timerSeg);
+    document.getElementById('timer-pill-label').textContent = fmtL(timerSeg);
+    const el = document.getElementById('pit-'+timerTarefaId);
+    if(el) el.textContent = fmtL(timerSeg);
   },1000);
 }
 
-function atualizarBanner(saved){
-  document.getElementById('tb-cliente').textContent=saved.clienteNome||'';
-  document.getElementById('tb-titulo').textContent=saved.tarefaTitulo||'';
-  document.getElementById('tb-time').textContent=fmtL(timerSeg);
-  document.getElementById('timer-banner').classList.add('on');
+function atualizarTimerPill(sv){
+  document.getElementById('timer-pill-label').textContent = fmtL(timerSeg);
+  document.getElementById('timer-pill').classList.add('on');
 }
 
-// ── CONCLUIR ────────────────────────────────────────────────────────
-async function concluirTarefa(tarefaId){
-  if(timerTarefaId===tarefaId)await pararTimer();
-  await fetch(`${SB}/rest/v1/tarefas?id=eq.${tarefaId}`,{method:'PATCH',headers:{'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json'},body:JSON.stringify({status:'concluida',concluida_em:new Date().toISOString()})});
-  tarefas=tarefas.filter(t=>t.id!==tarefaId);
-  renderTarefas();toast('✅ Concluída!');
+function irParaClienteTimer(){
+  const sv = JSON.parse(localStorage.getItem('timer5')||'{}');
+  if(sv.clienteId) abrirCliente(sv.clienteId);
 }
 
-// ── ESCOPO ──────────────────────────────────────────────────────────
-let escopoClienteSel=null,servicosSelecionados=new Set(),escopoServicos=[];
-let modoEscopo='lista'; // 'lista' | 'novo'
+// ── CLIENTE PANEL ─────────────────────────────────────────────────
+async function abrirCliente(id){
+  clienteAtual = clientes.find(c=>c.id===id);
+  if(!clienteAtual) return;
+  const c_cor = cor(clienteAtual.nome_completo);
 
-async function abrirEscopo(){
-  escopoClienteSel=clienteSel||clientes[0]||null;
-  servicosSelecionados.clear();
-  modoEscopo='lista';
-  await renderEscopo();
-  document.getElementById('overlay-escopo').classList.add('open');
-}
+  document.getElementById('cp-header').innerHTML=`
+    <div class="cp-av" style="background:${c_cor}">${ini(clienteAtual.nome_completo)}</div>
+    <div class="cp-info">
+      <div class="cp-nome">${clienteAtual.nome_completo}</div>
+      <div class="cp-empresa">${clienteAtual.empresa||'—'}</div>
+    </div>
+    <button class="cp-close" onclick="fecharClientePanel()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>`;
 
-function fecharEscopo(e){if(e.target===document.getElementById('overlay-escopo'))fecharEscopoForce();}
-function fecharEscopoForce(){document.getElementById('overlay-escopo').classList.remove('open');}
+  document.querySelectorAll('.client-row').forEach(r=>r.classList.remove('active'));
+  document.getElementById('cr-'+id)?.classList.add('active');
 
-async function renderEscopo(){
-  const body=document.getElementById('sheet-body');
-  const foot=document.getElementById('sheet-foot');
+  document.getElementById('client-panel').classList.add('open');
+  document.getElementById('overlay-bg').classList.add('show');
 
-  if(modoEscopo==='novo'){
-    document.getElementById('sheet-titulo').textContent='Novo serviço';
-    body.innerHTML=`
-      <div class="fg"><label>Cliente</label>
-        <select id="es-cliente">
-          ${clientes.map(c=>`<option value="${c.id}" ${escopoClienteSel?.id===c.id?'selected':''}>${c.nome_completo}</option>`).join('')}
-        </select>
-      </div>
-      <div class="fg"><label>Serviço / entregável</label><input id="es-titulo" placeholder="Ex: Landing Page, Gestão Meta Ads, Linha Editorial…"></div>
-      <div class="row2">
-        <div class="fg"><label>Categoria</label>
-          <select id="es-cat">
-            ${Object.entries(CAT).map(([k,v])=>`<option value="${k}">${v.e} ${v.l}</option>`).join('')}
-          </select>
-        </div>
-        <div class="fg"><label>Prazo</label><input id="es-prazo" type="date"></div>
-      </div>
-      <div class="fg"><label>Observações</label><input id="es-obs" placeholder="Detalhes, briefing…"></div>`;
-    foot.innerHTML=`
-      <button class="btn btn-ghost" onclick="modoEscopo='lista';renderEscopo()">← Voltar</button>
-      <button class="btn btn-primary btn-full" onclick="salvarServico()">Salvar serviço</button>`;
-    return;
-  }
+  cpSetTab('escopo');
+  await Promise.all([carregarCpStats(), carregarEscopoCliente(), carregarTarefasCliente()]);
 
-  // Modo lista
-  document.getElementById('sheet-titulo').textContent='Escopo do cliente';
-
-  // Seletor de cliente
-  const chipsHTML=`<div class="escopo-cliente-sel">${clientes.map(c=>`
-    <div class="ec-chip ${escopoClienteSel?.id===c.id?'active':''}" onclick="mudarClienteEscopo('${c.id}')">${c.nome_completo.split(' ')[0]}</div>`).join('')}</div>`;
-
-  // Busca serviços do cliente
-  if(escopoClienteSel){
-    escopoServicos=await api(`projetos?select=id,titulo,status,prazo,descricao&cliente_id=eq.${escopoClienteSel.id}&order=created_at.desc`)||[];
-  }
-
-  const servicosHTML=escopoServicos.length
-    ?escopoServicos.map(s=>{
-      const isSel=servicosSelecionados.has(s.id);
-      const statusCor={entregue:'var(--green)',em_andamento:'var(--blue)',briefing:'var(--orange)',revisao:'var(--teal)',pausado:'var(--ink3)'}[s.status]||'var(--ink3)';
-      const prazo=s.prazo?new Date(s.prazo+'T00:00:00').toLocaleDateString('pt-BR',{day:'numeric',month:'short'}):'';
-      return`<div class="servico-card ${isSel?'selected':''}" onclick="toggleServico('${s.id}')">
-        <div class="sc-info">
-          <div class="sc-titulo">${s.titulo}</div>
-          <div class="sc-prazo">${prazo?'📅 '+prazo:''}</div>
-        </div>
-        <span class="sc-status" style="background:${statusCor}22;color:${statusCor}">${s.status}</span>
-        <div class="sc-check">${isSel?'✓':''}</div>
-      </div>`;
-    }).join('')
-    :`<div class="empty"><div class="empty-icon">◫</div><p>Nenhum serviço no escopo.<br>Adicione um novo abaixo!</p></div>`;
-
-  body.innerHTML=chipsHTML+servicosHTML;
-  foot.innerHTML=`
-    <button class="btn btn-ghost" onclick="modoEscopo='novo';renderEscopo()">+ Novo serviço</button>
-    <button class="btn btn-primary" onclick="adicionarDoEscopo()" ${servicosSelecionados.size?'':'disabled'} style="flex:1;justify-content:center">
-      Adicionar ${servicosSelecionados.size?'('+servicosSelecionados.size+')':''}
+  // Actions
+  document.getElementById('cp-actions').innerHTML=`
+    <button class="cp-action" onclick="abrirWorkflow()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Report
+    </button>
+    <button class="cp-action" onclick="abrirWorkflow()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 9.81 19.79 19.79 0 0 1 1.17 4.14 2 2 0 0 1 3.12 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21 16.92z"/></svg>
+      WhatsApp
+    </button>
+    <button class="cp-action primary" onclick="abrirNovoServico()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Serviço
     </button>`;
 }
 
-async function mudarClienteEscopo(id){
-  escopoClienteSel=clientes.find(c=>c.id===id)||null;
-  servicosSelecionados.clear();
-  await renderEscopo();
+function fecharClientePanel(){
+  document.getElementById('client-panel').classList.remove('open');
+  document.getElementById('overlay-bg').classList.remove('show');
+  document.querySelectorAll('.client-row').forEach(r=>r.classList.remove('active'));
+  clienteAtual = null;
 }
 
-function toggleServico(id){
-  if(servicosSelecionados.has(id))servicosSelecionados.delete(id);
-  else servicosSelecionados.add(id);
-  renderEscopo();
+function cpSetTab(tab){
+  cpTabAtiva = tab;
+  document.querySelectorAll('.cp-tab').forEach((t,i)=>{
+    t.classList.toggle('active',['escopo','tarefas','tempo'][i]===tab);
+  });
+  renderCpBody();
+}
+
+async function carregarCpStats(){
+  const [sess,proj] = await Promise.all([
+    api(`tempo_sessoes?select=duracao&cliente_id=eq.${clienteAtual.id}&created_at=gte.${semI()}T00:00:00`),
+    api(`projetos?select=status&cliente_id=eq.${clienteAtual.id}`)
+  ]);
+  const total = (sess||[]).reduce((a,s)=>a+(s.duracao||0),0);
+  const ent = (proj||[]).filter(p=>p.status==='entregue').length;
+  const at  = (proj||[]).filter(p=>p.status==='em_andamento').length;
+  document.getElementById('cp-stats').innerHTML=`
+    <div class="cp-stat"><div class="cp-stat-v" style="color:var(--accent)">${fmtS(total)}</div><div class="cp-stat-l">Semana</div></div>
+    <div class="cp-stat"><div class="cp-stat-v" style="color:var(--green)">${ent}</div><div class="cp-stat-l">Entregues</div></div>
+    <div class="cp-stat"><div class="cp-stat-v" style="color:var(--orange)">${at}</div><div class="cp-stat-l">Em andamento</div></div>`;
+}
+
+async function carregarEscopoCliente(){
+  cpServicos = await api(`projetos?select=id,titulo,status,prazo&cliente_id=eq.${clienteAtual.id}&order=created_at.desc`)||[];
+}
+
+async function carregarTarefasCliente(){
+  cpTarefas = await api(`tarefas?select=*&cliente_id=eq.${clienteAtual.id}&order=created_at.desc`)||[];
+}
+
+function renderCpBody(){
+  const body = document.getElementById('cp-body');
+  if(cpTabAtiva==='escopo') renderEscopo(body);
+  else if(cpTabAtiva==='tarefas') renderCpTarefas(body);
+  else renderCpTempo(body);
+}
+
+function renderEscopo(body){
+  const statusCor={entregue:'var(--green)',em_andamento:'var(--accent)',briefing:'var(--orange)',revisao:'var(--purple)',pausado:'var(--ink3)'};
+  body.innerHTML=`<div class="cp-section">
+    <div class="cp-section-title">Serviços <span class="cp-add-btn" onclick="abrirNovoServico()">+ Adicionar</span></div>
+    ${cpServicos.length
+      ? cpServicos.map(s=>{
+          const prazo=s.prazo?new Date(s.prazo+'T00:00:00').toLocaleDateString('pt-BR',{day:'numeric',month:'short',year:'numeric'}):'Sem prazo';
+          const c=statusCor[s.status]||'var(--ink3)';
+          return`<div class="service-item">
+            <div class="si-status" style="background:${c}"></div>
+            <div class="si-info">
+              <div class="si-titulo">${s.titulo}</div>
+              <div class="si-prazo">${prazo}</div>
+            </div>
+            <div class="si-add" onclick="addServicoDia('${s.id}')">+ Hoje</div>
+          </div>`;
+        }).join('')
+      :'<div class="empty-msg">Nenhum serviço cadastrado</div>'}
+  </div>`;
+}
+
+function renderCpTarefas(body){
+  const pend = cpTarefas.filter(t=>t.status!=='concluida');
+  const conc = cpTarefas.filter(t=>t.status==='concluida').slice(0,5);
+  body.innerHTML=`<div class="cp-section">
+    <div class="cp-section-title">Tarefas</div>
+    ${pend.length ? pend.map(t=>taskHTML(t)).join('') : '<div class="empty-msg">Sem tarefas pendentes</div>'}
+    ${conc.length ? `<div style="margin-top:12px;font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">Concluídas</div>${conc.map(t=>taskHTML(t)).join('')}` : ''}
+  </div>`;
+}
+
+async function renderCpTempo(body){
+  body.innerHTML='<div class="empty-msg">Carregando…</div>';
+  const sessoes = await api(`tempo_sessoes?select=*,tarefas(titulo)&cliente_id=eq.${clienteAtual.id}&order=created_at.desc&limit=15`)||[];
+  if(!sessoes.length){ body.innerHTML='<div class="empty-msg">Nenhuma sessão ainda</div>'; return; }
+  body.innerHTML=`<div class="cp-section">${sessoes.map(s=>{
+    const dt=new Date(s.created_at).toLocaleDateString('pt-BR',{day:'numeric',month:'short'});
+    return`<div class="service-item">
+      <div class="si-status" style="background:var(--accent)"></div>
+      <div class="si-info">
+        <div class="si-titulo">${s.tarefas?.titulo||'Sessão'}</div>
+        <div class="si-prazo">${CAT[s.categoria]||'Geral'} · ${dt}</div>
+      </div>
+      <span style="font-size:13px;font-weight:700;color:var(--accent)">${fmtS(s.duracao||0)}</span>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+// ── ESCOPO ────────────────────────────────────────────────────────
+async function addServicoDia(projetoId){
+  const s = cpServicos.find(x=>x.id===projetoId);
+  if(!s) return;
+  const res = await fetch(`${SB}/rest/v1/tarefas`,{method:'POST',headers:{'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify({cliente_id:clienteAtual.id,projeto_id:projetoId,titulo:s.titulo,categoria:'geral',status:'pendente',tempo_total:0,created_at:new Date().toISOString()})}).then(r=>r.json());
+  if(res?.[0]){
+    tasks.unshift({...res[0],clientes:{nome_completo:clienteAtual.nome_completo}});
+    cpTarefas.unshift(res[0]);
+    renderTasks(); renderCpBody();
+    await fetch(`${SB}/rest/v1/projetos?id=eq.${projetoId}`,{method:'PATCH',headers:{'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json'},body:JSON.stringify({status:'em_andamento'})});
+    toast(`"${s.titulo}" adicionado ao dia`);
+  }
+}
+
+function abrirNovoServico(){
+  document.getElementById('modal-servico').classList.add('open');
+  setTimeout(()=>document.getElementById('ms-titulo')?.focus(),200);
 }
 
 async function salvarServico(){
-  const clienteId=document.getElementById('es-cliente')?.value;
-  const titulo=document.getElementById('es-titulo')?.value.trim();
-  const cat=document.getElementById('es-cat')?.value;
-  const prazo=document.getElementById('es-prazo')?.value;
-  const obs=document.getElementById('es-obs')?.value;
-  if(!titulo){toast('Preencha o nome do serviço','er');return;}
-  const res=await fetch(`${SB}/rest/v1/projetos`,{
-    method:'POST',
-    headers:{'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json','Prefer':'return=representation'},
-    body:JSON.stringify({cliente_id:clienteId||null,titulo,status:'briefing',prazo:prazo||null,descricao:`[${cat}]${obs?' · '+obs:''}`})
-  }).then(r=>r.json());
-  toast('Serviço adicionado ao escopo!');
-  modoEscopo='lista';
-  if(clienteId)escopoClienteSel=clientes.find(c=>c.id===clienteId)||escopoClienteSel;
-  await renderEscopo();
+  const titulo = document.getElementById('ms-titulo')?.value.trim();
+  const prazo  = document.getElementById('ms-prazo')?.value;
+  const status = document.getElementById('ms-status')?.value;
+  if(!titulo||!clienteAtual){ toast('Preencha o nome do serviço','er'); return; }
+  const res = await fetch(`${SB}/rest/v1/projetos`,{method:'POST',headers:{'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify({cliente_id:clienteAtual.id,titulo,status:status||'briefing',prazo:prazo||null,created_at:new Date().toISOString()})}).then(r=>r.json());
+  if(res?.[0]){ cpServicos.unshift(res[0]); renderCpBody(); fecharModal('modal-servico'); toast('Serviço adicionado'); }
 }
 
-async function adicionarDoEscopo(){
-  const selecionados=escopoServicos.filter(s=>servicosSelecionados.has(s.id));
-  for(const s of selecionados){
-    const cat=s.descricao?.match(/\[(\w+)\]/)?.[1]||'geral';
-    const res=await fetch(`${SB}/rest/v1/tarefas`,{
-      method:'POST',
-      headers:{'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json','Prefer':'return=representation'},
-      body:JSON.stringify({cliente_id:escopoClienteSel?.id||null,projeto_id:s.id,titulo:s.titulo,categoria:CAT[cat]?cat:'geral',status:'pendente',tempo_total:0,created_at:new Date().toISOString()})
-    }).then(r=>r.json());
-    if(res?.[0])tarefas.unshift({...res[0],clientes:escopoClienteSel?{nome_completo:escopoClienteSel.nome_completo}:null});
-    // Atualiza status do projeto para em_andamento
-    await fetch(`${SB}/rest/v1/projetos?id=eq.${s.id}`,{method:'PATCH',headers:{'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json'},body:JSON.stringify({status:'em_andamento'})});
-  }
-  renderTarefas();
-  fecharEscopoForce();
-  toast(`${selecionados.length} tarefa(s) adicionada(s) ao dia!`);
+// ── ESCOPO PICKER (do homepage) ────────────────────────────────────
+function abrirEscopoPicker(){
+  if(!clientes.length){ toast('Nenhum cliente ativo','er'); return; }
+  if(!clienteAtual && clientes[0]) clienteAtual = clientes[0];
+  // Abre o panel do cliente
+  abrirCliente(clienteAtual?.id||clientes[0].id);
 }
 
-// ── CHAT ────────────────────────────────────────────────────────────
-function chipCmd(cmd){
-  document.getElementById('chat-input').value=cmd;
-  enviarChat();
-}
+// ── MODAIS ────────────────────────────────────────────────────────
+function fecharModal(id){ document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m=>{
+  m.addEventListener('click',e=>{ if(e.target===m) m.classList.remove('open'); });
+});
+
+// ── CHAT ──────────────────────────────────────────────────────────
+function quickChat(msg){ document.getElementById('chat-in').value=msg; enviarChat(); }
 
 async function enviarChat(){
-  const input=document.getElementById('chat-input');
-  const msg=input.value.trim();
-  if(!msg)return;
+  const input = document.getElementById('chat-in');
+  const msg = input.value.trim(); if(!msg) return;
   input.value='';
-  const msgs=document.getElementById('chat-msgs');
-  msgs.innerHTML+=`<div class="chat-msg user">${msg}</div><div class="chat-msg typing" id="ctyping">···</div>`;
-  msgs.scrollTop=msgs.scrollHeight;
+  const result = document.getElementById('chat-result');
+  result.textContent = 'Processando…'; result.classList.add('show');
 
-  // Contexto rico
-  const tarefasPend=tarefas.filter(t=>t.status!=='concluida').length;
-  const clienteCtx=clienteSel?`Cliente selecionado: ${clienteSel.nome_completo}.`:'Nenhum cliente selecionado.';
-  const sistema=`Você é o assistente de Patrick, CEO da 5essência Marketing (agência premium, Balneário Camboriú, SC). Você tem acesso ao sistema de gestão de clientes. ${clienteCtx} Tarefas pendentes hoje: ${tarefasPend}. Clientes ativos: ${clientes.length}. Responda de forma direta, prática e em português. Pode sugerir ações concretas.`;
+  const tarefasPend = tasks.length;
+  const clienteCtx = clienteAtual?`Cliente em foco: ${clienteAtual.nome_completo} (${clienteAtual.empresa||'—'}). `:'';
+  const sistema = `Você é o assistente de Patrick, CEO da 5essência Marketing (agência premium, Balneário Camboriú, SC). ${clienteCtx}Tarefas hoje: ${tarefasPend}. Clientes: ${clientes.length}. Responda de forma direta, máximo 2 frases. Em português.`;
 
   try{
-    const r=await fetch(`${SB}/functions/v1/chat-assistant`,{
-      method:'POST',
-      headers:{'Content-Type':'application/json','apikey':KEY,'Authorization':'Bearer '+KEY},
-      body:JSON.stringify({system:sistema,messages:[{role:'user',content:msg}]})
-    });
-    const d=await r.json();
-    document.getElementById('ctyping').className='chat-msg ai';
-    document.getElementById('ctyping').textContent=d.resposta||'Não consegui processar. Tente novamente.';
-    document.getElementById('ctyping').id='';
-  }catch(e){
-    document.getElementById('ctyping').className='chat-msg ai';
-    document.getElementById('ctyping').textContent='Erro de conexão.';
-    document.getElementById('ctyping').id='';
-  }
-  msgs.scrollTop=msgs.scrollHeight;
+    const r = await fetch(`${SB}/functions/v1/chat-assistant`,{method:'POST',headers:{'Content-Type':'application/json','apikey':KEY,'Authorization':'Bearer '+KEY},body:JSON.stringify({system:sistema,messages:[{role:'user',content:msg}]})});
+    const d = await r.json();
+    result.textContent = d.resposta||'Não consegui processar.';
+  }catch(e){ result.textContent='Erro de conexão.'; }
 }
 
-// ── TOAST ────────────────────────────────────────────────────────────
+// ── WORKFLOW ──────────────────────────────────────────────────────
+function abrirWorkflow(){ window.open('workflow-5essencia.html','_blank'); }
+
+// ── VIEWS (NAV) ───────────────────────────────────────────────────
+function setView(v){
+  document.getElementById('tb-section').textContent = {home:'Dashboard',clientes:'Clientes'}[v]||v;
+  document.querySelectorAll('.sb-btn').forEach(b=>b.classList.remove('active'));
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────
 function toast(msg,tipo='ok'){
-  const wrap=document.getElementById('toasts');
-  const el=document.createElement('div');
-  el.className='toast';
-  const c=tipo==='er'?'#FF3B45':'#2DD47A';
-  el.innerHTML=`<div class="tdot" style="background:${c};box-shadow:0 0 8px ${c}"></div>${msg}`;
+  const wrap = document.getElementById('toasts');
+  const el = document.createElement('div');
+  el.className = `toast ${tipo}`;
+  el.textContent = msg;
   wrap.appendChild(el);
-  setTimeout(()=>el.remove(),3200);
+  setTimeout(()=>el.remove(), 3000);
 }
 </script>
 </body>

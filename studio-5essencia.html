@@ -552,7 +552,7 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); font-family:
       </svg>
     </div>
     <div class="sb-divider"></div>
-    <div class="sb-btn" title="Workflow" onclick="abrirWorkflow()">
+    <div class="sb-btn" title="Workflow" onclick="window.open('https://5essenciamarketing-wq.github.io/5ia/workflow-5essencia.html','_blank')" >
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
       </svg>
@@ -867,42 +867,50 @@ async function addTask(){
   const palavras = textoOriginal.split(' ').length;
   const titulo   = palavras <= 6 ? textoOriginal : textoOriginal.slice(0,50);
 
-  const res = await fetch(`${SB}/rest/v1/tarefas`,{
-    method:'POST',
-    headers:{'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json','Prefer':'return=representation'},
-    body:JSON.stringify({
-      cliente_id: clienteAtual?.id||null,
-      titulo,
-      descricao: palavras > 6 ? textoOriginal : null,
-      categoria: cat,
-      status: 'pendente',
-      tempo_total: 0,
-      created_at: new Date().toISOString()
-    })
-  }).then(r=>r.json());
+  try {
+    const r = await fetch(`${SB}/rest/v1/tarefas`,{
+      method:'POST',
+      headers:{'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json','Prefer':'return=representation'},
+      body:JSON.stringify(Object.assign({
+        titulo,
+        categoria:   cat,
+        status:      'pendente',
+        tempo_total: 0,
+        created_at:  new Date().toISOString()
+      }, clienteAtual?.id ? {cliente_id: clienteAtual.id} : {}))
+    });
 
-  if(res?.[0]){
-    tasks.unshift({...res[0], clientes: clienteAtual?{nome_completo:clienteAtual.nome_completo}:null});
-    renderTasks();
-    toast('Tarefa adicionada');
+    const res = await r.json();
 
-    // Em background, se texto longo, melhora o título com IA
-    if(palavras > 6){
-      resumirEmTitulo(textoOriginal).then(async tituloIA => {
-        if(tituloIA !== titulo){
-          await fetch(`${SB}/rest/v1/tarefas?id=eq.${res[0].id}`,{
-            method:'PATCH',
-            headers:{'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json'},
-            body:JSON.stringify({titulo:tituloIA})
-          });
-          // Atualiza UI
-          const idx = tasks.findIndex(t=>t.id===res[0].id);
-          if(idx>=0){ tasks[idx].titulo = tituloIA; renderTasks(); }
-        }
-      });
+    if(!r.ok){
+      console.error('Erro Supabase:', res);
+      toast('Erro ao salvar: ' + (res?.message || r.status), 'er');
+      return;
     }
-  } else {
-    toast('Erro ao adicionar tarefa — verifique a conexão','er');
+
+    if(res?.[0]){
+      tasks.unshift({...res[0], clientes: clienteAtual ? {nome_completo:clienteAtual.nome_completo} : null});
+      renderTasks();
+      toast('Tarefa adicionada');
+
+      // Em background: se texto longo, melhora título com IA
+      if(palavras > 6){
+        resumirEmTitulo(textoOriginal).then(async tituloIA => {
+          if(tituloIA && tituloIA !== titulo){
+            await fetch(`${SB}/rest/v1/tarefas?id=eq.${res[0].id}`,{
+              method:'PATCH',
+              headers:{'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json'},
+              body:JSON.stringify({titulo:tituloIA})
+            });
+            const idx = tasks.findIndex(t=>t.id===res[0].id);
+            if(idx>=0){ tasks[idx].titulo = tituloIA; renderTasks(); }
+          }
+        });
+      }
+    }
+  } catch(e) {
+    console.error('Erro addTask:', e);
+    toast('Erro de conexão ao adicionar tarefa','er');
   }
 }
 
@@ -1020,11 +1028,11 @@ async function abrirCliente(id){
 
   // Actions
   document.getElementById('cp-actions').innerHTML=`
-    <button class="cp-action" onclick="abrirWorkflow()">
+    <button class="cp-action" onclick="window.open('https://5essenciamarketing-wq.github.io/5ia/workflow-5essencia.html','_blank')" >
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
       Report
     </button>
-    <button class="cp-action" onclick="abrirWorkflow()">
+    <button class="cp-action" onclick="window.open('https://5essenciamarketing-wq.github.io/5ia/workflow-5essencia.html','_blank')" >
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 9.81 19.79 19.79 0 0 1 1.17 4.14 2 2 0 0 1 3.12 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21 16.92z"/></svg>
       WhatsApp
     </button>
@@ -1449,7 +1457,7 @@ async function setView(v){
         <h2 style="font-size:18px;font-weight:700;letter-spacing:-0.4px">Relatórios</h2>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="card" style="cursor:pointer" onclick="abrirWorkflow()">
+        <div class="card" style="cursor:pointer" onclick="window.open('https://5essenciamarketing-wq.github.io/5ia/workflow-5essencia.html','_blank')" >
           <div class="card-body" style="padding:20px">
             <div style="width:36px;height:36px;border-radius:9px;background:var(--accent-l);display:flex;align-items:center;justify-content:center;margin-bottom:12px">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
@@ -1458,7 +1466,7 @@ async function setView(v){
             <div style="font-size:12px;color:var(--ink3)">Envia atualização de processo via WhatsApp para o cliente</div>
           </div>
         </div>
-        <div class="card" style="cursor:pointer" onclick="abrirWorkflow()">
+        <div class="card" style="cursor:pointer" onclick="window.open('https://5essenciamarketing-wq.github.io/5ia/workflow-5essencia.html','_blank')" >
           <div class="card-body" style="padding:20px">
             <div style="width:36px;height:36px;border-radius:9px;background:var(--green-l);display:flex;align-items:center;justify-content:center;margin-bottom:12px">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
@@ -1467,7 +1475,7 @@ async function setView(v){
             <div style="font-size:12px;color:var(--ink3)">Compilado de entregas e métricas do mês para o cliente</div>
           </div>
         </div>
-        <div class="card" style="cursor:pointer" onclick="abrirWorkflow()">
+        <div class="card" style="cursor:pointer" onclick="window.open('https://5essenciamarketing-wq.github.io/5ia/workflow-5essencia.html','_blank')" >
           <div class="card-body" style="padding:20px">
             <div style="width:36px;height:36px;border-radius:9px;background:var(--orange-l);display:flex;align-items:center;justify-content:center;margin-bottom:12px">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
@@ -1476,7 +1484,7 @@ async function setView(v){
             <div style="font-size:12px;color:var(--ink3)">Resultado de campanhas com análise de IA</div>
           </div>
         </div>
-        <div class="card" style="cursor:pointer" onclick="abrirWorkflow()">
+        <div class="card" style="cursor:pointer" onclick="window.open('https://5essenciamarketing-wq.github.io/5ia/workflow-5essencia.html','_blank')" >
           <div class="card-body" style="padding:20px">
             <div style="width:36px;height:36px;border-radius:9px;background:var(--red-l);display:flex;align-items:center;justify-content:center;margin-bottom:12px">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>

@@ -1798,7 +1798,7 @@ async function verificarNotificacoes(){
         const totalFmt = 'R$ '+(totalDevido.toFixed(2).replace('.',','));
         const jurosFmt = juros>0 ? ('\nJuros ('+dias+'d): R$ '+(juros.toFixed(2).replace('.',','))) : '';
         const pixChave = 'ce89b6e3-951a-4485-aff7-5663c3a7d5e1';
-        const msg = 'Olá, '+cli+'!\n\nTudo bem? Gostaríamos de informar que identificamos uma parcela em aberto em nosso sistema:\n\n📋 '+( c.descricao||'Mensalidade 5essência')+'\nVencimento: '+vencFmt+'\nValor: '+totalFmt+jurosFmt+'\n\nPara sua conveniência, segue nossa chave Pix:\n'+pixChave+'\n\nAssim que identificarmos o pagamento, daremos continuidade normalmente. Qualquer dúvida, estamos aqui.\n\nAtenciosamente,\n5essência Marketing';
+        const msg = 'Olá, '+cli+'!\n\nTudo bem? Gostaríamos de informar que identificamos uma parcela em aberto em nosso sistema:\n\n📋 '+( c.descricao||'Mensalidade 5essência')+'\nVencimento: '+vencFmt+'\nValor: '+totalFmt+jurosFmt+'\n\nPara sua conveniência, segue nossa chave Pix:\n'+pixChave+'\n\nQualquer dúvida, estamos à disposição.\n\nAtenciosamente,\n5essência Marketing';
 
         const msgEscapada = msg.replace(/`/g,"'").replace(/\$/g,"\\$");
         return `<div id="cob-${c.id}" style="background:rgba(255,59,69,0.06);border:1px solid rgba(255,59,69,0.2);border-radius:12px;padding:12px 14px">

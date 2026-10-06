@@ -1798,7 +1798,8 @@ async function verificarNotificacoes(){
         const valorFmt = 'R$ '+((c.valor||0).toFixed(2).replace('.',','));
         const totalFmt = 'R$ '+(totalDevido.toFixed(2).replace('.',','));
         const jurosFmt = juros>0 ? ('\nJuros ('+dias+'d): R$ '+(juros.toFixed(2).replace('.',','))) : '';
-        const msg = 'Olá, '+cli+'! 👋\n\nPassando para lembrar que identificamos uma pendência financeira em aberto:\n\n💰 *'+(c.descricao||'Fatura')+'*\nVencimento: '+vencFmt+'\nValor: '+valorFmt+jurosFmt+'\n*Total: '+totalFmt+'*\n\nQualquer dúvida, estamos à disposição!\n\n— Equipe 5essência Marketing';
+        const pixChave = 'ce89b6e3-951a-4485-aff7-5663c3a7d5e1';
+        const msg = 'Olá, '+cli+'! 👋\n\nPassando para lembrar que identificamos uma pendência financeira em aberto:\n\n💰 *'+(c.descricao||'Fatura')+'*\nVencimento: '+vencFmt+'\nValor: '+valorFmt+jurosFmt+'\n*Total: '+totalFmt+'*\n\n💳 *Pagamento via Pix:*\nChave: '+pixChave+'\n\nQualquer dúvida, estamos à disposição!\n\n— Equipe 5essência Marketing';
 
         const msgEscapada = msg.replace(/`/g,"'").replace(/\$/g,"\\$");
         return `<div id="cob-${c.id}" style="background:rgba(255,59,69,0.06);border:1px solid rgba(255,59,69,0.2);border-radius:12px;padding:12px 14px">

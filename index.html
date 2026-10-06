@@ -434,8 +434,9 @@ body{
     <button onclick="adicionarLivre()" class="ativ-add-btn">+ Adicionar</button>
   </div>
   <div id="lista-dia"></div>
-  <div class="ativ-footer">
+  <div class="ativ-footer" style="display:flex;flex-direction:column;gap:6px">
     <button onclick="abrirResumoSemanal()" class="resumo-btn">📋 Resumo semanal</button>
+    <button onclick="otimizarTitulos()" id="btn-otimizar" class="resumo-btn" style="border-color:rgba(168,85,247,0.3);color:var(--purple)">✦ Otimizar títulos dos projetos</button>
   </div>
 </div>
 
@@ -1868,6 +1869,71 @@ async function marcarPago(cobId, cardId){
 
 function fecharNotif(){
   document.getElementById('modal-notif').style.display='none';
+}
+
+
+
+// ── OTIMIZAR TÍTULOS DOS PROJETOS ────────────────────────────────
+async function otimizarTitulos(){
+  const btn = document.getElementById('btn-otimizar');
+  btn.textContent = '✦ Buscando projetos…';
+  btn.disabled = true;
+
+  try{
+    // Busca projetos com títulos longos (mais de 40 chars)
+    const r = await fetch(
+      `${SB_URL}/rest/v1/projetos?select=id,titulo,cliente_id,clientes(nome_completo)&order=created_at.desc&limit=100`,
+      {headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}}
+    );
+    const projetos = await r.json()||[];
+    const longos = projetos.filter(p=>p.titulo && p.titulo.length > 40);
+
+    if(!longos.length){
+      toast('Nenhum título longo encontrado!');
+      btn.textContent='✦ Otimizar títulos dos projetos';
+      btn.disabled=false;
+      return;
+    }
+
+    btn.textContent = `✦ Resumindo ${longos.length} títulos…`;
+
+    // Manda tudo de uma vez para a IA
+    const lista = longos.map((p,i)=>(i+1)+'. [ID:'+p.id+'] '+p.titulo).join('\n');
+    const res = await fetch(`${SB_URL}/functions/v1/chat-assistant`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY},
+      body:JSON.stringify({
+        system:'Você resume títulos de projetos de marketing. Retorne APENAS um JSON array sem explicações: [{"id":"uuid","titulo":"novo título resumido"}]. Máximo 35 caracteres por título. Mantenha o essencial — tipo de serviço e nome do cliente se houver.',
+        messages:[{role:'user',content:'Resuma estes títulos:\n'+lista}]
+      })
+    });
+    const d = await res.json();
+    const resposta = d.resposta||'';
+    const match = resposta.match(/\[[\s\S]*\]/);
+    if(!match){ throw new Error('IA não retornou JSON'); }
+    const resumidos = JSON.parse(match[0]);
+
+    // Salva cada um no Supabase
+    let salvos = 0;
+    for(const p of resumidos){
+      if(!p.id||!p.titulo) continue;
+      await fetch(`${SB_URL}/rest/v1/projetos?id=eq.${p.id}`,{
+        method:'PATCH',
+        headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'},
+        body:JSON.stringify({titulo:p.titulo})
+      });
+      salvos++;
+    }
+
+    toast(`✅ ${salvos} títulos atualizados!`);
+    btn.textContent='✦ Otimizar títulos dos projetos';
+    btn.disabled=false;
+
+  }catch(e){
+    toast('Erro ao otimizar: '+e.message,'er');
+    btn.textContent='✦ Otimizar títulos dos projetos';
+    btn.disabled=false;
+  }
 }
 
 

@@ -1,0 +1,1862 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>5essência · Report</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+:root{
+  /* Base */
+  --bg:#0A0A12;
+  --s1:#0F0F1A;   /* superfície primária */
+  --s2:#141420;   /* superfície secundária */
+  --s3:#1C1C2C;   /* superfície terciária */
+
+  /* Bordas */
+  --b1:rgba(255,255,255,0.06);
+  --b2:rgba(255,255,255,0.11);
+
+  /* Texto */
+  --ink:#EEEEFF;
+  --ink2:#8888AA;
+  --ink3:#4A4A66;
+  --ink4:#2E2E44;
+
+  /* Acentos */
+  --blue:#4C82FB;
+  --blue-g:linear-gradient(135deg,#3B6FE8,#6C3AED);
+  --blue-glow:rgba(76,130,251,0.2);
+  --green:#2DD47A;
+  --green-l:rgba(45,212,122,0.1);
+  --orange:#FF9A0A;
+  --red:#FF3B45;
+  --purple:#A855F7;
+  --purple-l:rgba(168,85,247,0.1);
+
+  --font:'Inter',-apple-system,sans-serif;
+  --r:10px;--r2:14px;--r3:20px;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{height:100%;background:var(--bg);}
+
+body{
+  height:100dvh;overflow:hidden;
+  font-family:var(--font);color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+  display:grid;
+  grid-template-columns:280px 1fr;
+  background:var(--bg);
+}
+
+#toasts{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:6px;align-items:center;pointer-events:none;}
+
+/* ── COLUNA ESQUERDA — Atividades ── */
+#col-ativ{
+  display:flex;flex-direction:column;overflow:hidden;
+  background:var(--s1);
+  border-right:1px solid var(--b1);
+}
+
+/* Cabeçalho da coluna */
+.ativ-col-head{
+  padding:18px 16px 14px;
+  border-bottom:1px solid var(--b1);
+  flex-shrink:0;
+}
+.ativ-col-title{
+  font-size:11px;font-weight:700;text-transform:uppercase;
+  letter-spacing:0.1em;color:var(--ink3);margin-bottom:4px;
+}
+.ativ-col-date{
+  font-size:14px;font-weight:700;color:var(--ink);letter-spacing:-0.3px;
+}
+.ativ-col-hint{
+  font-size:11px;color:var(--ink3);margin-top:3px;
+}
+.ativ-col-hint span{color:var(--blue);font-weight:600;}
+
+/* Input de atividade */
+.ativ-input-wrap{
+  padding:12px 16px;
+  border-bottom:1px solid var(--b1);
+  flex-shrink:0;
+}
+#campo-livre{
+  width:100%;
+  background:var(--s2);
+  border:1px solid var(--b1);
+  border-radius:var(--r2);
+  color:var(--ink);
+  font-family:var(--font);font-size:13px;
+  padding:10px 12px;
+  outline:none;resize:none;
+  line-height:1.6;
+  margin-bottom:8px;
+  transition:border-color 0.15s;
+}
+#campo-livre:focus{border-color:rgba(76,130,251,0.4);}
+#campo-livre::placeholder{color:var(--ink4);}
+.ativ-add-btn{
+  width:100%;padding:9px;border:none;
+  border-radius:var(--r2);
+  background:var(--blue-g);color:#fff;
+  font-family:var(--font);font-size:13px;font-weight:600;
+  cursor:pointer;letter-spacing:0.01em;
+  box-shadow:0 2px 10px var(--blue-glow);
+  transition:opacity 0.15s;
+}
+.ativ-add-btn:active{opacity:0.85;}
+
+/* Lista de atividades */
+#lista-dia{
+  flex:1;overflow-y:auto;
+  padding:10px 16px;
+  display:flex;flex-direction:column;gap:5px;
+}
+
+/* Grupo de cliente */
+.ativ-grupo-nome{
+  font-size:9.5px;font-weight:700;
+  text-transform:uppercase;letter-spacing:0.1em;
+  color:var(--blue);cursor:pointer;
+  display:inline-flex;align-items:center;gap:4px;
+  margin-bottom:5px;margin-top:8px;
+  padding:2px 0;
+}
+.ativ-grupo-nome:first-child{margin-top:2px;}
+
+/* Item de atividade */
+.ativ-item-row{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 10px;
+  background:var(--s2);border:1px solid var(--b1);
+  border-radius:var(--r);
+  transition:all 0.12s;
+}
+.ativ-item-row.done{opacity:0.4;}
+.ativ-item-row.pessoal{background:rgba(255,154,10,0.06);border-color:rgba(255,154,10,0.15);}
+.ativ-item-row.pessoal .ativ-item-nome{color:#FCD34D;}
+.ativ-item-row.pessoal .ativ-check-box{border-color:rgba(255,154,10,0.3);}
+.ativ-check-box{
+  width:15px;height:15px;border-radius:4px;
+  border:1.5px solid var(--b2);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:all 0.15s;
+}
+.ativ-check-box.on{background:var(--green);border-color:var(--green);}
+.ativ-check-box.on::after{content:'✓';font-size:9px;color:white;font-weight:700;}
+.ativ-item-nome{
+  flex:1;font-size:12.5px;font-weight:500;color:var(--ink);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.ativ-item-row.done .ativ-item-nome{text-decoration:line-through;color:var(--ink3);}
+.ativ-del-btn{
+  color:var(--ink4);cursor:pointer;
+  font-size:14px;padding:0 2px;line-height:1;
+  flex-shrink:0;transition:color 0.12s;
+}
+.ativ-del-btn:hover{color:var(--red);}
+
+/* Rodapé — resumo semanal */
+.ativ-footer{
+  padding:12px 16px;
+  border-top:1px solid var(--b1);
+  flex-shrink:0;
+}
+.resumo-btn{
+  width:100%;padding:8px;
+  border:1px solid var(--b2);border-radius:var(--r2);
+  background:transparent;color:var(--ink3);
+  font-family:var(--font);font-size:12px;font-weight:600;
+  cursor:pointer;transition:all 0.15s;
+}
+.resumo-btn:hover{background:var(--s2);color:var(--ink2);}
+
+/* ── COLUNA DIREITA — Report + Comercial ── */
+#col-report{
+  display:grid;
+  grid-template-columns:1fr 0px;
+  transition:grid-template-columns 0.3s cubic-bezier(0.32,0.72,0,1);
+  overflow:hidden;
+}
+#col-report.comercial-aberto{grid-template-columns:1fr 360px;}
+
+#report-inner{
+  overflow-y:auto;
+  display:flex;flex-direction:column;
+  align-items:center;
+  padding:24px 20px 48px;
+  background:var(--bg);
+}
+
+/* ── CARD DO REPORT ── */
+.card{
+  width:100%;max-width:520px;
+  background:var(--s1);
+  border:1px solid var(--b1);
+  border-radius:var(--r3);
+  padding:24px 22px 20px;
+  box-shadow:0 8px 40px rgba(0,0,0,0.5);
+}
+
+/* Header */
+.header{
+  display:flex;align-items:center;
+  justify-content:space-between;
+  margin-bottom:22px;
+  padding-bottom:16px;
+  border-bottom:1px solid var(--b1);
+}
+.logo{display:flex;align-items:center;gap:10px;}
+.logo-dot{
+  width:32px;height:32px;border-radius:9px;
+  background:var(--blue-g);display:flex;align-items:center;
+  justify-content:center;font-size:14px;font-weight:800;
+  color:#fff;box-shadow:0 3px 14px var(--blue-glow);
+}
+.logo-nome{font-size:13.5px;font-weight:700;letter-spacing:-0.3px;}
+.logo-sub{font-size:10.5px;color:var(--ink3);margin-top:1px;}
+.date-pill{
+  font-size:11px;font-weight:600;color:var(--ink3);
+  background:var(--s2);border:1px solid var(--b1);
+  border-radius:20px;padding:4px 11px;
+}
+
+/* Fields */
+.field{margin-bottom:13px;}
+.field label{
+  display:flex;align-items:center;gap:5px;
+  font-size:9.5px;font-weight:700;color:var(--ink3);
+  letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;
+}
+.opt{font-weight:400;text-transform:none;letter-spacing:0;color:var(--ink4);}
+.field input,.field select,.field textarea{
+  width:100%;background:var(--s2);border:1px solid var(--b1);
+  border-radius:var(--r2);color:var(--ink);font-family:var(--font);
+  font-size:13.5px;padding:10px 12px;outline:none;
+  transition:all 0.15s;-webkit-appearance:none;
+}
+.field input:focus,.field select:focus,.field textarea:focus{
+  border-color:rgba(76,130,251,0.45);background:var(--s3);
+}
+.field input::placeholder,.field textarea::placeholder{color:var(--ink4);}
+.field select{cursor:pointer;}
+.field select option{background:var(--s2);}
+.field textarea{resize:none;line-height:1.6;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+/* Preview WhatsApp */
+.preview-wrap{
+  background:var(--s2);border:1px solid var(--b1);
+  border-radius:var(--r2);margin-bottom:13px;overflow:hidden;
+}
+.preview-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 12px;border-bottom:1px solid var(--b1);
+}
+.preview-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink3);}
+.pbadge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;margin-left:6px;}
+.pbadge.tpl{background:rgba(76,130,251,0.1);color:var(--blue);}
+.pbadge.ia{background:var(--purple-l);color:var(--purple);}
+.pbadge.edit{background:rgba(255,154,10,0.1);color:var(--orange);}
+.btn-ia{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:4px 10px;border-radius:20px;border:none;
+  cursor:pointer;background:var(--purple-l);color:var(--purple);
+  font-family:var(--font);font-size:11px;font-weight:700;
+  transition:all 0.15s;
+}
+.btn-ia:hover{background:rgba(168,85,247,0.18);}
+.btn-ia:disabled{opacity:0.35;cursor:not-allowed;}
+.preview-body{
+  padding:12px;min-height:72px;font-size:12.5px;
+  color:var(--ink2);line-height:1.75;white-space:pre-wrap;
+  word-break:break-word;cursor:pointer;
+}
+.preview-body:hover{background:rgba(255,255,255,0.015);}
+.preview-body.empty{color:var(--ink3);font-style:italic;cursor:default;}
+.preview-body.ia{color:var(--ink);}
+
+/* WPP toggle */
+.wpp-row{
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--s2);border:1px solid var(--b1);
+  border-radius:var(--r2);padding:10px 13px;
+  margin-bottom:13px;cursor:pointer;transition:all 0.15s;
+}
+.wpp-row.on{border-color:rgba(45,212,122,0.3);background:rgba(45,212,122,0.04);}
+.wpp-left{display:flex;align-items:center;gap:9px;}
+.wpp-icon{font-size:16px;}
+.wpp-name{font-size:12.5px;font-weight:600;}
+.wpp-sub{font-size:10.5px;color:var(--ink3);margin-top:1px;}
+.pill{width:40px;height:21px;border-radius:11px;background:var(--s3);border:1px solid var(--b2);position:relative;transition:all 0.22s;flex-shrink:0;}
+.pill::after{content:'';position:absolute;top:3px;left:3px;width:13px;height:13px;border-radius:50%;background:var(--ink3);transition:all 0.22s cubic-bezier(0.34,1.56,0.64,1);}
+.wpp-row.on .pill{background:var(--green);border-color:var(--green);}
+.wpp-row.on .pill::after{left:22px;background:#fff;}
+
+/* Botão principal */
+.btn-main{
+  width:100%;padding:13px;border:none;border-radius:var(--r2);
+  background:var(--blue-g);color:#fff;
+  font-family:var(--font);font-size:14px;font-weight:700;
+  cursor:pointer;transition:opacity 0.15s;
+  box-shadow:0 3px 16px var(--blue-glow);letter-spacing:0.01em;
+}
+.btn-main:active{opacity:0.88;}
+.btn-main:disabled{opacity:0.35;cursor:not-allowed;}
+
+/* Histórico */
+.hist{margin-top:18px;padding-top:14px;border-top:1px solid var(--b1);}
+.hist-lbl{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink3);margin-bottom:8px;}
+.lancamento{
+  display:flex;align-items:center;gap:8px;
+  padding:7px 10px;background:var(--s2);
+  border-radius:var(--r);margin-bottom:5px;
+}
+.h-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+.h-nome{font-size:12px;font-weight:600;}
+.h-meta{font-size:10px;color:var(--ink3);margin-top:1px;}
+
+/* ── PAINEL COMERCIAL ── */
+#painel-comercial{
+  overflow-y:auto;
+  background:linear-gradient(170deg,#140E2A 0%,#0D0A1E 100%);
+  border-left:1px solid rgba(168,85,247,0.18);
+  display:flex;flex-direction:column;
+  opacity:0;transition:opacity 0.25s;
+  pointer-events:none;
+}
+#col-report.comercial-aberto #painel-comercial{opacity:1;pointer-events:all;}
+
+/* Botão comercial no header */
+.btn-comercial{
+  font-size:11px;font-weight:600;padding:4px 11px;border-radius:20px;
+  border:1px solid rgba(168,85,247,0.3);
+  background:rgba(168,85,247,0.08);color:var(--purple);
+  cursor:pointer;font-family:var(--font);transition:all 0.15s;
+}
+.btn-comercial:hover{background:rgba(168,85,247,0.16);}
+
+/* Modo de seleção de modo */
+.modo-tabs{
+  display:flex;gap:0;overflow-x:auto;scrollbar-width:none;
+  border-bottom:1px solid rgba(168,85,247,0.12);
+}
+.modo-tabs::-webkit-scrollbar{display:none;}
+.modo-tab{
+  flex-shrink:0;padding:10px 16px;font-size:12px;font-weight:600;
+  color:rgba(255,255,255,0.3);cursor:pointer;
+  border-bottom:2px solid transparent;transition:all 0.15s;white-space:nowrap;
+}
+.modo-tab.active{color:var(--purple);border-bottom-color:var(--purple);}
+
+/* Toasts */
+.toast{
+  background:rgba(10,10,18,0.97);border:1px solid var(--b2);
+  border-radius:22px;padding:8px 15px;font-size:12.5px;font-weight:600;
+  backdrop-filter:blur(24px);box-shadow:0 4px 20px rgba(0,0,0,0.5);
+  display:flex;align-items:center;gap:8px;white-space:nowrap;
+  animation:tIn 0.25s cubic-bezier(0.34,1.56,0.64,1) both,tOut 0.2s 2.7s ease both;
+}
+.tdot{width:5px;height:5px;border-radius:50%;}
+@keyframes tIn{from{opacity:0;transform:translateY(-8px) scale(0.9);}to{opacity:1;transform:none;}}
+@keyframes tOut{to{opacity:0;transform:translateY(-6px);}}
+
+/* Modal de resumo / cliente */
+.modal-overlay-inner{
+  position:fixed;inset:0;background:rgba(0,0,0,0.75);
+  backdrop-filter:blur(10px);z-index:500;
+  display:none;align-items:flex-end;justify-content:center;
+}
+.modal-overlay-inner.open{display:flex;}
+.modal-sheet-inner{
+  width:100%;max-width:520px;
+  background:var(--s1);border:1px solid var(--b2);
+  border-top-left-radius:22px;border-top-right-radius:22px;
+  max-height:82dvh;display:flex;flex-direction:column;
+  box-shadow:0 -8px 40px rgba(0,0,0,0.6);
+  animation:sheetUp 0.28s cubic-bezier(0.32,0.72,0,1) both;
+}
+@keyframes sheetUp{from{transform:translateY(100%);}to{transform:none;}}
+.modal-handle-inner{width:30px;height:3px;background:var(--b2);border-radius:2px;margin:10px auto 0;flex-shrink:0;}
+.modal-head-inner{padding:13px 18px;border-bottom:1px solid var(--b1);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.modal-title-inner{font-size:14px;font-weight:700;}
+.modal-close-inner{font-size:17px;color:var(--ink3);cursor:pointer;}
+.modal-body-inner{flex:1;overflow-y:auto;padding:14px 18px;}
+
+/* Editor de preview */
+.edit-area{display:none;margin-top:6px;}
+.edit-area.show{display:block;}
+#edit-ta{
+  width:100%;min-height:100px;
+  background:var(--s2);border:1px solid rgba(76,130,251,0.35);
+  border-radius:var(--r2);color:var(--ink);
+  font-family:var(--font);font-size:13px;line-height:1.7;
+  padding:10px 12px;outline:none;resize:none;
+}
+.edit-btns{display:flex;gap:7px;margin-top:7px;}
+.btn-sm{
+  padding:6px 13px;border-radius:var(--r);
+  font-family:var(--font);font-size:12px;font-weight:600;
+  cursor:pointer;transition:all 0.12s;
+  border:1px solid var(--b2);background:var(--s2);color:var(--ink2);
+}
+.btn-sm.ok{background:var(--blue-g);color:white;border-color:transparent;}
+.btn-sm:hover{opacity:0.85;}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:3px;height:3px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px;}
+
+/* Mobile */
+@media(max-width:700px){
+  body{grid-template-columns:1fr;grid-template-rows:auto 1fr;height:auto;overflow-y:auto;}
+  #col-ativ{border-right:none;border-bottom:1px solid var(--b1);max-height:45vh;}
+  #col-report{overflow-y:visible;}
+}
+</style>
+</head>
+<body>
+<div id="toasts"></div>
+
+<!-- COLUNA ESQUERDA -->
+<div id="col-ativ">
+  <div style="padding:20px 18px 12px;border-bottom:1px solid var(--b1);flex-shrink:0">
+    <div style="font-size:13px;font-weight:700;margin-bottom:2px" id="ativ-date-label"></div>
+    <div style="font-size:11px;color:var(--ink3)">Use <span style="color:var(--blue);font-weight:600">/Cliente</span> para associar</div>
+  </div>
+  <div class="ativ-input-wrap">
+    <textarea id="campo-livre" rows="2" style="width:100%;background:var(--bg2);border:1px solid var(--b1);border-radius:10px;color:var(--ink);font-family:var(--font);font-size:13px;padding:10px 12px;outline:none;resize:none;line-height:1.6;margin-bottom:8px" placeholder="Editar vídeo /Kalu, Ligar /Sibele, Reunião…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();adicionarLivre()}"></textarea>
+    <button onclick="adicionarLivre()" class="ativ-add-btn">+ Adicionar</button>
+  </div>
+  <div id="lista-dia"></div>
+  <div class="ativ-footer">
+    <button onclick="abrirResumoSemanal()" class="resumo-btn">📋 Resumo semanal</button>
+  </div>
+</div>
+
+<!-- COLUNA DIREITA -->
+<div id="col-report">
+<div id="report-inner">
+<div class="card">
+
+  <div class="header">
+    <div class="logo">
+      <div class="logo-dot" style="background:transparent;padding:0;overflow:hidden"><img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAASABIAAD/4QBMRXhpZgAATU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAACBKADAAQAAAABAAAB7QAAAAD/7QA4UGhvdG9zaG9wIDMuMAA4QklNBAQAAAAAAAA4QklNBCUAAAAAABDUHYzZjwCyBOmACZjs+EJ+/8AAEQgB7QIEAwEiAAIRAQMRAf/EAB8AAAEFAQEBAQEBAAAAAAAAAAABAgMEBQYHCAkKC//EALUQAAIBAwMCBAMFBQQEAAABfQECAwAEEQUSITFBBhNRYQcicRQygZGhCCNCscEVUtHwJDNicoIJChYXGBkaJSYnKCkqNDU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6g4SFhoeIiYqSk5SVlpeYmZqio6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2drh4uPk5ebn6Onq8fLz9PX29/j5+v/EAB8BAAMBAQEBAQEBAQEAAAAAAAABAgMEBQYHCAkKC//EALURAAIBAgQEAwQHBQQEAAECdwABAgMRBAUhMQYSQVEHYXETIjKBCBRCkaGxwQkjM1LwFWJy0QoWJDThJfEXGBkaJicoKSo1Njc4OTpDREVGR0hJSlNUVVZXWFlaY2RlZmdoaWpzdHV2d3h5eoKDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uLj5OXm5+jp6vLz9PX29/j5+v/bAEMAAQEBAQEBAgEBAgMCAgIDBAMDAwMEBAQEBAQEBAUEBAQEBAQFBQUFBQUFBQYGBgYGBggICAgICAgICAgICAgICP/bAEMBAQEBAgICBAICBAkGBQYJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCf/dAAQAIf/aAAwDAQACEQMRAD8A/jXooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigD/0P416KKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooA/9H+NeiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKAP/S/jXooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigD/0/416KKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooA/9T+NeiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKAP/V/jXooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigD/1v416KKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAo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q+4r8HP2wv8Ag7/8E2OnXfhn9hj4dXWoXzBki1zxayQW8ZxjzItLs5JJZxk5UyXMOMfNGc4AB/U/+3D+3R+zz/wT6+Bd/wDHf9ojWEsLKANHYWMZVr3U7vaWjsrCAkGWV8cn7sa5eRlRSw/ybv2+/wBt34r/APBQv9qLxF+078XNkF3qzLBY2ELFoNO0+DK2ljASF3LEhJd8AySM8hALkVx/7V37ZP7Sv7bvxOl+Lv7Tviy88U6wwZIBOwW3tImbd9nsbSMLBbQg87IkUE/M2WJJ+Y6ACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKAP//S/jXooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooA/vg/4M2/D4tvgt8cvFWOb3W9GtM+v2a0u5Mfh9pr+jn/AIKGf8FM/wBln/gmp8LP+FgftB6yBqd/FMdE0C0/eajqs0SgmO3iAIjjDFRJcSlYkyAWLMqt/Np/wasfF34d/s7/APBOf4/fHz4sX66Z4c8K68dS1G5ILFLe00eKVwiD5pJHztijUFncqigswFfx6ft4ftr/ABd/4KBftNeIf2lvjFOftmrS+XY2KOzQadp8bN9k0+2B6RwoeTgF3LyMN7saAP1N/bZ/4OVv+CkH7VmrXml/DHXz8IPCchYQad4YkaO/2H7puNbKreNKOfmtjboc/wCryAa/Bvxn498dfEfW5PEvxD1q/wBe1KX791qNzNdTtk5+aWdnc8+prk6KACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKAP/T/jXooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooA/YX4bftF3/w0/wCCHvxG+BuhztFcfEP4paXb3ahiN+n2Wkm/lHHX/Sre0yOmM1+PVdI/i7xHJ4Qj8BPdE6RDePfpb7VwLmSJIXl3Y3kmONVwWwMcAEnPN0AFFFFABRRX0f8ACD9jn9rr9oXw1P40+AXwr8X+ONHtblrKa/8AD+h6nqdtHcpHHK9u89lbyxrMscsbtGW3BXViMMCQD5wor7k/4dhf8FKv+jefiZ/4SWv/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ACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooA/9D+NeiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKAP/R/jXooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigD/0v416KKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooA/9P+NeiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKAP/U/jXooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigD/1f416KKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooA/9k=" style="width:34px;height:34px;object-fit:cover;border-radius:10px"></div>
+      <div>
+        <div class="logo-nome">Report Diário</div>
+        <div class="logo-sub">5essência Marketing</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div class="date-pill" id="date-pill"></div>
+      <button onclick="toggleComercial()" id="btn-comercial" class="btn-comercial">⚡ Comercial</button>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>Cliente</label>
+    <select id="sel-cliente" onchange="onClienteChange()">
+      <option value="">Carregando…</option>
+    </select>
+  </div>
+
+  <div class="field">
+    <label>O que está sendo feito</label>
+    <textarea id="inp-acao" rows="2" style="height:72px"
+      placeholder="Ex: Criando linha editorial de outubro, editando vídeo do produto X, desenvolvendo criativos para campanha de lançamento…"
+      oninput="onInputChange()"></textarea>
+  </div>
+
+  <div class="row2">
+    <div class="field">
+      <label>Etapa <span class="opt">(opcional)</span></label>
+      <select id="sel-etapa" onchange="onInputChange()">
+        <option value="">— Selecionar —</option>
+        <option value="iniciando">Iniciando</option>
+        <option value="em_desenvolvimento">Em desenvolvimento</option>
+        <option value="50">50% concluído</option>
+        <option value="finalizando">Finalizando</option>
+        <option value="revisao">Em revisão</option>
+        <option value="aguardando_aprovacao">Aguardando aprovação</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Previsão <span class="opt">(opcional)</span></label>
+      <select id="sel-prev" onchange="onInputChange()">
+        <option value="">— Selecionar —</option>
+        <option value="hoje">Hoje</option>
+        <option value="amanha">Amanhã</option>
+        <option value="essa_semana">Essa semana</option>
+        <option value="semana_que_vem">Semana que vem</option>
+        <option value="proximos_dias">Próximos dias</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>Link <span class="opt">(opcional — drive, loom, figma…)</span></label>
+    <input id="inp-link" type="url" placeholder="https://…" oninput="onInputChange()">
+  </div>
+
+  <!-- Preview -->
+  <div class="preview-wrap" id="pw">
+    <div class="preview-head">
+      <div class="preview-head-left">
+        <span class="preview-lbl">Mensagem WhatsApp</span>
+        <span class="preview-badge badge-tpl" id="pbadge">Template</span>
+      </div>
+      <button class="btn-ia" id="btn-ia" onclick="gerarIA()" disabled>
+        <span class="star">✦</span>&nbsp;Gerar com IA
+      </button>
+    </div>
+    <div class="preview-body empty" id="pbody" onclick="abrirEdicao()">
+      Preencha os campos para ver o preview…
+    </div>
+    <div class="edit-area" id="edit-area">
+      <textarea id="edit-ta"></textarea>
+      <div class="edit-btns">
+        <button class="btn-sm ok" onclick="confirmarEdit()">✓ Confirmar</button>
+        <button class="btn-sm" onclick="cancelarEdit()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- WPP -->
+  <div class="wpp-row" id="wpp-row" onclick="toggleWpp()">
+    <div class="wpp-left">
+      <span class="wpp-icon">📲</span>
+      <div>
+        <div class="wpp-name">Enviar WhatsApp</div>
+        <div class="wpp-sub" id="wpp-sub">Toque para ativar</div>
+      </div>
+    </div>
+    <div class="pill"></div>
+  </div>
+
+  <button class="btn-main" id="btn-main" onclick="enviar()">Enviar report</button>
+
+  <div class="hist" id="hist" style="display:none">
+    <div class="hist-lbl">Enviados hoje</div>
+    <div id="hist-lista"></div>
+  </div>
+</div>
+
+</div><!-- /report-inner -->
+
+<!-- PAINEL COMERCIAL -->
+<div id="painel-comercial">
+  <div style="padding:20px 20px 14px;border-bottom:1px solid rgba(168,85,247,0.15);flex-shrink:0">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div>
+        <div style="font-size:14px;font-weight:700;color:#F0F0FF">Comercial</div>
+        <div style="font-size:11px;color:rgba(168,85,247,0.7);margin-top:1px">Prospecção & Follow-up</div>
+      </div>
+      <button onclick="toggleComercial()" style="width:26px;height:26px;border-radius:50%;border:1px solid rgba(168,85,247,0.2);background:transparent;color:rgba(168,85,247,0.6);cursor:pointer;font-size:13px">✕</button>
+    </div>
+    <div class="modo-tabs">
+      <button onclick="setTabComercial('prospec')" id="tab-prospec" class="modo-tab active">Prospecção</button>
+      <button onclick="setTabComercial('followup')" id="tab-followup" class="modo-tab">Follow-up</button>
+      <button onclick="setTabComercial('registros')" id="tab-registros" class="modo-tab">Registros</button>
+    </div>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:16px 20px" id="comercial-body"></div>
+</div>
+
+
+<!-- MODAL NOTIFICAÇÕES DE STARTUP -->
+<div id="modal-notif" style="position:fixed;inset:0;background:rgba(0,0,0,0.8);backdrop-filter:blur(12px);z-index:600;display:none;align-items:flex-start;justify-content:center;padding-top:40px">
+  <div style="width:100%;max-width:480px;background:var(--s1);border:1px solid var(--b2);border-radius:22px;max-height:82dvh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.7);animation:cardIn 0.3s cubic-bezier(0.34,1.56,0.64,1) both">
+    <div style="padding:16px 20px;border-bottom:1px solid var(--b1);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+      <div style="font-size:14px;font-weight:700" id="notif-title">⚡ Atenção necessária</div>
+      <span onclick="fecharNotif()" style="cursor:pointer;color:var(--ink3);font-size:17px">✕</span>
+    </div>
+    <div id="notif-body" style="flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:10px"></div>
+    <div style="padding:12px 20px;border-top:1px solid var(--b1);flex-shrink:0">
+      <button onclick="fecharNotif()" style="width:100%;padding:10px;border:none;border-radius:12px;background:var(--s3);color:var(--ink2);font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer">Entendido</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CLIENTE -->
+<div id="modal-cliente" style="position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(12px);z-index:500;display:none;align-items:flex-end;justify-content:center">
+  <div style="width:100%;max-width:540px;background:rgba(13,13,23,0.98);border:1px solid var(--b2);border-top-left-radius:24px;border-top-right-radius:24px;max-height:80dvh;display:flex;flex-direction:column">
+    <div style="width:32px;height:3px;background:var(--b2);border-radius:2px;margin:11px auto 0;flex-shrink:0"></div>
+    <div style="padding:14px 20px;border-bottom:1px solid var(--b1);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+      <div>
+        <div style="font-size:15px;font-weight:700" id="mcli-nome"></div>
+        <div style="font-size:11px;color:var(--ink3);margin-top:1px">Esta semana</div>
+      </div>
+      <span onclick="fecharModalCliente()" style="font-size:18px;color:var(--ink3);cursor:pointer">✕</span>
+    </div>
+    <div id="mcli-body" style="flex:1;overflow-y:auto;padding:14px 20px;display:flex;flex-direction:column;gap:7px"></div>
+  </div>
+</div>
+
+<!-- MODAL RESUMO SEMANAL -->
+<div class="modal-overlay-inner" id="modal-resumo" onclick="if(event.target===this)fecharResumo()">
+  <div class="modal-sheet-inner">
+    <div class="modal-handle-inner"></div>
+    <div class="modal-head-inner">
+      <span class="modal-title-inner">📋 Resumo da semana</span>
+      <span class="modal-close-inner" onclick="fecharResumo()">✕</span>
+    </div>
+    <div class="modal-body-inner" id="modal-body">
+      <div style="text-align:center;padding:32px;color:var(--ink3)">Carregando…</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SB_URL  = 'https://zebudefzhakitwjswvkl.supabase.co';
+const SB_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InplYnVkZWZ6aGFraXR3anN3dmtsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MTE1MDksImV4cCI6MjA5MTQ4NzUwOX0.uKRcENdJFNirbC84qG7uIkkDFbn4McQ4DGxh3CKAyPM';
+const ZAPI_I  = '3F5C34424A94529FAEF902DFFFEFDAC7';
+const ZAPI_T  = '7E3E002717ABB45986650021';
+const ZAPI_C  = 'Fb9f1dad5634343098c2506ee81f99e2eS';
+const SIGN    = 'Equipe 5essência Marketing';
+
+// ── BANCO DE VARIAÇÕES ──────────────────────────────────────────
+// Estrutura: cada array tem múltiplas variações para a IA sortear
+// Nunca repete o mesmo padrão duas vezes seguidas
+
+const ABERTURAS_COM_NOME = [
+  (n) => `Olá, ${n}!`,
+  (n) => `Oi, ${n}!`,
+  (n) => `${n}, tudo certo?`,
+  (n) => `Boa tarde, ${n}!`,
+  (n) => `${n}!`,
+];
+
+const FRASES_ANDAMENTO = [
+  "Passando para te manter atualizado sobre o andamento do projeto.",
+  "Segue uma atualização rápida sobre o que está em desenvolvimento.",
+  "Uma atualização sobre o trabalho de hoje:",
+  "Atualização do dia:",
+  "Deixando você por dentro do que está acontecendo:",
+  "Mais uma atualização do nosso lado:",
+  "Report de hoje:",
+  "Passando para compartilhar o andamento:",
+];
+
+const FRASES_ETAPA = {
+  iniciando: ["Iniciamos hoje", "Demos início hoje", "Começamos"],
+  em_desenvolvimento: ["Em desenvolvimento", "Em produção", "Avançando com"],
+  "50": ["Na metade do caminho com", "50% concluído —", "Meio caminho andado com"],
+  finalizando: ["Finalizando", "Nos últimos ajustes de", "Quase pronto —"],
+  revisao: ["Em revisão —", "Revisando", "Em fase de revisão:"],
+  aguardando_aprovacao: ["Aguardando sua aprovação em", "Pronto para revisão —", "Disponível para aprovação:"],
+};
+
+const FRASES_PREVISAO = {
+  hoje: ["com entrega prevista ainda hoje.", "e a entrega fica para hoje.", "— finalizamos hoje."],
+  amanha: ["com entrega amanhã.", "— entregamos amanhã.", "e a previsão de entrega é amanhã."],
+  essa_semana: ["com entrega ainda essa semana.", "— encerramos essa semana.", "e finalizamos até o final da semana."],
+  semana_que_vem: ["com previsão para a semana que vem.", "— entregamos na semana que vem.", "e a entrega está programada para a semana que vem."],
+  proximos_dias: ["nos próximos dias.", "— entregamos em breve.", "com previsão para os próximos dias."],
+};
+
+const ENCERRAMENTOS_SEM_LINK = [
+  "Qualquer dúvida ou direcionamento, estamos aqui!",
+  "Qualquer ajuste ou feedback ao longo do processo, é só falar!",
+  "Se surgir algo, pode nos chamar!",
+  "Seguimos trabalhando — qualquer coisa é só chamar.",
+  "Estamos no detalhe. Qualquer dúvida, fala com a gente!",
+  "Trabalhando com atenção em cada detalhe. Qualquer ponto, é só avisar!",
+];
+
+const ENCERRAMENTOS_COM_LINK = [
+  (l) => `Você pode acompanhar aqui: ${l}`,
+  (l) => `Acesse para dar uma olhada: ${l}`,
+  (l) => `Disponível para revisão: ${l}`,
+  (l) => `Confere aqui quando puder: ${l}`,
+];
+
+function rand(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+// ── TEMPLATE INTELIGENTE COM VARIAÇÕES ──────────────────────────
+function gerarTemplate() {
+  const ctx = getCtx();
+  if (!ctx.acao) return '';
+
+  const alias = ctx.alias;
+  const acao  = ctx.acao;
+  const etapa = ctx.etapa;
+  const prev  = ctx.prev;
+  const link  = ctx.link;
+
+  let partes = [];
+
+  // Abertura
+  partes.push(rand(ABERTURAS_COM_NOME)(alias) + ' 👋');
+  partes.push('');
+
+  // Frase de andamento
+  partes.push(rand(FRASES_ANDAMENTO));
+  partes.push('');
+
+  // Corpo principal
+  let corpo = '';
+  if (etapa && FRASES_ETAPA[etapa]) {
+    corpo = rand(FRASES_ETAPA[etapa]) + ' *' + acao + '*';
+  } else {
+    corpo = '🔄 *' + acao + '*';
+  }
+
+  if (prev && FRASES_PREVISAO[prev]) {
+    corpo += ' ' + rand(FRASES_PREVISAO[prev]);
+  }
+
+  partes.push(corpo);
+  partes.push('');
+
+  // Encerramento
+  if (link) {
+    partes.push(rand(ENCERRAMENTOS_COM_LINK)(link));
+  } else {
+    partes.push(rand(ENCERRAMENTOS_SEM_LINK));
+  }
+
+  partes.push('');
+  partes.push('— ' + SIGN);
+
+  return partes.join('\n');
+}
+
+// ── PROMPT PARA IA ───────────────────────────────────────────────
+function buildPrompt(ctx) {
+  const temLink = !!ctx.link;
+
+  return `Você é o responsável de comunicação de uma agência de marketing digital premium chamada 5essência Marketing. Escreva uma mensagem de WhatsApp de report diário para o cliente.
+
+DADOS DO REPORT:
+- Cliente: ${ctx.alias}
+- O que está sendo feito: ${ctx.acao}
+- Etapa: ${ctx.etapa || 'não informada'}
+- Previsão de entrega: ${ctx.prev || 'não informada'}
+${temLink ? `- Link para acesso: ${ctx.link}` : '- Sem link disponível'}
+
+BANCO DE VARIAÇÕES — escolha elementos diferentes a cada geração:
+
+Aberturas possíveis: "Olá, [nome]! 👋", "Oi, [nome]!", "[Nome]! 👋", "Boa tarde, [nome]!", "[Nome], tudo certo?"
+
+Frases de transição possíveis: "Passando para te manter atualizado.", "Segue uma atualização rápida.", "Atualização do dia:", "Report de hoje:", "Deixando você por dentro:"
+
+Formas de descrever o trabalho: descreva o que está sendo feito de forma profissional e específica, usando *negrito* para o entregável principal
+
+Encerramentos possíveis: "Qualquer ajuste ou direcionamento, estamos aqui!", "Se surgir algo, pode nos chamar!", "Seguimos no detalhe — qualquer coisa é só falar.", "Trabalhando com atenção em cada etapa."
+
+REGRAS:
+1. Tom profissional, próximo e confiante — como um parceiro estratégico, não um prestador de serviço
+2. Máximo 6 linhas no total
+3. Use *negrito* apenas no entregável principal
+4. ${temLink ? 'Inclua o link de forma natural com chamada para ação' : 'NUNCA mencione portal, sistema, link ou "acesse aqui" — não há link'}
+5. Varie a estrutura — não comece sempre da mesma forma
+6. Termine com: — Equipe 5essência Marketing
+7. Escreva apenas a mensagem, sem explicações
+
+Escreva a mensagem agora:`;
+}
+
+// ── ESTADO ──────────────────────────────────────────────────────
+let wppAtivo = false;
+let msgFinal = '';
+let msgIsIA  = false;
+let editando = false;
+
+// ── INIT ────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  const hoje = new Date();
+  document.getElementById('date-pill').textContent =
+    hoje.toLocaleDateString('pt-BR', { weekday:'short', day:'numeric', month:'short' })
+        .replace(/^\w/, c => c.toUpperCase());
+  carregarClientes();
+});
+
+async function carregarClientes() {
+  try {
+    const r = await fetch(
+      `${SB_URL}/rest/v1/clientes?select=id,nome_completo,empresa,whatsapp&status=eq.ativo&order=nome_completo`,
+      { headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY } }
+    );
+    const data = await r.json();
+    clientes = data || [];
+    const sel = document.getElementById('sel-cliente');
+    sel.innerHTML = '<option value="">Selecionar cliente…</option>';
+    clientes.forEach(c => {
+      const o = document.createElement('option');
+      o.value = c.id;
+      o.textContent = c.nome_completo + (c.empresa ? ' · ' + c.empresa : '');
+      o.dataset.wpp   = c.whatsapp || '';
+      o.dataset.alias = c.nome_completo.split(' ')[0];
+      sel.appendChild(o);
+    });
+  } catch(e) { toast('Erro ao carregar clientes', 'er'); }
+}
+
+function getCtx() {
+  const sel = document.getElementById('sel-cliente');
+  const opt = sel.options[sel.selectedIndex];
+  return {
+    clienteId: sel.value,
+    alias:     opt?.dataset?.alias || 'Cliente',
+    wpp:       opt?.dataset?.wpp   || '',
+    acao:      document.getElementById('inp-acao').value.trim(),
+    etapa:     document.getElementById('sel-etapa').value,
+    prev:      document.getElementById('sel-prev').value,
+    link:      document.getElementById('inp-link').value.trim(),
+  };
+}
+
+function onClienteChange() {
+  msgFinal = ''; msgIsIA = false;
+  atualizarPreview();
+  if (wppAtivo) atualizarWppSub();
+}
+
+function onInputChange() {
+  if (msgIsIA) { msgIsIA = false; msgFinal = ''; }
+  atualizarPreview();
+}
+
+function atualizarPreview() {
+  const ctx  = getCtx();
+  const body = document.getElementById('pbody');
+  const btnIA = document.getElementById('btn-ia');
+
+  if (!ctx.acao) {
+    body.textContent = 'Preencha os campos para ver o preview…';
+    body.className = 'preview-body empty';
+    btnIA.disabled = true;
+    msgFinal = '';
+    return;
+  }
+
+  btnIA.disabled = false;
+  if (msgIsIA && msgFinal) { renderPreview(msgFinal, true); return; }
+
+  // Gera novo template com variações aleatórias
+  msgFinal = gerarTemplate();
+  renderPreview(msgFinal, false);
+}
+
+function renderPreview(msg, isIA) {
+  const body  = document.getElementById('pbody');
+  const badge = document.getElementById('pbadge');
+  body.textContent = msg;
+  body.className = 'preview-body' + (isIA ? ' ia' : '');
+  badge.textContent = isIA ? '✦ IA' : 'Template';
+  badge.className = 'preview-badge ' + (isIA ? 'badge-ia' : 'badge-tpl');
+}
+
+// ── GERAR COM IA ─────────────────────────────────────────────────
+async function gerarIA() {
+  const ctx = getCtx();
+  if (!ctx.acao) { toast('Preencha o que está sendo feito', 'er'); return; }
+
+  const btnIA = document.getElementById('btn-ia');
+  const body  = document.getElementById('pbody');
+  const badge = document.getElementById('pbadge');
+  const pw    = document.getElementById('pw');
+
+  btnIA.disabled = true;
+  btnIA.innerHTML = '<span style="display:inline-block;animation:spin 0.7s linear infinite;font-size:12px">✦</span>&nbsp;Gerando…';
+  pw.classList.add('pulse');
+  body.className = 'preview-body typing';
+  body.textContent = '';
+
+  try {
+    const resp = await fetch(`${SB_URL}/functions/v1/chat-assistant`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SB_KEY,
+        'Authorization': `Bearer ${SB_KEY}`
+      },
+      body: JSON.stringify({
+        system: 'Você é especialista em comunicação de agências de marketing premium. Escreva mensagens de WhatsApp profissionais e variadas. Responda APENAS com a mensagem, sem explicações.',
+        messages: [{ role: 'user', content: buildPrompt(ctx) }]
+      })
+    });
+
+    const data = await resp.json();
+    const texto = data.resposta || '';
+    if (!texto) throw new Error('vazio');
+
+    // Efeito de digitação
+    body.className = 'preview-body ia typing';
+    body.textContent = '';
+    await digitar(body, texto);
+    body.className = 'preview-body ia';
+
+    msgFinal = texto;
+    msgIsIA  = true;
+    badge.textContent = '✦ IA';
+    badge.className   = 'preview-badge badge-ia';
+
+  } catch(e) {
+    toast('IA indisponível — usando template variado', 'er');
+    msgIsIA  = false;
+    msgFinal = gerarTemplate();
+    renderPreview(msgFinal, false);
+  } finally {
+    pw.classList.remove('pulse');
+    btnIA.disabled = false;
+    btnIA.innerHTML = '<span class="star">✦</span>&nbsp;Gerar com IA';
+  }
+}
+
+async function digitar(el, texto) {
+  const chars = [...texto];
+  let i = 0;
+  return new Promise(res => {
+    function next() {
+      if (i >= chars.length) { res(); return; }
+      const chunk = Math.min(5, chars.length - i);
+      el.textContent += chars.slice(i, i + chunk).join('');
+      i += chunk;
+      setTimeout(next, 16);
+    }
+    next();
+  });
+}
+
+// ── EDIÇÃO INLINE ────────────────────────────────────────────────
+function abrirEdicao() {
+  const ctx = getCtx();
+  if (!ctx.acao || !msgFinal) return;
+  if (editando) return;
+  editando = true;
+  document.getElementById('edit-ta').value = msgFinal;
+  document.getElementById('edit-area').classList.add('show');
+  document.getElementById('edit-ta').focus();
+}
+
+function confirmarEdit() {
+  msgFinal = document.getElementById('edit-ta').value;
+  msgIsIA  = false;
+  renderPreview(msgFinal, false);
+  const badge = document.getElementById('pbadge');
+  badge.textContent = 'Editado';
+  badge.className   = 'preview-badge badge-edit';
+  document.getElementById('edit-area').classList.remove('show');
+  editando = false;
+}
+
+function cancelarEdit() {
+  document.getElementById('edit-area').classList.remove('show');
+  editando = false;
+}
+
+// ── WPP ──────────────────────────────────────────────────────────
+function toggleWpp() {
+  wppAtivo = !wppAtivo;
+  document.getElementById('wpp-row').classList.toggle('on', wppAtivo);
+  atualizarWppSub();
+  document.getElementById('btn-main').textContent =
+    wppAtivo ? 'Enviar report via WhatsApp 📲' : 'Enviar report';
+}
+
+function atualizarWppSub() {
+  const sel  = document.getElementById('sel-cliente');
+  const opt  = sel.options[sel.selectedIndex];
+  const sub  = document.getElementById('wpp-sub');
+  if (wppAtivo && opt?.dataset?.wpp) {
+    sub.textContent = `Enviará para ${opt.dataset.alias}`;
+    sub.style.color = 'var(--green)';
+  } else if (wppAtivo) {
+    sub.textContent = '⚠️ Sem WhatsApp cadastrado';
+    sub.style.color = 'var(--orange)';
+  } else {
+    sub.textContent = 'Toque para ativar';
+    sub.style.color = '';
+  }
+}
+
+// ── ENVIAR ────────────────────────────────────────────────────────
+async function enviar() {
+  const ctx = getCtx();
+  if (!ctx.clienteId) { toast('Selecione um cliente', 'er'); return; }
+  if (!ctx.acao)      { toast('Preencha o que está sendo feito', 'er'); return; }
+
+  const btn = document.getElementById('btn-main');
+  btn.disabled = true;
+  btn.textContent = 'Enviando…';
+
+  let wppOk = false;
+
+  try {
+    // Status no Supabase baseado na etapa
+    const etapasConcluidas = ['finalizando', 'aguardando_aprovacao'];
+    const statusSB = etapasConcluidas.includes(ctx.etapa) ? 'entregue' : 'em_andamento';
+
+    // Salva no Supabase
+    await fetch(`${SB_URL}/rest/v1/projetos`, {
+      method: 'POST',
+      headers: {
+        'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY,
+        'Content-Type': 'application/json', 'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({
+        cliente_id:  ctx.clienteId,
+        titulo:      ctx.acao,
+        descricao:   `[Report diário]${ctx.etapa ? ' · ' + ctx.etapa : ''}${ctx.prev ? ' · Previsão: ' + ctx.prev : ''}${ctx.link ? ' · ' + ctx.link : ''}`,
+        status:      statusSB,
+        prazo:       new Date().toISOString().split('T')[0],
+        created_at:  new Date().toISOString()
+      })
+    });
+
+    // Envia WhatsApp
+    if (wppAtivo && ctx.wpp) {
+      const msg = msgFinal || gerarTemplate();
+      const rw  = await fetch(
+        `https://api.z-api.io/instances/${ZAPI_I}/token/${ZAPI_T}/send-text`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Client-Token': ZAPI_C },
+          body: JSON.stringify({ phone: '55' + ctx.wpp.replace(/\D/g,''), message: msg })
+        }
+      );
+      const dw = await rw.json();
+      wppOk = rw.ok && (dw.zaapId || dw.messageId || dw.id);
+    }
+
+    // Adiciona ao histórico
+    const sel  = document.getElementById('sel-cliente');
+    const nome = sel.options[sel.selectedIndex]?.text.split(' · ')[0];
+    adicionarHistorico(nome, ctx.acao, wppOk, msgIsIA, statusSB);
+
+    // Reset
+    document.getElementById('inp-acao').value = '';
+    document.getElementById('inp-link').value = '';
+    document.getElementById('sel-etapa').value = '';
+    document.getElementById('sel-prev').value = '';
+    msgFinal = ''; msgIsIA = false;
+    atualizarPreview();
+    if (wppAtivo) toggleWpp();
+
+    const statusLabel = statusSB === 'entregue' ? '✅ salvo como entregue' : '🔄 salvo como em andamento';
+    toast(wppOk ? `📲 Enviado · ${statusLabel}` : `✅ Registrado · ${statusLabel}`);
+
+  } catch(e) {
+    toast('Erro: ' + e.message, 'er');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = wppAtivo ? 'Enviar report via WhatsApp 📲' : 'Enviar report';
+  }
+}
+
+// ── HISTÓRICO ─────────────────────────────────────────────────────
+function adicionarHistorico(nome, acao, wpp, ia, status) {
+  document.getElementById('hist').style.display = 'block';
+  const lista = document.getElementById('hist-lista');
+  const cor   = status === 'entregue' ? '#2DD47A' : '#4C82FB';
+  const el = document.createElement('div');
+  el.className = 'hist-item';
+  el.innerHTML = `
+    <div class="h-dot" style="background:${cor}"></div>
+    <div class="h-info">
+      <div class="h-nome">${acao}</div>
+      <div class="h-meta">${nome}${ia ? ' · ✦ IA' : ''}${wpp ? ' · 📲' : ''} · ${status === 'entregue' ? '✅ Entregue' : '🔄 Em andamento'}</div>
+    </div>
+  `;
+  lista.insertBefore(el, lista.firstChild);
+  while (lista.children.length > 5) lista.removeChild(lista.lastChild);
+}
+
+
+// ── ATIVIDADES DO DIA ─────────────────────────────────────────────
+let atividades = JSON.parse(localStorage.getItem('atividades5') || '[]');
+
+function salvarAtividades(){
+  localStorage.setItem('atividades5', JSON.stringify(atividades));
+}
+
+function renderAtividades(){
+  const lista = document.getElementById('ativ-lista');
+  if(!lista) return;
+
+  // Label da semana
+  const semLabel = document.getElementById('ativ-semana-label');
+  const d = new Date();
+  const ini = new Date(d); ini.setDate(d.getDate()-d.getDay());
+  const fim = new Date(ini); fim.setDate(ini.getDate()+6);
+  if(semLabel) semLabel.textContent = ini.toLocaleDateString('pt-BR',{day:'numeric',month:'short'})+' – '+fim.toLocaleDateString('pt-BR',{day:'numeric',month:'short'});
+
+  const semana = getSemanaStr();
+  // Aceita atividades da semana atual, comparando por data
+  const d7 = new Date(); d7.setDate(d7.getDate()-7);
+  const desta = atividadesDia.filter(a => {
+    // Tenta por semana string
+    if(a.semana === semana) return true;
+    // Fallback: por data nos últimos 7 dias
+    if(a.data && new Date(a.data) >= d7) return true;
+    return false;
+  });
+  const abertas    = desta.filter(a => !a.concluida);
+  const concluidas = desta.filter(a => a.concluida);
+  const todas = [...abertas, ...concluidas];
+
+  if(!todas.length){
+    lista.innerHTML = '<div style="text-align:center;padding:20px;color:var(--ink4);font-size:12.5px">Nenhuma atividade essa semana</div>';
+    return;
+  }
+
+  lista.innerHTML = todas.map(a => `
+    <div class="ativ-item ${a.concluida?'concluida':''}" id="ativ-${a.id}">
+      <div class="ativ-check ${a.concluida?'on':''}" onclick="toggleAtividade('${a.id}')"></div>
+      <div style="flex:1;min-width:0">
+        <div class="ativ-nome">${a.titulo}</div>
+        ${a.clienteNome?`<span class="ativ-cliente-tag">${a.clienteNome.split(' ')[0]}</span>`:''}
+      </div>
+      <span class="ativ-del" onclick="deletarAtividade('${a.id}')">×</span>
+    </div>`).join('');
+}
+
+async function adicionarAtividade(){
+  const input = document.getElementById('ativ-input');
+  const titulo = input.value.trim();
+  if(!titulo) return;
+  input.value = '';
+
+  // Pega cliente do painel de atividades (ou do report)
+  const selAtiv = document.getElementById('ativ-cliente');
+  const selReport = document.getElementById('sel-cliente');
+  const sel = (selAtiv?.value ? selAtiv : selReport);
+  const opt = sel?.options[sel.selectedIndex];
+  const clienteId   = sel?.value || '';
+  const clienteNome = opt?.text?.split(' · ')[0] || '';
+  const prazo = document.getElementById('ativ-prazo')?.value || '';
+
+  const ativ = {
+    id: Date.now().toString(),
+    titulo,
+    clienteId,
+    clienteNome,
+    prazo,
+    data: new Date().toISOString().split('T')[0],
+    semana: getSemanaStr(),
+    concluida: false,
+    created_at: new Date().toISOString()
+  };
+
+  atividades.unshift(ativ);
+  salvarAtividades();
+  renderAtividades();
+
+  // Salva no Supabase também
+  if(clienteId){
+    fetch(`${SB_URL}/rest/v1/tarefas`, {
+      method: 'POST',
+      headers: {'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+      body: JSON.stringify({
+        cliente_id: clienteId,
+        titulo,
+        categoria: 'geral',
+        status: 'pendente',
+        tempo_total: 0,
+        created_at: new Date().toISOString()
+      })
+    }).catch(()=>{});
+  }
+}
+
+function toggleAtividade(id){
+  const idx = atividades.findIndex(a=>a.id===id);
+  if(idx<0) return;
+  const ativ = atividades[idx];
+  ativ.concluida = !ativ.concluida;
+  salvarAtividades();
+  renderAtividades();
+
+  // Ao marcar como concluída: salva como entregue no Supabase
+  if(ativ.concluida && ativ.clienteId){
+    fetch(`${SB_URL}/rest/v1/projetos`, {
+      method: 'POST',
+      headers: {'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+      body: JSON.stringify({
+        cliente_id: ativ.clienteId,
+        titulo: ativ.titulo,
+        status: 'entregue',
+        prazo: ativ.prazo || new Date().toISOString().split('T')[0],
+        created_at: new Date().toISOString()
+      })
+    }).then(()=>toast('✅ Salvo como entregue para '+ativ.clienteNome.split(' ')[0])).catch(()=>{});
+  }
+}
+
+function deletarAtividade(id){
+  atividades = atividades.filter(a=>a.id!==id);
+  salvarAtividades();
+  renderAtividades();
+}
+
+function getSemanaStr(){
+  const d = new Date();
+  d.setDate(d.getDate() - d.getDay());
+  return d.toISOString().split('T')[0];
+}
+
+// ── RESUMO SEMANAL ─────────────────────────────────────────────────
+async function abrirResumoSemanal(){
+  document.getElementById('modal-resumo').classList.add('open');
+  const body = document.getElementById('modal-body');
+  body.innerHTML = '<div style="text-align:center;padding:32px;color:var(--ink3)">Carregando…</div>';
+
+  const semana = getSemanaStr();
+  // Aceita atividades da semana atual, comparando por data
+  const d7 = new Date(); d7.setDate(d7.getDate()-7);
+  const desta = atividadesDia.filter(a => {
+    // Tenta por semana string
+    if(a.semana === semana) return true;
+    // Fallback: por data nos últimos 7 dias
+    if(a.data && new Date(a.data) >= d7) return true;
+    return false;
+  });
+
+  if(!desta.length){
+    body.innerHTML = '<div style="text-align:center;padding:32px;color:var(--ink3)">Nenhuma atividade registrada essa semana.</div>';
+    return;
+  }
+
+  // Agrupa por cliente
+  const porCliente = {};
+  desta.forEach(a => {
+    const key = a.clienteId || 'sem-cliente';
+    if(!porCliente[key]) porCliente[key] = { nome: a.clienteNome || 'Sem cliente', atividades: [], wpp: '' };
+    porCliente[key].atividades.push(a);
+  });
+
+  // Busca WhatsApp dos clientes
+  try {
+    const r = await fetch(`${SB_URL}/rest/v1/clientes?select=id,whatsapp`, {
+      headers: {'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}
+    });
+    const cls = await r.json() || [];
+    cls.forEach(c => { if(porCliente[c.id]) porCliente[c.id].wpp = c.whatsapp || ''; });
+  } catch(e){}
+
+  // Datas da semana
+  const d = new Date();
+  const ini = new Date(d); ini.setDate(d.getDate()-d.getDay());
+  const fim = new Date(ini); fim.setDate(ini.getDate()+6);
+  const periodo = `${ini.toLocaleDateString('pt-BR',{day:'numeric',month:'short'})} a ${fim.toLocaleDateString('pt-BR',{day:'numeric',month:'short'})}`;
+
+  body.innerHTML = Object.entries(porCliente).map(([key, grupo]) => {
+    const lista = grupo.atividades.map(a=>'• '+a.titulo+(a.concluida?' ✓':'')).join('\n');
+    const alias = grupo.nome.split(' ')[0];
+    const msg = 'Olá, '+alias+'! 👋\n\n📋 *Resumo da semana — '+periodo+'*\n\n'+lista+'\n\nSeguimos trabalhando com dedicação. Qualquer dúvida, estamos aqui!\n\n— Equipe 5essência Marketing';
+    return `<div class="resumo-cliente">
+      <div class="resumo-cli-nome">${grupo.nome} <span style="font-size:11px;color:var(--ink3);font-weight:400">(${grupo.atividades.length} atividades)</span></div>
+      <div class="resumo-preview">${msg}</div>
+      ${grupo.wpp
+        ? `<button class="resumo-enviar" onclick="enviarResumo('${grupo.wpp}',${JSON.stringify(msg).replace(/'/g,"\'")},'${alias}')">📲 Enviar para ${alias}</button>`
+        : `<div style="font-size:12px;color:var(--ink3);text-align:center;padding:6px">Sem WhatsApp cadastrado</div>`
+      }
+    </div>`;
+  }).join('');
+}
+
+async function enviarResumo(wpp, msg, alias){
+  const numero = wpp.replace(/\D/g,'');
+  const btn = event.target;
+  btn.disabled = true;
+  btn.textContent = 'Enviando…';
+  try {
+    const r = await fetch(
+      `https://api.z-api.io/instances/${ZAPI_I}/token/${ZAPI_T}/send-text`,
+      {method:'POST',headers:{'Content-Type':'application/json','Client-Token':ZAPI_C},
+       body:JSON.stringify({phone:'55'+numero,message:msg})}
+    );
+    const d = await r.json();
+    if(d.zaapId||d.messageId||d.id){
+      btn.textContent = `✅ Enviado para ${alias}!`;
+      btn.style.background = 'rgba(45,212,122,0.2)';
+      btn.style.color = 'var(--green)';
+      toast(`📲 Resumo enviado para ${alias}!`);
+    } else {
+      btn.textContent = 'Erro ao enviar';
+      btn.disabled = false;
+    }
+  } catch(e){
+    btn.textContent = 'Erro de conexão';
+    btn.disabled = false;
+  }
+}
+
+function fecharResumo(){
+  document.getElementById('modal-resumo').classList.remove('open');
+}
+
+// Inicializa atividades
+document.addEventListener('DOMContentLoaded', ()=>{
+  initAtividades();
+  renderComercial();
+  setTimeout(verificarNotificacoes, 1200);
+  // Limpa atividades de mais de 14 dias
+  const limite = new Date();
+  limite.setDate(limite.getDate()-14);
+  atividades = atividades.filter(a => new Date(a.data) >= limite);
+  salvarAtividades();
+  renderAtividades();
+});
+
+
+// ── ATIVIDADES LIVRES ─────────────────────────────────────────────
+let atividadesDia = JSON.parse(localStorage.getItem('atv5_'+hoje()) || '[]');
+let clientes = []; // populado junto com o select de clientes
+
+function hoje(){ return new Date().toISOString().split('T')[0]; }
+function getSemanaStr(){ const d=new Date(); d.setDate(d.getDate()-d.getDay()); return d.toISOString().split('T')[0]; }
+function salvarAtv(){ localStorage.setItem('atv5_'+hoje(), JSON.stringify(atividadesDia)); }
+
+function initAtividades(){
+  const d = new Date();
+  const label = document.getElementById('ativ-date-label');
+  if(label) label.textContent = 'Atividades de hoje — '+d.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'}).replace(/^\w/,c=>c.toUpperCase());
+  renderListaDia();
+}
+
+function adicionarLivre(){
+  const campo = document.getElementById('campo-livre');
+  const texto = campo.value.trim();
+  if(!texto) return;
+
+  const linhas = texto.split(/[,\n]+/).map(l=>l.trim()).filter(l=>l.length>2);
+
+  linhas.forEach(linha=>{
+    let titulo = linha;
+    let clienteEncontrado = null;
+
+    // Detecta /NomeCliente no texto
+    const slashMatch = linha.match(/\/(\w+)/);
+    if(slashMatch){
+      const nome = slashMatch[1].toLowerCase();
+      clienteEncontrado = clientes.find(c=>
+        c.nome_completo.split(' ')[0].toLowerCase().startsWith(nome)
+      );
+      if(clienteEncontrado){
+        // Remove o /nome do título
+        titulo = linha.replace(/\/\w+/, '').trim().replace(/\s+/,' ');
+      }
+    }
+
+    // Fallback: detecta nome do cliente no texto
+    if(!clienteEncontrado){
+      clienteEncontrado = clientes.find(c=>
+        linha.toLowerCase().includes(c.nome_completo.split(' ')[0].toLowerCase())
+      );
+    }
+
+    atividadesDia.push({
+      id: Date.now().toString()+Math.random().toString(36).slice(2,5),
+      titulo,
+      categoria: 'geral',
+      clienteId: clienteEncontrado?.id||'',
+      clienteNome: clienteEncontrado?.nome_completo||'',
+      semana: getSemanaStr(),
+      data: hoje(),
+      concluida: false
+    });
+  });
+
+  salvarAtv();
+  atividadesDia.forEach(a=>{ if(!a._saved){ salvarAtvSupabase(a); a._saved=true; } });
+  campo.value = '';
+  renderListaDia();
+}
+
+function renderListaDia(){
+  const lista = document.getElementById('lista-dia');
+  if(!lista) return;
+
+  if(!atividadesDia.length){
+    lista.innerHTML = '<div style="text-align:center;padding:16px 0;color:var(--ink4);font-size:12.5px">Nada ainda. Digite acima e pressione Enter!</div>';
+    return;
+  }
+
+  // Agrupa por cliente
+  const grupos = {};
+  atividadesDia.forEach(a=>{
+    const key = a.clienteId||'_sem';
+    const nome = a.clienteNome||'Geral';
+    if(!grupos[key]) grupos[key]={nome,items:[]};
+    grupos[key].items.push(a);
+  });
+
+  lista.innerHTML = Object.entries(grupos).map(([key,g])=>`
+    <div>
+      ${g.nome!=='Geral'?`<div class="ativ-grupo-nome" onclick="abrirModalCliente('${key}','${g.nome}')">${g.nome.split(' ')[0]} <span style="font-size:9px;opacity:0.5">↗</span></div>`:''}
+      ${g.items.map(a=>`
+        <div class="ativ-item-row ${a.concluida?'done':''} ${!a.clienteId?'pessoal':''}">
+          <div class="ativ-check-box ${a.concluida?'on':''}" onclick="toggleAtv('${a.id}')"></div>
+          <span class="ativ-item-nome">${a.titulo}</span>
+          <span class="ativ-del-btn" onclick="deletarAtv('${a.id}')">×</span>
+        </div>`).join('')}
+    </div>`).join('');
+}
+
+function toggleAtv(id){
+  const idx = atividadesDia.findIndex(a=>a.id===id);
+  if(idx<0) return;
+  atividadesDia[idx].concluida = !atividadesDia[idx].concluida;
+  salvarAtv();
+
+  // Ao concluir: salva como projeto entregue no Supabase
+  const a = atividadesDia[idx];
+  if(a.concluida && a.clienteId){
+    fetch(`${SB_URL}/rest/v1/projetos`,{
+      method:'POST',
+      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+      body:JSON.stringify({cliente_id:a.clienteId,titulo:a.titulo,status:'entregue',prazo:hoje(),created_at:new Date().toISOString()})
+    }).catch(()=>{});
+    toast('✅ Salvo para '+a.clienteNome.split(' ')[0]);
+  }
+  renderListaDia();
+}
+
+function deletarAtv(id){
+  atividadesDia = atividadesDia.filter(a=>a.id!==id);
+  salvarAtv();
+  renderListaDia();
+}
+
+// Integra atividades no resumo semanal existente
+const _abrirResumoOriginal = typeof abrirResumoSemanal !== 'undefined' ? abrirResumoSemanal : null;
+
+
+// ── MODAL CLIENTE ────────────────────────────────────────────────
+async function abrirModalCliente(clienteId, clienteNome){
+  document.getElementById('modal-cliente').style.display = 'flex';
+  document.getElementById('mcli-nome').textContent = clienteNome;
+  const body = document.getElementById('mcli-body');
+  body.innerHTML = '<div style="text-align:center;padding:20px;color:var(--ink3)">Carregando…</div>';
+
+  // Atividades locais da semana
+  const semana = getSemanaStr();
+  const locais = atividadesDia.filter(a => a.clienteId === clienteId && a.semana === semana);
+
+  // Projetos do Supabase dessa semana
+  const d = new Date(); d.setDate(d.getDate()-d.getDay());
+  const semStr = d.toISOString().split('T')[0];
+  let projetos = [];
+  try{
+    const r = await fetch(`${SB_URL}/rest/v1/projetos?select=titulo,status,created_at&cliente_id=eq.${clienteId}&created_at=gte.${semStr}T00:00:00&order=created_at.desc`,
+      {headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});
+    projetos = await r.json()||[];
+  }catch(e){}
+
+  if(!locais.length && !projetos.length){
+    body.innerHTML = '<div style="text-align:center;padding:20px;color:var(--ink3)">Nenhuma atividade essa semana</div>';
+    return;
+  }
+
+  const statusCor = {entregue:'var(--green)',em_andamento:'var(--blue)',briefing:'var(--orange)'};
+  const statusLabel = {entregue:'Entregue',em_andamento:'Em andamento',briefing:'Briefing'};
+
+  const itensLocais = locais.map(a=>`
+    <div style="display:flex;align-items:center;gap:9px;padding:8px 11px;background:var(--bg2);border:1px solid ${a.concluida?'rgba(45,212,122,0.2)':'var(--b1)'};border-radius:10px">
+      <div style="width:6px;height:6px;border-radius:50%;background:${a.concluida?'var(--green)':'var(--ink3)'};flex-shrink:0"></div>
+      <span style="flex:1;font-size:13px;${a.concluida?'text-decoration:line-through;color:var(--ink3)':'color:var(--ink)'}">${a.titulo}</span>
+      <span style="font-size:10px;color:${a.concluida?'var(--green)':'var(--ink3)'}">${a.concluida?'Feito':'Pendente'}</span>
+    </div>`).join('');
+
+  const itensProjetos = projetos.map(p=>`
+    <div style="display:flex;align-items:center;gap:9px;padding:8px 11px;background:var(--bg2);border:1px solid var(--b1);border-radius:10px">
+      <div style="width:6px;height:6px;border-radius:50%;background:${statusCor[p.status]||'var(--ink3)'};flex-shrink:0"></div>
+      <span style="flex:1;font-size:13px;color:var(--ink)">${p.titulo}</span>
+      <span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;background:${statusCor[p.status]||'var(--ink3)'}22;color:${statusCor[p.status]||'var(--ink3)'}">${statusLabel[p.status]||p.status}</span>
+    </div>`).join('');
+
+  body.innerHTML = (locais.length?`<div style="font-size:10px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">Atividades do dia</div>${itensLocais}`:'')
+    + (projetos.length?`<div style="font-size:10px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:0.08em;margin:10px 0 6px">Registrado no sistema</div>${itensProjetos}`:'');
+}
+
+function fecharModalCliente(){
+  document.getElementById('modal-cliente').style.display = 'none';
+}
+
+
+// ── COMERCIAL ────────────────────────────────────────────────────
+let tabComercial = 'prospec';
+let prospectos = JSON.parse(localStorage.getItem('prospectos5')||'[]');
+
+function toggleComercial(){
+  const col = document.getElementById('col-report');
+  const btn = document.getElementById('btn-comercial');
+  const aberto = col.classList.toggle('comercial-aberto');
+  btn.style.background = aberto ? 'rgba(168,85,247,0.2)' : 'rgba(168,85,247,0.1)';
+  if(aberto) renderComercial();
+}
+
+function setTabComercial(tab){
+  tabComercial = tab;
+  ['prospec','followup','registros'].forEach(t=>{
+    const el = document.getElementById('tab-'+t);
+    if(!el) return;
+    if(t===tab){
+      el.style.background='rgba(168,85,247,0.2)';
+      el.style.color='#C084FC';
+    } else {
+      el.style.background='transparent';
+      el.style.color='rgba(255,255,255,0.35)';
+    }
+  });
+  renderComercial();
+}
+
+function renderComercial(){
+  const body = document.getElementById('comercial-body');
+  if(!body) return;
+  if(tabComercial==='prospec')  renderProspec(body);
+  if(tabComercial==='followup') renderFollowup(body);
+  if(tabComercial==='registros') renderRegistros(body);
+}
+
+// ── PROSPECÇÃO ──────────────────────────────────────────────────
+function renderProspec(body){
+  body.innerHTML = `
+    <div style="margin-bottom:14px">
+      <div style="font-size:10px;font-weight:700;color:rgba(168,85,247,0.7);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px">Novo prospecto</div>
+      <input id="pr-nome" placeholder="Nome" style="${inputStyle()}margin-bottom:7px">
+      <input id="pr-empresa" placeholder="Empresa / Segmento" style="${inputStyle()}margin-bottom:7px">
+      <input id="pr-contato" placeholder="WhatsApp" style="${inputStyle()}margin-bottom:7px">
+      <textarea id="pr-diag" rows="3" placeholder="Diagnóstico — escreva o que sabe sobre o negócio, dores, objetivos…" style="${inputStyle()}resize:none;height:80px;margin-bottom:7px"></textarea>
+      <div style="display:flex;gap:7px">
+        <button onclick="gerarPitchProspec()" style="${btnSecStyle()}flex:1">✦ Gerar pitch</button>
+        <button onclick="salvarProspecto()" style="${btnPriStyle()}flex:1">+ Salvar</button>
+      </div>
+      <div id="pr-pitch" style="display:none;margin-top:10px;background:rgba(0,0,0,0.3);border:1px solid rgba(168,85,247,0.2);border-radius:10px;padding:12px;font-size:12.5px;color:rgba(240,240,255,0.85);line-height:1.65;white-space:pre-wrap"></div>
+      <button id="pr-pitch-send" onclick="enviarPitch()" style="display:none;width:100%;margin-top:8px;${btnPriStyle()}">📲 Enviar via WhatsApp</button>
+    </div>
+
+    <div style="font-size:10px;font-weight:700;color:rgba(168,85,247,0.7);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px">Em prospecção (${prospectos.filter(p=>p.status==='prospecto').length})</div>
+    ${prospectos.filter(p=>p.status==='prospecto').map(p=>prospectoCard(p)).join('') || '<div style="text-align:center;padding:16px;color:rgba(255,255,255,0.2);font-size:12.5px">Nenhum prospecto ainda</div>'}
+  `;
+}
+
+function inputStyle(){ return 'width:100%;background:rgba(0,0,0,0.3);border:1px solid rgba(168,85,247,0.2);border-radius:9px;color:#F0F0FF;font-family:Inter,sans-serif;font-size:13px;padding:9px 12px;outline:none;display:block;'; }
+function btnPriStyle(){ return 'padding:9px 14px;border:none;border-radius:9px;background:linear-gradient(135deg,#7C3AED,#4C82FB);color:#fff;font-family:Inter,sans-serif;font-size:12.5px;font-weight:700;cursor:pointer;'; }
+function btnSecStyle(){ return 'padding:9px 14px;border:1px solid rgba(168,85,247,0.3);border-radius:9px;background:rgba(168,85,247,0.1);color:#C084FC;font-family:Inter,sans-serif;font-size:12.5px;font-weight:700;cursor:pointer;'; }
+
+function prospectoCard(p){
+  const statusCor = {prospecto:'#A855F7',followup:'#FF9A0A',cliente:'#2DD47A',perdido:'#FF3B45'};
+  const c = statusCor[p.status]||'#A855F7';
+  return `<div style="background:rgba(0,0,0,0.3);border:1px solid rgba(168,85,247,0.15);border-radius:11px;padding:12px 13px;margin-bottom:8px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <div style="font-size:13px;font-weight:700;color:#F0F0FF">${p.nome}</div>
+      <span style="font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:20px;background:${c}22;color:${c}">${p.status}</span>
+    </div>
+    <div style="font-size:11.5px;color:rgba(255,255,255,0.4);margin-bottom:8px">${p.empresa||''}</div>
+    <div style="display:flex;gap:6px">
+      <button onclick="moverProspecto('${p.id}','followup')" style="${btnSecStyle()}font-size:11px;padding:5px 10px">Follow-up</button>
+      <button onclick="moverProspecto('${p.id}','cliente')" style="${btnSecStyle()}font-size:11px;padding:5px 10px;border-color:rgba(45,212,122,0.3);color:#4ADE80">Fechou!</button>
+      <button onclick="verRegistros('${p.id}')" style="${btnSecStyle()}font-size:11px;padding:5px 10px;margin-left:auto">Ver</button>
+    </div>
+  </div>`;
+}
+
+async function gerarPitchProspec(){
+  const nome    = document.getElementById('pr-nome')?.value.trim()||'';
+  const empresa = document.getElementById('pr-empresa')?.value.trim()||'';
+  const diag    = document.getElementById('pr-diag')?.value.trim()||'';
+  if(!diag){ toast('Escreva o diagnóstico primeiro','er'); return; }
+
+  const pitchEl = document.getElementById('pr-pitch');
+  const sendBtn = document.getElementById('pr-pitch-send');
+  pitchEl.style.display='block';
+  pitchEl.textContent='Gerando pitch…';
+
+  try{
+    const r = await fetch(`${SB_URL}/functions/v1/chat-assistant`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY},
+      body:JSON.stringify({
+        system:'Você é um especialista em vendas consultivas para agências de marketing digital premium. Crie uma mensagem de prospecção via WhatsApp com base no diagnóstico do lead. Tom: profissional, direto, que gera curiosidade. Máximo 6 linhas. Sem asteriscos markdown. Termine com: — Equipe 5essência Marketing',
+        messages:[{role:'user',content:`Diagnóstico: ${diag}
+Lead: ${nome}${empresa?' — '+empresa:''}
+
+Crie um pitch de prospecção personalizado.`}]
+      })
+    });
+    const d = await r.json();
+    pitchEl.textContent = d.resposta||'Não consegui gerar.';
+    sendBtn.style.display = 'block';
+  }catch(e){
+    pitchEl.textContent = 'Erro de conexão.';
+  }
+}
+
+function salvarProspecto(){
+  const nome    = document.getElementById('pr-nome')?.value.trim();
+  const empresa = document.getElementById('pr-empresa')?.value.trim()||'';
+  const contato = document.getElementById('pr-contato')?.value.trim()||'';
+  const diag    = document.getElementById('pr-diag')?.value.trim()||'';
+  if(!nome){ toast('Preencha o nome','er'); return; }
+
+  prospectos.unshift({
+    id: Date.now().toString(),
+    nome, empresa, contato, diag,
+    status: 'prospecto',
+    criado: new Date().toISOString(),
+    registros: [{data: new Date().toISOString(), tipo:'criação', nota:'Prospecto adicionado.'}]
+  });
+  localStorage.setItem('prospectos5', JSON.stringify(prospectos));
+  ['pr-nome','pr-empresa','pr-contato','pr-diag'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('pr-pitch').style.display='none';
+  document.getElementById('pr-pitch-send').style.display='none';
+  renderComercial();
+  toast('Prospecto salvo!');
+}
+
+function moverProspecto(id, status){
+  const idx = prospectos.findIndex(p=>p.id===id);
+  if(idx<0) return;
+  prospectos[idx].status = status;
+  prospectos[idx].registros = prospectos[idx].registros||[];
+  prospectos[idx].registros.push({data:new Date().toISOString(),tipo:status,nota:`Status atualizado para ${status}`});
+  localStorage.setItem('prospectos5', JSON.stringify(prospectos));
+  renderComercial();
+  toast(status==='cliente'?'🎉 Cliente fechado!':'Status atualizado');
+}
+
+async function enviarPitch(){
+  const contato = document.getElementById('pr-contato')?.value.trim()||'';
+  const pitch   = document.getElementById('pr-pitch')?.textContent||'';
+  if(!contato){ toast('Preencha o WhatsApp do lead','er'); return; }
+  const num = contato.replace(/\D/g,'');
+  const r = await fetch(`https://api.z-api.io/instances/${ZAPI_I}/token/${ZAPI_T}/send-text`,{
+    method:'POST',headers:{'Content-Type':'application/json','Client-Token':ZAPI_C},
+    body:JSON.stringify({phone:'55'+num,message:pitch})
+  }).then(r=>r.json()).catch(()=>({}));
+  if(r.zaapId||r.messageId||r.id) toast('📲 Pitch enviado!');
+  else toast('Erro ao enviar','er');
+}
+
+// ── FOLLOW-UP ───────────────────────────────────────────────────
+function renderFollowup(body){
+  const lista = prospectos.filter(p=>p.status==='followup');
+  body.innerHTML = `
+    <div style="font-size:10px;font-weight:700;color:rgba(168,85,247,0.7);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px">Aguardando follow-up (${lista.length})</div>
+    ${lista.map(p=>`
+      <div style="background:rgba(0,0,0,0.3);border:1px solid rgba(255,154,10,0.2);border-radius:11px;padding:12px 13px;margin-bottom:8px">
+        <div style="font-size:13px;font-weight:700;color:#F0F0FF;margin-bottom:3px">${p.nome}</div>
+        <div style="font-size:11.5px;color:rgba(255,255,255,0.4);margin-bottom:8px">${p.empresa||''} · ${p.contato||''}</div>
+        <textarea id="nota-${p.id}" rows="2" placeholder="Anotação do follow-up…" style="${inputStyle()}height:56px;margin-bottom:7px;resize:none"></textarea>
+        <div style="display:flex;gap:6px">
+          <button onclick="addNota('${p.id}')" style="${btnSecStyle()}font-size:11px;padding:5px 10px">+ Registrar</button>
+          <button onclick="moverProspecto('${p.id}','cliente')" style="${btnSecStyle()}font-size:11px;padding:5px 10px;border-color:rgba(45,212,122,0.3);color:#4ADE80">Fechou!</button>
+          <button onclick="moverProspecto('${p.id}','perdido')" style="${btnSecStyle()}font-size:11px;padding:5px 10px;border-color:rgba(255,59,69,0.2);color:#F87171">Perdeu</button>
+        </div>
+      </div>`).join('') || '<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.2);font-size:12.5px">Nenhum follow-up pendente</div>'}
+  `;
+}
+
+function addNota(id){
+  const el = document.getElementById('nota-'+id);
+  const nota = el?.value.trim();
+  if(!nota) return;
+  const idx = prospectos.findIndex(p=>p.id===id);
+  if(idx<0) return;
+  prospectos[idx].registros = prospectos[idx].registros||[];
+  prospectos[idx].registros.push({data:new Date().toISOString(),tipo:'followup',nota});
+  localStorage.setItem('prospectos5', JSON.stringify(prospectos));
+  el.value='';
+  toast('Anotação salva!');
+}
+
+// ── REGISTROS ───────────────────────────────────────────────────
+function renderRegistros(body){
+  const todos = [...prospectos].sort((a,b)=>new Date(b.criado)-new Date(a.criado));
+  const statusCor = {prospecto:'#A855F7',followup:'#FF9A0A',cliente:'#2DD47A',perdido:'#FF3B45'};
+  body.innerHTML = `
+    <div style="font-size:10px;font-weight:700;color:rgba(168,85,247,0.7);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px">Todos os registros (${todos.length})</div>
+    ${todos.map(p=>{
+      const c = statusCor[p.status]||'#A855F7';
+      const ult = p.registros?.[p.registros.length-1];
+      return `<div style="background:rgba(0,0,0,0.3);border:1px solid rgba(168,85,247,0.12);border-radius:11px;padding:12px 13px;margin-bottom:8px;cursor:pointer" onclick="verRegistros('${p.id}')">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div style="font-size:13px;font-weight:700;color:#F0F0FF">${p.nome}</div>
+          <span style="font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:20px;background:${c}22;color:${c}">${p.status}</span>
+        </div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:4px">${p.empresa||''}${ult?' · '+new Date(ult.data).toLocaleDateString('pt-BR'):''}</div>
+      </div>`;
+    }).join('') || '<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.2);font-size:12.5px">Nenhum registro ainda</div>'}
+  `;
+}
+
+function verRegistros(id){
+  const p = prospectos.find(x=>x.id===id);
+  if(!p) return;
+  const body = document.getElementById('comercial-body');
+  const regs = (p.registros||[]).slice().reverse();
+  body.innerHTML = `
+    <button onclick="setTabComercial('registros')" style="${btnSecStyle()}margin-bottom:14px;font-size:11px;padding:5px 10px">← Voltar</button>
+    <div style="font-size:14px;font-weight:700;color:#F0F0FF;margin-bottom:2px">${p.nome}</div>
+    <div style="font-size:11.5px;color:rgba(255,255,255,0.4);margin-bottom:14px">${p.empresa||''} · ${p.contato||''}</div>
+    ${p.diag?`<div style="background:rgba(0,0,0,0.3);border:1px solid rgba(168,85,247,0.15);border-radius:10px;padding:10px 12px;font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:14px">${p.diag}</div>`:''}
+    <div style="font-size:10px;font-weight:700;color:rgba(168,85,247,0.7);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Histórico</div>
+    ${regs.map(r=>`
+      <div style="display:flex;gap:10px;margin-bottom:10px">
+        <div style="width:1px;background:rgba(168,85,247,0.2);flex-shrink:0;margin-left:5px"></div>
+        <div>
+          <div style="font-size:10px;color:rgba(168,85,247,0.6);margin-bottom:2px">${new Date(r.data).toLocaleDateString('pt-BR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</div>
+          <div style="font-size:12.5px;color:rgba(240,240,255,0.8)">${r.nota}</div>
+        </div>
+      </div>`).join('')}
+  `;
+}
+
+
+
+// ── MEMÓRIA — salva atividades no Supabase ──────────────────────
+async function salvarAtvSupabase(ativ){
+  if(!ativ.clienteId) return; // só salva se tem cliente
+  try {
+    await fetch(`${SB_URL}/rest/v1/tarefas`, {
+      method:'POST',
+      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+      body:JSON.stringify({
+        cliente_id: ativ.clienteId,
+        titulo: ativ.titulo,
+        categoria: ativ.categoria||'geral',
+        status: ativ.concluida ? 'concluida' : 'pendente',
+        tempo_total: 0,
+        created_at: ativ.created_at||new Date().toISOString()
+      })
+    });
+  } catch(e){}
+}
+
+// ── NOTIFICAÇÕES DE STARTUP ──────────────────────────────────────
+async function verificarNotificacoes(){
+  const itens = [];
+
+  // 1. Tarefas do dia anterior em aberto
+  const ontem = new Date();
+  ontem.setDate(ontem.getDate()-1);
+  const ontemStr = ontem.toISOString().split('T')[0];
+
+  // Busca últimos 7 dias no localStorage
+  for(let i=1;i<=7;i++){
+    const d = new Date();
+    d.setDate(d.getDate()-i);
+    const ds = d.toISOString().split('T')[0];
+    const atvsAnteriores = JSON.parse(localStorage.getItem('atv5_'+ds)||'[]');
+    const abertas = atvsAnteriores.filter(a=>!a.concluida);
+    if(abertas.length){
+      itens.push({
+        tipo: 'tarefas_abertas',
+        data: ds,
+        label: d.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'short'}),
+        itens: abertas
+      });
+    }
+  }
+
+  // 2. Cobranças em atraso no Supabase
+  try{
+    const hoje = new Date().toISOString().split('T')[0];
+    const r = await fetch(
+      `${SB_URL}/rest/v1/financeiro?select=id,descricao,valor,vencimento,cliente_id,clientes(nome_completo,whatsapp)&status=eq.pendente&vencimento=lte.${hoje}&order=vencimento.asc`,
+      {headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}}
+    );
+    const cobranças = await r.json()||[];
+    if(cobranças.length) itens.push({tipo:'cobrancas', itens: cobranças});
+  }catch(e){}
+
+  if(!itens.length) return;
+
+  // Monta modal
+  const body = document.getElementById('notif-body');
+  const title = document.getElementById('notif-title');
+  let count = 0;
+  itens.forEach(g=>{ count += g.itens.length; });
+  title.textContent = `⚡ ${count} item${count>1?'s':''} precisam de atenção`;
+
+  body.innerHTML = itens.map(grupo=>{
+    if(grupo.tipo==='tarefas_abertas'){
+      return `<div style="background:rgba(255,154,10,0.06);border:1px solid rgba(255,154,10,0.2);border-radius:12px;padding:12px 14px">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--orange);margin-bottom:8px">⏰ ${grupo.label} — tarefas em aberto</div>
+        ${grupo.itens.map(a=>`<div style="font-size:12.5px;color:var(--ink2);padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04)">${a.clienteNome?'<span style="color:var(--blue);font-weight:600">'+a.clienteNome.split(' ')[0]+'</span> · ':''} ${a.titulo}</div>`).join('')}
+      </div>`;
+    }
+    if(grupo.tipo==='cobrancas'){
+      return grupo.itens.map(c=>{
+        const dias = Math.floor((new Date()-new Date(c.vencimento+'T00:00:00'))/(1000*60*60*24));
+        const juros = dias>3 ? (c.valor * 0.02 * Math.ceil(dias/30)) : 0; // 2% ao mês
+        const totalDevido = c.valor + juros;
+        const cli = c.clientes?.nome_completo?.split(' ')[0]||'Cliente';
+        const wpp = c.clientes?.whatsapp||'';
+        const vencFmt = new Date(c.vencimento+'T00:00:00').toLocaleDateString('pt-BR');
+        const valorFmt = 'R$ '+((c.valor||0).toFixed(2).replace('.',','));
+        const totalFmt = 'R$ '+(totalDevido.toFixed(2).replace('.',','));
+        const jurosFmt = juros>0 ? ('\nJuros ('+dias+'d): R$ '+(juros.toFixed(2).replace('.',','))) : '';
+        const msg = 'Olá, '+cli+'! 👋\n\nPassando para lembrar que identificamos uma pendência financeira em aberto:\n\n💰 *'+(c.descricao||'Fatura')+'*\nVencimento: '+vencFmt+'\nValor: '+valorFmt+jurosFmt+'\n*Total: '+totalFmt+'*\n\nQualquer dúvida, estamos à disposição!\n\n— Equipe 5essência Marketing';
+
+        return `<div style="background:rgba(255,59,69,0.06);border:1px solid rgba(255,59,69,0.2);border-radius:12px;padding:12px 14px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <div style="font-size:13px;font-weight:700;color:var(--ink)">${c.clientes?.nome_completo||'—'}</div>
+            <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(255,59,69,0.15);color:var(--red)">${dias}d em atraso</span>
+          </div>
+          <div style="font-size:12px;color:var(--ink2);margin-bottom:4px">${c.descricao||'Fatura'}</div>
+          <div style="font-size:13px;font-weight:700;color:var(--red);margin-bottom:10px">R$ ${totalDevido.toFixed(2).replace('.',',')}${juros>0?' <span style="font-size:10px;font-weight:500;color:var(--ink3)">(+juros)</span>':''}</div>
+          ${wpp?`<button onclick="cobrarCliente('${wpp}',${JSON.stringify(msg).replace(/'/g,"\'")},'${cli}')" style="width:100%;padding:8px;border:none;border-radius:9px;background:linear-gradient(135deg,var(--red),#c0392b);color:white;font-family:var(--font);font-size:12.5px;font-weight:700;cursor:pointer">📲 Cobrar ${cli}</button>`
+          :'<div style="font-size:11px;color:var(--ink3);text-align:center">Sem WhatsApp cadastrado</div>'}
+        </div>`;
+      }).join('');
+    }
+    return '';
+  }).join('');
+
+  document.getElementById('modal-notif').style.display = 'flex';
+}
+
+async function cobrarCliente(wpp, msg, alias){
+  const num = wpp.replace(/\D/g,'');
+  const btn = event.target;
+  btn.disabled=true; btn.textContent='Enviando…';
+  try{
+    const r = await fetch(
+      `https://api.z-api.io/instances/${ZAPI_I}/token/${ZAPI_T}/send-text`,
+      {method:'POST',headers:{'Content-Type':'application/json','Client-Token':ZAPI_C},
+       body:JSON.stringify({phone:'55'+num,message:msg})}
+    ).then(r=>r.json());
+    if(r.zaapId||r.messageId||r.id){
+      btn.textContent='✅ Enviado!';
+      btn.style.background='rgba(45,212,122,0.2)';
+      btn.style.color='var(--green)';
+      toast('📲 Cobrança enviada para '+alias);
+    } else { btn.textContent='Erro — tente novamente'; btn.disabled=false; }
+  }catch(e){ btn.textContent='Erro de conexão'; btn.disabled=false; }
+}
+
+function fecharNotif(){
+  document.getElementById('modal-notif').style.display='none';
+}
+
+
+// ── TOAST ─────────────────────────────────────────────────────────
+function toast(msg, tipo = 'ok') {
+  const wrap = document.getElementById('toasts');
+  const el   = document.createElement('div');
+  el.className = 'toast';
+  const cor = tipo === 'er' ? '#FF3B45' : '#2DD47A';
+  el.innerHTML = `<div class="tdot" style="background:${cor};box-shadow:0 0 8px ${cor}"></div>${msg}`;
+  wrap.appendChild(el);
+  setTimeout(() => el.remove(), 3200);
+}
+
+// Spin animation para o botão IA
+const style = document.createElement('style');
+style.textContent = '@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}';
+document.head.appendChild(style);
+</script>
+</body>
+</html>

@@ -618,29 +618,28 @@ const SB_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsIn
 const ZAPI_I  = '3F5C34424A94529FAEF902DFFFEFDAC7';
 const ZAPI_T  = '7E3E002717ABB45986650021';
 const ZAPI_C  = 'Fb9f1dad5634343098c2506ee81f99e2eS';
-const SIGN    = 'Equipe 5essência Marketing';
+const SIGN    = '5essência Marketing';
 
 // ── BANCO DE VARIAÇÕES ──────────────────────────────────────────
 // Estrutura: cada array tem múltiplas variações para a IA sortear
 // Nunca repete o mesmo padrão duas vezes seguidas
 
 const ABERTURAS_COM_NOME = [
+  (n) => `Olá, ${n},`,
   (n) => `Olá, ${n}!`,
-  (n) => `Oi, ${n}!`,
-  (n) => `${n}, tudo certo?`,
-  (n) => `Boa tarde, ${n}!`,
-  (n) => `${n}!`,
+  (n) => `Boa tarde, ${n},`,
+  (n) => `Bom dia, ${n},`,
+  (n) => `Boa noite, ${n},`,
 ];
 
 const FRASES_ANDAMENTO = [
-  "Passando para te manter atualizado sobre o andamento do projeto.",
-  "Segue uma atualização rápida sobre o que está em desenvolvimento.",
-  "Uma atualização sobre o trabalho de hoje:",
+  "Segue uma atualização sobre o andamento do projeto.",
+  "Gostaríamos de compartilhar o progresso de hoje.",
+  "Uma breve atualização do trabalho em andamento:",
   "Atualização do dia:",
-  "Deixando você por dentro do que está acontecendo:",
-  "Mais uma atualização do nosso lado:",
-  "Report de hoje:",
-  "Passando para compartilhar o andamento:",
+  "Mantendo você informado sobre o que está em desenvolvimento:",
+  "Progresso de hoje:",
+  "Segue um panorama rápido do andamento:",
 ];
 
 const FRASES_ETAPA = {
@@ -661,12 +660,11 @@ const FRASES_PREVISAO = {
 };
 
 const ENCERRAMENTOS_SEM_LINK = [
-  "Qualquer dúvida ou direcionamento, estamos aqui!",
-  "Qualquer ajuste ou feedback ao longo do processo, é só falar!",
-  "Se surgir algo, pode nos chamar!",
-  "Seguimos trabalhando — qualquer coisa é só chamar.",
-  "Estamos no detalhe. Qualquer dúvida, fala com a gente!",
-  "Trabalhando com atenção em cada detalhe. Qualquer ponto, é só avisar!",
+  "Qualquer dúvida ou alinhamento, estamos à disposição.",
+  "Caso tenha alguma observação, pode nos contatar.",
+  "Continuamos acompanhando cada etapa com atenção.",
+  "Estamos disponíveis para qualquer dúvida ou direcionamento.",
+  "Seguimos trabalhando com dedicação. Qualquer ponto, é só avisar.",
 ];
 
 const ENCERRAMENTOS_COM_LINK = [
@@ -694,7 +692,7 @@ function gerarTemplate() {
   let partes = [];
 
   // Abertura
-  partes.push(rand(ABERTURAS_COM_NOME)(alias) + ' 👋');
+  partes.push(rand(ABERTURAS_COM_NOME)(alias));
   partes.push('');
 
   // Frase de andamento
@@ -753,12 +751,12 @@ Formas de descrever o trabalho: descreva o que está sendo feito de forma profis
 Encerramentos possíveis: "Qualquer ajuste ou direcionamento, estamos aqui!", "Se surgir algo, pode nos chamar!", "Seguimos no detalhe — qualquer coisa é só falar.", "Trabalhando com atenção em cada etapa."
 
 REGRAS:
-1. Tom profissional, próximo e confiante — como um parceiro estratégico, não um prestador de serviço
+1. Tom elegante, educado e direto — como um parceiro de confiança, sem informalidade excessiva nem ar comercial
 2. Máximo 6 linhas no total
 3. Use *negrito* apenas no entregável principal
 4. ${temLink ? 'Inclua o link de forma natural com chamada para ação' : 'NUNCA mencione portal, sistema, link ou "acesse aqui" — não há link'}
 5. Varie a estrutura — não comece sempre da mesma forma
-6. Termine com: — Equipe 5essência Marketing
+6. Termine com: Atenciosamente,\n5essência Marketing
 7. Escreva apenas a mensagem, sem explicações
 
 Escreva a mensagem agora:`;
@@ -1252,7 +1250,7 @@ async function abrirResumoSemanal(){
   body.innerHTML = Object.entries(porCliente).map(([key, grupo]) => {
     const lista = grupo.atividades.map(a=>'• '+a.titulo+(a.concluida?' ✓':'')).join('\n');
     const alias = grupo.nome.split(' ')[0];
-    const msg = 'Olá, '+alias+'! 👋\n\n📋 *Resumo da semana — '+periodo+'*\n\n'+lista+'\n\nSeguimos trabalhando com dedicação. Qualquer dúvida, estamos aqui!\n\n— Equipe 5essência Marketing';
+    const msg = 'Olá, '+alias+'!\n\nSegue o resumo das atividades realizadas pela nossa equipe nesta semana ('+periodo+'):\n\n'+listaTexto+'\n\nContinuamos à disposição para qualquer dúvida ou alinhamento.\n\nAtenciosamente,\n5essência Marketing';
     return `<div class="resumo-cliente">
       <div class="resumo-cli-nome">${grupo.nome} <span style="font-size:11px;color:var(--ink3);font-weight:400">(${grupo.atividades.length} atividades)</span></div>
       <div class="resumo-preview">${msg}</div>
@@ -1579,7 +1577,7 @@ async function gerarPitchProspec(){
       method:'POST',
       headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY},
       body:JSON.stringify({
-        system:'Você é um especialista em vendas consultivas para agências de marketing digital premium. Crie uma mensagem de prospecção via WhatsApp com base no diagnóstico do lead. Tom: profissional, direto, que gera curiosidade. Máximo 6 linhas. Sem asteriscos markdown. Termine com: — Equipe 5essência Marketing',
+        system:'Você é especialista em comunicação para agências de marketing premium. Com base no diagnóstico do lead, escreva uma mensagem de primeiro contato via WhatsApp. Tom: educado, humano, genuinamente interessado no negócio do outro. Sem ar de vendas. Máximo 5 linhas. Sem asteriscos. Termine com: Atenciosamente, 5essência Marketing',
         messages:[{role:'user',content:`Diagnóstico: ${diag}
 Lead: ${nome}${empresa?' — '+empresa:''}
 
@@ -1800,7 +1798,7 @@ async function verificarNotificacoes(){
         const totalFmt = 'R$ '+(totalDevido.toFixed(2).replace('.',','));
         const jurosFmt = juros>0 ? ('\nJuros ('+dias+'d): R$ '+(juros.toFixed(2).replace('.',','))) : '';
         const pixChave = 'ce89b6e3-951a-4485-aff7-5663c3a7d5e1';
-        const msg = 'Olá, '+cli+'! 👋\n\nPassando para lembrar que identificamos uma pendência financeira em aberto:\n\n💰 *'+(c.descricao||'Fatura')+'*\nVencimento: '+vencFmt+'\nValor: '+valorFmt+jurosFmt+'\n*Total: '+totalFmt+'*\n\n💳 *Pagamento via Pix:*\nChave: '+pixChave+'\n\nQualquer dúvida, estamos à disposição!\n\n— Equipe 5essência Marketing';
+        const msg = 'Olá, '+cli+'!\n\nTudo bem? Gostaríamos de informar que identificamos uma parcela em aberto em nosso sistema:\n\n📋 '+( c.descricao||'Mensalidade 5essência')+'\nVencimento: '+vencFmt+'\nValor: '+totalFmt+jurosFmt+'\n\nPara sua conveniência, segue nossa chave Pix:\n'+pixChave+'\n\nAssim que identificarmos o pagamento, daremos continuidade normalmente. Qualquer dúvida, estamos aqui.\n\nAtenciosamente,\n5essência Marketing';
 
         const msgEscapada = msg.replace(/`/g,"'").replace(/\$/g,"\\$");
         return `<div id="cob-${c.id}" style="background:rgba(255,59,69,0.06);border:1px solid rgba(255,59,69,0.2);border-radius:12px;padding:12px 14px">

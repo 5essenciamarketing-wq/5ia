@@ -1483,6 +1483,47 @@ function fecharModalCliente(){
 
 
 // ── COMERCIAL ────────────────────────────────────────────────────
+let servicoSelecionado = '';
+let enviarVideo = false;
+const VIDEO_APRESENTACAO = 'https://drive.google.com/uc?export=download&id=1andzKoQyi40Hp0xMEsllXQSi_pIYMafE';
+
+function toggleVideo(){
+  enviarVideo = !enviarVideo;
+  const dot = document.getElementById('video-dot');
+  const toggle = document.getElementById('video-toggle');
+  if(enviarVideo){
+    dot.style.background = '#C084FC';
+    dot.style.borderColor = '#C084FC';
+    toggle.style.background = 'rgba(168,85,247,0.12)';
+  } else {
+    dot.style.background = 'transparent';
+    dot.style.borderColor = 'rgba(168,85,247,0.4)';
+    toggle.style.background = 'rgba(0,0,0,0.2)';
+  }
+}
+
+function selecionarServico(el, servico){
+  // Toggle
+  if(servicoSelecionado === servico){
+    servicoSelecionado = '';
+    el.style.background = 'transparent';
+    el.style.color = 'rgba(168,85,247,0.6)';
+    el.style.borderColor = 'rgba(168,85,247,0.25)';
+    return;
+  }
+  // Deseleciona todos
+  document.querySelectorAll('#chips-servico div').forEach(d=>{
+    d.style.background = 'transparent';
+    d.style.color = 'rgba(168,85,247,0.6)';
+    d.style.borderColor = 'rgba(168,85,247,0.25)';
+  });
+  // Seleciona o clicado
+  servicoSelecionado = servico;
+  el.style.background = 'rgba(168,85,247,0.2)';
+  el.style.color = '#C084FC';
+  el.style.borderColor = 'rgba(168,85,247,0.5)';
+}
+
 let tabComercial = 'prospec';
 let prospectos = JSON.parse(localStorage.getItem('prospectos5')||'[]');
 
@@ -1522,11 +1563,21 @@ function renderComercial(){
 function renderProspec(body){
   body.innerHTML = `
     <div style="margin-bottom:14px">
+      <div style="font-size:10px;font-weight:700;color:rgba(168,85,247,0.7);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">O que vou ofertar</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px" id="chips-servico">
+        ${['Agendamento','Anúncios','Vídeos','Sites','Marketing 360','SDR','CRM'].map(s=>`
+          <div onclick="selecionarServico(this,'${s}')" style="padding:5px 12px;border-radius:20px;border:1px solid rgba(168,85,247,0.25);background:transparent;color:rgba(168,85,247,0.6);font-size:11.5px;font-weight:600;cursor:pointer;transition:all 0.15s">${s}</div>
+        `).join('')}
+      </div>
       <div style="font-size:10px;font-weight:700;color:rgba(168,85,247,0.7);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px">Novo prospecto</div>
       <input id="pr-nome" placeholder="Nome" style="${inputStyle()}margin-bottom:7px">
       <input id="pr-empresa" placeholder="Empresa / Segmento" style="${inputStyle()}margin-bottom:7px">
       <input id="pr-contato" placeholder="WhatsApp" style="${inputStyle()}margin-bottom:7px">
       <textarea id="pr-diag" rows="3" placeholder="Diagnóstico — escreva o que sabe sobre o negócio, dores, objetivos…" style="${inputStyle()}resize:none;height:80px;margin-bottom:7px"></textarea>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:8px 10px;background:rgba(0,0,0,0.2);border-radius:9px;cursor:pointer" onclick="toggleVideo()" id="video-toggle">
+        <div id="video-dot" style="width:14px;height:14px;border-radius:50%;border:1.5px solid rgba(168,85,247,0.4);flex-shrink:0;transition:all 0.15s"></div>
+        <span style="font-size:12px;font-weight:600;color:rgba(168,85,247,0.7)">Enviar vídeo de apresentação junto</span>
+      </div>
       <div style="display:flex;gap:7px">
         <button onclick="gerarPitchProspec()" style="${btnSecStyle()}flex:1">✦ Gerar pitch</button>
         <button onclick="salvarProspecto()" style="${btnPriStyle()}flex:1">+ Salvar</button>
@@ -1577,11 +1628,8 @@ async function gerarPitchProspec(){
       method:'POST',
       headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY},
       body:JSON.stringify({
-        system:'Você é especialista em comunicação para agências de marketing premium. Com base no diagnóstico do lead, escreva uma mensagem de primeiro contato via WhatsApp. Tom: educado, humano, genuinamente interessado no negócio do outro. Sem ar de vendas. Máximo 5 linhas. Sem asteriscos. Termine com: Atenciosamente, 5essência Marketing',
-        messages:[{role:'user',content:`Diagnóstico: ${diag}
-Lead: ${nome}${empresa?' — '+empresa:''}
-
-Crie um pitch de prospecção personalizado.`}]
+        system:'Você é especialista em comunicação para agências de marketing premium. Com base no diagnóstico do lead, escreva uma mensagem de primeiro contato via WhatsApp. Tom: educado, humano, genuinamente interessado no negócio do outro. Sem ar de vendas. Sem asteriscos. Máximo 5 linhas. Termine com: Atenciosamente, 5essência Marketing',
+        messages:[{role:'user',content:'Diagnóstico: '+diag+'\nLead: '+nome+(empresa?' — '+empresa:'')+(servicoSelecionado?'\nServiço a ofertar: '+servicoSelecionado:'')+'\n\nCrie uma mensagem de primeiro contato, mencionando o serviço de forma natural e sem parecer uma oferta direta.'}]
       })
     });
     const d = await r.json();
@@ -1629,13 +1677,35 @@ async function enviarPitch(){
   const contato = document.getElementById('pr-contato')?.value.trim()||'';
   const pitch   = document.getElementById('pr-pitch')?.textContent||'';
   if(!contato){ toast('Preencha o WhatsApp do lead','er'); return; }
-  const num = contato.replace(/\D/g,'');
-  const r = await fetch(`https://api.z-api.io/instances/${ZAPI_I}/token/${ZAPI_T}/send-text`,{
-    method:'POST',headers:{'Content-Type':'application/json','Client-Token':ZAPI_C},
-    body:JSON.stringify({phone:'55'+num,message:pitch})
-  }).then(r=>r.json()).catch(()=>({}));
-  if(r.zaapId||r.messageId||r.id) toast('📲 Pitch enviado!');
-  else toast('Erro ao enviar','er');
+  const num = '55'+contato.replace(/\D/g,'');
+  const btn = document.getElementById('pr-pitch-send');
+  btn.disabled=true; btn.textContent='Enviando…';
+
+  try{
+    // 1. Envia o texto
+    const r1 = await fetch(`https://api.z-api.io/instances/${ZAPI_I}/token/${ZAPI_T}/send-text`,{
+      method:'POST',headers:{'Content-Type':'application/json','Client-Token':ZAPI_C},
+      body:JSON.stringify({phone:num,message:pitch})
+    }).then(r=>r.json());
+
+    // 2. Se toggle ativo, envia vídeo
+    if(enviarVideo){
+      await new Promise(r=>setTimeout(r,1200)); // pequeno delay
+      await fetch(`https://api.z-api.io/instances/${ZAPI_I}/token/${ZAPI_T}/send-video`,{
+        method:'POST',headers:{'Content-Type':'application/json','Client-Token':ZAPI_C},
+        body:JSON.stringify({phone:num,video:VIDEO_APRESENTACAO,caption:'Veja como funciona na prática 👆'})
+      });
+    }
+
+    if(r1.zaapId||r1.messageId||r1.id){
+      btn.textContent = enviarVideo ? '✅ Mensagem + vídeo enviados!' : '✅ Enviado!';
+      btn.style.background='rgba(45,212,122,0.15)';
+      btn.style.color='var(--green)';
+      toast(enviarVideo ? '📲 Pitch + vídeo enviados!' : '📲 Pitch enviado!');
+    } else {
+      btn.textContent='Erro ao enviar'; btn.disabled=false;
+    }
+  }catch(e){ btn.textContent='Erro de conexão'; btn.disabled=false; }
 }
 
 // ── FOLLOW-UP ───────────────────────────────────────────────────

@@ -1582,7 +1582,7 @@ function renderProspec(body){
         <button onclick="gerarPitchProspec()" style="${btnSecStyle()}flex:1">✦ Gerar pitch</button>
         <button onclick="salvarProspecto()" style="${btnPriStyle()}flex:1">+ Salvar</button>
       </div>
-      <div id="pr-pitch" style="display:none;margin-top:10px;background:rgba(0,0,0,0.3);border:1px solid rgba(168,85,247,0.2);border-radius:10px;padding:12px;font-size:12.5px;color:rgba(240,240,255,0.85);line-height:1.65;white-space:pre-wrap"></div>
+      <textarea id="pr-pitch" style="display:none;margin-top:10px;width:100%;background:rgba(0,0,0,0.3);border:1px solid rgba(168,85,247,0.2);border-radius:10px;padding:12px;font-size:12.5px;color:rgba(240,240,255,0.85);line-height:1.65;resize:none;height:160px;font-family:var(--font);outline:none"></textarea>
       <button id="pr-pitch-send" onclick="enviarPitch()" style="display:none;width:100%;margin-top:8px;${btnPriStyle()}">📲 Enviar via WhatsApp</button>
     </div>
 
@@ -1621,7 +1621,7 @@ async function gerarPitchProspec(){
   const pitchEl = document.getElementById('pr-pitch');
   const sendBtn = document.getElementById('pr-pitch-send');
   pitchEl.style.display='block';
-  pitchEl.textContent='Gerando pitch…';
+  pitchEl.value='Gerando pitch…';
 
   try{
     const r = await fetch(`${SB_URL}/functions/v1/chat-assistant`,{
@@ -1633,10 +1633,10 @@ async function gerarPitchProspec(){
       })
     });
     const d = await r.json();
-    pitchEl.textContent = d.resposta||'Não consegui gerar.';
+    pitchEl.value = d.resposta||'Não consegui gerar.';
     sendBtn.style.display = 'block';
   }catch(e){
-    pitchEl.textContent = 'Erro de conexão.';
+    pitchEl.value = 'Erro de conexão.';
   }
 }
 
@@ -1675,7 +1675,7 @@ function moverProspecto(id, status){
 
 async function enviarPitch(){
   const contato = document.getElementById('pr-contato')?.value.trim()||'';
-  const pitch   = document.getElementById('pr-pitch')?.textContent||'';
+  const pitch   = document.getElementById('pr-pitch')?.value||'';
   if(!contato){ toast('Preencha o WhatsApp do lead','er'); return; }
   const num = '55'+contato.replace(/\D/g,'');
   const btn = document.getElementById('pr-pitch-send');

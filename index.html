@@ -1854,7 +1854,7 @@ async function marcarPago(cobId, cardId){
     await fetch(`${SB_URL}/rest/v1/financeiro?id=eq.${cobId}`,{
       method:'PATCH',
       headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'},
-      body:JSON.stringify({status:'pago', pago_em: new Date().toISOString()})
+      body:JSON.stringify({status:'pago'})
     });
     // Remove o card da tela
     const card = document.getElementById(cardId);

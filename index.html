@@ -1800,15 +1800,21 @@ async function verificarNotificacoes(){
         const jurosFmt = juros>0 ? ('\nJuros ('+dias+'d): R$ '+(juros.toFixed(2).replace('.',','))) : '';
         const msg = 'Olá, '+cli+'! 👋\n\nPassando para lembrar que identificamos uma pendência financeira em aberto:\n\n💰 *'+(c.descricao||'Fatura')+'*\nVencimento: '+vencFmt+'\nValor: '+valorFmt+jurosFmt+'\n*Total: '+totalFmt+'*\n\nQualquer dúvida, estamos à disposição!\n\n— Equipe 5essência Marketing';
 
-        return `<div style="background:rgba(255,59,69,0.06);border:1px solid rgba(255,59,69,0.2);border-radius:12px;padding:12px 14px">
+        const msgEscapada = msg.replace(/`/g,"'").replace(/\$/g,"\\$");
+        return `<div id="cob-${c.id}" style="background:rgba(255,59,69,0.06);border:1px solid rgba(255,59,69,0.2);border-radius:12px;padding:12px 14px">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
             <div style="font-size:13px;font-weight:700;color:var(--ink)">${c.clientes?.nome_completo||'—'}</div>
             <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(255,59,69,0.15);color:var(--red)">${dias}d em atraso</span>
           </div>
-          <div style="font-size:12px;color:var(--ink2);margin-bottom:4px">${c.descricao||'Fatura'}</div>
-          <div style="font-size:13px;font-weight:700;color:var(--red);margin-bottom:10px">R$ ${totalDevido.toFixed(2).replace('.',',')}${juros>0?' <span style="font-size:10px;font-weight:500;color:var(--ink3)">(+juros)</span>':''}</div>
-          ${wpp?`<button onclick="cobrarCliente('${wpp}',${JSON.stringify(msg).replace(/'/g,"\'")},'${cli}')" style="width:100%;padding:8px;border:none;border-radius:9px;background:linear-gradient(135deg,var(--red),#c0392b);color:white;font-family:var(--font);font-size:12.5px;font-weight:700;cursor:pointer">📲 Cobrar ${cli}</button>`
-          :'<div style="font-size:11px;color:var(--ink3);text-align:center">Sem WhatsApp cadastrado</div>'}
+          <div style="font-size:12px;color:var(--ink2);margin-bottom:6px">${c.descricao||'Fatura'} · <strong style="color:var(--red)">${totalFmt}</strong>${juros>0?' <span style="font-size:10px;color:var(--ink3)">(+juros)</span>':''}</div>
+          <textarea id="msg-${c.id}" style="width:100%;background:rgba(0,0,0,0.25);border:1px solid rgba(255,59,69,0.15);border-radius:9px;color:var(--ink2);font-family:var(--font);font-size:11.5px;line-height:1.6;padding:9px 11px;outline:none;resize:none;height:108px;margin-bottom:8px">${msg}</textarea>
+          <div style="display:flex;gap:7px">
+            ${wpp
+              ? `<button id="btn-cobrar-${c.id}" onclick="cobrarCliente('${wpp}','${c.id}','${cli}')" style="flex:1;padding:8px;border:none;border-radius:9px;background:linear-gradient(135deg,var(--red),#c0392b);color:white;font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer">📲 Cobrar ${cli}</button>`
+              : `<div style="flex:1;font-size:11px;color:var(--ink3);text-align:center;padding:8px">Sem WhatsApp</div>`
+            }
+            <button onclick="marcarPago('${c.id}')" style="padding:8px 13px;border:1px solid rgba(45,212,122,0.3);border-radius:9px;background:rgba(45,212,122,0.06);color:var(--green);font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer">✓ Pago</button>
+          </div>
         </div>`;
       }).join('');
     }
@@ -1818,9 +1824,12 @@ async function verificarNotificacoes(){
   document.getElementById('modal-notif').style.display = 'flex';
 }
 
-async function cobrarCliente(wpp, msg, alias){
+async function cobrarCliente(wpp, cobId, alias){
   const num = wpp.replace(/\D/g,'');
-  const btn = event.target;
+  const btn = document.getElementById('btn-cobrar-'+cobId);
+  const textarea = document.getElementById('msg-'+cobId);
+  const msg = textarea ? textarea.value : '';
+  if(!msg){ toast('Mensagem vazia','er'); return; }
   btn.disabled=true; btn.textContent='Enviando…';
   try{
     const r = await fetch(
@@ -1830,11 +1839,30 @@ async function cobrarCliente(wpp, msg, alias){
     ).then(r=>r.json());
     if(r.zaapId||r.messageId||r.id){
       btn.textContent='✅ Enviado!';
-      btn.style.background='rgba(45,212,122,0.2)';
+      btn.style.background='rgba(45,212,122,0.15)';
       btn.style.color='var(--green)';
+      btn.style.border='1px solid rgba(45,212,122,0.3)';
       toast('📲 Cobrança enviada para '+alias);
     } else { btn.textContent='Erro — tente novamente'; btn.disabled=false; }
   }catch(e){ btn.textContent='Erro de conexão'; btn.disabled=false; }
+}
+
+async function marcarPago(cobId, cardId){
+  const btn = event.target;
+  btn.disabled=true; btn.textContent='Salvando…';
+  try{
+    await fetch(`${SB_URL}/rest/v1/financeiro?id=eq.${cobId}`,{
+      method:'PATCH',
+      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'},
+      body:JSON.stringify({status:'pago', pago_em: new Date().toISOString()})
+    });
+    // Remove o card da tela
+    const card = document.getElementById(cardId);
+    if(card){ card.style.opacity='0'; card.style.transition='opacity 0.3s'; setTimeout(()=>card.remove(),300); }
+    toast('✅ Marcado como pago!');
+  }catch(e){
+    btn.textContent='Erro'; btn.disabled=false;
+  }
 }
 
 function fecharNotif(){

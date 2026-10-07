@@ -1038,15 +1038,26 @@ async function enviar() {
       let dw;
       for(const numero of numeros){
         if(fotoBase64){
-          // Envia imagem com legenda
-          const base64data = fotoBase64.split(',')[1];
+          // Z-API aceita base64 com o prefixo data:image completo no campo "image"
           const rw = await fetch(
             `https://api.z-api.io/instances/${ZAPI_I}/token/${ZAPI_T}/send-image`,
             { method:'POST', headers:{'Content-Type':'application/json','Client-Token':ZAPI_C},
-              body: JSON.stringify({ phone: numero, image: base64data, caption: msg }) }
+              body: JSON.stringify({ phone: numero, image: fotoBase64, caption: msg }) }
           );
           dw = await rw.json();
+          console.log('send-image response:', dw);
           wppOk = rw.ok && (dw.zaapId || dw.messageId || dw.id);
+          // Se falhar, envia só o texto
+          if(!wppOk){
+            const rw2 = await fetch(
+              `https://api.z-api.io/instances/${ZAPI_I}/token/${ZAPI_T}/send-text`,
+              { method:'POST', headers:{'Content-Type':'application/json','Client-Token':ZAPI_C},
+                body: JSON.stringify({ phone: numero, message: msg }) }
+            );
+            dw = await rw2.json();
+            wppOk = rw2.ok && (dw.zaapId || dw.messageId || dw.id);
+            toast('Foto não suportada — mensagem enviada sem imagem','er');
+          }
         } else {
           // Envia só texto
           const rw = await fetch(

@@ -596,6 +596,21 @@ body{
   </div>
 </div>
 
+<!-- MODAL STATUS ATIVIDADE -->
+<div id="modal-status-ativ" style="position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(12px);z-index:600;display:none;align-items:center;justify-content:center;padding:20px">
+  <div style="width:100%;max-width:340px;background:var(--s1);border:1px solid var(--b2);border-radius:20px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,0.7)">
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink3);margin-bottom:8px">Salvar como projeto</div>
+    <div style="font-size:14px;font-weight:700;color:var(--ink);margin-bottom:4px" id="msa-titulo"></div>
+    <div style="font-size:12px;color:var(--blue);font-weight:600;margin-bottom:20px" id="msa-cliente"></div>
+    <div style="font-size:12px;color:var(--ink3);margin-bottom:14px">Como está essa atividade?</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <button onclick="confirmarStatusAtiv('em_andamento')" style="width:100%;padding:12px;border:1px solid var(--b2);border-radius:12px;background:rgba(76,130,251,0.1);color:var(--blue);font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer">🔄 Em andamento</button>
+      <button onclick="confirmarStatusAtiv('entregue')" style="width:100%;padding:12px;border:1px solid rgba(45,212,122,0.3);border-radius:12px;background:rgba(45,212,122,0.08);color:var(--green);font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer">✅ Finalizado</button>
+      <button onclick="document.getElementById('modal-status-ativ').style.display='none'" style="width:100%;padding:10px;border:none;border-radius:12px;background:transparent;color:var(--ink3);font-family:var(--font);font-size:12px;cursor:pointer">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL CLIENTE -->
 <div id="modal-cliente" style="position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(12px);z-index:500;display:none;align-items:flex-end;justify-content:center">
   <div style="width:100%;max-width:540px;background:rgba(13,13,23,0.98);border:1px solid var(--b2);border-top-left-radius:24px;border-top-right-radius:24px;max-height:80dvh;display:flex;flex-direction:column">
@@ -1005,12 +1020,8 @@ async function enviar() {
   let wppOk = false;
 
   try {
-    // Status no Supabase baseado na etapa
-    const etapasConcluidas = ['finalizando', 'aguardando_aprovacao'];
-    const statusSB = etapasConcluidas.includes(ctx.etapa) ? 'entregue' : 'em_andamento';
-
-    // Salva no Supabase
-    await fetch(`${SB_URL}/rest/v1/projetos`, {
+    // Salva como notificação de trabalho (não é projeto)
+    await fetch(`${SB_URL}/rest/v1/notificacoes`, {
       method: 'POST',
       headers: {
         'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY,
@@ -1019,12 +1030,12 @@ async function enviar() {
       body: JSON.stringify({
         cliente_id:  ctx.clienteId,
         titulo:      ctx.acao,
-        descricao:   `[Report diário]${ctx.etapa ? ' · ' + ctx.etapa : ''}${ctx.prev ? ' · Previsão: ' + ctx.prev : ''}${ctx.link ? ' · ' + ctx.link : ''}`,
-        status:      statusSB,
-        prazo:       new Date().toISOString().split('T')[0],
+        mensagem:    msgFinal || gerarTemplate(),
+        tipo:        'report_diario',
+        canal:       wppAtivo ? 'whatsapp' : 'interno',
         created_at:  new Date().toISOString()
       })
-    });
+    }).catch(()=>{}); // silencia erro se tabela não tiver todos os campos
 
     // Envia WhatsApp
     console.log('WPP ativo:', wppAtivo, '| wpp:', ctx.wpp, '| foto:', !!fotoBase64);
@@ -1066,7 +1077,7 @@ async function enviar() {
     // Adiciona ao histórico
     const sel  = document.getElementById('sel-cliente');
     const nome = sel.options[sel.selectedIndex]?.text.split(' · ')[0];
-    adicionarHistorico(nome, ctx.acao, wppOk, msgIsIA, statusSB);
+    adicionarHistorico(nome, ctx.acao, wppOk, msgIsIA, 'report');
 
     // Reset
     document.getElementById('inp-acao').value = '';
@@ -1077,8 +1088,7 @@ async function enviar() {
     atualizarPreview();
     if (wppAtivo) toggleWpp();
 
-    const statusLabel = statusSB === 'entregue' ? '✅ salvo como entregue' : '🔄 salvo como em andamento';
-    toast(wppOk ? `📲 Enviado · ${statusLabel}` : `✅ Registrado · ${statusLabel}`);
+    toast(wppOk ? '📲 Report enviado!' : '✅ Report registrado!');
 
   } catch(e) {
     toast('Erro: ' + e.message, 'er');

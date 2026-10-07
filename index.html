@@ -1270,16 +1270,14 @@ async function abrirResumoSemanal(){
   const body = document.getElementById('modal-body');
   body.innerHTML = '<div style="text-align:center;padding:32px;color:var(--ink3)">Carregando…</div>';
 
-  const semana = getSemanaStr();
-  // Aceita atividades da semana atual, comparando por data
-  const d7 = new Date(); d7.setDate(d7.getDate()-7);
-  const desta = atividadesDia.filter(a => {
-    // Tenta por semana string
-    if(a.semana === semana) return true;
-    // Fallback: por data nos últimos 7 dias
-    if(a.data && new Date(a.data) >= d7) return true;
-    return false;
-  });
+  // Coleta atividades dos últimos 7 dias do localStorage
+  const desta = [];
+  for(let i=0;i<=7;i++){
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const ds = d.toISOString().split('T')[0];
+    const atv = JSON.parse(localStorage.getItem('atv5_'+ds)||'[]');
+    atv.forEach(a=>desta.push(a));
+  }
 
   if(!desta.length){
     body.innerHTML = '<div style="text-align:center;padding:32px;color:var(--ink3)">Nenhuma atividade registrada essa semana.</div>';
@@ -1310,7 +1308,7 @@ async function abrirResumoSemanal(){
   const periodo = `${ini.toLocaleDateString('pt-BR',{day:'numeric',month:'short'})} a ${fim.toLocaleDateString('pt-BR',{day:'numeric',month:'short'})}`;
 
   body.innerHTML = Object.entries(porCliente).map(([key, grupo]) => {
-    const lista = grupo.atividades.map(a=>'• '+a.titulo+(a.concluida?' ✓':'')).join('\n');
+    const listaTexto = grupo.atividades.map(a=>'• '+a.titulo+(a.concluida?' ✓':'')).join('\n');
     const alias = grupo.nome.split(' ')[0];
     const msg = 'Olá, '+alias+'!\n\nSegue o resumo das atividades realizadas pela nossa equipe nesta semana ('+periodo+'):\n\n'+listaTexto+'\n\nContinuamos à disposição para qualquer dúvida ou alinhamento.\n\nAtenciosamente,\n5essência Marketing';
     return `<div class="resumo-cliente">

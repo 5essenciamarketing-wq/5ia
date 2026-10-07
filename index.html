@@ -1110,7 +1110,22 @@ function renderAtividades(){
   const concluidas = desta.filter(a => a.concluida);
   const todas = [...abertas, ...concluidas];
 
-  if(!todas.length){
+  const blocoAtrasadas = atrasadas.length ? `
+    <div style="margin-bottom:10px">
+      <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--red);margin-bottom:6px">⏰ Atrasadas (${atrasadas.length})</div>
+      ${atrasadas.map(a=>`
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:rgba(255,59,69,0.06);border:1px solid rgba(255,59,69,0.2);border-radius:var(--r);margin-bottom:5px">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12.5px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.titulo}</div>
+            ${a.clienteNome?`<div style="font-size:10px;color:var(--blue);font-weight:600;margin-top:1px">${a.clienteNome.split(' ')[0]}</div>`:''}
+          </div>
+          <span style="font-size:9px;font-weight:700;color:var(--red);white-space:nowrap">${a.diasAtraso}d</span>
+          <button onclick="moverParaHoje('${a.id}')" style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px;border:1px solid rgba(76,130,251,0.3);background:rgba(76,130,251,0.1);color:var(--blue);cursor:pointer">Hoje</button>
+          <button onclick="concluirAtrasada('${a.id}')" style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px;border:1px solid rgba(45,212,122,0.3);background:rgba(45,212,122,0.08);color:var(--green);cursor:pointer">✓</button>
+        </div>`).join('')}
+    </div>` : '';
+
+  if(!todas.length && !atrasadas.length){
     lista.innerHTML = '<div style="text-align:center;padding:20px;color:var(--ink4);font-size:12.5px">Nenhuma atividade essa semana</div>';
     return;
   }
@@ -1384,6 +1399,15 @@ function renderListaDia(){
   const lista = document.getElementById('lista-dia');
   if(!lista) return;
 
+  // Busca tarefas atrasadas (dias anteriores, não concluídas)
+  const atrasadas = [];
+  for(let i=1;i<=7;i++){
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const ds = d.toISOString().split('T')[0];
+    const atv = JSON.parse(localStorage.getItem('atv5_'+ds)||'[]');
+    atv.filter(a=>!a.concluida).forEach(a=>atrasadas.push({...a, diasAtraso:i}));
+  }
+
   if(!atividadesDia.length){
     lista.innerHTML = '<div style="text-align:center;padding:16px 0;color:var(--ink4);font-size:12.5px">Nada ainda. Digite acima e pressione Enter!</div>';
     return;
@@ -1398,7 +1422,7 @@ function renderListaDia(){
     grupos[key].items.push(a);
   });
 
-  lista.innerHTML = Object.entries(grupos).map(([key,g])=>`
+  lista.innerHTML = blocoAtrasadas + Object.entries(grupos).map(([key,g])=>`
     <div>
       ${g.nome!=='Geral'?`<div class="ativ-grupo-nome" onclick="abrirModalCliente('${key}','${g.nome}')">${g.nome.split(' ')[0]} <span style="font-size:9px;opacity:0.5">↗</span></div>`:''}
       ${g.items.map(a=>`
@@ -1862,7 +1886,11 @@ async function verificarNotificacoes(){
     if(grupo.tipo==='tarefas_abertas'){
       return `<div style="background:rgba(255,154,10,0.06);border:1px solid rgba(255,154,10,0.2);border-radius:12px;padding:12px 14px">
         <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--orange);margin-bottom:8px">⏰ ${grupo.label} — tarefas em aberto</div>
-        ${grupo.itens.map(a=>`<div style="font-size:12.5px;color:var(--ink2);padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04)">${a.clienteNome?'<span style="color:var(--blue);font-weight:600">'+a.clienteNome.split(' ')[0]+'</span> · ':''} ${a.titulo}</div>`).join('')}
+        ${grupo.itens.map(a=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
+          <div style="flex:1;font-size:12.5px;color:var(--ink2)">${a.clienteNome?'<span style="color:var(--blue);font-weight:600">'+a.clienteNome.split(' ')[0]+'</span> · ':''} ${a.titulo}</div>
+          <button onclick="moverParaHoje('${a.id}')" style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;border:1px solid rgba(76,130,251,0.3);background:rgba(76,130,251,0.1);color:var(--blue);cursor:pointer;white-space:nowrap;flex-shrink:0">→ Hoje</button>
+          <button onclick="concluirAtrasada('${a.id}')" style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;border:1px solid rgba(45,212,122,0.3);background:rgba(45,212,122,0.1);color:var(--green);cursor:pointer;flex-shrink:0">✓</button>
+        </div>`).join('')}
       </div>`;
     }
     if(grupo.tipo==='cobrancas'){
@@ -2010,6 +2038,62 @@ async function otimizarTitulos(){
     toast('Erro ao otimizar: '+e.message,'er');
     btn.textContent='✦ Otimizar títulos dos projetos';
     btn.disabled=false;
+  }
+}
+
+
+
+// ── TAREFAS ATRASADAS ────────────────────────────────────────────
+function moverParaHoje(id){
+  // Busca em todos os dias
+  let encontrada = null;
+  for(let i=1;i<=7;i++){
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const ds = d.toISOString().split('T')[0];
+    const atv = JSON.parse(localStorage.getItem('atv5_'+ds)||'[]');
+    const idx = atv.findIndex(a=>a.id===id);
+    if(idx>=0){
+      encontrada = {...atv[idx]};
+      // Remove do dia original
+      atv.splice(idx,1);
+      localStorage.setItem('atv5_'+ds, JSON.stringify(atv));
+      break;
+    }
+  }
+  if(!encontrada) return;
+  // Adiciona hoje com flag de atrasada
+  encontrada.data = hoje();
+  encontrada.semana = getSemanaStr();
+  encontrada.atrasada = true;
+  encontrada.concluida = false;
+  atividadesDia.unshift(encontrada);
+  salvarAtv();
+  renderListaDia();
+  // Remove o card do popup se vazio
+  const notif = document.getElementById('modal-notif');
+  const body = document.getElementById('notif-body');
+  const btn = body?.querySelector(`[onclick="moverParaHoje('${encontrada.id}')"]`);
+  btn?.closest('div[style*="padding:6px"]')?.remove();
+  toast('Tarefa movida para hoje');
+}
+
+function concluirAtrasada(id){
+  for(let i=1;i<=7;i++){
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const ds = d.toISOString().split('T')[0];
+    const atv = JSON.parse(localStorage.getItem('atv5_'+ds)||'[]');
+    const idx = atv.findIndex(a=>a.id===id);
+    if(idx>=0){
+      atv[idx].concluida = true;
+      localStorage.setItem('atv5_'+ds, JSON.stringify(atv));
+      // Salva no Supabase se tiver cliente
+      if(atv[idx].clienteId) salvarAtvSupabase({...atv[idx], concluida:true});
+      toast('✓ Concluída');
+      // Remove do popup
+      const btn = document.querySelector(`[onclick="concluirAtrasada('${id}')"]`);
+      btn?.closest('div[style*="padding:6px"]')?.remove();
+      return;
+    }
   }
 }
 

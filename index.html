@@ -2093,6 +2093,7 @@ function moverParaHoje(id){
   const body = document.getElementById('notif-body');
   const btn = body?.querySelector(`[onclick="moverParaHoje('${encontrada.id}')"]`);
   btn?.closest('div[style*="padding:6px"]')?.remove();
+  renderListaDia();
   toast('Tarefa movida para hoje');
 }
 
@@ -2105,12 +2106,9 @@ function concluirAtrasada(id){
     if(idx>=0){
       atv[idx].concluida = true;
       localStorage.setItem('atv5_'+ds, JSON.stringify(atv));
-      // Salva no Supabase se tiver cliente
       if(atv[idx].clienteId) salvarAtvSupabase({...atv[idx], concluida:true});
+      renderListaDia();
       toast('✓ Concluída');
-      // Remove do popup
-      const btn = document.querySelector(`[onclick="concluirAtrasada('${id}')"]`);
-      btn?.closest('div[style*="padding:6px"]')?.remove();
       return;
     }
   }

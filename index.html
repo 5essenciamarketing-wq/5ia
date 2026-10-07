@@ -813,6 +813,8 @@ function getCtx() {
 }
 
 function onClienteChange() {
+  const sel = document.getElementById('sel-cliente');
+  clienteAtual = clientes.find(c => c.id === sel.value) || null;
   msgFinal = ''; msgIsIA = false;
   atualizarPreview();
   if (wppAtivo) atualizarWppSub();
@@ -1316,6 +1318,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
 // ── ATIVIDADES LIVRES ─────────────────────────────────────────────
 let atividadesDia = JSON.parse(localStorage.getItem('atv5_'+hoje()) || '[]');
 let clientes = []; // populado junto com o select de clientes
+let clienteAtual = null;
 
 function hoje(){ return new Date().toISOString().split('T')[0]; }
 function getSemanaStr(){ const d=new Date(); d.setDate(d.getDate()-d.getDay()); return d.toISOString().split('T')[0]; }

@@ -1270,61 +1270,86 @@ async function abrirResumoSemanal(){
   const body = document.getElementById('modal-body');
   body.innerHTML = '<div style="text-align:center;padding:32px;color:var(--ink3)">Carregando…</div>';
 
-  // Coleta atividades dos últimos 7 dias do localStorage
-  const desta = [];
-  for(let i=0;i<=7;i++){
-    const d = new Date(); d.setDate(d.getDate()-i);
-    const ds = d.toISOString().split('T')[0];
-    const atv = JSON.parse(localStorage.getItem('atv5_'+ds)||'[]');
-    atv.forEach(a=>desta.push(a));
-  }
-
-  if(!desta.length){
-    body.innerHTML = '<div style="text-align:center;padding:32px;color:var(--ink3)">Nenhuma atividade registrada essa semana.</div>';
-    return;
-  }
-
-  // Agrupa por cliente
-  const porCliente = {};
-  desta.forEach(a => {
-    const key = a.clienteId || 'sem-cliente';
-    if(!porCliente[key]) porCliente[key] = { nome: a.clienteNome || 'Sem cliente', atividades: [], wpp: '' };
-    porCliente[key].atividades.push(a);
-  });
-
-  // Busca WhatsApp dos clientes
   try {
-    const r = await fetch(`${SB_URL}/rest/v1/clientes?select=id,whatsapp`, {
-      headers: {'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}
+    // Coleta atividades dos últimos 7 dias
+    const todas = [];
+    for(let i=0;i<=7;i++){
+      const d = new Date(); d.setDate(d.getDate()-i);
+      const ds = d.toISOString().split('T')[0];
+      const atv = JSON.parse(localStorage.getItem('atv5_'+ds)||'[]');
+      atv.forEach(a => todas.push(a));
+    }
+
+    console.log('Total atividades semana:', todas.length);
+
+    if(!todas.length){
+      body.innerHTML = '<div style="text-align:center;padding:32px;color:var(--ink3)">Nenhuma atividade registrada essa semana.</div>';
+      return;
+    }
+
+    // Agrupa por cliente
+    const porCliente = {};
+    todas.forEach(a => {
+      const key = a.clienteId || 'sem-cliente';
+      if(!porCliente[key]) porCliente[key] = {nome: a.clienteNome || 'Pessoal', atividades: [], wpp: ''};
+      porCliente[key].atividades.push(a);
     });
-    const cls = await r.json() || [];
-    cls.forEach(c => { if(porCliente[c.id]) porCliente[c.id].wpp = c.whatsapp || ''; });
-  } catch(e){}
 
-  // Datas da semana
-  const d = new Date();
-  const ini = new Date(d); ini.setDate(d.getDate()-d.getDay());
-  const fim = new Date(ini); fim.setDate(ini.getDate()+6);
-  const periodo = `${ini.toLocaleDateString('pt-BR',{day:'numeric',month:'short'})} a ${fim.toLocaleDateString('pt-BR',{day:'numeric',month:'short'})}`;
+    // Busca WhatsApp
+    try {
+      const r = await fetch(`${SB_URL}/rest/v1/clientes?select=id,whatsapp`,
+        {headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});
+      const cls = await r.json()||[];
+      cls.forEach(c => { if(porCliente[c.id]) porCliente[c.id].wpp = c.whatsapp||''; });
+    } catch(e){}
 
-  body.innerHTML = Object.entries(porCliente).map(([key, grupo]) => {
-    const listaTexto = grupo.atividades.map(a=>'• '+a.titulo+(a.concluida?' ✓':'')).join('\n');
-    const alias = grupo.nome.split(' ')[0];
-    const msg = 'Olá, '+alias+'!\n\nSegue o resumo das atividades realizadas pela nossa equipe nesta semana ('+periodo+'):\n\n'+listaTexto+'\n\nContinuamos à disposição para qualquer dúvida ou alinhamento.\n\nAtenciosamente,\n5essência Marketing';
-    return `<div class="resumo-cliente">
-      <div class="resumo-cli-nome">${grupo.nome} <span style="font-size:11px;color:var(--ink3);font-weight:400">(${grupo.atividades.length} atividades)</span></div>
-      <div class="resumo-preview">${msg}</div>
-      ${grupo.wpp
-        ? `<button class="resumo-enviar" onclick="enviarResumo('${grupo.wpp}',${JSON.stringify(msg).replace(/'/g,"\'")},'${alias}')">📲 Enviar para ${alias}</button>`
-        : `<div style="font-size:12px;color:var(--ink3);text-align:center;padding:6px">Sem WhatsApp cadastrado</div>`
-      }
-    </div>`;
-  }).join('');
+    // Período
+    const d = new Date();
+    const ini = new Date(d); ini.setDate(d.getDate()-d.getDay());
+    const fim = new Date(ini); fim.setDate(ini.getDate()+6);
+    const periodo = ini.toLocaleDateString('pt-BR',{day:'numeric',month:'short'})+' a '+fim.toLocaleDateString('pt-BR',{day:'numeric',month:'short'});
+
+    body.innerHTML = Object.entries(porCliente).map(([key, grupo]) => {
+      const listaTexto = grupo.atividades.map(a => '• '+a.titulo+(a.concluida?' ✓':'')).join('\n');
+      const alias = grupo.nome.split(' ')[0];
+      const msg = 'Olá, '+alias+'!\n\nSegue o resumo das atividades realizadas pela nossa equipe nesta semana ('+periodo+'):\n\n'+listaTexto+'\n\nContinuamos à disposição para qualquer dúvida ou alinhamento.\n\nAtenciosamente,\n5essência Marketing';
+      const msgJson = JSON.stringify(msg);
+
+      const listaHtml = grupo.atividades.map(a =>
+        '<div style="display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.05)">'+
+        '<span style="color:'+(a.concluida?'var(--green)':'var(--ink3)')+';font-size:11px">'+(a.concluida?'✓':'·')+'</span>'+
+        '<span style="font-size:12.5px;'+(a.concluida?'text-decoration:line-through;color:var(--ink3)':'')+'">'+(a.titulo||'')+'</span>'+
+        '</div>'
+      ).join('');
+
+      return '<div style="background:var(--s2);border:1px solid var(--b1);border-radius:14px;padding:14px;margin-bottom:10px">'+
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'+
+        '<div style="font-size:13px;font-weight:700;color:var(--ink)">'+grupo.nome+'</div>'+
+        '<span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;background:rgba(76,130,251,0.1);color:var(--blue)">'+grupo.atividades.length+' itens</span>'+
+        '</div>'+
+        '<div style="margin-bottom:10px">'+listaHtml+'</div>'+
+        (grupo.wpp
+          ? '<button class="resumo-enviar" data-wpp="'+grupo.wpp+'" data-alias="'+alias+'" data-msg="'+encodeURIComponent(msg)+'" onclick="enviarResumoBtn(this)">📲 Enviar para '+alias+'</button>'
+          : '<div style="font-size:11px;color:var(--ink3);text-align:center;padding:6px">Sem WhatsApp cadastrado</div>'
+        )+'</div>';
+    }).join('');
+
+  } catch(err) {
+    console.error('Erro resumo semanal:', err);
+    body.innerHTML = '<div style="text-align:center;padding:32px;color:var(--red)">Erro: '+err.message+'</div>';
+  }
 }
 
-async function enviarResumo(wpp, msg, alias){
+function enviarResumoBtn(btn){
+  const wpp   = btn.dataset.wpp;
+  const alias = btn.dataset.alias;
+  const msg   = decodeURIComponent(btn.dataset.msg);
+  enviarResumo(wpp, msg, alias, btn);
+}
+
+async function enviarResumo(wpp, msg, alias, btn){
+  btn = btn || event?.target;
   const numero = wpp.replace(/\D/g,'');
-  const btn = event.target;
   btn.disabled = true;
   btn.textContent = 'Enviando…';
   try {

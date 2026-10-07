@@ -528,6 +528,19 @@ body{
   </div>
 
   <!-- WPP -->
+  <!-- FOTO ANEXADA -->
+  <div id="foto-preview-wrap" style="display:none;margin-bottom:10px;position:relative">
+    <img id="foto-preview" style="width:100%;border-radius:12px;max-height:200px;object-fit:cover;border:1px solid var(--b1)">
+    <div onclick="removerFoto()" style="position:absolute;top:8px;right:8px;width:24px;height:24px;border-radius:50%;background:rgba(0,0,0,0.7);color:white;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px">×</div>
+  </div>
+  <input type="file" id="foto-input" accept="image/*" style="display:none" onchange="onFotoSelecionada(event)">
+
+  <!-- BOTÃO ANEXAR FOTO -->
+  <div onclick="document.getElementById('foto-input').click()" style="display:flex;align-items:center;gap:9px;padding:9px 13px;background:var(--s2);border:1px solid var(--b1);border-radius:var(--r2);margin-bottom:10px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.borderColor='rgba(76,130,251,0.3)'" onmouseout="this.style.borderColor='var(--b1)'">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--ink3);flex-shrink:0"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+    <span id="foto-label" style="font-size:12.5px;font-weight:500;color:var(--ink3)">Anexar foto ao report</span>
+  </div>
+
   <div class="wpp-row" id="wpp-row" onclick="toggleWpp()">
     <div class="wpp-left">
       <span class="wpp-icon">📲</span>
@@ -1023,15 +1036,30 @@ async function enviar() {
 
       let dw;
       for(const numero of numeros){
-        const rw = await fetch(
-          `https://api.z-api.io/instances/${ZAPI_I}/token/${ZAPI_T}/send-text`,
-          { method:'POST', headers:{'Content-Type':'application/json','Client-Token':ZAPI_C},
-            body: JSON.stringify({ phone: numero, message: msg }) }
-        );
-        dw = await rw.json();
-        wppOk = rw.ok && (dw.zaapId || dw.messageId || dw.id);
+        if(fotoBase64){
+          // Envia imagem com legenda
+          const base64data = fotoBase64.split(',')[1];
+          const rw = await fetch(
+            `https://api.z-api.io/instances/${ZAPI_I}/token/${ZAPI_T}/send-image`,
+            { method:'POST', headers:{'Content-Type':'application/json','Client-Token':ZAPI_C},
+              body: JSON.stringify({ phone: numero, image: base64data, caption: msg }) }
+          );
+          dw = await rw.json();
+          wppOk = rw.ok && (dw.zaapId || dw.messageId || dw.id);
+        } else {
+          // Envia só texto
+          const rw = await fetch(
+            `https://api.z-api.io/instances/${ZAPI_I}/token/${ZAPI_T}/send-text`,
+            { method:'POST', headers:{'Content-Type':'application/json','Client-Token':ZAPI_C},
+              body: JSON.stringify({ phone: numero, message: msg }) }
+          );
+          dw = await rw.json();
+          wppOk = rw.ok && (dw.zaapId || dw.messageId || dw.id);
+        }
         if(numeros.length > 1) await new Promise(r=>setTimeout(r,800));
       }
+      // Limpa foto após envio
+      if(fotoBase64) removerFoto();
     }
 
     // Adiciona ao histórico
@@ -2112,6 +2140,35 @@ function concluirAtrasada(id){
       return;
     }
   }
+}
+
+
+
+// ── FOTO ─────────────────────────────────────────────────────────
+let fotoBase64 = null;
+let fotoMimeType = 'image/jpeg';
+
+function onFotoSelecionada(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  fotoMimeType = file.type || 'image/jpeg';
+  const reader = new FileReader();
+  reader.onload = ev => {
+    fotoBase64 = ev.target.result; // data:image/jpeg;base64,...
+    document.getElementById('foto-preview').src = fotoBase64;
+    document.getElementById('foto-preview-wrap').style.display = 'block';
+    document.getElementById('foto-label').textContent = file.name;
+    document.getElementById('foto-label').style.color = 'var(--blue)';
+  };
+  reader.readAsDataURL(file);
+}
+
+function removerFoto(){
+  fotoBase64 = null;
+  document.getElementById('foto-preview-wrap').style.display = 'none';
+  document.getElementById('foto-input').value = '';
+  document.getElementById('foto-label').textContent = 'Anexar foto ao report';
+  document.getElementById('foto-label').style.color = 'var(--ink3)';
 }
 
 

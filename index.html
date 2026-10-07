@@ -1293,7 +1293,7 @@ async function abrirResumoSemanal(){
     const porCliente = {};
     todas.forEach(a => {
       const key = a.clienteId || 'sem-cliente';
-      if(!porCliente[key]) porCliente[key] = {nome: a.clienteNome || 'Pessoal', atividades: [], wpp: ''};
+      if(!porCliente[key]) porCliente[key] = {nome: a.clienteNome || 'Pessoal', atividades: [], wpp: key==='sem-cliente'?'48991075451':''};
       porCliente[key].atividades.push(a);
     });
 

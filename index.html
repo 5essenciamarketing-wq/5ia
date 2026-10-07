@@ -1037,27 +1037,16 @@ async function enviar() {
 
       let dw;
       for(const numero of numeros){
-        if(fotoBase64){
-          // Z-API aceita base64 com o prefixo data:image completo no campo "image"
+        if(fotoBase64 && fotoUrlPublica){
+          // Envia imagem via URL pública
           const rw = await fetch(
             `https://api.z-api.io/instances/${ZAPI_I}/token/${ZAPI_T}/send-image`,
             { method:'POST', headers:{'Content-Type':'application/json','Client-Token':ZAPI_C},
-              body: JSON.stringify({ phone: numero, image: fotoBase64, caption: msg }) }
+              body: JSON.stringify({ phone: numero, image: fotoUrlPublica, caption: msg }) }
           );
           dw = await rw.json();
           console.log('send-image response:', dw);
           wppOk = rw.ok && (dw.zaapId || dw.messageId || dw.id);
-          // Se falhar, envia só o texto
-          if(!wppOk){
-            const rw2 = await fetch(
-              `https://api.z-api.io/instances/${ZAPI_I}/token/${ZAPI_T}/send-text`,
-              { method:'POST', headers:{'Content-Type':'application/json','Client-Token':ZAPI_C},
-                body: JSON.stringify({ phone: numero, message: msg }) }
-            );
-            dw = await rw2.json();
-            wppOk = rw2.ok && (dw.zaapId || dw.messageId || dw.id);
-            toast('Foto não suportada — mensagem enviada sem imagem','er');
-          }
         } else {
           // Envia só texto
           const rw = await fetch(
@@ -2159,24 +2148,53 @@ function concluirAtrasada(id){
 // ── FOTO ─────────────────────────────────────────────────────────
 let fotoBase64 = null;
 let fotoMimeType = 'image/jpeg';
+let fotoUrlPublica = null;
+let fotoFile = null;
 
-function onFotoSelecionada(e){
+async function onFotoSelecionada(e){
   const file = e.target.files[0];
   if(!file) return;
   fotoMimeType = file.type || 'image/jpeg';
+  fotoFile = file;
+
+  // Preview local
   const reader = new FileReader();
   reader.onload = ev => {
-    fotoBase64 = ev.target.result; // data:image/jpeg;base64,...
+    fotoBase64 = ev.target.result;
     document.getElementById('foto-preview').src = fotoBase64;
     document.getElementById('foto-preview-wrap').style.display = 'block';
-    document.getElementById('foto-label').textContent = file.name;
-    document.getElementById('foto-label').style.color = 'var(--blue)';
+    document.getElementById('foto-label').textContent = '⬆ Enviando…';
+    document.getElementById('foto-label').style.color = 'var(--ink3)';
   };
   reader.readAsDataURL(file);
+
+  // Upload para Supabase Storage
+  try{
+    const ext = file.name.split('.').pop();
+    const path = `reports/${Date.now()}.${ext}`;
+    const up = await fetch(`${SB_URL}/storage/v1/object/fotos-report/${path}`,{
+      method:'POST',
+      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':file.type,'x-upsert':'true'},
+      body: file
+    });
+    if(up.ok){
+      fotoUrlPublica = `${SB_URL}/storage/v1/object/public/fotos-report/${path}`;
+      document.getElementById('foto-label').textContent = file.name;
+      document.getElementById('foto-label').style.color = 'var(--blue)';
+    } else {
+      document.getElementById('foto-label').textContent = file.name + ' (sem upload)';
+      document.getElementById('foto-label').style.color = 'var(--orange)';
+    }
+  }catch(e){
+    document.getElementById('foto-label').textContent = file.name;
+    document.getElementById('foto-label').style.color = 'var(--ink2)';
+  }
 }
 
 function removerFoto(){
   fotoBase64 = null;
+  fotoUrlPublica = null;
+  fotoFile = null;
   document.getElementById('foto-preview-wrap').style.display = 'none';
   document.getElementById('foto-input').value = '';
   document.getElementById('foto-label').textContent = 'Anexar foto ao report';

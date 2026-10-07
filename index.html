@@ -1266,9 +1266,11 @@ function getSemanaStr(){
 
 // ── RESUMO SEMANAL ─────────────────────────────────────────────────
 async function abrirResumoSemanal(){
+  console.log('abrirResumoSemanal chamada');
   document.getElementById('modal-resumo').classList.add('open');
   const body = document.getElementById('modal-body');
   body.innerHTML = '<div style="text-align:center;padding:32px;color:var(--ink3)">Carregando…</div>';
+  console.log('body encontrado:', !!body);
 
   try {
     // Coleta atividades dos últimos 7 dias

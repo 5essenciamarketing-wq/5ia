@@ -1027,6 +1027,7 @@ async function enviar() {
     });
 
     // Envia WhatsApp
+    console.log('WPP ativo:', wppAtivo, '| wpp:', ctx.wpp, '| foto:', !!fotoBase64);
     if (wppAtivo && ctx.wpp) {
       const msg = msgFinal || gerarTemplate();
       const numeros = ['55'+ctx.wpp.replace(/\D/g,'')];

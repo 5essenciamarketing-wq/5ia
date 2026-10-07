@@ -780,7 +780,7 @@ document.addEventListener('DOMContentLoaded', () => {
 async function carregarClientes() {
   try {
     const r = await fetch(
-      `${SB_URL}/rest/v1/clientes?select=id,nome_completo,empresa,whatsapp&status=eq.ativo&order=nome_completo`,
+      `${SB_URL}/rest/v1/clientes?select=id,nome_completo,empresa,whatsapp,whatsapp_financeiro&status=eq.ativo&order=nome_completo`,
       { headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY } }
     );
     const data = await r.json();
@@ -1014,16 +1014,22 @@ async function enviar() {
     // Envia WhatsApp
     if (wppAtivo && ctx.wpp) {
       const msg = msgFinal || gerarTemplate();
-      const rw  = await fetch(
-        `https://api.z-api.io/instances/${ZAPI_I}/token/${ZAPI_T}/send-text`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Client-Token': ZAPI_C },
-          body: JSON.stringify({ phone: '55' + ctx.wpp.replace(/\D/g,''), message: msg })
-        }
-      );
-      const dw = await rw.json();
-      wppOk = rw.ok && (dw.zaapId || dw.messageId || dw.id);
+      const numeros = ['55'+ctx.wpp.replace(/\D/g,'')];
+      const wppFin = clienteAtual?.whatsapp_financeiro;
+      if(wppFin && wppFin.replace(/\D/g,'') !== ctx.wpp.replace(/\D/g,''))
+        numeros.push('55'+wppFin.replace(/\D/g,''));
+
+      let dw;
+      for(const numero of numeros){
+        const rw = await fetch(
+          `https://api.z-api.io/instances/${ZAPI_I}/token/${ZAPI_T}/send-text`,
+          { method:'POST', headers:{'Content-Type':'application/json','Client-Token':ZAPI_C},
+            body: JSON.stringify({ phone: numero, message: msg }) }
+        );
+        dw = await rw.json();
+        wppOk = rw.ok && (dw.zaapId || dw.messageId || dw.id);
+        if(numeros.length > 1) await new Promise(r=>setTimeout(r,800));
+      }
     }
 
     // Adiciona ao histórico

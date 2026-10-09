@@ -573,6 +573,11 @@ async function onAgendar(){
   const dtFmt=`${partes[2]}/${partes[1]}/${partes[0]}`;
   const procNome=S.proc==='resina10sup'?'10 Lentes Superiores':'20 Lentes Completo';
 
+  // Gera código único (mesmo que será exibido na tela)
+  const codData = partes[0].slice(2)+partes[1]+partes[2];
+  const rand = Math.random().toString(36).toUpperCase().slice(2,6);
+  S._codigo = `AVAL-${codData}-${rand}`;
+
   try{
     const res=await fetch(GS_URL,{
       method:'POST',
@@ -585,7 +590,8 @@ async function onAgendar(){
         profissional:'Dra. Daniele Caju',
         data_horario:S.data+' '+S.horario,
         data_agenda:S.data,
-        obs:'CPF: '+S.cpf
+        obs:'CPF: '+S.cpf,
+        codigo_avaliacao: S._codigo
       })
     });
     const json=await res.json();
@@ -601,24 +607,35 @@ async function onAgendar(){
 }
 
 function showConfirmacao(dtFmt, procNome){
+  // Usa o código gerado no POST
+  const codigo = S._codigo || 'AVAL-' + Date.now().toString(36).toUpperCase().slice(-8);
+
   const card = document.createElement('div');
   card.className='confirm-card';
   card.innerHTML=`
-    <div class="confirm-top">
-      <div class="confirm-nome">${S.nome}</div>
-      <div class="confirm-sub">Avaliação agendada ✔</div>
+    <div class="confirm-top" style="text-align:center;padding:22px 20px 18px">
+      <div style="font-size:28px;margin-bottom:8px">🌿</div>
+      <div class="confirm-nome" style="font-size:18px">${S.nome}</div>
+      <div class="confirm-sub" style="font-size:12px;margin-top:3px">Avaliação Gratuita confirmada ✔</div>
+    </div>
+    <div style="padding:14px 20px;text-align:center;border-bottom:1px solid var(--border)">
+      <div style="font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--gray-400);margin-bottom:6px">Código da sua avaliação</div>
+      <div style="font-family:var(--serif);font-size:22px;font-weight:700;color:var(--gold);letter-spacing:.12em">${codigo}</div>
+      <div style="font-size:10px;color:var(--gray-500);margin-top:4px">Apresente este código na recepção</div>
     </div>
     <div class="confirm-rows">
       <div class="confirm-row"><span class="confirm-lbl">Procedimento</span><span class="confirm-val">${procNome}</span></div>
       <div class="confirm-row"><span class="confirm-lbl">Data</span><span class="confirm-val">${dtFmt} às ${S.horario}</span></div>
       <div class="confirm-row"><span class="confirm-lbl">Profissional</span><span class="confirm-val">Dra. Daniele Caju</span></div>
-      <div class="confirm-row"><span class="confirm-lbl">WhatsApp</span><span class="confirm-val">${S.wpp}</span></div>
-      <div class="confirm-row"><span class="confirm-lbl">E-mail</span><span class="confirm-val">${S.email}</span></div>
+    </div>
+    <div style="padding:14px 20px 18px;text-align:center">
+      <div style="font-size:11px;color:var(--accent2);font-weight:600">📧 Enviamos sua ficha para <span style="color:var(--gold)">${S.email}</span></div>
+      <div style="font-size:10px;color:var(--gray-500);margin-top:3px">Verifique também a pasta de spam</div>
     </div>
   `;
   appendEl(card);
   setTimeout(()=>{
-    botMsg('Cadastro confirmado! 🌟 Você receberá a confirmação no e-mail e WhatsApp informados.');
+    botMsg('Perfeito! 🌟 Sua ficha de avaliação gratuita chegará no e-mail em instantes. Até lá!');
     setTimeout(showChipsFinal, 800);
   }, 500);
 }

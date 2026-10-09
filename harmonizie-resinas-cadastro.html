@@ -150,13 +150,13 @@ const WPP_CLINICA = '5547991667116';
 const CAL_ID      = '5322f89c2ab62e76e353c27b42dab51643262567f881f4fd37f1cb609485509a@group.calendar.google.com';
 const TZ          = 'America/Sao_Paulo';
 
-const DURACAO     = 320; // min — tarde inteira
+const DURACAO     = 70; // min — duração da avaliação
 
-// horários disponíveis: 14h–18h, intervalos 30min
+// horários disponíveis: 08h–18h, intervalos 30min
 // slot válido: slot + DURACAO <= 18h30 = 1110min do dia
 const TODOS_SLOTS = [];
 (function(){
-  for(let h=14;h<=18;h++){
+  for(let h=8;h<=18;h++){
     for(let m=0;m<60;m+=30){
       const total = h*60+m;
       if(total + DURACAO <= 18*60+30) TODOS_SLOTS.push(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`);
@@ -532,7 +532,7 @@ async function selectDay(iso, el){
   const dtFmt=`${partes[2]}/${partes[1]}`;
   const dtObj=new Date(+partes[0],+partes[1]-1,+partes[2]);
   const dowNome=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'][dtObj.getDay()];
-  document.getElementById('slots-title').textContent=`${dowNome}, ${dtFmt} — Tarde`;
+  document.getElementById('slots-title').textContent=`${dowNome}, ${dtFmt} — Horários disponíveis`;
   renderSlots();
 }
 

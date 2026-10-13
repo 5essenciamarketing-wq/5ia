@@ -51,7 +51,7 @@ body{
   -moz-osx-font-smoothing:grayscale;
   text-rendering:optimizeLegibility;
   display:grid;
-  grid-template-columns:272px 1fr;
+  grid-template-columns:240px minmax(340px,420px) 1fr;
   background:var(--bg);
 }
 
@@ -185,21 +185,19 @@ body{
 }
 .resumo-btn:hover{background:var(--s2);color:var(--ink2);border-color:var(--b2);}
 
-/* ── COLUNA DIREITA — Report + Comercial ── */
+/* ── COLUNA CENTRAL — Report ── */
 #col-report{
-  display:grid;
-  grid-template-columns:1fr 0px;
-  transition:grid-template-columns 0.3s cubic-bezier(0.32,0.72,0,1);
+  display:flex;flex-direction:column;
   overflow:hidden;
 }
-#col-report.comercial-aberto{grid-template-columns:1fr 360px;}
 
 #report-inner{
   overflow:hidden;
   display:flex;flex-direction:column;
   padding:0;
   background:var(--bg);
-  height:100%;
+  flex:1;
+  min-height:0;
 }
 
 /* ── CARD DO REPORT ── */
@@ -208,26 +206,21 @@ body{
   background:var(--s1);
   border:none;
   border-radius:0;
-  padding:0;
+  padding:16px 18px;
   flex:1;
-  overflow:hidden;
-  display:grid;
-  grid-template-columns:minmax(380px,440px) 1fr;
-  grid-template-rows:100%;
-}
-#card-form{
   overflow-y:auto;
-  padding:16px 20px 16px;
-  border-right:1px solid var(--b1);
-  display:flex;flex-direction:column;
+  display:flex;
+  flex-direction:column;
   gap:0;
   min-height:0;
 }
-#card-right{
-  overflow-y:auto;
-  padding:16px 20px 16px;
+#card-form{
   display:flex;flex-direction:column;
-  min-height:0;
+  gap:0;
+}
+#card-right{
+  display:flex;flex-direction:column;
+  margin-top:4px;
 }
 
 /* Header */
@@ -366,19 +359,17 @@ body{
 .h-nome{font-size:12px;font-weight:600;}
 .h-meta{font-size:10px;color:var(--ink3);margin-top:1px;}
 
-/* ── PAINEL COMERCIAL ── */
+/* ── PAINEL COMERCIAL — 3ª coluna, sempre visível ── */
 #painel-comercial{
-  overflow-y:auto;
+  overflow:hidden;
   background:var(--s1);
   border-left:1px solid var(--b1);
   display:flex;flex-direction:column;
-  opacity:0;transition:opacity 0.22s;
-  pointer-events:none;
 }
-#col-report.comercial-aberto #painel-comercial{opacity:1;pointer-events:all;}
 
 /* Botão comercial no header */
 .btn-comercial{
+  display:none;
   font-size:11.5px;font-weight:600;padding:5px 14px;border-radius:20px;
   border:1px solid var(--b2);
   background:var(--s2);color:var(--ink2);
@@ -484,7 +475,6 @@ input:-webkit-autofill,input:-webkit-autofill:focus{
     height:100dvh;
     overflow:hidden;
   }
-
   /* Esconde a coluna esquerda (sidebar) — vira aba mobile */
   #col-ativ{
     display:none;
@@ -525,11 +515,6 @@ input:-webkit-autofill,input:-webkit-autofill:focus{
     opacity:1 !important;
     pointer-events:all !important;
   }
-  /* No mobile, o toggle de comercial não usa a classe do col-report */
-  #col-report.comercial-aberto{
-    grid-template-columns:1fr;
-  }
-
   /* Barra de navegação inferior */
   #mobile-nav{
     display:flex;
@@ -573,10 +558,8 @@ input:-webkit-autofill,input:-webkit-autofill:focus{
   /* Row2 vira coluna no mobile */
   .row2{ grid-template-columns:1fr; }
 
-  /* Card vira coluna única no mobile */
-  .card{ grid-template-columns:1fr; grid-template-rows:auto 1fr; }
-  #card-form{ border-right:none; border-bottom:1px solid var(--b1); overflow-y:visible; }
-  #card-right{ min-height:200px; }
+  /* Card no mobile: padding reduzido */
+  .card{ padding:12px 14px; }
 
   /* Relatório: remove padding excessivo */
   #rep-scroll{ padding:12px 14px; }
@@ -768,7 +751,7 @@ input:-webkit-autofill,input:-webkit-autofill:focus{
     <input id="inp-link" type="url" placeholder="https://…" oninput="onInputChange()">
   </div>
 
-  <button class="btn-main" id="btn-main" onclick="enviar()" style="margin-top:auto">Enviar report</button>
+  <button class="btn-main" id="btn-main" onclick="enviar()" style="margin-top:12px">Enviar report</button>
 </div><!-- /card-form -->
 
 <div id="card-right">
@@ -830,6 +813,7 @@ input:-webkit-autofill,input:-webkit-autofill:focus{
 </div><!-- /card -->
 
 </div><!-- /report-inner -->
+</div><!-- /col-report -->
 
 <!-- PAINEL COMERCIAL -->
 <div id="painel-comercial">
@@ -839,7 +823,7 @@ input:-webkit-autofill,input:-webkit-autofill:focus{
         <div style="font-size:14px;font-weight:700;color:#F0F0FF">Comercial</div>
         <div style="font-size:11px;color:var(--ink3);margin-top:1px">Prospecção & Pipeline</div>
       </div>
-      <button onclick="toggleComercial()" style="width:26px;height:26px;border-radius:50%;border:1px solid var(--b2);background:transparent;color:var(--ink3);cursor:pointer;font-size:13px">×</button>
+      <button onclick="toggleComercial()" style="display:none">×</button>
     </div>
     <div class="modo-tabs">
       <button onclick="setTabComercial('prospec')" id="tab-prospec" class="modo-tab active">Prospecção</button>
@@ -1962,10 +1946,11 @@ async function atualizarProspectoSB(p){
 }
 
 function toggleComercial(){
-  const col = document.getElementById('col-report');
-  const btn = document.getElementById('btn-comercial');
-  const aberto = col.classList.toggle('comercial-aberto');
-  btn.style.background = aberto ? 'rgba(61,123,245,0.18)' : 'rgba(255,255,255,0.06)';
+  // Desktop: painel sempre visível — só funciona no mobile
+  const isMobile = window.innerWidth <= 700;
+  if(!isMobile) return;
+  const painel = document.getElementById('painel-comercial');
+  const aberto = painel.classList.toggle('mobile-visible');
   if(aberto) renderComercial();
 }
 

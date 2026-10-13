@@ -414,9 +414,111 @@ body{
 
 /* Mobile */
 @media(max-width:700px){
-  body{grid-template-columns:1fr;grid-template-rows:auto 1fr;height:auto;overflow-y:auto;}
-  #col-ativ{border-right:none;border-bottom:1px solid var(--b1);max-height:45vh;}
-  #col-report{overflow-y:visible;}
+  /* Layout mobile: uma coluna, altura total, scroll interno */
+  body{
+    grid-template-columns:1fr;
+    grid-template-rows:1fr;
+    height:100dvh;
+    overflow:hidden;
+  }
+
+  /* Esconde a coluna esquerda (sidebar) — vira aba mobile */
+  #col-ativ{
+    display:none;
+    position:fixed;
+    inset:0;
+    bottom:56px;
+    z-index:200;
+    border-right:none;
+    border-bottom:1px solid var(--b1);
+    overflow-y:auto;
+    max-height:calc(100dvh - 56px);
+    background:var(--bg);
+  }
+  #col-ativ.mobile-visible{ display:flex; flex-direction:column; }
+
+  /* Coluna principal ocupa tudo */
+  #col-report{
+    grid-column:1;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+    height:calc(100dvh - 56px);
+  }
+
+  /* Painel comercial no mobile: sobrepõe tudo */
+  #painel-comercial{
+    position:fixed !important;
+    inset:0 !important;
+    bottom:56px !important;
+    z-index:210 !important;
+    background:var(--bg) !important;
+    opacity:0;
+    pointer-events:none;
+    display:flex;
+    flex-direction:column;
+  }
+  #painel-comercial.mobile-visible{
+    opacity:1 !important;
+    pointer-events:all !important;
+  }
+  /* No mobile, o toggle de comercial não usa a classe do col-report */
+  #col-report.comercial-aberto{
+    grid-template-columns:1fr;
+  }
+
+  /* Barra de navegação inferior */
+  #mobile-nav{
+    display:flex;
+    position:fixed;
+    bottom:0; left:0; right:0;
+    height:56px;
+    background:var(--s1);
+    border-top:1px solid var(--b1);
+    z-index:300;
+    align-items:stretch;
+  }
+  .mobile-nav-btn{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:2px;
+    background:transparent;
+    border:none;
+    color:var(--ink3);
+    font-family:var(--font);
+    font-size:9px;
+    font-weight:600;
+    letter-spacing:.03em;
+    cursor:pointer;
+    transition:color .15s;
+    padding:0;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .mobile-nav-btn .nav-icon{ font-size:18px; line-height:1; }
+  .mobile-nav-btn.active{ color:var(--blue); }
+
+  /* Header da sidebar no mobile */
+  .ativ-header{ padding:12px 14px 8px; }
+
+  /* Row2 vira coluna no mobile */
+  .row2{ grid-template-columns:1fr; }
+
+  /* Relatório: remove padding excessivo */
+  #rep-scroll{ padding:12px 14px; }
+
+  /* Modal de evento full screen no mobile */
+  #modal-evento > div {
+    width:100% !important;
+    max-width:100% !important;
+    border-radius:20px 20px 0 0 !important;
+    position:fixed !important;
+    bottom:56px !important;
+    left:0 !important;
+    right:0 !important;
+  }
 }
 </style>
 </head>
@@ -2515,6 +2617,63 @@ async function salvarEvento() {
     setGcalUI(true);
     carregarEventos();
   }
+})();
+
+// ── NAVEGAÇÃO MOBILE ──────────────────────────────────────────────
+function isMobile(){ return window.innerWidth <= 700; }
+
+function mobileNav(aba){
+  if(!isMobile()) return;
+  const colAtiv      = document.getElementById('col-ativ');
+  const colReport    = document.getElementById('col-report');
+  const painelComercial = document.getElementById('painel-comercial');
+
+  // Esconde tudo
+  colAtiv.classList.remove('mobile-visible');
+  if(painelComercial) painelComercial.classList.remove('mobile-visible');
+
+  // Atualiza botões
+  document.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById('nav-btn-'+aba);
+  if(btn) btn.classList.add('active');
+
+  if(aba === 'agenda'){
+    colAtiv.classList.add('mobile-visible');
+  } else if(aba === 'comercial'){
+    if(painelComercial) painelComercial.classList.add('mobile-visible');
+  }
+  // 'report' = padrão
+}
+
+// Inicializa mobile
+(function setupMobile(){
+  if(!isMobile()) return;
+  // Ativa a aba "report" por padrão
+  const btn = document.getElementById('nav-btn-report');
+  if(btn) btn.classList.add('active');
+})();
+</script>
+
+<!-- BARRA MOBILE -->
+<nav id="mobile-nav" style="display:none">
+  <button class="mobile-nav-btn active" id="nav-btn-report" onclick="mobileNav('report')">
+    <span class="nav-icon">📋</span>Report
+  </button>
+  <button class="mobile-nav-btn" id="nav-btn-agenda" onclick="mobileNav('agenda')">
+    <span class="nav-icon">📅</span>Agenda
+  </button>
+  <button class="mobile-nav-btn" id="nav-btn-comercial" onclick="mobileNav('comercial')">
+    <span class="nav-icon">💼</span>Comercial
+  </button>
+</nav>
+
+<script>
+// Mostra a nav mobile só em telas pequenas
+(function(){
+  const nav = document.getElementById('mobile-nav');
+  function check(){ nav.style.display = window.innerWidth <= 700 ? 'flex' : 'none'; }
+  check();
+  window.addEventListener('resize', check);
 })();
 </script>
 </body>

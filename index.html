@@ -1834,8 +1834,8 @@ async function gerarPitchProspec(){
       method:'POST',
       headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY},
       body:JSON.stringify({
-        system:'Você é especialista em comunicação para agências de marketing premium. Com base no diagnóstico do lead, escreva uma mensagem de primeiro contato via WhatsApp. Tom: educado, humano, genuinamente interessado no negócio do outro. Sem ar de vendas. Sem asteriscos. Máximo 5 linhas. Termine com: Atenciosamente, 5essência Marketing',
-        messages:[{role:'user',content:'Diagnóstico: '+diag+'\nLead: '+nome+(empresa?' — '+empresa:'')+(servicoSelecionado?'\nServiço a ofertar: '+servicoSelecionado:'')+'\n\nCrie uma mensagem de primeiro contato, mencionando o serviço de forma natural e sem parecer uma oferta direta.'}]
+        system:'Você é especialista em vendas pelo WhatsApp para a agência 5essência Marketing. Escreva uma mensagem de primeiro contato curta e comercial, no estilo abaixo:\n\n"Oi [Nome]! Tudo bem?\nTrabalhamos com profissionais da sua área e nos últimos 30 dias uma das nossas clientes fechou 18 novos agendamentos sem responder uma mensagem sequer — foi tudo automático.\nGravei um vídeo rápido mostrando exatamente como funciona 👇\n\n[vídeo]\n\nE o melhor: custa R$ 29,90 por mês. Menos que um lanche. 🙂\nSe quiser testar, é só me falar!"\n\nAdapte o nome, segmento e resultado com base no diagnóstico do lead. Use prova social real e mostre o preço no final, depois do vídeo. Sem asteriscos. Sem formalidade excessiva. Sem "Atenciosamente". Máximo 6 linhas.',
+        messages:[{role:'user',content:'Diagnóstico: '+diag+'\nLead: '+nome+(empresa?' — '+empresa:'')+(servicoSelecionado?'\nServiço a ofertar: '+servicoSelecionado:'')+'\n\nCrie a mensagem de primeiro contato conforme o estilo definido.'}]
       })
     });
     const d = await r.json();

@@ -1642,7 +1642,7 @@ function fecharResumo(){
 // Inicializa atividades
 document.addEventListener('DOMContentLoaded', ()=>{
   initAtividades();
-  renderComercial();
+  carregarProspectos(); // carrega do Supabase e chama renderComercial() no callback
   setTimeout(verificarNotificacoes, 1200);
   // Limpa atividades de mais de 14 dias
   const limite = new Date();

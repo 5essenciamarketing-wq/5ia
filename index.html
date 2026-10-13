@@ -5,38 +5,40 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>5essência · Report</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
 
 :root{
-  /* Base */
-  --bg:#0A0A12;
-  --s1:#0F0F1A;   /* superfície primária */
-  --s2:#141420;   /* superfície secundária */
-  --s3:#1C1C2C;   /* superfície terciária */
+  /* Base — deep neutral, não roxo */
+  --bg:#080810;
+  --s1:#0D0D18;
+  --s2:#111120;
+  --s3:#181828;
 
-  /* Bordas */
-  --b1:rgba(255,255,255,0.06);
-  --b2:rgba(255,255,255,0.11);
+  /* Bordas com mais precisão */
+  --b1:rgba(255,255,255,0.055);
+  --b2:rgba(255,255,255,0.10);
+  --b3:rgba(255,255,255,0.16);
 
-  /* Texto */
-  --ink:#EEEEFF;
-  --ink2:#8888AA;
-  --ink3:#4A4A66;
-  --ink4:#2E2E44;
+  /* Texto — mais contraste e limpeza */
+  --ink:#F0F0FF;
+  --ink2:#9090B0;
+  --ink3:#505068;
+  --ink4:#303045;
 
-  /* Acentos */
-  --blue:#4C82FB;
-  --blue-g:linear-gradient(135deg,#3B6FE8,#6C3AED);
-  --blue-glow:rgba(76,130,251,0.2);
-  --green:#2DD47A;
-  --green-l:rgba(45,212,122,0.1);
-  --orange:#FF9A0A;
-  --red:#FF3B45;
-  --purple:#A855F7;
-  --purple-l:rgba(168,85,247,0.1);
+  /* Acentos — mais sóbrios */
+  --blue:#3D7BF5;
+  --blue-g:linear-gradient(135deg,#2D6BE4 0%,#5A30E0 100%);
+  --blue-glow:rgba(61,123,245,0.18);
+  --green:#27C76E;
+  --green-l:rgba(39,199,110,0.09);
+  --orange:#F59E0B;
+  --red:#EF4444;
+  --purple:#9333EA;
+  --purple-l:rgba(147,51,234,0.09);
 
-  --font:'Inter',-apple-system,sans-serif;
-  --r:10px;--r2:14px;--r3:20px;
+  --font:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+  /* Border-radius system — mais arredondado */
+  --r:12px;--r2:16px;--r3:22px;--r4:28px;
 }
 
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -46,8 +48,10 @@ body{
   height:100dvh;overflow:hidden;
   font-family:var(--font);color:var(--ink);
   -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  text-rendering:optimizeLegibility;
   display:grid;
-  grid-template-columns:280px 1fr;
+  grid-template-columns:272px 1fr;
   background:var(--bg);
 }
 
@@ -87,7 +91,7 @@ body{
 #campo-livre{
   width:100%;
   background:var(--s2);
-  border:1px solid var(--b1);
+  border:1px solid var(--b2);
   border-radius:var(--r2);
   color:var(--ink);
   font-family:var(--font);font-size:13px;
@@ -95,20 +99,21 @@ body{
   outline:none;resize:none;
   line-height:1.6;
   margin-bottom:8px;
-  transition:border-color 0.15s;
+  transition:border-color 0.15s,box-shadow 0.15s;
 }
-#campo-livre:focus{border-color:rgba(76,130,251,0.4);}
+#campo-livre:focus{border-color:rgba(61,123,245,0.5);box-shadow:0 0 0 3px rgba(61,123,245,0.1);}
 #campo-livre::placeholder{color:var(--ink4);}
 .ativ-add-btn{
-  width:100%;padding:9px;border:none;
+  width:100%;padding:10px;border:none;
   border-radius:var(--r2);
   background:var(--blue-g);color:#fff;
   font-family:var(--font);font-size:13px;font-weight:600;
-  cursor:pointer;letter-spacing:0.01em;
-  box-shadow:0 2px 10px var(--blue-glow);
-  transition:opacity 0.15s;
+  cursor:pointer;letter-spacing:0.02em;
+  box-shadow:0 3px 14px var(--blue-glow),0 1px 0 rgba(255,255,255,0.1) inset;
+  transition:opacity 0.15s,transform 0.1s;
 }
-.ativ-add-btn:active{opacity:0.85;}
+.ativ-add-btn:hover{opacity:0.92;}
+.ativ-add-btn:active{opacity:0.85;transform:scale(0.99);}
 
 /* Lista de atividades */
 #lista-dia{
@@ -131,9 +136,9 @@ body{
 /* Item de atividade */
 .ativ-item-row{
   display:flex;align-items:center;gap:8px;
-  padding:8px 10px;
+  padding:9px 11px;
   background:var(--s2);border:1px solid var(--b1);
-  border-radius:var(--r);
+  border-radius:var(--r2);
   transition:all 0.12s;
 }
 .ativ-item-row.done{opacity:0.4;}
@@ -141,13 +146,18 @@ body{
 .ativ-item-row.pessoal .ativ-item-nome{color:#FCD34D;}
 .ativ-item-row.pessoal .ativ-check-box{border-color:rgba(255,154,10,0.3);}
 .ativ-check-box{
-  width:15px;height:15px;border-radius:4px;
-  border:1.5px solid var(--b2);flex-shrink:0;
+  width:16px;height:16px;border-radius:5px;
+  border:1.5px solid var(--b3);flex-shrink:0;
   display:flex;align-items:center;justify-content:center;
   cursor:pointer;transition:all 0.15s;
 }
-.ativ-check-box.on{background:var(--green);border-color:var(--green);}
-.ativ-check-box.on::after{content:'✓';font-size:9px;color:white;font-weight:700;}
+.ativ-check-box:hover{border-color:var(--green);}
+.ativ-check-box.on{background:var(--green);border-color:var(--green);box-shadow:0 2px 8px rgba(39,199,110,0.3);}
+.ativ-check-box.on::after{
+  content:'';display:block;width:4px;height:7px;
+  border-right:2px solid white;border-bottom:2px solid white;
+  transform:rotate(40deg) translate(-1px,-1px);
+}
 .ativ-item-nome{
   flex:1;font-size:12.5px;font-weight:500;color:var(--ink);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
@@ -167,13 +177,13 @@ body{
   flex-shrink:0;
 }
 .resumo-btn{
-  width:100%;padding:8px;
-  border:1px solid var(--b2);border-radius:var(--r2);
+  width:100%;padding:9px;
+  border:1px solid var(--b1);border-radius:var(--r2);
   background:transparent;color:var(--ink3);
   font-family:var(--font);font-size:12px;font-weight:600;
-  cursor:pointer;transition:all 0.15s;
+  cursor:pointer;transition:all 0.15s;letter-spacing:0.01em;
 }
-.resumo-btn:hover{background:var(--s2);color:var(--ink2);}
+.resumo-btn:hover{background:var(--s2);color:var(--ink2);border-color:var(--b2);}
 
 /* ── COLUNA DIREITA — Report + Comercial ── */
 #col-report{
@@ -197,9 +207,9 @@ body{
   width:100%;max-width:520px;
   background:var(--s1);
   border:1px solid var(--b1);
-  border-radius:var(--r3);
-  padding:24px 22px 20px;
-  box-shadow:0 8px 40px rgba(0,0,0,0.5);
+  border-radius:var(--r4);
+  padding:26px 24px 22px;
+  box-shadow:0 2px 0 rgba(255,255,255,0.03) inset,0 12px 48px rgba(0,0,0,0.6);
 }
 
 /* Header */
@@ -212,17 +222,19 @@ body{
 }
 .logo{display:flex;align-items:center;gap:10px;}
 .logo-dot{
-  width:32px;height:32px;border-radius:9px;
+  width:34px;height:34px;border-radius:10px;
   background:var(--blue-g);display:flex;align-items:center;
-  justify-content:center;font-size:14px;font-weight:800;
-  color:#fff;box-shadow:0 3px 14px var(--blue-glow);
+  justify-content:center;font-size:13px;font-weight:800;
+  color:#fff;box-shadow:0 4px 16px var(--blue-glow),0 1px 0 rgba(255,255,255,0.15) inset;
+  letter-spacing:-0.5px;
 }
 .logo-nome{font-size:13.5px;font-weight:700;letter-spacing:-0.3px;}
 .logo-sub{font-size:10.5px;color:var(--ink3);margin-top:1px;}
 .date-pill{
   font-size:11px;font-weight:600;color:var(--ink3);
-  background:var(--s2);border:1px solid var(--b1);
-  border-radius:20px;padding:4px 11px;
+  background:var(--s2);border:1px solid var(--b2);
+  border-radius:20px;padding:5px 13px;
+  letter-spacing:0.02em;
 }
 
 /* Fields */
@@ -234,13 +246,15 @@ body{
 }
 .opt{font-weight:400;text-transform:none;letter-spacing:0;color:var(--ink4);}
 .field input,.field select,.field textarea{
-  width:100%;background:var(--s2);border:1px solid var(--b1);
+  width:100%;background:var(--s2);border:1px solid var(--b2);
   border-radius:var(--r2);color:var(--ink);font-family:var(--font);
-  font-size:13.5px;padding:10px 12px;outline:none;
-  transition:all 0.15s;-webkit-appearance:none;
+  font-size:13.5px;padding:11px 13px;outline:none;
+  transition:border-color 0.15s,background 0.15s,box-shadow 0.15s;
+  -webkit-appearance:none;
 }
 .field input:focus,.field select:focus,.field textarea:focus{
-  border-color:rgba(76,130,251,0.45);background:var(--s3);
+  border-color:rgba(61,123,245,0.55);background:var(--s3);
+  box-shadow:0 0 0 3px rgba(61,123,245,0.1);
 }
 .field input::placeholder,.field textarea::placeholder{color:var(--ink4);}
 .field select{cursor:pointer;}
@@ -250,7 +264,7 @@ body{
 
 /* Preview WhatsApp */
 .preview-wrap{
-  background:var(--s2);border:1px solid var(--b1);
+  background:var(--s2);border:1px solid var(--b2);
   border-radius:var(--r2);margin-bottom:13px;overflow:hidden;
 }
 .preview-head{
@@ -263,14 +277,16 @@ body{
 .pbadge.ia{background:var(--purple-l);color:var(--purple);}
 .pbadge.edit{background:rgba(255,154,10,0.1);color:var(--orange);}
 .btn-ia{
-  display:inline-flex;align-items:center;gap:4px;
-  padding:4px 10px;border-radius:20px;border:none;
+  display:inline-flex;align-items:center;gap:5px;
+  padding:5px 12px;border-radius:20px;
+  border:1px solid rgba(147,51,234,0.2);
   cursor:pointer;background:var(--purple-l);color:var(--purple);
-  font-family:var(--font);font-size:11px;font-weight:700;
+  font-family:var(--font);font-size:11px;font-weight:600;
+  letter-spacing:0.01em;
   transition:all 0.15s;
 }
-.btn-ia:hover{background:rgba(168,85,247,0.18);}
-.btn-ia:disabled{opacity:0.35;cursor:not-allowed;}
+.btn-ia:hover{background:rgba(147,51,234,0.15);border-color:rgba(147,51,234,0.35);}
+.btn-ia:disabled{opacity:0.3;cursor:not-allowed;}
 .preview-body{
   padding:12px;min-height:72px;font-size:12.5px;
   color:var(--ink2);line-height:1.75;white-space:pre-wrap;
@@ -283,109 +299,126 @@ body{
 /* WPP toggle */
 .wpp-row{
   display:flex;align-items:center;justify-content:space-between;
-  background:var(--s2);border:1px solid var(--b1);
-  border-radius:var(--r2);padding:10px 13px;
+  background:var(--s2);border:1px solid var(--b2);
+  border-radius:var(--r2);padding:11px 14px;
   margin-bottom:13px;cursor:pointer;transition:all 0.15s;
 }
-.wpp-row.on{border-color:rgba(45,212,122,0.3);background:rgba(45,212,122,0.04);}
-.wpp-left{display:flex;align-items:center;gap:9px;}
-.wpp-icon{font-size:16px;}
+.wpp-row:hover{border-color:var(--b3);}
+.wpp-row.on{border-color:rgba(39,199,110,0.3);background:rgba(39,199,110,0.04);}
+.wpp-left{display:flex;align-items:center;gap:10px;}
+.wpp-icon{
+  width:28px;height:28px;border-radius:8px;background:var(--s3);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.wpp-icon svg{width:15px;height:15px;stroke:var(--ink3);}
+.wpp-row.on .wpp-icon svg{stroke:var(--green);}
 .wpp-name{font-size:12.5px;font-weight:600;}
 .wpp-sub{font-size:10.5px;color:var(--ink3);margin-top:1px;}
-.pill{width:40px;height:21px;border-radius:11px;background:var(--s3);border:1px solid var(--b2);position:relative;transition:all 0.22s;flex-shrink:0;}
-.pill::after{content:'';position:absolute;top:3px;left:3px;width:13px;height:13px;border-radius:50%;background:var(--ink3);transition:all 0.22s cubic-bezier(0.34,1.56,0.64,1);}
-.wpp-row.on .pill{background:var(--green);border-color:var(--green);}
+.pill{width:40px;height:22px;border-radius:11px;background:var(--s3);border:1px solid var(--b2);position:relative;transition:all 0.22s;flex-shrink:0;}
+.pill::after{content:'';position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:var(--ink3);transition:all 0.22s cubic-bezier(0.34,1.56,0.64,1);}
+.wpp-row.on .pill{background:var(--green);border-color:var(--green);box-shadow:0 2px 8px rgba(39,199,110,0.3);}
 .wpp-row.on .pill::after{left:22px;background:#fff;}
 
 /* Botão principal */
 .btn-main{
-  width:100%;padding:13px;border:none;border-radius:var(--r2);
+  width:100%;padding:14px;border:none;border-radius:var(--r2);
   background:var(--blue-g);color:#fff;
   font-family:var(--font);font-size:14px;font-weight:700;
-  cursor:pointer;transition:opacity 0.15s;
-  box-shadow:0 3px 16px var(--blue-glow);letter-spacing:0.01em;
+  cursor:pointer;transition:opacity 0.15s,transform 0.1s;
+  box-shadow:0 4px 20px var(--blue-glow),0 1px 0 rgba(255,255,255,0.12) inset;
+  letter-spacing:0.015em;
 }
-.btn-main:active{opacity:0.88;}
-.btn-main:disabled{opacity:0.35;cursor:not-allowed;}
+.btn-main:hover{opacity:0.93;}
+.btn-main:active{opacity:0.88;transform:scale(0.99);}
+.btn-main:disabled{opacity:0.3;cursor:not-allowed;transform:none;}
 
 /* Histórico */
 .hist{margin-top:18px;padding-top:14px;border-top:1px solid var(--b1);}
 .hist-lbl{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink3);margin-bottom:8px;}
 .lancamento{
-  display:flex;align-items:center;gap:8px;
-  padding:7px 10px;background:var(--s2);
-  border-radius:var(--r);margin-bottom:5px;
+  display:flex;align-items:center;gap:10px;
+  padding:8px 12px;background:var(--s2);
+  border:1px solid var(--b1);
+  border-radius:var(--r2);margin-bottom:5px;
+  transition:border-color 0.12s;
 }
-.h-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+.lancamento:hover{border-color:var(--b2);}
+.h-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
 .h-nome{font-size:12px;font-weight:600;}
 .h-meta{font-size:10px;color:var(--ink3);margin-top:1px;}
 
 /* ── PAINEL COMERCIAL ── */
 #painel-comercial{
   overflow-y:auto;
-  background:linear-gradient(170deg,#140E2A 0%,#0D0A1E 100%);
-  border-left:1px solid rgba(168,85,247,0.18);
+  background:var(--s1);
+  border-left:1px solid var(--b1);
   display:flex;flex-direction:column;
-  opacity:0;transition:opacity 0.25s;
+  opacity:0;transition:opacity 0.22s;
   pointer-events:none;
 }
 #col-report.comercial-aberto #painel-comercial{opacity:1;pointer-events:all;}
 
 /* Botão comercial no header */
 .btn-comercial{
-  font-size:11px;font-weight:600;padding:4px 11px;border-radius:20px;
-  border:1px solid rgba(168,85,247,0.3);
-  background:rgba(168,85,247,0.08);color:var(--purple);
+  font-size:11.5px;font-weight:600;padding:5px 14px;border-radius:20px;
+  border:1px solid var(--b2);
+  background:var(--s2);color:var(--ink2);
   cursor:pointer;font-family:var(--font);transition:all 0.15s;
+  letter-spacing:0.01em;
 }
-.btn-comercial:hover{background:rgba(168,85,247,0.16);}
+.btn-comercial:hover{background:var(--s3);color:var(--ink);border-color:var(--b3);}
+.btn-comercial.active{background:rgba(147,51,234,0.1);color:var(--purple);border-color:rgba(147,51,234,0.25);}
 
 /* Modo de seleção de modo */
 .modo-tabs{
   display:flex;gap:0;overflow-x:auto;scrollbar-width:none;
-  border-bottom:1px solid rgba(168,85,247,0.12);
+  border-bottom:1px solid var(--b1);
 }
 .modo-tabs::-webkit-scrollbar{display:none;}
 .modo-tab{
-  flex-shrink:0;padding:10px 16px;font-size:12px;font-weight:600;
-  color:rgba(255,255,255,0.3);cursor:pointer;
+  flex-shrink:0;padding:11px 18px;font-size:12px;font-weight:600;
+  color:var(--ink3);cursor:pointer;
   border-bottom:2px solid transparent;transition:all 0.15s;white-space:nowrap;
+  letter-spacing:0.01em;
 }
-.modo-tab.active{color:var(--purple);border-bottom-color:var(--purple);}
+.modo-tab:hover{color:var(--ink2);}
+.modo-tab.active{color:var(--ink);border-bottom-color:var(--blue);}
 
 /* Toasts */
 .toast{
-  background:rgba(10,10,18,0.97);border:1px solid var(--b2);
-  border-radius:22px;padding:8px 15px;font-size:12.5px;font-weight:600;
-  backdrop-filter:blur(24px);box-shadow:0 4px 20px rgba(0,0,0,0.5);
+  background:rgba(13,13,24,0.96);border:1px solid var(--b3);
+  border-radius:24px;padding:9px 16px;font-size:12.5px;font-weight:600;
+  backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);
+  box-shadow:0 8px 32px rgba(0,0,0,0.6),0 1px 0 rgba(255,255,255,0.06) inset;
   display:flex;align-items:center;gap:8px;white-space:nowrap;
   animation:tIn 0.25s cubic-bezier(0.34,1.56,0.64,1) both,tOut 0.2s 2.7s ease both;
 }
-.tdot{width:5px;height:5px;border-radius:50%;}
+.tdot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
 @keyframes tIn{from{opacity:0;transform:translateY(-8px) scale(0.9);}to{opacity:1;transform:none;}}
 @keyframes tOut{to{opacity:0;transform:translateY(-6px);}}
 
 /* Modal de resumo / cliente */
 .modal-overlay-inner{
-  position:fixed;inset:0;background:rgba(0,0,0,0.75);
-  backdrop-filter:blur(10px);z-index:500;
+  position:fixed;inset:0;background:rgba(0,0,0,0.7);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);z-index:500;
   display:none;align-items:flex-end;justify-content:center;
 }
 .modal-overlay-inner.open{display:flex;}
 .modal-sheet-inner{
   width:100%;max-width:520px;
   background:var(--s1);border:1px solid var(--b2);
-  border-top-left-radius:22px;border-top-right-radius:22px;
+  border-top-left-radius:26px;border-top-right-radius:26px;
   max-height:82dvh;display:flex;flex-direction:column;
-  box-shadow:0 -8px 40px rgba(0,0,0,0.6);
+  box-shadow:0 -12px 60px rgba(0,0,0,0.7);
   animation:sheetUp 0.28s cubic-bezier(0.32,0.72,0,1) both;
 }
 @keyframes sheetUp{from{transform:translateY(100%);}to{transform:none;}}
-.modal-handle-inner{width:30px;height:3px;background:var(--b2);border-radius:2px;margin:10px auto 0;flex-shrink:0;}
-.modal-head-inner{padding:13px 18px;border-bottom:1px solid var(--b1);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
-.modal-title-inner{font-size:14px;font-weight:700;}
-.modal-close-inner{font-size:17px;color:var(--ink3);cursor:pointer;}
-.modal-body-inner{flex:1;overflow-y:auto;padding:14px 18px;}
+.modal-handle-inner{width:32px;height:3px;background:var(--b3);border-radius:3px;margin:12px auto 0;flex-shrink:0;}
+.modal-head-inner{padding:14px 20px;border-bottom:1px solid var(--b1);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.modal-title-inner{font-size:14px;font-weight:700;letter-spacing:-0.2px;}
+.modal-close-inner{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--ink3);cursor:pointer;background:var(--s2);transition:all 0.15s;}
+.modal-close-inner:hover{background:var(--s3);color:var(--ink);}
+.modal-body-inner{flex:1;overflow-y:auto;padding:16px 20px;}
 
 /* Editor de preview */
 .edit-area{display:none;margin-top:6px;}
@@ -399,18 +432,29 @@ body{
 }
 .edit-btns{display:flex;gap:7px;margin-top:7px;}
 .btn-sm{
-  padding:6px 13px;border-radius:var(--r);
+  padding:7px 14px;border-radius:var(--r);
   font-family:var(--font);font-size:12px;font-weight:600;
   cursor:pointer;transition:all 0.12s;
-  border:1px solid var(--b2);background:var(--s2);color:var(--ink2);
+  border:1px solid var(--b2);background:var(--s3);color:var(--ink2);
+  letter-spacing:0.01em;
 }
-.btn-sm.ok{background:var(--blue-g);color:white;border-color:transparent;}
+.btn-sm.ok{background:var(--blue-g);color:white;border-color:transparent;box-shadow:0 2px 10px var(--blue-glow);}
 .btn-sm:hover{opacity:0.85;}
 
-/* Scrollbar */
-::-webkit-scrollbar{width:3px;height:3px;}
+/* Scrollbar refinada */
+::-webkit-scrollbar{width:4px;height:4px;}
 ::-webkit-scrollbar-track{background:transparent;}
-::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px;}
+::-webkit-scrollbar-thumb{background:var(--b2);border-radius:4px;}
+::-webkit-scrollbar-thumb:hover{background:var(--b3);}
+
+/* Seleção */
+::selection{background:rgba(61,123,245,0.25);color:var(--ink);}
+
+/* Inputs — sem autocomplete amarelo */
+input:-webkit-autofill,input:-webkit-autofill:focus{
+  -webkit-box-shadow:0 0 0 1000px var(--s2) inset !important;
+  -webkit-text-fill-color:var(--ink) !important;
+}
 
 /* Mobile */
 @media(max-width:700px){
@@ -472,11 +516,13 @@ body{
     display:flex;
     position:fixed;
     bottom:0; left:0; right:0;
-    height:56px;
-    background:var(--s1);
+    height:60px;
+    background:rgba(13,13,24,0.95);
+    backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
     border-top:1px solid var(--b1);
     z-index:300;
     align-items:stretch;
+    padding-bottom:env(safe-area-inset-bottom,0);
   }
   .mobile-nav-btn{
     flex:1;
@@ -484,21 +530,23 @@ body{
     flex-direction:column;
     align-items:center;
     justify-content:center;
-    gap:2px;
+    gap:3px;
     background:transparent;
     border:none;
     color:var(--ink3);
     font-family:var(--font);
-    font-size:9px;
+    font-size:9.5px;
     font-weight:600;
-    letter-spacing:.03em;
+    letter-spacing:.04em;
+    text-transform:uppercase;
     cursor:pointer;
     transition:color .15s;
     padding:0;
     -webkit-tap-highlight-color:transparent;
   }
-  .mobile-nav-btn .nav-icon{ font-size:18px; line-height:1; }
+  .mobile-nav-btn .nav-icon{ display:flex;align-items:center;justify-content:center; }
   .mobile-nav-btn.active{ color:var(--blue); }
+  .mobile-nav-btn.active .nav-icon svg{ stroke:var(--blue); }
 
   /* Header da sidebar no mobile */
   .ativ-header{ padding:12px 14px 8px; }
@@ -597,11 +645,11 @@ body{
   <!-- AGENDA GOOGLE -->
   <div id="agenda-section" style="margin:10px 0 4px;border-top:1px solid var(--b1);padding-top:10px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-      <span style="font-size:12px;font-weight:600;color:var(--ink2);letter-spacing:.5px;text-transform:uppercase">📅 Agenda</span>
+      <span style="font-size:12px;font-weight:600;color:var(--ink2);letter-spacing:.5px;text-transform:uppercase">Agenda</span>
       <div style="display:flex;gap:6px;align-items:center">
         <button id="btn-add-evento" onclick="abrirModalEvento()" title="Novo evento" style="display:none;background:rgba(76,130,251,0.15);border:1px solid rgba(76,130,251,0.3);color:var(--blue);border-radius:6px;padding:3px 8px;font-size:12px;cursor:pointer">+ Novo</button>
         <button id="btn-conectar-gcal" onclick="conectarGcal()" style="background:rgba(76,130,251,0.12);border:1px solid rgba(76,130,251,0.25);color:var(--blue);border-radius:6px;padding:3px 9px;font-size:11px;cursor:pointer;white-space:nowrap">Conectar</button>
-        <button id="btn-desconectar-gcal" onclick="desconectarGcal()" title="Desconectar" style="display:none;background:transparent;border:none;color:var(--ink3);font-size:11px;cursor:pointer">✕</button>
+        <button id="btn-desconectar-gcal" onclick="desconectarGcal()" title="Desconectar" style="display:none;background:transparent;border:none;color:var(--ink3);font-size:11px;cursor:pointer">×</button>
       </div>
     </div>
     <div id="agenda-lista" style="font-size:12px;color:var(--ink2)">
@@ -612,7 +660,7 @@ body{
   <!-- MODAL NOVO EVENTO -->
   <div id="modal-evento" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.7);align-items:center;justify-content:center">
     <div style="background:var(--s1);border:1px solid var(--b2);border-radius:16px;padding:24px;width:320px;max-width:90vw">
-      <div style="font-size:14px;font-weight:600;color:var(--ink);margin-bottom:16px">📅 Novo evento</div>
+      <div style="font-size:14px;font-weight:600;color:var(--ink);margin-bottom:16px">Novo evento</div>
       <input id="ev-titulo" placeholder="Título do evento" style="width:100%;background:var(--bg);border:1px solid var(--b1);border-radius:8px;padding:9px 12px;color:var(--ink);font-size:13px;outline:none;margin-bottom:8px;box-sizing:border-box">
       <div style="display:flex;gap:8px;margin-bottom:8px">
         <input id="ev-data" type="date" style="flex:1;background:var(--bg);border:1px solid var(--b1);border-radius:8px;padding:9px 10px;color:var(--ink);font-size:12px;outline:none;box-sizing:border-box">
@@ -627,8 +675,8 @@ body{
   </div>
 
   <div class="ativ-footer" style="display:flex;flex-direction:column;gap:6px">
-    <button onclick="abrirResumoSemanal()" class="resumo-btn">📋 Resumo semanal</button>
-    <button onclick="otimizarTitulos()" id="btn-otimizar" class="resumo-btn" style="border-color:rgba(168,85,247,0.3);color:var(--purple)">✦ Otimizar títulos dos projetos</button>
+    <button onclick="abrirResumoSemanal()" class="resumo-btn">Resumo semanal</button>
+    <button onclick="otimizarTitulos()" id="btn-otimizar" class="resumo-btn" style="border-color:rgba(168,85,247,0.3);color:var(--purple)">Otimizar títulos dos projetos</button>
   </div>
 </div>
 
@@ -647,7 +695,7 @@ body{
     </div>
     <div style="display:flex;align-items:center;gap:8px">
       <div class="date-pill" id="date-pill"></div>
-      <button onclick="toggleComercial()" id="btn-comercial" class="btn-comercial">⚡ Comercial</button>
+      <button onclick="toggleComercial()" id="btn-comercial" class="btn-comercial">Comercial</button>
     </div>
   </div>
 
@@ -704,7 +752,7 @@ body{
         <span class="preview-badge badge-tpl" id="pbadge">Template</span>
       </div>
       <button class="btn-ia" id="btn-ia" onclick="gerarIA()" disabled>
-        <span class="star">✦</span>&nbsp;Gerar com IA
+        <span class="star"></span>&nbsp;Gerar com IA
       </button>
     </div>
     <div class="preview-body empty" id="pbody" onclick="abrirEdicao()">
@@ -713,7 +761,7 @@ body{
     <div class="edit-area" id="edit-area">
       <textarea id="edit-ta"></textarea>
       <div class="edit-btns">
-        <button class="btn-sm ok" onclick="confirmarEdit()">✓ Confirmar</button>
+        <button class="btn-sm ok" onclick="confirmarEdit()">Confirmar</button>
         <button class="btn-sm" onclick="cancelarEdit()">Cancelar</button>
       </div>
     </div>
@@ -735,7 +783,7 @@ body{
 
   <div class="wpp-row" id="wpp-row" onclick="toggleWpp()">
     <div class="wpp-left">
-      <span class="wpp-icon">📲</span>
+      <span class="wpp-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
       <div>
         <div class="wpp-name">Enviar WhatsApp</div>
         <div class="wpp-sub" id="wpp-sub">Toque para ativar</div>
@@ -762,7 +810,7 @@ body{
         <div style="font-size:14px;font-weight:700;color:#F0F0FF">Comercial</div>
         <div style="font-size:11px;color:rgba(168,85,247,0.7);margin-top:1px">Prospecção & Follow-up</div>
       </div>
-      <button onclick="toggleComercial()" style="width:26px;height:26px;border-radius:50%;border:1px solid rgba(168,85,247,0.2);background:transparent;color:rgba(168,85,247,0.6);cursor:pointer;font-size:13px">✕</button>
+      <button onclick="toggleComercial()" style="width:26px;height:26px;border-radius:50%;border:1px solid rgba(168,85,247,0.2);background:transparent;color:rgba(168,85,247,0.6);cursor:pointer;font-size:13px">×</button>
     </div>
     <div class="modo-tabs">
       <button onclick="setTabComercial('prospec')" id="tab-prospec" class="modo-tab active">Prospecção</button>
@@ -778,8 +826,8 @@ body{
 <div id="modal-notif" style="position:fixed;inset:0;background:rgba(0,0,0,0.8);backdrop-filter:blur(12px);z-index:600;display:none;align-items:flex-start;justify-content:center;padding-top:40px">
   <div style="width:100%;max-width:480px;background:var(--s1);border:1px solid var(--b2);border-radius:22px;max-height:82dvh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.7);animation:cardIn 0.3s cubic-bezier(0.34,1.56,0.64,1) both">
     <div style="padding:16px 20px;border-bottom:1px solid var(--b1);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
-      <div style="font-size:14px;font-weight:700" id="notif-title">⚡ Atenção necessária</div>
-      <span onclick="fecharNotif()" style="cursor:pointer;color:var(--ink3);font-size:17px">✕</span>
+      <div style="font-size:14px;font-weight:700" id="notif-title">Atenção necessária</div>
+      <span onclick="fecharNotif()" style="cursor:pointer;color:var(--ink3);font-size:17px">×</span>
     </div>
     <div id="notif-body" style="flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:10px"></div>
     <div style="padding:12px 20px;border-top:1px solid var(--b1);flex-shrink:0">
@@ -796,8 +844,8 @@ body{
     <div style="font-size:12px;color:var(--blue);font-weight:600;margin-bottom:20px" id="msa-cliente"></div>
     <div style="font-size:12px;color:var(--ink3);margin-bottom:14px">Como está essa atividade?</div>
     <div style="display:flex;flex-direction:column;gap:8px">
-      <button onclick="confirmarStatusAtiv('em_andamento')" style="width:100%;padding:12px;border:1px solid var(--b2);border-radius:12px;background:rgba(76,130,251,0.1);color:var(--blue);font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer">🔄 Em andamento</button>
-      <button onclick="confirmarStatusAtiv('entregue')" style="width:100%;padding:12px;border:1px solid rgba(45,212,122,0.3);border-radius:12px;background:rgba(45,212,122,0.08);color:var(--green);font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer">✅ Finalizado</button>
+      <button onclick="confirmarStatusAtiv('em_andamento')" style="width:100%;padding:12px;border:1px solid var(--b2);border-radius:12px;background:rgba(76,130,251,0.1);color:var(--blue);font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer">Em andamento</button>
+      <button onclick="confirmarStatusAtiv('entregue')" style="width:100%;padding:12px;border:1px solid rgba(45,212,122,0.3);border-radius:12px;background:rgba(45,212,122,0.08);color:var(--green);font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer">Finalizado</button>
       <button onclick="document.getElementById('modal-status-ativ').style.display='none'" style="width:100%;padding:10px;border:none;border-radius:12px;background:transparent;color:var(--ink3);font-family:var(--font);font-size:12px;cursor:pointer">Cancelar</button>
     </div>
   </div>
@@ -812,7 +860,7 @@ body{
         <div style="font-size:15px;font-weight:700" id="mcli-nome"></div>
         <div style="font-size:11px;color:var(--ink3);margin-top:1px">Esta semana</div>
       </div>
-      <span onclick="fecharModalCliente()" style="font-size:18px;color:var(--ink3);cursor:pointer">✕</span>
+      <span onclick="fecharModalCliente()" style="font-size:18px;color:var(--ink3);cursor:pointer">×</span>
     </div>
     <div id="mcli-body" style="flex:1;overflow-y:auto;padding:14px 20px;display:flex;flex-direction:column;gap:7px"></div>
   </div>
@@ -823,8 +871,8 @@ body{
   <div class="modal-sheet-inner">
     <div class="modal-handle-inner"></div>
     <div class="modal-head-inner">
-      <span class="modal-title-inner">📋 Resumo da semana</span>
-      <span class="modal-close-inner" onclick="fecharResumo()">✕</span>
+      <span class="modal-title-inner">Resumo da semana</span>
+      <span class="modal-close-inner" onclick="fecharResumo()">×</span>
     </div>
     <div class="modal-body-inner" id="modal-body">
       <div style="text-align:center;padding:32px;color:var(--ink3)">Carregando…</div>
@@ -962,7 +1010,7 @@ ${temLink ? `- Link para acesso: ${ctx.link}` : '- Sem link disponível'}
 
 BANCO DE VARIAÇÕES — escolha elementos diferentes a cada geração:
 
-Aberturas possíveis: "Olá, [nome]! 👋", "Oi, [nome]!", "[Nome]! 👋", "Boa tarde, [nome]!", "[Nome], tudo certo?"
+Aberturas possíveis: "Olá, [nome]! ", "Oi, [nome]!", "[Nome]! ", "Boa tarde, [nome]!", "[Nome], tudo certo?"
 
 Frases de transição possíveis: "Passando para te manter atualizado.", "Segue uma atualização rápida.", "Atualização do dia:", "Report de hoje:", "Deixando você por dentro:"
 
@@ -1071,7 +1119,7 @@ function renderPreview(msg, isIA) {
   const badge = document.getElementById('pbadge');
   body.textContent = msg;
   body.className = 'preview-body' + (isIA ? ' ia' : '');
-  badge.textContent = isIA ? '✦ IA' : 'Template';
+  badge.textContent = isIA ? 'IA' : 'Template';
   badge.className = 'preview-badge ' + (isIA ? 'badge-ia' : 'badge-tpl');
 }
 
@@ -1086,7 +1134,7 @@ async function gerarIA() {
   const pw    = document.getElementById('pw');
 
   btnIA.disabled = true;
-  btnIA.innerHTML = '<span style="display:inline-block;animation:spin 0.7s linear infinite;font-size:12px">✦</span>&nbsp;Gerando…';
+  btnIA.innerHTML = '<span style="display:inline-block;animation:spin 0.7s linear infinite;font-size:12px"></span>&nbsp;Gerando…';
   pw.classList.add('pulse');
   body.className = 'preview-body typing';
   body.textContent = '';
@@ -1117,7 +1165,7 @@ async function gerarIA() {
 
     msgFinal = texto;
     msgIsIA  = true;
-    badge.textContent = '✦ IA';
+    badge.textContent = 'IA';
     badge.className   = 'preview-badge badge-ia';
 
   } catch(e) {
@@ -1128,7 +1176,7 @@ async function gerarIA() {
   } finally {
     pw.classList.remove('pulse');
     btnIA.disabled = false;
-    btnIA.innerHTML = '<span class="star">✦</span>&nbsp;Gerar com IA';
+    btnIA.innerHTML = '<span class="star"></span>&nbsp;Gerar com IA';
   }
 }
 
@@ -1180,7 +1228,7 @@ function toggleWpp() {
   document.getElementById('wpp-row').classList.toggle('on', wppAtivo);
   atualizarWppSub();
   document.getElementById('btn-main').textContent =
-    wppAtivo ? 'Enviar report via WhatsApp 📲' : 'Enviar report';
+    wppAtivo ? 'Enviar report via WhatsApp ·' : 'Enviar report';
 }
 
 function atualizarWppSub() {
@@ -1191,7 +1239,7 @@ function atualizarWppSub() {
     sub.textContent = `Enviará para ${opt.dataset.alias}`;
     sub.style.color = 'var(--green)';
   } else if (wppAtivo) {
-    sub.textContent = '⚠️ Sem WhatsApp cadastrado';
+    sub.textContent = 'Sem WhatsApp cadastrado';
     sub.style.color = 'var(--orange)';
   } else {
     sub.textContent = 'Toque para ativar';
@@ -1280,13 +1328,13 @@ async function enviar() {
     atualizarPreview();
     if (wppAtivo) toggleWpp();
 
-    toast(wppOk ? '📲 Report enviado!' : '✅ Report registrado!');
+    toast(wppOk ? 'Report enviado via WhatsApp!' : 'Report registrado!');
 
   } catch(e) {
     toast('Erro: ' + e.message, 'er');
   } finally {
     btn.disabled = false;
-    btn.textContent = wppAtivo ? 'Enviar report via WhatsApp 📲' : 'Enviar report';
+    btn.textContent = wppAtivo ? 'Enviar report via WhatsApp ·' : 'Enviar report';
   }
 }
 
@@ -1301,7 +1349,7 @@ function adicionarHistorico(nome, acao, wpp, ia, status) {
     <div class="h-dot" style="background:${cor}"></div>
     <div class="h-info">
       <div class="h-nome">${acao}</div>
-      <div class="h-meta">${nome}${ia ? ' · ✦ IA' : ''}${wpp ? ' · 📲' : ''} · ${status === 'entregue' ? '✅ Entregue' : '🔄 Em andamento'}</div>
+      <div class="h-meta">${nome}${ia ? ' · IA' : ''}${wpp ? ' · WPP' : ''} · ${status === 'entregue' ? 'Entregue' : 'Em andamento'}</div>
     </div>
   `;
   lista.insertBefore(el, lista.firstChild);
@@ -1343,7 +1391,7 @@ function renderAtividades(){
 
   const blocoAtrasadas = atrasadas.length ? `
     <div style="margin-bottom:10px">
-      <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--red);margin-bottom:6px">⏰ Atrasadas (${atrasadas.length})</div>
+      <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--red);margin-bottom:6px"> Atrasadas (${atrasadas.length})</div>
       ${atrasadas.map(a=>`
         <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:rgba(255,59,69,0.06);border:1px solid rgba(255,59,69,0.2);border-radius:var(--r);margin-bottom:5px">
           <div style="flex:1;min-width:0">
@@ -1352,7 +1400,7 @@ function renderAtividades(){
           </div>
           <span style="font-size:9px;font-weight:700;color:var(--red);white-space:nowrap">${a.diasAtraso}d</span>
           <button onclick="moverParaHoje('${a.id}')" style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px;border:1px solid rgba(76,130,251,0.3);background:rgba(76,130,251,0.1);color:var(--blue);cursor:pointer">Hoje</button>
-          <button onclick="concluirAtrasada('${a.id}')" style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px;border:1px solid rgba(45,212,122,0.3);background:rgba(45,212,122,0.08);color:var(--green);cursor:pointer">✓</button>
+          <button onclick="concluirAtrasada('${a.id}')" style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;border:1px solid rgba(39,199,110,0.25);background:rgba(39,199,110,0.07);color:var(--green);cursor:pointer;font-size:9px;line-height:1">✓</button>
         </div>`).join('')}
     </div>` : '';
 
@@ -1440,7 +1488,7 @@ function toggleAtividade(id){
         prazo: ativ.prazo || new Date().toISOString().split('T')[0],
         created_at: new Date().toISOString()
       })
-    }).then(()=>toast('✅ Salvo como entregue para '+ativ.clienteNome.split(' ')[0])).catch(()=>{});
+    }).then(()=>toast('Salvo como entregue para '+ativ.clienteNome.split(' ')[0])).catch(()=>{});
   }
 }
 
@@ -1511,7 +1559,7 @@ async function abrirResumoSemanal(){
 
       const listaHtml = grupo.atividades.map(a =>
         '<div style="display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.05)">'+
-        '<span style="color:'+(a.concluida?'var(--green)':'var(--ink3)')+';font-size:11px">'+(a.concluida?'✓':'·')+'</span>'+
+        '<span style="color:'+(a.concluida?'var(--green)':'var(--ink3)')+';font-size:11px">'+(a.concluida?'':'·')+'</span>'+
         '<span style="font-size:12.5px;color:var(--ink)">'+(a.titulo||'')+'</span>'+
         '</div>'
       ).join('');
@@ -1523,7 +1571,7 @@ async function abrirResumoSemanal(){
         '</div>'+
         '<div style="margin-bottom:10px">'+listaHtml+'</div>'+
         (grupo.wpp
-          ? '<button class="resumo-enviar" data-wpp="'+grupo.wpp+'" data-alias="'+alias+'" data-msg="'+encodeURIComponent(msg)+'" onclick="enviarResumoBtn(this)">📲 Enviar para '+alias+'</button>'
+          ? '<button class="resumo-enviar" data-wpp="'+grupo.wpp+'" data-alias="'+alias+'" data-msg="'+encodeURIComponent(msg)+'" onclick="enviarResumoBtn(this)">· Enviar para '+alias+'</button>'
           : '<div style="font-size:11px;color:var(--ink3);text-align:center;padding:6px">Sem WhatsApp cadastrado</div>'
         )+'</div>';
     }).join('');
@@ -1554,10 +1602,10 @@ async function enviarResumo(wpp, msg, alias, btn){
     );
     const d = await r.json();
     if(d.zaapId||d.messageId||d.id){
-      btn.textContent = `✅ Enviado para ${alias}!`;
+      btn.textContent = `Enviado para ${alias}!`;
       btn.style.background = 'rgba(45,212,122,0.2)';
       btn.style.color = 'var(--green)';
-      toast(`📲 Resumo enviado para ${alias}!`);
+      toast(`· Resumo enviado para ${alias}!`);
     } else {
       btn.textContent = 'Erro ao enviar';
       btn.disabled = false;
@@ -1667,7 +1715,7 @@ function renderListaDia(){
   // Bloco de atrasadas em vermelho
   const blocoAtrasadas = atrasadas.length ? `
     <div style="margin-bottom:10px">
-      <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--red);margin-bottom:6px">⏰ Atrasadas (${atrasadas.length})</div>
+      <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--red);margin-bottom:6px"> Atrasadas (${atrasadas.length})</div>
       ${atrasadas.map(a=>`
         <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:rgba(255,59,69,0.06);border:1px solid rgba(255,59,69,0.2);border-radius:var(--r);margin-bottom:5px">
           <div style="flex:1;min-width:0">
@@ -1676,7 +1724,7 @@ function renderListaDia(){
           </div>
           <span style="font-size:9px;font-weight:700;color:var(--red);white-space:nowrap">${a.diasAtraso}d</span>
           <button onclick="moverParaHoje('${a.id}')" style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px;border:1px solid rgba(76,130,251,0.3);background:rgba(76,130,251,0.1);color:var(--blue);cursor:pointer">Hoje</button>
-          <button onclick="concluirAtrasada('${a.id}')" style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px;border:1px solid rgba(45,212,122,0.3);background:rgba(45,212,122,0.08);color:var(--green);cursor:pointer">✓</button>
+          <button onclick="concluirAtrasada('${a.id}')" style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;border:1px solid rgba(39,199,110,0.25);background:rgba(39,199,110,0.07);color:var(--green);cursor:pointer;font-size:9px;line-height:1">✓</button>
         </div>`).join('')}
     </div>` : '';
 
@@ -1723,7 +1771,7 @@ function toggleAtv(id){
       headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
       body:JSON.stringify({cliente_id:a.clienteId,titulo:a.titulo,status:'entregue',prazo:hoje(),created_at:new Date().toISOString()})
     }).catch(()=>{});
-    toast('✅ Salvo para '+a.clienteNome.split(' ')[0]);
+    toast('Salvo para '+a.clienteNome.split(' ')[0]);
   }
   renderListaDia();
 }
@@ -1833,7 +1881,51 @@ function selecionarServico(el, servico){
 }
 
 let tabComercial = 'prospec';
-let prospectos = JSON.parse(localStorage.getItem('prospectos5')||'[]');
+let prospectos = [];
+
+async function carregarProspectos(){
+  try{
+    const r = await fetch(`${SB_URL}/rest/v1/prospectos?order=criado.desc`,
+      {headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});
+    prospectos = await r.json()||[];
+    // migrar localStorage se houver dados antigos
+    const local = JSON.parse(localStorage.getItem('prospectos5')||'[]');
+    if(local.length){
+      for(const p of local){
+        await fetch(`${SB_URL}/rest/v1/prospectos`,{
+          method:'POST',
+          headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'ignore-duplicates'},
+          body:JSON.stringify(p)
+        });
+      }
+      localStorage.removeItem('prospectos5');
+      const r2 = await fetch(`${SB_URL}/rest/v1/prospectos?order=criado.desc`,
+        {headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});
+      prospectos = await r2.json()||[];
+    }
+  }catch(e){ prospectos = JSON.parse(localStorage.getItem('prospectos5')||'[]'); }
+  renderComercial();
+}
+
+async function salvarProspectoSB(p){
+  try{
+    await fetch(`${SB_URL}/rest/v1/prospectos`,{
+      method:'POST',
+      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},
+      body:JSON.stringify(p)
+    });
+  }catch(e){}
+}
+
+async function atualizarProspectoSB(p){
+  try{
+    await fetch(`${SB_URL}/rest/v1/prospectos?id=eq.${p.id}`,{
+      method:'PATCH',
+      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'},
+      body:JSON.stringify({status:p.status,registros:p.registros})
+    });
+  }catch(e){}
+}
 
 function toggleComercial(){
   const col = document.getElementById('col-report');
@@ -1887,11 +1979,11 @@ function renderProspec(body){
         <span style="font-size:12px;font-weight:600;color:rgba(168,85,247,0.7)">Enviar vídeo de apresentação junto</span>
       </div>
       <div style="display:flex;gap:7px">
-        <button onclick="gerarPitchProspec()" style="${btnSecStyle()}flex:1">✦ Gerar pitch</button>
+        <button onclick="gerarPitchProspec()" style="${btnSecStyle()}flex:1">Gerar pitch</button>
         <button onclick="salvarProspecto()" style="${btnPriStyle()}flex:1">+ Salvar</button>
       </div>
       <textarea id="pr-pitch" style="display:none;margin-top:10px;width:100%;background:rgba(0,0,0,0.3);border:1px solid rgba(168,85,247,0.2);border-radius:10px;padding:12px;font-size:12.5px;color:rgba(240,240,255,0.85);line-height:1.65;resize:none;height:160px;font-family:var(--font);outline:none"></textarea>
-      <button id="pr-pitch-send" onclick="enviarPitch()" style="display:none;width:100%;margin-top:8px;${btnPriStyle()}">📲 Enviar via WhatsApp</button>
+      <button id="pr-pitch-send" onclick="enviarPitch()" style="display:none;width:100%;margin-top:8px;${btnPriStyle()}">· Enviar via WhatsApp</button>
     </div>
 
     <div style="font-size:10px;font-weight:700;color:rgba(168,85,247,0.7);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px">Em prospecção (${prospectos.filter(p=>p.status==='prospecto').length})</div>
@@ -1936,7 +2028,7 @@ async function gerarPitchProspec(){
       method:'POST',
       headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY},
       body:JSON.stringify({
-        system:'Você é especialista em vendas pelo WhatsApp para a agência 5essência Marketing. Escreva uma mensagem de primeiro contato curta e comercial, no estilo abaixo:\n\n"Oi [Nome]! Tudo bem?\nTrabalhamos com profissionais da sua área e nos últimos 30 dias uma das nossas clientes fechou 18 novos agendamentos sem responder uma mensagem sequer — foi tudo automático.\nGravei um vídeo rápido mostrando exatamente como funciona 👇\n\n[vídeo]\n\nE o melhor: custa R$ 29,90 por mês. Menos que um lanche. 🙂\nSe quiser testar, é só me falar!"\n\nAdapte o nome, segmento e resultado com base no diagnóstico do lead. Use prova social real e mostre o preço no final, depois do vídeo. Sem asteriscos. Sem formalidade excessiva. Sem "Atenciosamente". Máximo 6 linhas.',
+        system:'Você é especialista em vendas pelo WhatsApp para a agência 5essência Marketing. Escreva uma mensagem de primeiro contato curta e comercial, no estilo abaixo:\n\n"Oi [Nome]! Tudo bem?\nTrabalhamos com profissionais da sua área e nos últimos 30 dias uma das nossas clientes fechou 18 novos agendamentos sem responder uma mensagem sequer — foi tudo automático.\nGravei um vídeo rápido mostrando exatamente como funciona \n\n[vídeo]\n\nE o melhor: custa R$ 29,90 por mês. Menos que um lanche. \nSe quiser testar, é só me falar!"\n\nAdapte o nome, segmento e resultado com base no diagnóstico do lead. Use prova social real e mostre o preço no final, depois do vídeo. Sem asteriscos. Sem formalidade excessiva. Sem "Atenciosamente". Máximo 6 linhas.',
         messages:[{role:'user',content:'Diagnóstico: '+diag+'\nLead: '+nome+(empresa?' — '+empresa:'')+(servicoSelecionado?'\nServiço a ofertar: '+servicoSelecionado:'')+'\n\nCrie a mensagem de primeiro contato conforme o estilo definido.'}]
       })
     });
@@ -1955,14 +2047,15 @@ function salvarProspecto(){
   const diag    = document.getElementById('pr-diag')?.value.trim()||'';
   if(!nome){ toast('Preencha o nome','er'); return; }
 
-  prospectos.unshift({
+  const novo = {
     id: Date.now().toString(),
     nome, empresa, contato, diag,
     status: 'prospecto',
     criado: new Date().toISOString(),
     registros: [{data: new Date().toISOString(), tipo:'criação', nota:'Prospecto adicionado.'}]
-  });
-  localStorage.setItem('prospectos5', JSON.stringify(prospectos));
+  };
+  prospectos.unshift(novo);
+  salvarProspectoSB(novo);
   ['pr-nome','pr-empresa','pr-contato','pr-diag'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
   document.getElementById('pr-pitch').style.display='none';
   document.getElementById('pr-pitch-send').style.display='none';
@@ -1976,9 +2069,9 @@ function moverProspecto(id, status){
   prospectos[idx].status = status;
   prospectos[idx].registros = prospectos[idx].registros||[];
   prospectos[idx].registros.push({data:new Date().toISOString(),tipo:status,nota:`Status atualizado para ${status}`});
-  localStorage.setItem('prospectos5', JSON.stringify(prospectos));
+  atualizarProspectoSB(prospectos[idx]);
   renderComercial();
-  toast(status==='cliente'?'🎉 Cliente fechado!':'Status atualizado');
+  toast(status==='cliente'?'Cliente fechado!':'Status atualizado');
 }
 
 async function enviarPitch(){
@@ -2001,15 +2094,15 @@ async function enviarPitch(){
       await new Promise(r=>setTimeout(r,1200)); // pequeno delay
       await fetch(`https://api.z-api.io/instances/${ZAPI_I}/token/${ZAPI_T}/send-video`,{
         method:'POST',headers:{'Content-Type':'application/json','Client-Token':ZAPI_C},
-        body:JSON.stringify({phone:num,video:VIDEO_APRESENTACAO,caption:'Veja como funciona na prática 👆'})
+        body:JSON.stringify({phone:num,video:VIDEO_APRESENTACAO,caption:'Veja como funciona na prática'})
       });
     }
 
     if(r1.zaapId||r1.messageId||r1.id){
-      btn.textContent = enviarVideo ? '✅ Mensagem + vídeo enviados!' : '✅ Enviado!';
+      btn.textContent = enviarVideo ? 'Mensagem + vídeo enviados!' : 'Enviado!';
       btn.style.background='rgba(45,212,122,0.15)';
       btn.style.color='var(--green)';
-      toast(enviarVideo ? '📲 Pitch + vídeo enviados!' : '📲 Pitch enviado!');
+      toast(enviarVideo ? '· Pitch + vídeo enviados!' : 'Pitch enviado!');
     } else {
       btn.textContent='Erro ao enviar'; btn.disabled=false;
     }
@@ -2074,7 +2167,7 @@ function verRegistros(id){
   const body = document.getElementById('comercial-body');
   const regs = (p.registros||[]).slice().reverse();
   body.innerHTML = `
-    <button onclick="setTabComercial('registros')" style="${btnSecStyle()}margin-bottom:14px;font-size:11px;padding:5px 10px">← Voltar</button>
+    <button onclick="setTabComercial('registros')" style="${btnSecStyle()}margin-bottom:14px;font-size:11px;padding:5px 10px">‹ Voltar</button>
     <div style="font-size:14px;font-weight:700;color:#F0F0FF;margin-bottom:2px">${p.nome}</div>
     <div style="font-size:11.5px;color:rgba(255,255,255,0.4);margin-bottom:14px">${p.empresa||''} · ${p.contato||''}</div>
     ${p.diag?`<div style="background:rgba(0,0,0,0.3);border:1px solid rgba(168,85,247,0.15);border-radius:10px;padding:10px 12px;font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:14px">${p.diag}</div>`:''}
@@ -2155,16 +2248,16 @@ async function verificarNotificacoes(){
   const title = document.getElementById('notif-title');
   let count = 0;
   itens.forEach(g=>{ count += g.itens.length; });
-  title.textContent = `⚡ ${count} item${count>1?'s':''} precisam de atenção`;
+  title.textContent = `${count} item${count>1?'s':''} precisam de atenção`;
 
   body.innerHTML = itens.map(grupo=>{
     if(grupo.tipo==='tarefas_abertas'){
       return `<div style="background:rgba(255,154,10,0.06);border:1px solid rgba(255,154,10,0.2);border-radius:12px;padding:12px 14px">
-        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--orange);margin-bottom:8px">⏰ ${grupo.label} — tarefas em aberto</div>
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--orange);margin-bottom:8px"> ${grupo.label} — tarefas em aberto</div>
         ${grupo.itens.map(a=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
           <div style="flex:1;font-size:12.5px;color:var(--ink2)">${a.clienteNome?'<span style="color:var(--blue);font-weight:600">'+a.clienteNome.split(' ')[0]+'</span> · ':''} ${a.titulo}</div>
           <button onclick="moverParaHoje('${a.id}')" style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;border:1px solid rgba(76,130,251,0.3);background:rgba(76,130,251,0.1);color:var(--blue);cursor:pointer;white-space:nowrap;flex-shrink:0">→ Hoje</button>
-          <button onclick="concluirAtrasada('${a.id}')" style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;border:1px solid rgba(45,212,122,0.3);background:rgba(45,212,122,0.1);color:var(--green);cursor:pointer;flex-shrink:0">✓</button>
+          <button onclick="concluirAtrasada('${a.id}')" style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;border:1px solid rgba(39,199,110,0.25);background:rgba(39,199,110,0.07);color:var(--green);cursor:pointer;flex-shrink:0;font-size:9px;line-height:1">✓</button>
         </div>`).join('')}
       </div>`;
     }
@@ -2192,10 +2285,10 @@ async function verificarNotificacoes(){
           <textarea id="msg-${c.id}" style="width:100%;background:rgba(0,0,0,0.25);border:1px solid rgba(255,59,69,0.15);border-radius:9px;color:var(--ink2);font-family:var(--font);font-size:11.5px;line-height:1.6;padding:9px 11px;outline:none;resize:none;height:108px;margin-bottom:8px">${msg}</textarea>
           <div style="display:flex;gap:7px">
             ${wpp
-              ? `<button id="btn-cobrar-${c.id}" onclick="cobrarCliente('${wpp}','${c.id}','${cli}')" style="flex:1;padding:8px;border:none;border-radius:9px;background:linear-gradient(135deg,var(--red),#c0392b);color:white;font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer">📲 Cobrar ${cli}</button>`
+              ? `<button id="btn-cobrar-${c.id}" onclick="cobrarCliente('${wpp}','${c.id}','${cli}')" style="flex:1;padding:8px;border:none;border-radius:9px;background:linear-gradient(135deg,var(--red),#c0392b);color:white;font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer">· Cobrar ${cli}</button>`
               : `<div style="flex:1;font-size:11px;color:var(--ink3);text-align:center;padding:8px">Sem WhatsApp</div>`
             }
-            <button onclick="marcarPago('${c.id}')" style="padding:8px 13px;border:1px solid rgba(45,212,122,0.3);border-radius:9px;background:rgba(45,212,122,0.06);color:var(--green);font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer">✓ Pago</button>
+            <button onclick="marcarPago('${c.id}')" style="padding:8px 13px;border:1px solid rgba(45,212,122,0.3);border-radius:9px;background:rgba(45,212,122,0.06);color:var(--green);font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer">Pago</button>
           </div>
         </div>`;
       }).join('');
@@ -2220,11 +2313,11 @@ async function cobrarCliente(wpp, cobId, alias){
        body:JSON.stringify({phone:'55'+num,message:msg})}
     ).then(r=>r.json());
     if(r.zaapId||r.messageId||r.id){
-      btn.textContent='✅ Enviado!';
+      btn.textContent='Enviado!';
       btn.style.background='rgba(45,212,122,0.15)';
       btn.style.color='var(--green)';
       btn.style.border='1px solid rgba(45,212,122,0.3)';
-      toast('📲 Cobrança enviada para '+alias);
+      toast('· Cobrança enviada para '+alias);
     } else { btn.textContent='Erro — tente novamente'; btn.disabled=false; }
   }catch(e){ btn.textContent='Erro de conexão'; btn.disabled=false; }
 }
@@ -2241,7 +2334,7 @@ async function marcarPago(cobId, cardId){
     // Remove o card da tela
     const card = document.getElementById(cardId);
     if(card){ card.style.opacity='0'; card.style.transition='opacity 0.3s'; setTimeout(()=>card.remove(),300); }
-    toast('✅ Marcado como pago!');
+    toast('Marcado como pago!');
   }catch(e){
     btn.textContent='Erro'; btn.disabled=false;
   }
@@ -2256,7 +2349,7 @@ function fecharNotif(){
 // ── OTIMIZAR TÍTULOS DOS PROJETOS ────────────────────────────────
 async function otimizarTitulos(){
   const btn = document.getElementById('btn-otimizar');
-  btn.textContent = '✦ Buscando projetos…';
+  btn.textContent = 'Buscando projetos…';
   btn.disabled = true;
 
   try{
@@ -2270,12 +2363,12 @@ async function otimizarTitulos(){
 
     if(!longos.length){
       toast('Nenhum título longo encontrado!');
-      btn.textContent='✦ Otimizar títulos dos projetos';
+      btn.textContent='Otimizar títulos dos projetos';
       btn.disabled=false;
       return;
     }
 
-    btn.textContent = `✦ Resumindo ${longos.length} títulos…`;
+    btn.textContent = `Resumindo ${longos.length} títulos…`;
 
     // Manda tudo de uma vez para a IA
     const lista = longos.map((p,i)=>(i+1)+'. [ID:'+p.id+'] '+p.titulo).join('\n');
@@ -2305,13 +2398,13 @@ async function otimizarTitulos(){
       salvos++;
     }
 
-    toast(`✅ ${salvos} títulos atualizados!`);
-    btn.textContent='✦ Otimizar títulos dos projetos';
+    toast(`${salvos} títulos atualizados!`);
+    btn.textContent='Otimizar títulos dos projetos';
     btn.disabled=false;
 
   }catch(e){
     toast('Erro ao otimizar: '+e.message,'er');
-    btn.textContent='✦ Otimizar títulos dos projetos';
+    btn.textContent='Otimizar títulos dos projetos';
     btn.disabled=false;
   }
 }
@@ -2364,7 +2457,7 @@ function concluirAtrasada(id){
       localStorage.setItem('atv5_'+ds, JSON.stringify(atv));
       if(atv[idx].clienteId) salvarAtvSupabase({...atv[idx], concluida:true});
       renderListaDia();
-      toast('✓ Concluída');
+      toast('Concluída');
       return;
     }
   }
@@ -2553,7 +2646,7 @@ function renderEventos(events) {
       </div>
       <div style="flex:1;min-width:0">
         <div style="font-weight:500;color:var(--ink1);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${ev.summary || '(sem título)'}</div>
-        ${ev.location ? `<div style="font-size:10px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📍 ${ev.location}</div>` : ''}
+        ${ev.location ? `<div style="font-size:10px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${ev.location}</div>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -2598,7 +2691,7 @@ async function salvarEvento() {
     });
     if (!resp.ok) throw new Error();
     fecharModalEvento();
-    toast('Evento criado! 📅');
+    toast('Evento criado!');
     carregarEventos();
   } catch(e) {
     toast('Erro ao criar evento', 'er');
@@ -2657,13 +2750,13 @@ function mobileNav(aba){
 <!-- BARRA MOBILE -->
 <nav id="mobile-nav" style="display:none">
   <button class="mobile-nav-btn active" id="nav-btn-report" onclick="mobileNav('report')">
-    <span class="nav-icon">📋</span>Report
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="14" height="20" rx="2"/><path d="M9 7H4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h5"/><line x1="12" y1="11" x2="19" y2="11"/><line x1="12" y1="16" x2="19" y2="16"/></svg>Report
   </button>
   <button class="mobile-nav-btn" id="nav-btn-agenda" onclick="mobileNav('agenda')">
-    <span class="nav-icon">📅</span>Agenda
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Agenda
   </button>
   <button class="mobile-nav-btn" id="nav-btn-comercial" onclick="mobileNav('comercial')">
-    <span class="nav-icon">💼</span>Comercial
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>Comercial
   </button>
 </nav>
 

@@ -2495,8 +2495,7 @@ function renderProspec(body){
       <button id="pr-pitch-send" onclick="enviarPitch()" style="display:none;width:100%;margin-top:8px;${btnPriStyle()}">· Enviar via WhatsApp</button>
     </div>
 
-    <div style="font-size:10px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px">Em prospecção (${prospectos.filter(p=>p.status==='prospecto').length})</div>
-    ${prospectos.filter(p=>p.status==='prospecto').map(p=>prospectoCard(p)).join('') || '<div style="text-align:center;padding:16px;color:rgba(255,255,255,0.15);font-size:12.5px">Nenhum prospecto ainda</div>'}
+    <div id="prospec-lista-wrap">${renderProspecLista()}</div>
   `;
 }
 
@@ -2504,21 +2503,124 @@ function inputStyle(){ return 'width:100%;background:rgba(255,255,255,0.04);bord
 function btnPriStyle(){ return 'padding:9px 14px;border:none;border-radius:10px;background:linear-gradient(135deg,#2D6BE4 0%,#5A30E0 100%);color:#fff;font-family:Inter,sans-serif;font-size:12.5px;font-weight:700;cursor:pointer;'; }
 function btnSecStyle(){ return 'padding:9px 14px;border:1px solid rgba(255,255,255,0.12);border-radius:10px;background:rgba(255,255,255,0.06);color:rgba(240,240,255,0.7);font-family:Inter,sans-serif;font-size:12.5px;font-weight:600;cursor:pointer;'; }
 
+let filtroProspec = 'todos'; // 'todos' | 'sem_resposta'
+
+function diasSemAtividade(p){
+  const ult = (p.registros||[]).slice(-1)[0];
+  if(!ult) return 999;
+  return Math.floor((Date.now()-new Date(ult.data).getTime())/(1000*60*60*24));
+}
+
+function renderProspecLista(){
+  const emProspec = prospectos.filter(p=>p.status==='prospecto'||p.status==='followup');
+  const semResp   = emProspec.filter(p=>diasSemAtividade(p)>=2);
+  const lista     = filtroProspec==='sem_resposta' ? semResp : emProspec;
+
+  return `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div style="font-size:10px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:0.08em">
+        Em prospecção (${emProspec.length})
+      </div>
+      <div style="display:flex;gap:5px">
+        <button onclick="filtrarProspec('todos')" id="fp-todos"
+          style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;border:1px solid ${filtroProspec==='todos'?'rgba(61,123,245,0.5)':'rgba(255,255,255,0.1)'};background:${filtroProspec==='todos'?'rgba(61,123,245,0.15)':'transparent'};color:${filtroProspec==='todos'?'#6BA3FF':'var(--ink3)'};cursor:pointer">
+          Todos
+        </button>
+        <button onclick="filtrarProspec('sem_resposta')" id="fp-sr"
+          style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;border:1px solid ${filtroProspec==='sem_resposta'?'rgba(245,158,11,0.5)':'rgba(255,255,255,0.1)'};background:${filtroProspec==='sem_resposta'?'rgba(245,158,11,0.12)':'transparent'};color:${filtroProspec==='sem_resposta'?'#F59E0B':'var(--ink3)'};cursor:pointer">
+          ⚠ Sem resposta${semResp.length?` (${semResp.length})`:''}
+        </button>
+      </div>
+    </div>
+    ${lista.map(p=>prospectoCard(p)).join('') || '<div style="text-align:center;padding:16px;color:rgba(255,255,255,0.15);font-size:12.5px">Nenhum prospecto neste filtro</div>'}`;
+}
+
+function filtrarProspec(f){
+  filtroProspec = f;
+  const wrap = document.getElementById('prospec-lista-wrap');
+  if(wrap){ wrap.innerHTML = renderProspecLista(); }
+  else { renderComercial(); }
+}
+
 function prospectoCard(p){
   const statusCor = {prospecto:'#3D7BF5',followup:'#F59E0B',cliente:'#27C76E',perdido:'#EF4444'};
-  const c = statusCor[p.status]||'#3D7BF5';
-  return `<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:12px;padding:12px 13px;margin-bottom:8px">
+  const c    = statusCor[p.status]||'#3D7BF5';
+  const dias = diasSemAtividade(p);
+  const stale= dias >= 2;
+  const diasTxt = dias===0?'hoje':dias===1?'ontem':`${dias}d`;
+  const wpp  = p.contato ? `https://wa.me/${p.contato.replace(/\D/g,'')}` : null;
+
+  return `<div id="pcard-${p.id}" style="background:rgba(255,255,255,0.04);border:1px solid ${stale?'rgba(245,158,11,0.3)':'rgba(255,255,255,0.09)'};border-radius:12px;padding:12px 13px;margin-bottom:8px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
       <div style="font-size:13px;font-weight:700;color:#F0F0FF">${p.nome}</div>
-      <span style="font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:20px;background:${c}22;color:${c}">${p.status}</span>
+      <div style="display:flex;align-items:center;gap:6px">
+        ${stale?`<span style="font-size:9.5px;font-weight:700;color:#F59E0B">⚠ ${diasTxt}</span>`:''}
+        <span style="font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:20px;background:${c}22;color:${c}">${p.status}</span>
+      </div>
     </div>
     <div style="font-size:11.5px;color:rgba(240,240,255,0.35);margin-bottom:8px">${p.empresa||''}</div>
-    <div style="display:flex;gap:6px">
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
       <button onclick="moverProspecto('${p.id}','followup')" style="${btnSecStyle()}font-size:11px;padding:5px 10px">Follow-up</button>
       <button onclick="moverProspecto('${p.id}','cliente')" style="${btnSecStyle()}font-size:11px;padding:5px 10px;border-color:rgba(39,199,110,0.25);color:#27C76E">Fechou!</button>
-      <button onclick="verRegistros('${p.id}')" style="${btnSecStyle()}font-size:11px;padding:5px 10px;margin-left:auto">Ver</button>
+      ${stale?`<button onclick="gerarFollowUp('${p.id}')" style="${btnSecStyle()}font-size:11px;padding:5px 10px;border-color:rgba(245,158,11,0.3);color:#F59E0B;margin-left:auto">↩ Reengajar</button>`:`<button onclick="verRegistros('${p.id}')" style="${btnSecStyle()}font-size:11px;padding:5px 10px;margin-left:auto">Ver</button>`}
+    </div>
+    <!-- área do follow-up gerado -->
+    <div id="fu-${p.id}" style="display:none;margin-top:10px">
+      <textarea id="fu-txt-${p.id}" rows="5" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(245,158,11,0.2);border-radius:9px;padding:10px;font-size:12.5px;color:rgba(240,240,255,0.85);line-height:1.65;resize:none;font-family:var(--font);outline:none"></textarea>
+      <div style="display:flex;gap:7px;margin-top:7px">
+        ${wpp?`<a id="fu-wpp-${p.id}" href="#" target="_blank" style="${btnPriStyle()}flex:1;text-align:center;text-decoration:none;font-size:11.5px;padding:7px 10px">· Enviar no WhatsApp</a>`:''}
+        <button onclick="registrarFollowUp('${p.id}')" style="${btnSecStyle()}font-size:11px;padding:6px 10px">✓ Registrar</button>
+        <button onclick="document.getElementById('fu-${p.id}').style.display='none'" style="${btnSecStyle()}font-size:11px;padding:6px 10px">✕</button>
+      </div>
     </div>
   </div>`;
+}
+
+async function gerarFollowUp(id){
+  const p = prospectos.find(x=>x.id===id);
+  if(!p) return;
+  const btn = document.querySelector(`#pcard-${id} button[onclick*="gerarFollowUp"]`);
+  if(btn){ btn.textContent='⏳ Gerando…'; btn.disabled=true; }
+
+  try{
+    const r = await fetch(`${SB_URL}/functions/v1/chat-assistant`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY},
+      body:JSON.stringify({
+        system:`Você é especialista em reengajamento de leads no WhatsApp para a 5essência Marketing.
+Crie uma mensagem de follow-up curta (máximo 5 linhas) para um lead que não respondeu o primeiro contato.
+Tom: leve, sem cobrar resposta, sem insistência agressiva. Transmita valor, deixe a porta aberta.
+Estratégias: nova prova social, novo ângulo do benefício, ou uma pergunta simples e genuína.
+Sem asteriscos. Sem formalidade. Sem "Atenciosamente". Linguagem próxima e natural.`,
+        messages:[{role:'user',content:`Lead: ${p.nome}${p.empresa?' — '+p.empresa:''}\nDiagnóstico: ${p.diag||'sem diagnóstico registrado'}\nDias sem resposta: ${diasSemAtividade(p)}\n\nGere a mensagem de follow-up.`}]
+      })
+    });
+    const d = await r.json();
+    const msg = d.resposta||'Não consegui gerar.';
+
+    const area = document.getElementById(`fu-${id}`);
+    const txt  = document.getElementById(`fu-txt-${id}`);
+    const wpp  = document.getElementById(`fu-wpp-${id}`);
+    if(txt)  txt.value = msg;
+    if(wpp && p.contato) wpp.href = `https://wa.me/${p.contato.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`;
+    if(area) area.style.display='block';
+  }catch(e){
+    toast('Erro ao gerar follow-up','er');
+  }finally{
+    if(btn){ btn.textContent='↩ Reengajar'; btn.disabled=false; }
+  }
+}
+
+function registrarFollowUp(id){
+  const txt = document.getElementById(`fu-txt-${id}`)?.value.trim();
+  const idx = prospectos.findIndex(x=>x.id===id);
+  if(idx===-1) return;
+  prospectos[idx].registros = prospectos[idx].registros||[];
+  prospectos[idx].registros.push({data:new Date().toISOString(),tipo:'followup',nota:'Follow-up enviado: '+(txt||'')});
+  atualizarProspectoSB(prospectos[idx]);
+  document.getElementById(`fu-${id}`).style.display='none';
+  toast('Follow-up registrado!','ok');
+  renderComercial();
 }
 
 async function gerarPitchProspec(){

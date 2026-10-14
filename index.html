@@ -830,6 +830,7 @@ input:-webkit-autofill,input:-webkit-autofill:focus{
       <button onclick="setTabComercial('followup')" id="tab-followup" class="modo-tab">Follow-up</button>
       <button onclick="setTabComercial('pipeline')" id="tab-pipeline" class="modo-tab">Pipeline</button>
       <button onclick="setTabComercial('registros')" id="tab-registros" class="modo-tab">Registros</button>
+      <button onclick="setTabComercial('email')" id="tab-email" class="modo-tab">✉ E-mail</button>
     </div>
   </div>
   <div style="flex:1;overflow-y:auto;padding:16px 20px">
@@ -1639,6 +1640,239 @@ function fecharResumo(){
   document.getElementById('modal-resumo').classList.remove('open');
 }
 
+// ── EMAIL MARKETING via Gmail API ────────────────────────────────────
+// Preencha com o Client ID do seu projeto no Google Cloud Console
+// (Gmail API ativada + origem https://diario5essencia.netlify.app autorizada)
+const GMAIL_CLIENT_ID = 'SEU_CLIENT_ID.apps.googleusercontent.com';
+const GMAIL_SCOPE     = 'https://www.googleapis.com/auth/gmail.send';
+
+let gmailToken    = null;
+let emailClientes = [];
+
+async function carregarEmailClientes(){
+  try{
+    const r = await fetch(
+      `${SB_URL}/rest/v1/clientes?select=id,nome_completo,empresa,email&order=nome_completo`,
+      {headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}}
+    );
+    const data = await r.json();
+    emailClientes = (data||[]).filter(c=>c.email && c.email.includes('@'));
+  }catch(e){ emailClientes=[]; }
+}
+
+async function gmailAutorizar(){
+  return new Promise((resolve, reject)=>{
+    if(!window.google?.accounts?.oauth2){
+      // Carrega a biblioteca GIS se ainda não estiver
+      const s = document.createElement('script');
+      s.src = 'https://accounts.google.com/gsi/client';
+      s.onload = ()=> iniciarOAuth(resolve, reject);
+      s.onerror = ()=> reject(new Error('Falha ao carregar Google Identity Services'));
+      document.head.appendChild(s);
+    } else {
+      iniciarOAuth(resolve, reject);
+    }
+  });
+}
+
+function iniciarOAuth(resolve, reject){
+  const client = google.accounts.oauth2.initTokenClient({
+    client_id: GMAIL_CLIENT_ID,
+    scope: GMAIL_SCOPE,
+    callback: (resp)=>{
+      if(resp.error){ reject(resp); return; }
+      gmailToken = resp.access_token;
+      resolve(resp.access_token);
+    }
+  });
+  client.requestAccessToken();
+}
+
+function montarEmailRFC(destinatario, nomeDestinatario, assunto, corpoHtml){
+  const de      = `5essência Marketing <5essenciamarketing@gmail.com>`;
+  const para    = `${nomeDestinatario} <${destinatario}>`;
+  const boundary= 'boundary_5essencia_' + Date.now();
+
+  const rodape = `
+    <div style="margin-top:32px;padding-top:16px;border-top:1px solid #e5e7eb;font-family:Arial,sans-serif;font-size:12px;color:#6b7280">
+      <strong style="color:#111827">Patrick</strong><br>
+      5essência Marketing<br>
+      <a href="https://5essenciamarketing.com.br" style="color:#3D7BF5">5essenciamarketing.com.br</a>
+      <br><br>
+      <span style="font-size:11px">Este e-mail foi enviado porque você está em nossa base de contatos.<br>
+      Para não receber mais, responda com "Descadastrar".</span>
+    </div>`;
+
+  const htmlFinal = `
+    <div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.7;color:#1f2937;max-width:600px">
+      ${corpoHtml.replace(/\n/g,'<br>')}
+      ${rodape}
+    </div>`;
+
+  const raw = [
+    `From: ${de}`,
+    `To: ${para}`,
+    `Subject: =?UTF-8?B?${btoa(unescape(encodeURIComponent(assunto)))}?=`,
+    `MIME-Version: 1.0`,
+    `Content-Type: multipart/alternative; boundary="${boundary}"`,
+    ``,
+    `--${boundary}`,
+    `Content-Type: text/plain; charset=UTF-8`,
+    ``,
+    corpoHtml.replace(/<[^>]+>/g,'') + '\n\n-- Patrick | 5essência Marketing',
+    ``,
+    `--${boundary}`,
+    `Content-Type: text/html; charset=UTF-8`,
+    ``,
+    htmlFinal,
+    `--${boundary}--`
+  ].join('\r\n');
+
+  return btoa(unescape(encodeURIComponent(raw)))
+    .replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+
+async function enviarGmail(token, rawBase64){
+  const r = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send',{
+    method:'POST',
+    headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+    body: JSON.stringify({raw: rawBase64})
+  });
+  if(!r.ok){
+    const e = await r.json();
+    throw new Error(e?.error?.message || r.status);
+  }
+  return r.json();
+}
+
+function renderEmailMarketing(body){
+  carregarEmailClientes().then(()=>{
+    const lista = emailClientes.map((c,i)=>`
+      <label style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:9px;cursor:pointer;font-size:12.5px;color:var(--ink2)">
+        <input type="checkbox" checked data-idx="${i}" style="accent-color:#3D7BF5;width:14px;height:14px;flex-shrink:0">
+        <span style="font-weight:600;color:#F0F0FF">${c.nome_completo}</span>
+        <span style="color:var(--ink3);font-size:11px">${c.email}</span>
+        ${c.empresa?`<span style="margin-left:auto;font-size:10px;color:var(--ink3)">${c.empresa}</span>`:''}
+      </label>`).join('');
+
+    body.innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:14px">
+
+        <!-- Aviso Client ID -->
+        <div id="gmail-aviso" style="display:${GMAIL_CLIENT_ID.startsWith('SEU_')?'flex':'none'};align-items:flex-start;gap:9px;background:rgba(245,158,11,0.10);border:1px solid rgba(245,158,11,0.25);border-radius:10px;padding:10px 13px">
+          <svg width="15" height="15" style="flex-shrink:0;margin-top:1px" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span style="font-size:12px;color:#F59E0B;font-weight:600">Adicione seu <strong>Client ID</strong> do Google Cloud Console na variável <code style="background:rgba(0,0,0,0.3);padding:1px 5px;border-radius:4px">GMAIL_CLIENT_ID</code> no código para ativar o disparo.</span>
+        </div>
+
+        <!-- Status auth -->
+        <div id="gmail-auth-status" style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px 13px">
+          <div id="gmail-auth-dot" style="width:8px;height:8px;border-radius:50%;background:#F59E0B;flex-shrink:0"></div>
+          <span id="gmail-auth-label" style="font-size:12.5px;color:var(--ink2);flex:1">Não autorizado — clique em <strong style="color:#F0F0FF">Autorizar Gmail</strong> para conectar</span>
+          <button onclick="autorizarGmailBtn()" id="gmail-auth-btn"
+            style="font-size:12px;font-weight:700;background:rgba(61,123,245,0.15);border:1px solid rgba(61,123,245,0.3);border-radius:8px;color:#6BA3FF;padding:5px 12px;cursor:pointer">
+            Autorizar Gmail
+          </button>
+        </div>
+
+        <!-- Assunto -->
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">Assunto</div>
+          <input id="email-assunto" type="text" placeholder="Ex: 3 estratégias de tráfego para aumentar suas vendas este mês"
+            style="width:100%;box-sizing:border-box;background:var(--s2);border:1px solid var(--b2);border-radius:10px;color:var(--ink);font-size:13px;padding:10px 13px;outline:none;font-family:inherit">
+        </div>
+
+        <!-- Corpo -->
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">Conteúdo do e-mail</div>
+          <textarea id="email-corpo" rows="9" placeholder="Escreva aqui o conteúdo educacional/informativo...&#10;&#10;Dica: comece com uma pergunta ou dado surpreendente para prender a atenção."
+            style="width:100%;box-sizing:border-box;background:var(--s2);border:1px solid var(--b2);border-radius:10px;color:var(--ink);font-size:13px;padding:10px 13px;outline:none;resize:vertical;font-family:inherit;line-height:1.6"></textarea>
+        </div>
+
+        <!-- Preview assinatura -->
+        <div style="background:rgba(61,123,245,0.06);border:1px solid rgba(61,123,245,0.15);border-radius:10px;padding:12px 14px">
+          <div style="font-size:10px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Rodapé automático</div>
+          <div style="font-size:12px;color:var(--ink2);line-height:1.7;border-top:1px solid rgba(255,255,255,0.07);padding-top:10px">
+            <strong style="color:#F0F0FF">Patrick</strong> · 5essência Marketing · <span style="color:var(--blue)">5essenciamarketing.com.br</span><br>
+            <span style="font-size:11px;color:var(--ink3)">Este e-mail foi enviado porque você está em nossa base de contatos. Para não receber mais, responda com "Descadastrar".</span>
+          </div>
+        </div>
+
+        <!-- Lista destinatários -->
+        <div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <div style="font-size:11px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:0.08em">
+              Destinatários — ${emailClientes.length} com e-mail cadastrado
+            </div>
+            <div style="display:flex;gap:6px">
+              <button onclick="emailSelecionarTodos(true)" style="font-size:10px;font-weight:700;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:var(--ink3);padding:3px 8px;cursor:pointer">Todos</button>
+              <button onclick="emailSelecionarTodos(false)" style="font-size:10px;font-weight:700;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:var(--ink3);padding:3px 8px;cursor:pointer">Nenhum</button>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:5px;max-height:200px;overflow-y:auto" id="email-lista">
+            ${lista || '<div style="color:var(--ink3);font-size:12px;text-align:center;padding:20px">Nenhum cliente com e-mail cadastrado encontrado.</div>'}
+          </div>
+        </div>
+
+        <!-- Botão disparar -->
+        <button onclick="dispararEmailMarketing()"
+          style="width:100%;padding:13px;background:linear-gradient(135deg,#3D7BF5,#6366F1);border:none;border-radius:12px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:0.02em">
+          ✉ Disparar E-mail Marketing
+        </button>
+
+        <!-- Log -->
+        <div id="email-log" style="font-size:12px;line-height:1.9;display:none"></div>
+      </div>`;
+  });
+}
+
+async function autorizarGmailBtn(){
+  try{
+    await gmailAutorizar();
+    document.getElementById('gmail-auth-dot').style.background  = '#27C76E';
+    document.getElementById('gmail-auth-label').innerHTML = '<strong style="color:#27C76E">Gmail autorizado</strong> — pronto para disparar';
+    document.getElementById('gmail-auth-btn').textContent  = '✓ Autorizado';
+    document.getElementById('gmail-auth-btn').style.color  = '#27C76E';
+    toast('Gmail autorizado!','ok');
+  }catch(e){
+    toast('Erro na autorização: '+(e?.message||'tente novamente'),'er');
+  }
+}
+
+function emailSelecionarTodos(sel){
+  document.querySelectorAll('#email-lista input[type=checkbox]').forEach(cb=>cb.checked=sel);
+}
+
+async function dispararEmailMarketing(){
+  const assunto = document.getElementById('email-assunto')?.value.trim();
+  const corpo   = document.getElementById('email-corpo')?.value.trim();
+  if(!assunto||!corpo){ toast('Preencha assunto e conteúdo','er'); return; }
+  if(!gmailToken){ toast('Autorize o Gmail primeiro','er'); return; }
+
+  const checks = [...document.querySelectorAll('#email-lista input[type=checkbox]:checked')];
+  if(!checks.length){ toast('Selecione pelo menos um destinatário','er'); return; }
+
+  const log = document.getElementById('email-log');
+  log.style.display='block';
+  log.innerHTML='<div style="color:var(--ink3)">Iniciando disparo…</div>';
+  let ok=0, fail=0;
+
+  for(const cb of checks){
+    const c   = emailClientes[parseInt(cb.dataset.idx)];
+    const raw = montarEmailRFC(c.email, c.nome_completo, assunto, corpo);
+    try{
+      await enviarGmail(gmailToken, raw);
+      log.innerHTML += `<div style="color:#4ade80">✅ ${c.nome_completo} — ${c.email}</div>`;
+      ok++;
+    }catch(e){
+      log.innerHTML += `<div style="color:#f87171">❌ ${c.nome_completo} — ${e.message}</div>`;
+      fail++;
+    }
+    await new Promise(r=>setTimeout(r,350));
+  }
+  log.innerHTML += `<div style="font-weight:700;color:#fff;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.08)">✔ ${ok} enviados · ${fail} falhas</div>`;
+  toast(ok+' e-mails enviados!', ok>0?'ok':'er');
+}
+
 // Inicializa atividades
 document.addEventListener('DOMContentLoaded', ()=>{
   initAtividades();
@@ -1983,6 +2217,7 @@ function renderComercial(){
   if(tabComercial==='followup')  renderFollowup(body);
   if(tabComercial==='pipeline')  renderPipeline(body);
   if(tabComercial==='registros') renderRegistros(body);
+  if(tabComercial==='email')     renderEmailMarketing(body);
 }
 
 function renderKPI(el){

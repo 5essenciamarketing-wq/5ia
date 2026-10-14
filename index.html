@@ -2562,6 +2562,7 @@ function prospectoCard(p){
     <div style="display:flex;gap:6px;flex-wrap:wrap">
       <button onclick="moverProspecto('${p.id}','followup')" style="${btnSecStyle()}font-size:11px;padding:5px 10px">Follow-up</button>
       <button onclick="moverProspecto('${p.id}','cliente')" style="${btnSecStyle()}font-size:11px;padding:5px 10px;border-color:rgba(39,199,110,0.25);color:#27C76E">Fechou!</button>
+      <button onclick="registrarResposta('${p.id}')" style="${btnSecStyle()}font-size:11px;padding:5px 10px;border-color:rgba(39,199,110,0.2);color:#27C76E">✓ Respondeu</button>
       ${stale?`<button onclick="gerarFollowUp('${p.id}')" style="${btnSecStyle()}font-size:11px;padding:5px 10px;border-color:rgba(245,158,11,0.3);color:#F59E0B;margin-left:auto">↩ Reengajar</button>`:`<button onclick="verRegistros('${p.id}')" style="${btnSecStyle()}font-size:11px;padding:5px 10px;margin-left:auto">Ver</button>`}
     </div>
     <!-- área do follow-up gerado -->
@@ -2609,6 +2610,16 @@ Sem asteriscos. Sem formalidade. Sem "Atenciosamente". Linguagem próxima e natu
   }finally{
     if(btn){ btn.textContent='↩ Reengajar'; btn.disabled=false; }
   }
+}
+
+function registrarResposta(id){
+  const idx = prospectos.findIndex(x=>x.id===id);
+  if(idx===-1) return;
+  prospectos[idx].registros = prospectos[idx].registros||[];
+  prospectos[idx].registros.push({data:new Date().toISOString(),tipo:'contato',nota:'Lead respondeu — em tratativa.'});
+  atualizarProspectoSB(prospectos[idx]);
+  toast('Resposta registrada! Lead saiu do filtro "sem retorno".','ok');
+  renderComercial();
 }
 
 function registrarFollowUp(id){

@@ -2568,7 +2568,7 @@ function prospectoCard(p){
     <div id="fu-${p.id}" style="display:none;margin-top:10px">
       <textarea id="fu-txt-${p.id}" rows="5" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(245,158,11,0.2);border-radius:9px;padding:10px;font-size:12.5px;color:rgba(240,240,255,0.85);line-height:1.65;resize:none;font-family:var(--font);outline:none"></textarea>
       <div style="display:flex;gap:7px;margin-top:7px">
-        ${wpp?`<a id="fu-wpp-${p.id}" href="#" target="_blank" style="${btnPriStyle()}flex:1;text-align:center;text-decoration:none;font-size:11.5px;padding:7px 10px">· Enviar no WhatsApp</a>`:''}
+        ${wpp?`<a id="fu-wpp-${p.id}" href="#" target="_blank" onclick="registrarFollowUp('${p.id}')" style="${btnPriStyle()}flex:1;text-align:center;text-decoration:none;font-size:11.5px;padding:7px 10px">· Enviar no WhatsApp</a>`:''}
         <button onclick="registrarFollowUp('${p.id}')" style="${btnSecStyle()}font-size:11px;padding:6px 10px">✓ Registrar</button>
         <button onclick="document.getElementById('fu-${p.id}').style.display='none'" style="${btnSecStyle()}font-size:11px;padding:6px 10px">✕</button>
       </div>
@@ -2616,11 +2616,14 @@ function registrarFollowUp(id){
   const idx = prospectos.findIndex(x=>x.id===id);
   if(idx===-1) return;
   prospectos[idx].registros = prospectos[idx].registros||[];
-  prospectos[idx].registros.push({data:new Date().toISOString(),tipo:'followup',nota:'Follow-up enviado: '+(txt||'')});
+  prospectos[idx].registros.push({data:new Date().toISOString(),tipo:'contato',nota:'Follow-up enviado via WhatsApp'+(txt?': '+txt:'')+'.'});
   atualizarProspectoSB(prospectos[idx]);
-  document.getElementById(`fu-${id}`).style.display='none';
+  const area = document.getElementById(`fu-${id}`);
+  if(area) area.style.display='none';
   toast('Follow-up registrado!','ok');
-  renderComercial();
+  // Atualiza apenas a lista para refletir o novo timestamp
+  const wrap = document.getElementById('prospec-lista-wrap');
+  if(wrap) wrap.innerHTML = renderProspecLista();
 }
 
 async function gerarPitchProspec(){
@@ -2714,6 +2717,14 @@ async function enviarPitch(){
       btn.style.background='rgba(45,212,122,0.15)';
       btn.style.color='var(--green)';
       toast(enviarVideo ? '· Pitch + vídeo enviados!' : 'Pitch enviado!');
+      // Registra "contato enviado" no prospecto correspondente
+      const numLimpo = contato.replace(/\D/g,'');
+      const idx = prospectos.findIndex(p=>(p.contato||'').replace(/\D/g,'').endsWith(numLimpo.slice(-9)));
+      if(idx>=0){
+        prospectos[idx].registros = prospectos[idx].registros||[];
+        prospectos[idx].registros.push({data:new Date().toISOString(),tipo:'contato',nota:'Pitch enviado via WhatsApp'+(enviarVideo?' + vídeo':'')+'.'});
+        atualizarProspectoSB(prospectos[idx]);
+      }
     } else {
       btn.textContent='Erro ao enviar'; btn.disabled=false;
     }

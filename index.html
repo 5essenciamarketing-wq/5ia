@@ -1641,13 +1641,12 @@ function fecharResumo(){
 }
 
 // ── EMAIL MARKETING via Gmail API ────────────────────────────────────
-// Preencha com o Client ID do seu projeto no Google Cloud Console
-// (Gmail API ativada + origem https://diario5essencia.netlify.app autorizada)
 const GMAIL_CLIENT_ID = '1089736309823-dpu8379vmuambpvo1131r5111gsbspr9.apps.googleusercontent.com';
 const GMAIL_SCOPE     = 'https://www.googleapis.com/auth/gmail.send';
 
 let gmailToken    = null;
 let emailClientes = [];
+let emailAutoTimer = null;
 
 async function carregarEmailClientes(){
   try{
@@ -1688,10 +1687,49 @@ function iniciarOAuth(resolve, reject){
   client.requestAccessToken();
 }
 
-function montarEmailRFC(destinatario, nomeDestinatario, assunto, corpoHtml){
-  const de      = `5essência Marketing <5essenciamarketing@gmail.com>`;
-  const para    = `${nomeDestinatario} <${destinatario}>`;
+function encRFC2047(str){
+  // RFC 2047 UTF-8 Base64 encoding para cabeçalhos com acentos
+  return `=?UTF-8?B?${btoa(unescape(encodeURIComponent(str)))}?=`;
+}
+
+async function gerarEmailComIA(topico, link){
+  const linkTxt = link ? `\nLink a incluir (coloque como CTA clicável): ${link}` : '';
+  const r = await fetch(`${SB_URL}/functions/v1/chat-assistant`,{
+    method:'POST',
+    headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY},
+    body: JSON.stringify({
+      system:`Você é especialista em email marketing educacional para a 5essência Marketing (agência de marketing digital, Balneário Camboriú, SC).
+Crie emails no formato:
+- Abertura: curiosidade ou dado surpreendente sobre marketing/negócios para estética/beleza
+- Desenvolvimento: 1 insight prático e acionável (máximo 3 parágrafos curtos)
+- CTA claro e direto (agendar conversa, responder mensagem, ou clicar no link)
+- Tom: próximo, profissional, nunca vendedor agressivo
+- Sempre educacional — o cliente aprende algo útil, mesmo sem contratar
+- Sem asteriscos. Sem markdown. Texto corrido.
+
+Retorne APENAS JSON válido sem explicações:
+{"assunto":"...","corpo":"...","cta_texto":"...","cta_link":"..."}
+
+O campo "corpo" deve ter no máximo 180 palavras. O "cta_link" deve ser o link fornecido ou "https://wa.me/5547996XXXXXX" como padrão.`,
+      messages:[{role:'user',content:`Tópico/ideia para o email de hoje: ${topico}${linkTxt}`}]
+    })
+  });
+  const d = await r.json();
+  const txt = d.resposta || '';
+  const match = txt.match(/\{[\s\S]*\}/);
+  if(!match) throw new Error('IA não retornou JSON válido');
+  return JSON.parse(match[0]);
+}
+
+function montarEmailRFC(destinatario, nomeDestinatario, assunto, corpoHtml, ctaTexto, ctaLink){
+  const de   = `${encRFC2047('5essência Marketing')} <5essenciamarketing@gmail.com>`;
+  const para = `${encRFC2047(nomeDestinatario)} <${destinatario}>`;
   const boundary= 'boundary_5essencia_' + Date.now();
+
+  const ctaBotao = (ctaTexto && ctaLink) ? `
+    <div style="text-align:center;margin:28px 0">
+      <a href="${ctaLink}" style="display:inline-block;background:#3D7BF5;color:#ffffff;font-family:Arial,sans-serif;font-size:14px;font-weight:700;padding:13px 28px;border-radius:8px;text-decoration:none">${ctaTexto}</a>
+    </div>` : '';
 
   const rodape = `
     <div style="margin-top:32px;padding-top:16px;border-top:1px solid #e5e7eb;font-family:Arial,sans-serif;font-size:12px;color:#6b7280">
@@ -1704,8 +1742,9 @@ function montarEmailRFC(destinatario, nomeDestinatario, assunto, corpoHtml){
     </div>`;
 
   const htmlFinal = `
-    <div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.7;color:#1f2937;max-width:600px">
+    <div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.7;color:#1f2937;max-width:600px;margin:0 auto;padding:24px">
       ${corpoHtml.replace(/\n/g,'<br>')}
+      ${ctaBotao}
       ${rodape}
     </div>`;
 
@@ -1747,6 +1786,11 @@ async function enviarGmail(token, rawBase64){
 
 function renderEmailMarketing(body){
   carregarEmailClientes().then(()=>{
+    // Estado salvo do auto-envio
+    const autoOn   = localStorage.getItem('em_auto')==='1';
+    const autoHora = localStorage.getItem('em_auto_hora')||'08:00';
+    const autoTopico = localStorage.getItem('em_auto_topico')||'';
+
     const lista = emailClientes.map((c,i)=>`
       <label style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:9px;cursor:pointer;font-size:12.5px;color:var(--ink2)">
         <input type="checkbox" checked data-idx="${i}" style="accent-color:#3D7BF5;width:14px;height:14px;flex-shrink:0">
@@ -1756,48 +1800,93 @@ function renderEmailMarketing(body){
       </label>`).join('');
 
     body.innerHTML = `
-      <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;flex-direction:column;gap:16px">
 
-        <!-- Aviso Client ID -->
-        <div id="gmail-aviso" style="display:${GMAIL_CLIENT_ID.startsWith('SEU_')?'flex':'none'};align-items:flex-start;gap:9px;background:rgba(245,158,11,0.10);border:1px solid rgba(245,158,11,0.25);border-radius:10px;padding:10px 13px">
-          <svg width="15" height="15" style="flex-shrink:0;margin-top:1px" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          <span style="font-size:12px;color:#F59E0B;font-weight:600">Adicione seu <strong>Client ID</strong> do Google Cloud Console na variável <code style="background:rgba(0,0,0,0.3);padding:1px 5px;border-radius:4px">GMAIL_CLIENT_ID</code> no código para ativar o disparo.</span>
+        <!-- Auth Gmail -->
+        <div id="gmail-auth-status" style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px 13px">
+          <div id="gmail-auth-dot" style="width:8px;height:8px;border-radius:50%;background:${gmailToken?'#27C76E':'#F59E0B'};flex-shrink:0"></div>
+          <span id="gmail-auth-label" style="font-size:12.5px;color:var(--ink2);flex:1">${gmailToken?'<strong style="color:#27C76E">Gmail autorizado</strong> — pronto para disparar':'Não autorizado — clique em <strong style="color:#F0F0FF">Autorizar Gmail</strong>'}</span>
+          <button onclick="autorizarGmailBtn()" id="gmail-auth-btn"
+            style="font-size:12px;font-weight:700;background:rgba(61,123,245,0.15);border:1px solid rgba(61,123,245,0.3);border-radius:8px;color:${gmailToken?'#27C76E':'#6BA3FF'};padding:5px 12px;cursor:pointer">
+            ${gmailToken?'✓ Autorizado':'Autorizar Gmail'}
+          </button>
         </div>
 
-        <!-- Status auth -->
-        <div id="gmail-auth-status" style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px 13px">
-          <div id="gmail-auth-dot" style="width:8px;height:8px;border-radius:50%;background:#F59E0B;flex-shrink:0"></div>
-          <span id="gmail-auth-label" style="font-size:12.5px;color:var(--ink2);flex:1">Não autorizado — clique em <strong style="color:#F0F0FF">Autorizar Gmail</strong> para conectar</span>
-          <button onclick="autorizarGmailBtn()" id="gmail-auth-btn"
-            style="font-size:12px;font-weight:700;background:rgba(61,123,245,0.15);border:1px solid rgba(61,123,245,0.3);border-radius:8px;color:#6BA3FF;padding:5px 12px;cursor:pointer">
-            Autorizar Gmail
-          </button>
+        <!-- Geração com IA -->
+        <div style="background:rgba(99,102,241,0.07);border:1px solid rgba(99,102,241,0.2);border-radius:12px;padding:14px">
+          <div style="font-size:11px;font-weight:700;color:#A78BFA;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px">✨ Gerar email com IA</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <input id="em-topico" type="text" value="${autoTopico.replace(/"/g,'&quot;')}"
+              placeholder="Tópico ou ideia  (ex: como aumentar agendamentos sem gastar em tráfego)"
+              style="width:100%;box-sizing:border-box;background:var(--s2);border:1px solid var(--b2);border-radius:9px;color:var(--ink);font-size:13px;padding:9px 12px;outline:none;font-family:inherit">
+            <input id="em-link" type="text" placeholder="Link opcional  (ex: https://wa.me/...)"
+              style="width:100%;box-sizing:border-box;background:var(--s2);border:1px solid var(--b2);border-radius:9px;color:var(--ink);font-size:13px;padding:9px 12px;outline:none;font-family:inherit">
+            <button onclick="emGerarIA()" id="em-gerar-btn"
+              style="padding:9px 16px;background:linear-gradient(135deg,#6366F1,#8B5CF6);border:none;border-radius:9px;color:#fff;font-size:13px;font-weight:700;cursor:pointer">
+              ✨ Gerar com IA
+            </button>
+          </div>
         </div>
 
         <!-- Assunto -->
         <div>
           <div style="font-size:11px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">Assunto</div>
-          <input id="email-assunto" type="text" placeholder="Ex: 3 estratégias de tráfego para aumentar suas vendas este mês"
+          <input id="email-assunto" type="text" placeholder="Gerado pela IA ou escreva manualmente"
             style="width:100%;box-sizing:border-box;background:var(--s2);border:1px solid var(--b2);border-radius:10px;color:var(--ink);font-size:13px;padding:10px 13px;outline:none;font-family:inherit">
         </div>
 
         <!-- Corpo -->
         <div>
-          <div style="font-size:11px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">Conteúdo do e-mail</div>
-          <textarea id="email-corpo" rows="9" placeholder="Escreva aqui o conteúdo educacional/informativo...&#10;&#10;Dica: comece com uma pergunta ou dado surpreendente para prender a atenção."
+          <div style="font-size:11px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">Conteúdo</div>
+          <textarea id="email-corpo" rows="7" placeholder="Gerado pela IA ou escreva manualmente…"
             style="width:100%;box-sizing:border-box;background:var(--s2);border:1px solid var(--b2);border-radius:10px;color:var(--ink);font-size:13px;padding:10px 13px;outline:none;resize:vertical;font-family:inherit;line-height:1.6"></textarea>
         </div>
 
-        <!-- Preview assinatura -->
-        <div style="background:rgba(61,123,245,0.06);border:1px solid rgba(61,123,245,0.15);border-radius:10px;padding:12px 14px">
-          <div style="font-size:10px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Rodapé automático</div>
-          <div style="font-size:12px;color:var(--ink2);line-height:1.7;border-top:1px solid rgba(255,255,255,0.07);padding-top:10px">
-            <strong style="color:#F0F0FF">Patrick</strong> · 5essência Marketing · <span style="color:var(--blue)">5essenciamarketing.com.br</span><br>
-            <span style="font-size:11px;color:var(--ink3)">Este e-mail foi enviado porque você está em nossa base de contatos. Para não receber mais, responda com "Descadastrar".</span>
+        <!-- CTA -->
+        <div style="display:flex;gap:8px">
+          <div style="flex:2">
+            <div style="font-size:11px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">Texto do botão CTA</div>
+            <input id="email-cta-txt" type="text" placeholder="Ex: Quero saber mais"
+              style="width:100%;box-sizing:border-box;background:var(--s2);border:1px solid var(--b2);border-radius:10px;color:var(--ink);font-size:13px;padding:10px 13px;outline:none;font-family:inherit">
+          </div>
+          <div style="flex:3">
+            <div style="font-size:11px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">Link do CTA</div>
+            <input id="email-cta-link" type="text" placeholder="https://wa.me/..."
+              style="width:100%;box-sizing:border-box;background:var(--s2);border:1px solid var(--b2);border-radius:10px;color:var(--ink);font-size:13px;padding:10px 13px;outline:none;font-family:inherit">
           </div>
         </div>
 
-        <!-- Lista destinatários -->
+        <!-- Rodapé preview -->
+        <div style="background:rgba(61,123,245,0.05);border:1px solid rgba(61,123,245,0.12);border-radius:10px;padding:10px 13px">
+          <div style="font-size:10px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">Rodapé automático</div>
+          <div style="font-size:11.5px;color:var(--ink3);line-height:1.6">
+            <strong style="color:#F0F0FF">Patrick</strong> · 5essência Marketing · <a href="#" style="color:var(--blue)">5essenciamarketing.com.br</a>
+          </div>
+        </div>
+
+        <!-- Auto-envio diário -->
+        <div style="background:rgba(39,199,110,0.06);border:1px solid rgba(39,199,110,0.18);border-radius:12px;padding:13px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:${autoOn?'12px':'0'}">
+            <div>
+              <div style="font-size:12.5px;font-weight:700;color:#F0F0FF">⏱ Envio automático diário</div>
+              <div style="font-size:11px;color:var(--ink3);margin-top:2px">Dispara automaticamente quando o sistema estiver aberto no horário</div>
+            </div>
+            <label style="position:relative;display:inline-block;width:40px;height:22px;cursor:pointer;flex-shrink:0">
+              <input type="checkbox" id="em-auto-toggle" ${autoOn?'checked':''} onchange="emAutoToggle(this.checked)"
+                style="opacity:0;width:0;height:0">
+              <span style="position:absolute;inset:0;background:${autoOn?'#27C76E':'rgba(255,255,255,0.12)'};border-radius:22px;transition:0.2s"></span>
+              <span style="position:absolute;top:3px;left:${autoOn?'21px':'3px'};width:16px;height:16px;background:#fff;border-radius:50%;transition:0.2s"></span>
+            </label>
+          </div>
+          <div id="em-auto-config" style="display:${autoOn?'flex':'none'};align-items:center;gap:10px;flex-wrap:wrap">
+            <div style="font-size:12px;color:var(--ink2)">Horário:</div>
+            <input type="time" id="em-auto-hora" value="${autoHora}" onchange="emAutoSalvar()"
+              style="background:var(--s2);border:1px solid var(--b2);border-radius:8px;color:var(--ink);font-size:13px;padding:5px 10px;outline:none;font-family:inherit">
+            <div id="em-auto-status" style="font-size:11.5px;color:var(--ink3);flex:1">${emAutoStatusTxt()}</div>
+          </div>
+        </div>
+
+        <!-- Destinatários -->
         <div>
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
             <div style="font-size:11px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:0.08em">
@@ -1809,14 +1898,14 @@ function renderEmailMarketing(body){
             </div>
           </div>
           <div style="display:flex;flex-direction:column;gap:5px;max-height:200px;overflow-y:auto" id="email-lista">
-            ${lista || '<div style="color:var(--ink3);font-size:12px;text-align:center;padding:20px">Nenhum cliente com e-mail cadastrado encontrado.</div>'}
+            ${lista||'<div style="color:var(--ink3);font-size:12px;text-align:center;padding:20px">Nenhum cliente com e-mail cadastrado.</div>'}
           </div>
         </div>
 
         <!-- Botão disparar -->
         <button onclick="dispararEmailMarketing()"
           style="width:100%;padding:13px;background:linear-gradient(135deg,#3D7BF5,#6366F1);border:none;border-radius:12px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:0.02em">
-          ✉ Disparar E-mail Marketing
+          ✉ Disparar Agora
         </button>
 
         <!-- Log -->
@@ -1825,13 +1914,93 @@ function renderEmailMarketing(body){
   });
 }
 
+function emAutoStatusTxt(){
+  const ultimo = localStorage.getItem('em_ultimo_envio');
+  const hoje   = new Date().toISOString().slice(0,10);
+  if(ultimo===hoje) return '✅ Enviado hoje';
+  return 'Aguardando horário configurado…';
+}
+
+function emAutoToggle(on){
+  localStorage.setItem('em_auto', on?'1':'0');
+  document.getElementById('em-auto-config').style.display = on?'flex':'none';
+  const span = document.querySelector('#em-auto-toggle + span');
+  if(span){ span.style.background = on?'#27C76E':'rgba(255,255,255,0.12)'; }
+  const knob = document.querySelector('#em-auto-toggle + span + span');
+  if(knob){ knob.style.left = on?'21px':'3px'; }
+  if(on) iniciarVerificacaoAutoEmail();
+  else   clearInterval(emailAutoTimer);
+  emAutoSalvar();
+}
+
+function emAutoSalvar(){
+  const hora   = document.getElementById('em-auto-hora')?.value || '08:00';
+  const topico = document.getElementById('em-topico')?.value.trim() || '';
+  localStorage.setItem('em_auto_hora', hora);
+  localStorage.setItem('em_auto_topico', topico);
+}
+
+function iniciarVerificacaoAutoEmail(){
+  clearInterval(emailAutoTimer);
+  emailAutoTimer = setInterval(async ()=>{
+    if(localStorage.getItem('em_auto')!=='1') return;
+    const hora   = localStorage.getItem('em_auto_hora')||'08:00';
+    const agora  = new Date();
+    const hm     = `${String(agora.getHours()).padStart(2,'0')}:${String(agora.getMinutes()).padStart(2,'0')}`;
+    const hoje   = agora.toISOString().slice(0,10);
+    const ultimo = localStorage.getItem('em_ultimo_envio');
+    if(hm === hora && ultimo !== hoje){
+      if(!gmailToken){ return; } // precisa estar autorizado
+      await emAutoDisparar();
+    }
+  }, 30000); // verifica a cada 30 segundos
+}
+
+async function emAutoDisparar(){
+  const topico = localStorage.getItem('em_auto_topico')||'dicas de marketing digital para o mercado de beleza';
+  try{
+    toast('Auto-envio: gerando email com IA…','ok');
+    const gerado = await gerarEmailComIA(topico, '');
+    const hoje   = new Date().toISOString().slice(0,10);
+    await _executarDisparo(gerado.assunto, gerado.corpo, gerado.cta_texto, gerado.cta_link);
+    localStorage.setItem('em_ultimo_envio', hoje);
+    const el = document.getElementById('em-auto-status');
+    if(el) el.textContent = '✅ Enviado hoje';
+  }catch(e){ toast('Erro no auto-envio: '+e.message,'er'); }
+}
+
+async function emGerarIA(){
+  const topico = document.getElementById('em-topico')?.value.trim();
+  const link   = document.getElementById('em-link')?.value.trim();
+  if(!topico){ toast('Escreva o tópico/ideia para a IA','er'); return; }
+  const btn = document.getElementById('em-gerar-btn');
+  btn.textContent = '⏳ Gerando…';
+  btn.disabled = true;
+  try{
+    const g = await gerarEmailComIA(topico, link);
+    document.getElementById('email-assunto').value  = g.assunto  || '';
+    document.getElementById('email-corpo').value    = g.corpo    || '';
+    document.getElementById('email-cta-txt').value  = g.cta_texto|| '';
+    document.getElementById('email-cta-link').value = g.cta_link || '';
+    toast('Email gerado com IA!','ok');
+    emAutoSalvar(); // salva tópico para o auto-envio
+  }catch(e){
+    toast('Erro na geração: '+e.message,'er');
+  }finally{
+    btn.textContent = '✨ Gerar com IA';
+    btn.disabled = false;
+  }
+}
+
 async function autorizarGmailBtn(){
   try{
     await gmailAutorizar();
-    document.getElementById('gmail-auth-dot').style.background  = '#27C76E';
-    document.getElementById('gmail-auth-label').innerHTML = '<strong style="color:#27C76E">Gmail autorizado</strong> — pronto para disparar';
-    document.getElementById('gmail-auth-btn').textContent  = '✓ Autorizado';
-    document.getElementById('gmail-auth-btn').style.color  = '#27C76E';
+    const dot   = document.getElementById('gmail-auth-dot');
+    const label = document.getElementById('gmail-auth-label');
+    const btn   = document.getElementById('gmail-auth-btn');
+    if(dot)   dot.style.background = '#27C76E';
+    if(label) label.innerHTML = '<strong style="color:#27C76E">Gmail autorizado</strong> — pronto para disparar';
+    if(btn){  btn.textContent = '✓ Autorizado'; btn.style.color = '#27C76E'; }
     toast('Gmail autorizado!','ok');
   }catch(e){
     toast('Erro na autorização: '+(e?.message||'tente novamente'),'er');
@@ -1842,35 +2011,42 @@ function emailSelecionarTodos(sel){
   document.querySelectorAll('#email-lista input[type=checkbox]').forEach(cb=>cb.checked=sel);
 }
 
-async function dispararEmailMarketing(){
-  const assunto = document.getElementById('email-assunto')?.value.trim();
-  const corpo   = document.getElementById('email-corpo')?.value.trim();
-  if(!assunto||!corpo){ toast('Preencha assunto e conteúdo','er'); return; }
-  if(!gmailToken){ toast('Autorize o Gmail primeiro','er'); return; }
-
+async function _executarDisparo(assunto, corpo, ctaTxt, ctaLink){
+  if(!gmailToken) throw new Error('Gmail não autorizado');
+  await carregarEmailClientes();
   const checks = [...document.querySelectorAll('#email-lista input[type=checkbox]:checked')];
-  if(!checks.length){ toast('Selecione pelo menos um destinatário','er'); return; }
+  const destArr = checks.length
+    ? checks.map(cb => emailClientes[parseInt(cb.dataset.idx)])
+    : emailClientes;
 
   const log = document.getElementById('email-log');
-  log.style.display='block';
-  log.innerHTML='<div style="color:var(--ink3)">Iniciando disparo…</div>';
+  if(log){ log.style.display='block'; log.innerHTML='<div style="color:var(--ink3)">Enviando…</div>'; }
   let ok=0, fail=0;
 
-  for(const cb of checks){
-    const c   = emailClientes[parseInt(cb.dataset.idx)];
-    const raw = montarEmailRFC(c.email, c.nome_completo, assunto, corpo);
+  for(const c of destArr){
+    const raw = montarEmailRFC(c.email, c.nome_completo, assunto, corpo, ctaTxt, ctaLink);
     try{
       await enviarGmail(gmailToken, raw);
-      log.innerHTML += `<div style="color:#4ade80">✅ ${c.nome_completo} — ${c.email}</div>`;
+      if(log) log.innerHTML += `<div style="color:#4ade80">✅ ${c.nome_completo}</div>`;
       ok++;
     }catch(e){
-      log.innerHTML += `<div style="color:#f87171">❌ ${c.nome_completo} — ${e.message}</div>`;
+      if(log) log.innerHTML += `<div style="color:#f87171">❌ ${c.nome_completo} — ${e.message}</div>`;
       fail++;
     }
     await new Promise(r=>setTimeout(r,350));
   }
-  log.innerHTML += `<div style="font-weight:700;color:#fff;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.08)">✔ ${ok} enviados · ${fail} falhas</div>`;
+  if(log) log.innerHTML += `<div style="font-weight:700;color:#fff;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.08)">✔ ${ok} enviados · ${fail} falhas</div>`;
   toast(ok+' e-mails enviados!', ok>0?'ok':'er');
+}
+
+async function dispararEmailMarketing(){
+  const assunto = document.getElementById('email-assunto')?.value.trim();
+  const corpo   = document.getElementById('email-corpo')?.value.trim();
+  const ctaTxt  = document.getElementById('email-cta-txt')?.value.trim();
+  const ctaLink = document.getElementById('email-cta-link')?.value.trim();
+  if(!assunto||!corpo){ toast('Preencha assunto e conteúdo (ou gere com IA)','er'); return; }
+  if(!gmailToken){ toast('Autorize o Gmail primeiro','er'); return; }
+  await _executarDisparo(assunto, corpo, ctaTxt, ctaLink);
 }
 
 // Inicializa atividades
@@ -1884,6 +2060,8 @@ document.addEventListener('DOMContentLoaded', ()=>{
   atividades = atividades.filter(a => new Date(a.data) >= limite);
   salvarAtividades();
   renderAtividades();
+  // Inicia verificação de auto-envio se ativo
+  if(localStorage.getItem('em_auto')==='1') iniciarVerificacaoAutoEmail();
 });
 
 

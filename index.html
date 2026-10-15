@@ -1336,7 +1336,7 @@ async function enviar() {
     // Adiciona ao histórico
     const sel  = document.getElementById('sel-cliente');
     const nome = sel.options[sel.selectedIndex]?.text.split(' · ')[0];
-    adicionarHistorico(nome, ctx.acao, wppOk, msgIsIA, 'report');
+    adicionarHistorico(nome, ctx.acao, wppOk, msgIsIA, wppOk ? 'entregue' : 'em_andamento');
 
     // Reset
     document.getElementById('inp-acao').value = '';
@@ -1700,11 +1700,12 @@ async function gerarEmailComIA(topico, link){
     body: JSON.stringify({
       system:`Você é especialista em email marketing educacional para a 5essência Marketing (agência de marketing digital, Balneário Camboriú, SC).
 Crie emails no formato:
-- Abertura: curiosidade ou dado surpreendente sobre marketing/negócios para estética/beleza
-- Desenvolvimento: 1 insight prático e acionável (máximo 3 parágrafos curtos)
+- Abertura: curiosidade ou dado surpreendente relacionado ao tópico fornecido (adapte ao contexto — pode ser negócios, mercado, comportamento do consumidor, tecnologia, etc.)
+- Desenvolvimento: 1 insight prático e acionável ligado ao tópico (máximo 3 parágrafos curtos)
 - CTA claro e direto (agendar conversa, responder mensagem, ou clicar no link)
 - Tom: próximo, profissional, nunca vendedor agressivo
-- Sempre educacional — o cliente aprende algo útil, mesmo sem contratar
+- Sempre educacional — o leitor aprende algo útil, mesmo sem contratar
+- Adapte a linguagem ao setor/nicho implícito no tópico (imóveis, estética, varejo, tecnologia, etc.)
 - Sem asteriscos. Sem markdown. Texto corrido.
 
 Retorne APENAS JSON válido sem explicações:
@@ -1733,9 +1734,7 @@ function montarEmailRFC(destinatario, nomeDestinatario, assunto, corpoHtml, ctaT
 
   const rodape = `
     <div style="margin-top:32px;padding-top:16px;border-top:1px solid #e5e7eb;font-family:Arial,sans-serif;font-size:12px;color:#6b7280">
-      <strong style="color:#111827">Patrick</strong><br>
-      5essência Marketing<br>
-      <a href="https://5essenciamarketing.com.br" style="color:#3D7BF5">5essenciamarketing.com.br</a>
+      <img src="https://drive.google.com/uc?export=view&id=1fDsubLNcviOkkk-W8Qy37hwZtZ0LeEhh" alt="5essência Marketing" style="width:100%;max-width:600px;display:block;margin-bottom:8px">
       <br><br>
       <span style="font-size:11px">Este e-mail foi enviado porque você está em nossa base de contatos.<br>
       Para não receber mais, responda com "Descadastrar".</span>

@@ -475,6 +475,42 @@ const SECOES = {
     }};
   }},
 
+  contexto: { titulo:'Conte mais para a gente', desc:'Escreva do seu jeito, em tópicos ou como numa conversa. Quanto mais você contar, mais o seu atendimento fica com a sua cara.', render(){
+    const b0 = (S.cfg.tom_voz && S.cfg.tom_voz.briefing) || {};
+    let refs = Array.isArray(b0.refs) ? [...b0.refs] : [];
+    const CAMPOS = [
+      ['sobre','Conte sobre o seu negócio','Como começou, o que você faz de melhor, para quem atende...'],
+      ['diferenciais','O que te diferencia dos outros?','Técnica, produtos, ambiente, atendimento...'],
+      ['perguntas','Perguntas que os clientes mais fazem (com a resposta)','Ex.: Aceita cartão? Sim, em até 3x. / Tem estacionamento? ...'],
+      ['sempre','O que a assistente deve SEMPRE fazer','Ex.: avisar para chegar 10 min antes, pedir para trazer foto de referência...'],
+      ['nunca','O que ela NUNCA deve falar ou prometer','Ex.: nunca dar desconto, nunca falar de preço de procedimento X...'],
+      ['objetivo','O que você espera do seu agente?','Ex.: lotar a agenda de terça, reduzir faltas, parar de responder WhatsApp...'],
+      ['extras','Mais alguma coisa? Escreva à vontade','Promoções, pacotes, regras especiais, referências de sites ou perfis que você gosta...']
+    ];
+    const tas = {};
+    const campos = h('div',{}, CAMPOS.map(([k,l,ph]) => { const t = h('textarea',{placeholder:ph,style:'min-height:92px'}); t.value = b0[k] || ''; tas[k]=t; return h('div',{},h('label',{},l),t); }));
+    const grade = h('div',{class:'thumbs'});
+    function desenhar(){
+      grade.replaceChildren(...(refs.length ? refs.map(u => h('div',{class:'thumb'},h('img',{src:u}),h('button',{type:'button',title:'remover',onclick:()=>{ refs = refs.filter(x=>x!==u); desenhar(); }},'×'))) : [h('span',{class:'tag'},'nenhuma imagem')]));
+    }
+    desenhar();
+    const f = h('input',{type:'file',accept:'image/*',multiple:true});
+    f.onchange = async () => {
+      try{
+        toast('Enviando...');
+        for(const arq of f.files){ if(refs.length>=20){ toast('Máximo de 20 imagens.'); break; } refs.push(await enviarArquivo(arq,'ref',true)); }
+        desenhar(); toast('Enviado ✓');
+      }catch(e){ toast('Erro: '+e.message); }
+      f.value='';
+    };
+    const root = h('div',{}, campos,
+      h('div',{},h('label',{},'Fotos e materiais de referência ',h('small',{},'— ambiente, trabalhos, cardápio de serviços, prints, o que você gosta (até 20)')),grade,f));
+    return { root, async salvar(){
+      const v = { refs }; Object.keys(tas).forEach(k => { const x = tas[k].value.trim(); if(x) v[k] = x; });
+      await salvarConfig({ tom_voz: { ...(S.cfg.tom_voz||{}), briefing: v } });
+    }};
+  }},
+
   tom: { titulo:'Tom de voz', desc:'Escolha um estilo e ajuste os textos como quiser. Use {assistente}, {negocio} e {nome}.', render(){
     const PRESETS = {
       acolhedora:{ nome:'Acolhedora', ex:'Oii, tudo bem? 🙂', t:{
@@ -507,7 +543,7 @@ const SECOES = {
     desenharCards();
     return { root:h('div',{},cards,wrapCampos), async salvar(){
       const v = { preset }; Object.keys(tas).forEach(k => v[k] = tas[k].value.trim() || PRESETS[preset].t[k]);
-      await salvarConfig({ tom_voz: v });
+      await salvarConfig({ tom_voz: { ...(S.cfg.tom_voz||{}), ...v } });
     }};
   }},
 };
@@ -520,7 +556,7 @@ const MODELOS = {
   'Psicologia e terapia': [['Primeira consulta',60],['Sessão',50]],
   'Personal e estúdio': [['Aula experimental',45],['Treino individual',60]]
 };
-const ORDEM = ['negocio','horarios','servicos','bloqueios','visual','tom'];
+const ORDEM = EMBED ? ['negocio','horarios','servicos','bloqueios','visual','tom'] : ['negocio','horarios','servicos','bloqueios','visual','tom','contexto'];
 
 async function enviarArquivo(file, prefixo, imagem){
   let blob = file, ext = (file.name.split('.').pop()||'bin').toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,5);
@@ -601,7 +637,7 @@ function viewWizard(){
 }
 
 /* ---------- PAINEL ---------- */
-const ABAS_CFG = [['negocio','Negócio'],['horarios','Horários'],['servicos','Serviços'],['bloqueios','Períodos fechados'],['visual','Visual e mídia'],['tom','Tom de voz'],['simular','Testar atendimento']];
+const ABAS_CFG = [['negocio','Negócio'],['horarios','Horários'],['servicos','Serviços'],['bloqueios','Períodos fechados'],['visual','Visual e mídia'],['tom','Tom de voz'],...(EMBED?[]:[['contexto','Conte mais']]),['simular','Testar atendimento']];
 // no painel de cadastro: só configurar e enviar. Dentro do sistema da cliente: gestão completa.
 const abas = () => EMBED ? [['agenda','Agenda'],['resumo','Resumo'],['clientes','Clientes'],...ABAS_CFG]
                          : [...ABAS_CFG,['link','Enviar para criação']];
@@ -822,7 +858,8 @@ function montarPacote(){
     visual:{ cor_principal:c.cor_primaria, cor_escura:c.cor_escura, cor_suave:c.cor_suave, cor_fundo:c.cor_fundo,
       logo_url:c.logo_url, foto_profissional_url:c.foto_responsavel_url, audio_final_url:c.audio_final_url, audio_final_duracao:c.audio_final_duracao,
       galeria_urls:S.galeria.map(g=>g.url) },
-    tom_de_voz:c.tom_voz || {}
+    tom_de_voz:(({briefing,...t})=>t)(c.tom_voz||{}),
+    briefing_livre:(c.tom_voz&&c.tom_voz.briefing)||{}
   };
 }
 
@@ -847,23 +884,92 @@ function desenharSimular(main){
     h('div',{class:'actions',style:'justify-content:center'}, h('button',{class:'btn ghost',type:'button',onclick:()=>{ S.tab='simular'; render(); }},'Recomeçar o teste')));
 }
 
+function telaCriando(trabalho){
+  const c = S.cfg, b = (c.tom_voz && c.tom_voz.briefing) || {};
+  const nS = S.servicos.length, nD = Object.keys(S.horarios).length;
+  const nF = S.galeria.length + (Array.isArray(b.refs)?b.refs.length:0) + (c.logo_url?1:0) + (c.foto_responsavel_url?1:0);
+  const preset = ((c.tom_voz||{}).preset)||'acolhedora';
+  const etapas = [
+    `Lendo tudo o que você contou sobre ${c.nome_negocio||'o seu negócio'}`,
+    `Aprendendo ${nS} serviço${nS===1?'':'s'} e os valores de cada um`,
+    `Organizando a agenda: ${nD} dia${nD===1?'':'s'} de atendimento por semana`,
+    `Treinando o jeito de falar (${preset})`,
+    nF ? `Estudando ${nF} imagem${nF===1?'':'ns'} da sua marca` : 'Preparando a identidade visual',
+    `Dando personalidade à ${c.nome_assistente||'assistente'}`,
+    'Conectando tudo ao sistema de agendamento',
+    'Revisão final'
+  ];
+  if(!document.getElementById('nmn-criando-css')){
+    const st = document.createElement('style'); st.id='nmn-criando-css';
+    st.textContent = `.nmn-cr{position:fixed;inset:0;z-index:99998;background:radial-gradient(circle at 50% 18%,#14185a 0,#02031B 62%);display:flex;align-items:center;justify-content:center;padding:24px;color:#fff;font-family:inherit}
+.nmn-cr .in{width:min(460px,100%);text-align:center}
+.nmn-orb{width:92px;height:92px;border-radius:50%;margin:0 auto 22px;background:conic-gradient(from 0deg,#3B6FE0,#8B5CF6,#3B6FE0);filter:blur(.3px);animation:nmnspin 3s linear infinite;box-shadow:0 0 50px #8B5CF6aa;position:relative}
+.nmn-orb:after{content:'';position:absolute;inset:9px;border-radius:50%;background:#02031B}
+.nmn-orb.ok{animation:none;box-shadow:0 0 60px #22c55eaa;background:#22c55e}
+.nmn-orb.ok:after{background:#02031B}
+@keyframes nmnspin{to{transform:rotate(360deg)}}
+.nmn-cr h2{margin:0 0 6px;font-size:1.5rem}
+.nmn-cr .sub{color:#9aa0d0;margin:0 0 18px;font-size:.95rem}
+.nmn-bar{height:6px;border-radius:9px;background:#ffffff1a;overflow:hidden;margin:0 0 20px}
+.nmn-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#3B6FE0,#8B5CF6);transition:width .9s ease}
+.nmn-li{list-style:none;margin:0;padding:0;text-align:left;font-size:.95rem}
+.nmn-li li{display:flex;gap:10px;align-items:center;padding:7px 0;opacity:0;transform:translateY(6px);transition:all .45s}
+.nmn-li li.on{opacity:1;transform:none}
+.nmn-li li .d{width:18px;height:18px;border-radius:50%;border:2px solid #8B5CF6;flex:none;display:grid;place-items:center;font-size:11px}
+.nmn-li li.fim .d{background:#22c55e;border-color:#22c55e;color:#02031B}
+.nmn-li li:not(.fim) .d{border-top-color:transparent;animation:nmnspin .8s linear infinite}
+.nmn-li li.fim{color:#9aa0d0}
+.nmn-cr .btn{margin-top:22px}
+@media (prefers-reduced-motion:reduce){.nmn-orb,.nmn-li li .d{animation:none}}`;
+    document.head.appendChild(st);
+  }
+  const orb = h('div',{class:'nmn-orb'}), tit = h('h2',{},'Criando o seu agente de IA'), sub = h('p',{class:'sub'},'Isso leva só alguns instantes. Não feche esta tela.');
+  const barra = h('i'), lis = etapas.map(t => h('li',{},h('span',{class:'d'}),h('span',{},t)));
+  const ov = h('div',{class:'nmn-cr'}, h('div',{class:'in'}, orb, tit, sub, h('div',{class:'nmn-bar'},barra), h('ul',{class:'nmn-li'},lis)));
+  document.body.appendChild(ov);
+  const espera = ms => new Promise(r => setTimeout(r, ms));
+  let terminou = false, erro = null;
+  trabalho.then(()=>{ terminou = true; }, e => { erro = e; });
+  return (async()=>{
+    for(let i=0;i<etapas.length;i++){
+      lis[i].classList.add('on');
+      barra.style.width = Math.round((i+0.6)/etapas.length*92)+'%';
+      if(i>0){ lis[i-1].classList.add('fim'); lis[i-1].querySelector('.d').textContent='✓'; }
+      if(erro) break;
+      await espera(i===etapas.length-1 ? 600 : 1300);
+    }
+    // última etapa só fecha quando o envio de verdade terminou
+    while(!terminou && !erro) await espera(300);
+    if(erro){ ov.remove(); throw erro; }
+    lis[etapas.length-1].classList.add('fim'); lis[etapas.length-1].querySelector('.d').textContent='✓';
+    barra.style.width='100%'; orb.classList.add('ok');
+    tit.textContent = 'Tudo recebido! 🎉';
+    sub.textContent = 'Já temos tudo para criar o seu agente. Falta só o pagamento para começarmos.';
+    await new Promise(res => { const bt = h('button',{class:'btn',type:'button',onclick:()=>res()},'Continuar'); ov.querySelector('.in').appendChild(bt); });
+    ov.remove();
+  })();
+}
+
 function desenharLink(main){
   const st = S.tenant.status, msg = h('div',{class:'msg'}), cards = [];
   async function enviar(btn){
     const falta = faltaParaEnviar();
     if(falta.length){ msg.className='msg err'; msg.textContent = 'Antes de enviar, preencha: ' + falta.join(', ') + '.'; return; }
     if(!ENVIO_URL){ msg.className='msg err'; msg.textContent = 'Envio ainda não configurado (ENVIO_URL).'; return; }
-    btn.disabled = true; msg.className='msg'; msg.textContent = 'Enviando...';
-    try{
+    btn.disabled = true; msg.className='msg'; msg.textContent = '';
+    const trabalho = (async()=>{
       const res = await fetch(ENVIO_URL,{ method:'POST', headers:{'Content-Type':'text/plain'}, body:JSON.stringify(montarPacote()) });
       const j = await res.json(); if(!j.ok) throw new Error(j.erro || 'falha no envio');
       if(st === 'configurando') await sb.rpc('solicitar_publicacao');
-      S.tenant.status = st === 'configurando' ? 'solicitado' : st; toast('Enviado ✓'); render();
+    })();
+    try{
+      await telaCriando(trabalho);
+      S.tenant.status = st === 'configurando' ? 'solicitado' : st; render();
     }catch(e){ msg.className='msg err'; msg.textContent = 'Não consegui enviar agora. Tente de novo em instantes.'; btn.disabled = false; }
   }
   if(st === 'configurando'){
     cards.push(h('div',{class:'card'}, h('h3',{},'Teste e envie'),
-      h('p',{},'Já testou o atendimento na aba "Testar atendimento"? Se estiver como você quer, envie. Nossa equipe recebe tudo o que você preencheu, cria e publica o seu sistema, e avisa você quando estiver no ar. O link só existe depois disso.'),
+      h('p',{},'Já testou na aba "Testar atendimento"? Se estiver como você quer, envie. A nossa equipe recebe tudo o que você preencheu e escreveu, cria o seu agente de IA e avisa você quando ele estiver pronto.'),
       h('div',{class:'actions'}, h('button',{class:'btn',type:'button',onclick:e=>enviar(e.target)},'Enviar para criação')), msg));
   } else if(st === 'solicitado'){
     cards.push(h('div',{class:'card'}, h('span',{class:'tag'},'Último passo'),
@@ -874,12 +980,9 @@ function desenharLink(main){
       h('p',{style:'font-size:.85rem'},'Quer mudar algo antes de pagar? Ajuste nas abas e reenvie.'),
       h('div',{class:'actions'}, h('button',{class:'btn ghost',type:'button',onclick:e=>enviar(e.target)},'Reenviar com alterações')), msg));
   } else {
-    const url = linkPublico(); const inp = h('input',{value:url,readonly:true});
-    cards.push(h('div',{class:'card'}, h('span',{class:'tag ok'},'No ar'),
+    cards.push(h('div',{class:'card'}, h('span',{class:'tag ok'},'Entregue'),
       h('h3',{style:'margin-top:10px'},'Seu sistema está pronto'),
-      h('p',{},'Esse é o link do seu atendimento. Para gerenciar agenda, valores e bloqueios, abra o link e clique no cadeado no topo, entrando com este mesmo e-mail e senha.'),
-      h('div',{class:'linkbox'}, inp, h('button',{class:'btn',type:'button',onclick:async()=>{ try{ await navigator.clipboard.writeText(url); toast('Link copiado ✓'); }catch{ inp.select(); } }},'Copiar')),
-      h('div',{class:'actions'}, h('a',{class:'btn ghost',href:url,target:'_blank',rel:'noopener',style:'text-decoration:none'},'Abrir meu atendimento'))));
+      h('p',{},'A nossa equipe já criou o seu agente de IA e enviou os acessos para você. Qualquer ajuste, é só falar com a gente.')));
   }
   if(S.isAdmin){
     const muda = (novo,rot,cls) => h('button',{class:'btn sm '+(cls||'ghost'),type:'button',onclick:async()=>{

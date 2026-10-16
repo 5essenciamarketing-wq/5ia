@@ -861,7 +861,7 @@ function desenharLink(main){
   }
   if(st === 'configurando'){
     cards.push(h('div',{class:'card'}, h('h3',{},'Teste e envie'),
-      h('p',{},'Use a simulação ao lado para conversar como se fosse um cliente. Quando estiver como você quer, envie. Nossa equipe recebe tudo o que você preencheu e cria o seu sistema.'),
+      h('p',{},'Já testou o atendimento na aba "Testar atendimento"? Se estiver como você quer, envie. Nossa equipe recebe tudo o que você preencheu, cria e publica o seu sistema, e avisa você quando estiver no ar. O link só existe depois disso.'),
       h('div',{class:'actions'}, h('button',{class:'btn',type:'button',onclick:e=>enviar(e.target)},'Enviar para criação')), msg));
   } else if(st === 'solicitado'){
     cards.push(h('div',{class:'card'}, h('span',{class:'tag'},'Em criação'),
@@ -881,7 +881,7 @@ function desenharLink(main){
       const { data } = await sb.rpc('admin_definir_status',{ p_tenant:S.tenant.id, p_status:novo });
       if(data?.ok){ S.tenant.status = novo; toast('Status: '+novo); render(); } else toast('Sem permissão');
     }},rot);
-    cards.push(h('div',{class:'card'}, h('h3',{},'Equipe Numen'), h('p',{},`Status atual: ${st}. Link: ${linkPublico()}`),
+    cards.push(h('div',{class:'card'}, h('h3',{},'Equipe Numen'), h('p',{},st==='publicado' ? `No ar. Link: ${linkPublico()}` : `Status atual: ${st}. Ao publicar, o link do cliente passa a funcionar.`),
       h('div',{class:'actions'}, st!=='publicado'?muda('publicado','Publicar','') : muda('configurando','Tirar do ar'))));
   }
   main.append(h('h2',{},'Enviar para criação'), ...cards);

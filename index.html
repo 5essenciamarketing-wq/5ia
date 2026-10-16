@@ -2409,6 +2409,7 @@ function selecionarServico(el, servico){
 
 let tabComercial = 'prospec';
 let prospectos = [];
+let buscaLead = '';
 
 async function carregarProspectos(){
   try{
@@ -2916,8 +2917,13 @@ async function enviarPitch(){
 
 // ── FOLLOW-UP ───────────────────────────────────────────────────
 function renderFollowup(body){
-  const lista = prospectos.filter(p=>p.status==='followup');
+  const filtro = buscaLead.toLowerCase();
+  const lista = prospectos.filter(p=>p.status==='followup' && (!filtro || p.nome.toLowerCase().includes(filtro) || (p.empresa||'').toLowerCase().includes(filtro)));
   body.innerHTML = `
+    <div style="position:relative;margin-bottom:12px">
+      <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);opacity:0.35" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="lead-search-fu" value="${buscaLead.replace(/"/g,'&quot;')}" oninput="buscaLead=this.value;renderComercial()" placeholder="Buscar lead…" style="${inputStyle()}padding-left:30px;margin-bottom:0">
+    </div>
     <div style="font-size:10px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px">Aguardando follow-up (${lista.length})</div>
     ${lista.map(p=>`
       <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(245,158,11,0.18);border-radius:12px;padding:12px 13px;margin-bottom:8px">
@@ -2948,22 +2954,36 @@ function addNota(id){
 
 // ── REGISTROS ───────────────────────────────────────────────────
 function renderRegistros(body){
-  const todos = [...prospectos].sort((a,b)=>new Date(b.criado)-new Date(a.criado));
-  const statusCor = {prospecto:'#3D7BF5',followup:'#F59E0B',cliente:'#27C76E',perdido:'#EF4444'};
+  const statusCor = {prospecto:'#3D7BF5',followup:'#F59E0B',proposta:'#9333EA',cliente:'#27C76E',perdido:'#EF4444'};
+  const statusLabel = {prospecto:'Prospecção',followup:'Follow-up',proposta:'Proposta',cliente:'Fechado',perdido:'Perdido'};
+  const filtro = buscaLead.toLowerCase();
+  const todos = [...prospectos]
+    .filter(p=>!filtro || p.nome.toLowerCase().includes(filtro) || (p.empresa||'').toLowerCase().includes(filtro))
+    .sort((a,b)=>new Date(b.criado)-new Date(a.criado));
   body.innerHTML = `
-    <div style="font-size:10px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px">Todos os registros (${todos.length})</div>
+    <div style="position:relative;margin-bottom:12px">
+      <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);opacity:0.35" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="lead-search" value="${buscaLead.replace(/"/g,'&quot;')}" oninput="buscaLead=this.value;renderComercial()" placeholder="Buscar lead por nome ou empresa…" style="${inputStyle()}padding-left:30px;margin-bottom:0">
+    </div>
+    <div style="font-size:10px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px">Leads (${todos.length})</div>
     ${todos.map(p=>{
       const c = statusCor[p.status]||'#3D7BF5';
       const ult = p.registros?.[p.registros.length-1];
+      const etiqueta = p.etapa ? `<span style="font-size:9px;font-weight:600;padding:2px 7px;border-radius:20px;background:rgba(167,139,250,0.12);color:#A78BFA;margin-left:4px">${p.etapa}</span>` : '';
       return `<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px 13px;margin-bottom:8px;cursor:pointer" onclick="verRegistros('${p.id}')">
-        <div style="display:flex;align-items:center;justify-content:space-between">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px">
           <div style="font-size:13px;font-weight:700;color:#F0F0FF">${p.nome}</div>
-          <span style="font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:20px;background:${c}22;color:${c}">${p.status}</span>
+          <div style="display:flex;align-items:center;gap:4px">
+            ${etiqueta}
+            <span style="font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:20px;background:${c}22;color:${c}">${statusLabel[p.status]||p.status}</span>
+          </div>
         </div>
         <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:4px">${p.empresa||''}${ult?' · '+new Date(ult.data).toLocaleDateString('pt-BR'):''}</div>
       </div>`;
-    }).join('') || '<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.2);font-size:12.5px">Nenhum registro ainda</div>'}
+    }).join('') || '<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.2);font-size:12.5px">Nenhum lead encontrado</div>'}
   `;
+  // Restore focus on search if user was typing
+  if(filtro){ const el=document.getElementById('lead-search'); if(el){el.focus();el.setSelectionRange(el.value.length,el.value.length);} }
 }
 
 function verRegistros(id){
@@ -2971,21 +2991,54 @@ function verRegistros(id){
   if(!p) return;
   const body = document.getElementById('comercial-body');
   const regs = (p.registros||[]).slice().reverse();
+  const statusCor = {prospecto:'#3D7BF5',followup:'#F59E0B',proposta:'#9333EA',cliente:'#27C76E',perdido:'#EF4444'};
+  const statusLabel = {prospecto:'Prospecção',followup:'Follow-up',proposta:'Proposta',cliente:'Fechado',perdido:'Perdido'};
+  const etapas = ['App Agenda','Proposta','Tráfego Pago','Gestão de Redes','Outro'];
+  const estagios = ['prospecto','followup','proposta','cliente','perdido'];
   body.innerHTML = `
     <button onclick="setTabComercial('registros')" style="${btnSecStyle()}margin-bottom:14px;font-size:11px;padding:5px 10px">‹ Voltar</button>
     <div style="font-size:14px;font-weight:700;color:#F0F0FF;margin-bottom:2px">${p.nome}</div>
-    <div style="font-size:11.5px;color:rgba(255,255,255,0.4);margin-bottom:14px">${p.empresa||''} · ${p.contato||''}</div>
+    <div style="font-size:11.5px;color:rgba(255,255,255,0.4);margin-bottom:12px">${p.empresa||''} · ${p.contato||''}</div>
+
+    <div style="font-size:10px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">Estágio</div>
+    <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px">
+      ${estagios.map(e=>{
+        const sel = p.status===e;
+        const c = statusCor[e];
+        return `<button onclick="moverProspectoVer('${p.id}','${e}')" style="font-size:11px;padding:4px 11px;border-radius:20px;border:1px solid ${sel?c:'rgba(255,255,255,0.1)'};background:${sel?c+'22':'transparent'};color:${sel?c:'rgba(240,240,255,0.4)'};cursor:pointer;font-family:var(--font);transition:all .15s;font-weight:${sel?'700':'500'}">${statusLabel[e]}</button>`;
+      }).join('')}
+    </div>
+
+    <div style="font-size:10px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">Produto</div>
+    <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px" id="etapa-row-${p.id}">
+      ${etapas.map(e=>{
+        const sel=(p.etapa||'')===e;
+        return `<button onclick="setEtapa('${p.id}','${e}')" style="font-size:11px;padding:4px 11px;border-radius:20px;border:1px solid ${sel?'#A78BFA':'rgba(255,255,255,0.1)'};background:${sel?'rgba(167,139,250,0.15)':'transparent'};color:${sel?'#A78BFA':'rgba(240,240,255,0.4)'};cursor:pointer;font-family:var(--font);transition:all .15s;font-weight:${sel?'700':'500'}">${e}</button>`;
+      }).join('')}
+    </div>
+
     ${p.diag?`<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:12px;padding:10px 12px;font-size:12px;color:rgba(240,240,255,0.45);margin-bottom:14px">${p.diag}</div>`:''}
     <div style="font-size:10px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Histórico</div>
-    ${regs.map(r=>`
+    ${regs.length?regs.map(r=>`
       <div style="display:flex;gap:10px;margin-bottom:10px">
         <div style="width:1px;background:rgba(255,255,255,0.1);flex-shrink:0;margin-left:5px"></div>
         <div>
           <div style="font-size:10px;color:var(--ink3);margin-bottom:2px">${new Date(r.data).toLocaleDateString('pt-BR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</div>
           <div style="font-size:12.5px;color:rgba(240,240,255,0.8)">${r.nota}</div>
         </div>
-      </div>`).join('')}
+      </div>`).join(''):'<div style="color:rgba(255,255,255,0.2);font-size:12px;padding:8px 0">Nenhum registro ainda</div>'}
   `;
+}
+
+function moverProspectoVer(id, novoStatus){
+  const idx = prospectos.findIndex(p=>p.id===id);
+  if(idx<0) return;
+  prospectos[idx].status = novoStatus;
+  atualizarProspectoSB(prospectos[idx]);
+  // Rerender in place
+  verRegistros(id);
+  const labels = {prospecto:'Prospecção',followup:'Follow-up',proposta:'Proposta',cliente:'Fechado',perdido:'Perdido'};
+  toast(`Estágio: ${labels[novoStatus]}`,'ok');
 }
 
 

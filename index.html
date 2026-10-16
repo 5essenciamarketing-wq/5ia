@@ -53,6 +53,7 @@ body{
   display:grid;
   grid-template-columns:1fr 1fr 1fr;
   background:var(--bg);
+  padding-top:38px;
 }
 
 #toasts{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:6px;align-items:center;pointer-events:none;}
@@ -636,6 +637,103 @@ input:-webkit-autofill,input:-webkit-autofill:focus{
 </script>
 
 <div id="toasts"></div>
+
+<!-- WIDGET NOTÍCIAS -->
+<div id="news-bar" style="position:fixed;top:0;left:0;right:0;z-index:900;background:#0D0D1A;border-bottom:1px solid rgba(255,255,255,0.07);height:38px;overflow:hidden;display:flex;align-items:center;gap:0">
+  <div style="flex-shrink:0;padding:0 12px;font-size:10px;font-weight:700;color:rgba(255,255,255,0.3);letter-spacing:.08em;text-transform:uppercase;border-right:1px solid rgba(255,255,255,0.07);height:100%;display:flex;align-items:center;gap:6px">
+    <span style="color:#F59E0B">◈</span> RADAR
+  </div>
+  <div style="flex:1;overflow:hidden;position:relative">
+    <div id="news-ticker" style="display:flex;gap:0;white-space:nowrap;will-change:transform;transition:none"></div>
+  </div>
+</div>
+
+<style>
+#news-ticker .news-pill{
+  display:inline-flex;align-items:center;gap:8px;padding:0 14px;height:38px;border-right:1px solid rgba(255,255,255,0.05);cursor:pointer;transition:background .15s;flex-shrink:0
+}
+#news-ticker .news-pill:hover{background:rgba(255,255,255,0.05)}
+#news-ticker .news-pill .src{font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:1px 5px;border-radius:3px;flex-shrink:0}
+#news-ticker .news-pill .tit{font-size:11.5px;color:rgba(240,240,255,0.75);max-width:360px;overflow:hidden;text-overflow:ellipsis}
+#news-ticker .news-pill .use-btn{font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:4px;background:rgba(76,130,251,0.2);border:1px solid rgba(76,130,251,0.35);color:#4C82FB;cursor:pointer;flex-shrink:0;white-space:nowrap}
+#news-ticker .news-pill .use-btn:hover{background:rgba(76,130,251,0.35)}
+</style>
+
+<script>
+(function(){
+  const FEEDS = [
+    {url:'https://forbes.com.br/feed/',      cor:'#EF4444', label:'Forbes'},
+    {url:'https://exame.com/feed/',           cor:'#3D7BF5', label:'Exame'},
+    {url:'https://g4educacao.com/feed/',      cor:'#27C76E', label:'G4'},
+    {url:'https://g1.globo.com/rss/g1/economia/', cor:'#F59E0B', label:'G1 Econ'},
+  ];
+  const PROXY = 'https://api.rss2json.com/v1/api.json?rss_url=';
+  let allItems = [];
+  let tickPos  = 0;
+  let tickAnim = null;
+
+  async function loadFeed(f){
+    try{
+      const r = await fetch(PROXY + encodeURIComponent(f.url));
+      const d = await r.json();
+      return (d.items||[]).slice(0,6).map(i=>({title:i.title,link:i.link,src:f.label,cor:f.cor}));
+    }catch{ return []; }
+  }
+
+  function renderTicker(){
+    const tk = document.getElementById('news-ticker');
+    if(!tk||!allItems.length) return;
+    // duplica para loop contínuo
+    const items = [...allItems,...allItems];
+    tk.innerHTML = items.map((it,i)=>`
+      <div class="news-pill" onclick="window.open('${it.link}','_blank')">
+        <span class="src" style="background:${it.cor}22;color:${it.cor}">${it.src}</span>
+        <span class="tit">${it.title}</span>
+        <button class="use-btn" onclick="event.stopPropagation();usarNoticia('${encodeURIComponent(it.title)}','${encodeURIComponent(it.link)}')">▶ Usar</button>
+      </div>`).join('');
+    startTick();
+  }
+
+  function startTick(){
+    const tk = document.getElementById('news-ticker');
+    if(!tk) return;
+    if(tickAnim) cancelAnimationFrame(tickAnim);
+    const totalW = tk.scrollWidth / 2;
+    function step(){
+      tickPos += 0.4;
+      if(tickPos >= totalW) tickPos = 0;
+      tk.style.transform = `translateX(-${tickPos}px)`;
+      tickAnim = requestAnimationFrame(step);
+    }
+    tickAnim = requestAnimationFrame(step);
+  }
+
+  // pausa ao hover
+  document.addEventListener('DOMContentLoaded',()=>{
+    const bar = document.getElementById('news-bar');
+    if(bar){
+      bar.addEventListener('mouseenter',()=>{ if(tickAnim){ cancelAnimationFrame(tickAnim); tickAnim=null; } });
+      bar.addEventListener('mouseleave',()=>{ if(!tickAnim) startTick(); });
+    }
+    // carrega feeds
+    Promise.all(FEEDS.map(loadFeed)).then(results=>{
+      allItems = results.flat();
+      renderTicker();
+    });
+  });
+
+  window.usarNoticia = function(titulo, link){
+    const t = document.getElementById('em-topico');
+    const l = document.getElementById('em-link');
+    if(t) t.value = decodeURIComponent(titulo);
+    if(l) l.value = decodeURIComponent(link);
+    // Navega para aba de email marketing
+    const tabEmail = document.getElementById('tab-email');
+    if(tabEmail) tabEmail.click();
+    toast('Notícia carregada no Email Marketing!','ok');
+  };
+})();
+</script>
 
 <!-- COLUNA ESQUERDA -->
 <div id="col-ativ">
@@ -2568,8 +2666,8 @@ function prospectoCard(p){
     <div id="fu-${p.id}" style="display:none;margin-top:10px">
       <textarea id="fu-txt-${p.id}" rows="5" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(245,158,11,0.2);border-radius:9px;padding:10px;font-size:12.5px;color:rgba(240,240,255,0.85);line-height:1.65;resize:none;font-family:var(--font);outline:none"></textarea>
       <div style="display:flex;gap:7px;margin-top:7px">
-        ${wpp?`<a id="fu-wpp-${p.id}" href="#" target="_blank" onclick="registrarFollowUp('${p.id}')" style="${btnPriStyle()}flex:1;text-align:center;text-decoration:none;font-size:11.5px;padding:7px 10px">· Enviar no WhatsApp</a>`:''}
-        <button onclick="registrarFollowUp('${p.id}')" style="${btnSecStyle()}font-size:11px;padding:6px 10px">✓ Registrar</button>
+        ${wpp?`<button id="fu-wpp-${p.id}" onclick="enviarFollowUpZAPI('${p.id}')" style="${btnPriStyle()}flex:1;font-size:11.5px;padding:7px 10px">· Disparar no WhatsApp</button>`:''}
+        <button onclick="registrarFollowUp('${p.id}')" style="${btnSecStyle()}font-size:11px;padding:6px 10px">✓ Só registrar</button>
         <button onclick="document.getElementById('fu-${p.id}').style.display='none'" style="${btnSecStyle()}font-size:11px;padding:6px 10px">✕</button>
       </div>
     </div>
@@ -2587,12 +2685,19 @@ async function gerarFollowUp(id){
       method:'POST',
       headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY},
       body:JSON.stringify({
-        system:`Você é especialista em reengajamento de leads no WhatsApp para a 5essência Marketing.
+        system:`Você é especialista em reengajamento de leads no WhatsApp para a 5essência Marketing (agência de marketing digital).
 Crie uma mensagem de follow-up curta (máximo 5 linhas) para um lead que não respondeu o primeiro contato.
 Tom: leve, sem cobrar resposta, sem insistência agressiva. Transmita valor, deixe a porta aberta.
 Estratégias: nova prova social, novo ângulo do benefício, ou uma pergunta simples e genuína.
+IMPORTANTE: adapte o contexto ao serviço/etapa informado (ex: se é sobre agendamento, fale sobre agendar; se é sobre proposta, fale sobre a proposta; se é sobre tráfego pago, fale sobre resultados de anúncios).
 Sem asteriscos. Sem formalidade. Sem "Atenciosamente". Linguagem próxima e natural.`,
-        messages:[{role:'user',content:`Lead: ${p.nome}${p.empresa?' — '+p.empresa:''}\nDiagnóstico: ${p.diag||'sem diagnóstico registrado'}\nDias sem resposta: ${diasSemAtividade(p)}\n\nGere a mensagem de follow-up.`}]
+        messages:[{role:'user',content:`Lead: ${p.nome}${p.empresa?' — '+p.empresa:''}
+Etapa atual: ${p.etapa||p.status||'prospecção'}
+Diagnóstico/observações: ${p.diag||'sem diagnóstico registrado'}
+Último contato registrado: ${(p.registros||[]).slice(-1)[0]?.nota||'nenhum'}
+Dias sem resposta: ${diasSemAtividade(p)}
+
+Gere a mensagem de follow-up considerando o contexto acima.`}]
       })
     });
     const d = await r.json();
@@ -2600,14 +2705,40 @@ Sem asteriscos. Sem formalidade. Sem "Atenciosamente". Linguagem próxima e natu
 
     const area = document.getElementById(`fu-${id}`);
     const txt  = document.getElementById(`fu-txt-${id}`);
-    const wpp  = document.getElementById(`fu-wpp-${id}`);
     if(txt)  txt.value = msg;
-    if(wpp && p.contato) wpp.href = `https://wa.me/${p.contato.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`;
     if(area) area.style.display='block';
   }catch(e){
     toast('Erro ao gerar follow-up','er');
   }finally{
     if(btn){ btn.textContent='↩ Reengajar'; btn.disabled=false; }
+  }
+}
+
+async function enviarFollowUpZAPI(id){
+  const p = prospectos.find(x=>x.id===id);
+  if(!p||!p.contato) return;
+  const msg = document.getElementById(`fu-txt-${id}`)?.value.trim();
+  if(!msg){ toast('Mensagem vazia','er'); return; }
+  const btn = document.getElementById(`fu-wpp-${id}`);
+  if(btn){ btn.disabled=true; btn.textContent='Enviando…'; }
+  try{
+    const num = '55'+p.contato.replace(/\D/g,'');
+    const r = await fetch(`https://api.z-api.io/instances/${ZAPI_I}/token/${ZAPI_T}/send-text`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Client-Token':ZAPI_C},
+      body:JSON.stringify({phone:num,message:msg})
+    });
+    const d = await r.json();
+    if(d.zaapId||d.messageId||d.id){
+      toast('Follow-up enviado!','ok');
+      registrarFollowUp(id);
+    } else {
+      toast('Erro Z-API: '+(d.error||JSON.stringify(d)),'er');
+      if(btn){ btn.disabled=false; btn.textContent='· Disparar no WhatsApp'; }
+    }
+  }catch(e){
+    toast('Erro de conexão','er');
+    if(btn){ btn.disabled=false; btn.textContent='· Disparar no WhatsApp'; }
   }
 }
 

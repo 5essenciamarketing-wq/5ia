@@ -315,8 +315,22 @@ const SECOES = {
       }));
     }
     desenhar();
+    const gDias = {}; const gIni = h('input',{type:'time',value:'09:00'}), gFim = h('input',{type:'time',value:'17:00'}), gInt = h('input',{type:'number',value:60,min:10,step:5,inputmode:'numeric'});
+    const diasBox = h('div',{style:'display:flex;gap:10px;flex-wrap:wrap;margin:6px 0'}, DIAS.map(([d,nome]) => { const c = h('input',{type:'checkbox'}); c.checked = d>=1 && d<=5; gDias[d]=c; return h('label',{style:'display:flex;gap:6px;align-items:center;margin:0;font-weight:500'},c,nome.slice(0,3)); }));
+    const gerar = () => {
+      const [h1,m1] = gIni.value.split(':').map(Number), [h2,m2] = gFim.value.split(':').map(Number), passo = Number(gInt.value);
+      if(!gIni.value || !gFim.value || !(passo>=10)) { toast('Preencha início, fim e intervalo.'); return; }
+      const lista = []; for(let t=h1*60+m1; t<=h2*60+m2; t+=passo) lista.push(String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0'));
+      DIAS.forEach(([d]) => { if(gDias[d].checked) draft[d] = [...lista]; });
+      desenhar(); toast('Horários gerados. Ajuste o que precisar.');
+    };
+    const gerador = h('div',{class:'card',style:'background:var(--bg)'}, h('h3',{},'Gerar horários rapidamente'),
+      h('p',{style:'margin:0 0 4px'},'Marque os dias e defina o primeiro e o último horário de início. Depois ajuste um por um, se quiser.'), diasBox,
+      h('div',{class:'row'},h('div',{},h('label',{},'Primeiro horário'),gIni),h('div',{},h('label',{},'Último horário de início'),gFim)),
+      h('div',{style:'max-width:240px'},h('label',{},'A cada quantos minutos'),gInt),
+      h('div',{class:'actions'},h('button',{class:'btn sm',type:'button',onclick:gerar},'Gerar horários')));
     const copiar = h('button',{class:'btn sm ghost',type:'button',onclick:()=>{ const base = draft[1]; [2,3,4,5].forEach(d=>draft[d]=[...base]); desenhar(); toast('Horários de segunda copiados para terça a sexta'); }},'Copiar horários de segunda para terça–sexta');
-    const root = h('div',{}, h('div',{class:'actions',style:'margin:0 0 6px'},copiar), lista);
+    const root = h('div',{}, gerador, h('div',{class:'actions',style:'margin:0 0 6px'},copiar), lista);
     return { root, async salvar(){
       const rows = [];
       DIAS.forEach(([d]) => draft[d].forEach(hr => rows.push({ tenant_id:S.tenant.id, dia_semana:d, hora:hr })));
@@ -343,7 +357,12 @@ const SECOES = {
       }));
     }
     desenhar();
-    const root = h('div',{}, box, h('div',{class:'actions'},h('button',{class:'btn sm ghost',type:'button',onclick:()=>{itens.push({nome:'',categoria:itens.at(-1)?.categoria||'Serviços',duracao:60,preco:null,ativo:true});desenhar();}},'+ Adicionar serviço')),
+    const selModelo = h('select',{onchange:e=>{
+      const m = MODELOS[e.target.value]; if(!m) return;
+      if(itens.some(i=>(i.nome||'').trim()) && !confirm('Isso substitui os serviços que você já digitou. Continuar?')){ e.target.value=''; return; }
+      itens = m.map(([nome,min]) => ({ nome, categoria:'Serviços', duracao:min, preco:null, ativo:true })); desenhar(); toast('Modelo aplicado. Agora preencha os preços.'); e.target.value='';
+    }}, h('option',{value:''},'Escolher um modelo...'), Object.keys(MODELOS).map(k=>h('option',{value:k},k)));
+    const root = h('div',{}, h('div',{class:'card',style:'background:var(--bg)'}, h('label',{style:'margin-top:0'},'Começar de um modelo ',h('small',{},'— só nomes e durações. Os preços são seus.')), selModelo), box, h('div',{class:'actions'},h('button',{class:'btn sm ghost',type:'button',onclick:()=>{itens.push({nome:'',categoria:itens.at(-1)?.categoria||'Serviços',duracao:60,preco:null,ativo:true});desenhar();}},'+ Adicionar serviço')),
       h('p',{style:'margin-top:12px'},'Se um serviço ficar sem preço ou sem duração, a assistente encaminha o cliente para o seu WhatsApp em vez de inventar.'));
     return { root, async salvar(){
       const validos = itens.filter(i => (i.nome||'').trim());
@@ -476,6 +495,15 @@ const SECOES = {
       await salvarConfig({ tom_voz: v });
     }};
   }},
+};
+const MODELOS = {
+  'Salão de beleza': [['Corte feminino',60],['Escova',45],['Coloração',120],['Mechas',180],['Hidratação',60],['Manicure',45],['Pedicure',45]],
+  'Barbearia': [['Corte masculino',30],['Barba',30],['Corte + barba',60],['Sobrancelha',15]],
+  'Nail designer': [['Alongamento em gel',135],['Manutenção',105],['Esmaltação em gel',75],['Remoção',30],['Pedicure',60]],
+  'Estética e clínica': [['Avaliação',30],['Limpeza de pele',60],['Massagem relaxante',60],['Design de sobrancelhas',45],['Depilação',30]],
+  'Odontologia': [['Avaliação',30],['Limpeza',45],['Clareamento',60],['Restauração',45]],
+  'Psicologia e terapia': [['Primeira consulta',60],['Sessão',50]],
+  'Personal e estúdio': [['Aula experimental',45],['Treino individual',60]]
 };
 const ORDEM = ['negocio','horarios','servicos','bloqueios','visual','tom'];
 

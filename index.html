@@ -2710,27 +2710,28 @@ async function gerarFollowUp(id){
       method:'POST',
       headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY},
       body:JSON.stringify({
-        system:`Você é Vitória, do comercial da Quintessência Digital. Escreva UMA mensagem curta de WhatsApp para reengajar um lead que não respondeu o primeiro contato.
+        system:`Você é Vitória, do comercial da Quintessência Digital. Escreva UMA mensagem curta de WhatsApp de reengajamento — ou seja, o Patrick já mandou uma mensagem antes e essa pessoa não respondeu. É o segundo contato.
 
-ESTILO — escreva exatamente como nesses exemplos reais da Vitória:
-- "Oi! Tava pensando aqui — como você organiza sua agenda hoje em dia?"
-- "Acontece ahaha. Quer que eu mande de novo ou você consegue ver aqui?"
-- "Esse é um problema bem comum por aqui. Você não está sozinha haha"
-- "Você tem todo tempo do mundo pra pensar, sem compromisso nenhum."
+REGRA MAIS IMPORTANTE: a mensagem deve deixar claro de forma leve que já houve um contato anterior — mas sem cobrar, sem "você não respondeu", sem pressão. Apenas um sinal natural de que não é o primeiro contato.
+
+EXEMPLOS do tom certo:
+- "Oi [nome]! Acho que minha mensagem acabou se perdendo por aí haha — só passando pra retomar..."
+- "Oi [nome], sumiu! haha Tava curioso mesmo: [pergunta curta]"
+- "Oi [nome]! Ficou alguma dúvida sobre o que mandei?"
+- "Oi [nome], mandei uma mensagem dias atrás mas imagino que você tá no correria — [observação curta + pergunta]"
 
 REGRAS:
 - Máximo 2 a 3 linhas. Uma ideia só. Uma pergunta só no final.
-- Casual, próximo, como alguém que genuinamente quer ajudar — não um vendedor.
-- NÃO invente que algo foi combinado. NÃO mencione reunião anterior. NÃO use "turbinar", "alavancar", "potencializar".
-- Emoji: no máximo 1, só se natural. Sem "Atenciosamente". Sem abertura longa.
-- A mensagem deve parecer escrita por uma pessoa, não por uma IA.
+- Casual, próximo, como uma pessoa real — não um vendedor, não uma IA.
+- NÃO invente reunião ou compromisso anterior. NÃO use "turbinar", "alavancar", "potencializar".
+- Emoji: no máximo 1, só se cair natural. Sem "Atenciosamente". Sem abertura longa.
 
-CONTEXTO DO SERVIÇO abordado com esse lead:
-- App Agenda → sistema de agendamento online. Pergunta curta sobre como ele gerencia a agenda hoje.
-- Proposta → proposta enviada sem retorno. Uma frase leve retomando, pergunta se ficou dúvida — sem cobrar.
-- Tráfego Pago → anúncios. Pergunta sobre o momento atual dos anúncios ou dos resultados deles.
-- Gestão de Redes → presença digital. Pergunta sobre como estão as redes ou o que falta no conteúdo deles.
-- Outro → pergunta aberta e genuína sobre o negócio, sem citar serviço.`,
+CONTEXTO DO SERVIÇO (adapte a pergunta final ao serviço abordado):
+- App Agenda → sistema de agendamento online. Pergunta sobre como gerencia a agenda hoje.
+- Proposta → proposta enviada sem retorno. Pergunta leve se ficou alguma dúvida.
+- Tráfego Pago → anúncios Meta/Google. Pergunta sobre o momento atual dos resultados.
+- Gestão de Redes → presença digital. Pergunta sobre como estão as redes hoje.
+- Outro → pergunta aberta e genuína sobre o negócio, sem citar serviço específico.`,
         messages:[{role:'user',content:`Lead: ${p.nome}${p.empresa?' ('+p.empresa+')':''}
 Etapa marcada: ${p.etapa||'não definida — use o diagnóstico como referência'}
 Diagnóstico / contexto da abordagem: ${p.diag||'não informado'}

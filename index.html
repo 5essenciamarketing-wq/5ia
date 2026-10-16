@@ -2449,7 +2449,7 @@ async function atualizarProspectoSB(p){
     await fetch(`${SB_URL}/rest/v1/prospectos?id=eq.${p.id}`,{
       method:'PATCH',
       headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'},
-      body:JSON.stringify({status:p.status,registros:p.registros})
+      body:JSON.stringify({status:p.status,registros:p.registros,etapa:p.etapa||null})
     });
   }catch(e){}
 }
@@ -2655,7 +2655,14 @@ function prospectoCard(p){
         <span style="font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:20px;background:${c}22;color:${c}">${p.status}</span>
       </div>
     </div>
-    <div style="font-size:11.5px;color:rgba(240,240,255,0.35);margin-bottom:8px">${p.empresa||''}</div>
+    <div style="font-size:11.5px;color:rgba(240,240,255,0.35);margin-bottom:6px">${p.empresa||''}</div>
+    <!-- seletor de etapa -->
+    <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px" id="etapa-row-${p.id}">
+      ${['Agendamento','Proposta','Tráfego','Redes','Outro'].map(e=>{
+        const sel = (p.etapa||'')=== e;
+        return `<button onclick="setEtapa('${p.id}','${e}')" style="font-size:10px;padding:2px 8px;border-radius:20px;border:1px solid ${sel?'#A78BFA':'rgba(255,255,255,0.1)'};background:${sel?'rgba(167,139,250,0.15)':'transparent'};color:${sel?'#A78BFA':'rgba(240,240,255,0.4)'};cursor:pointer;font-family:var(--font);transition:all .15s">${e}</button>`;
+      }).join('')}
+    </div>
     <div style="display:flex;gap:6px;flex-wrap:wrap">
       <button onclick="moverProspecto('${p.id}','followup')" style="${btnSecStyle()}font-size:11px;padding:5px 10px">Follow-up</button>
       <button onclick="moverProspecto('${p.id}','cliente')" style="${btnSecStyle()}font-size:11px;padding:5px 10px;border-color:rgba(39,199,110,0.25);color:#27C76E">Fechou!</button>
@@ -2674,6 +2681,24 @@ function prospectoCard(p){
   </div>`;
 }
 
+function setEtapa(id, etapa){
+  const idx = prospectos.findIndex(x=>x.id===id);
+  if(idx===-1) return;
+  // toggle: clicar na etapa selecionada remove
+  prospectos[idx].etapa = prospectos[idx].etapa===etapa ? null : etapa;
+  atualizarProspectoSB(prospectos[idx]);
+  // redesenha só o seletor de etapa para não perder o estado do textarea
+  const row = document.getElementById(`etapa-row-${id}`);
+  if(row){
+    const p = prospectos[idx];
+    row.innerHTML = ['Agendamento','Proposta','Tráfego','Redes','Outro'].map(e=>{
+      const sel = (p.etapa||'')=== e;
+      return `<button onclick="setEtapa('${id}','${e}')" style="font-size:10px;padding:2px 8px;border-radius:20px;border:1px solid ${sel?'#A78BFA':'rgba(255,255,255,0.1)'};background:${sel?'rgba(167,139,250,0.15)':'transparent'};color:${sel?'#A78BFA':'rgba(240,240,255,0.4)'};cursor:pointer;font-family:var(--font);transition:all .15s">${e}</button>`;
+    }).join('');
+  }
+  toast(prospectos[idx].etapa ? `Etapa: ${prospectos[idx].etapa}` : 'Etapa removida','ok');
+}
+
 async function gerarFollowUp(id){
   const p = prospectos.find(x=>x.id===id);
   if(!p) return;
@@ -2685,25 +2710,26 @@ async function gerarFollowUp(id){
       method:'POST',
       headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY},
       body:JSON.stringify({
-        system:`Você é especialista em reengajamento de leads no WhatsApp para a 5essência Marketing (agência de marketing digital).
-Crie UMA mensagem de follow-up curta (máximo 5 linhas) para um lead que não respondeu.
-Tom: leve, sem cobrar resposta, sem insistência. Transmita valor, deixe a porta aberta.
-Estratégia: use o diagnóstico/serviço descrito para dar contexto relevante — fale sobre o que foi abordado.
-REGRAS:
-- Se o diagnóstico menciona agendamento → fale sobre marcar uma conversa
-- Se menciona proposta ou orçamento → retome o valor da proposta
-- Se menciona tráfego pago/anúncios → fale sobre resultados ou oportunidade
-- Se menciona gestão de redes → aborde o serviço de redes
-- Se não houver diagnóstico → faça uma pergunta genuína sobre o negócio deles
-Sem asteriscos. Sem formalidade. Sem "Atenciosamente". Primeira pessoa, linguagem próxima.`,
-        messages:[{role:'user',content:`Lead: ${p.nome}${p.empresa?' ('+p.empresa+')':''}
-O que foi abordado / diagnóstico: ${p.diag||'não informado'}
-Estágio no funil: ${p.status==='followup'?'aguardando retorno (follow-up)':'em prospecção inicial'}
-Histórico de contatos:
-${(p.registros||[]).slice(-3).map(r=>`- ${r.nota}`).join('\n')||'- nenhum registro'}
-Dias sem atividade: ${diasSemAtividade(p)}
+        system:`Você é Vitória, especialista em reengajamento de leads no WhatsApp da Quintessência Digital (agência de marketing digital).
+Crie UMA mensagem curta de follow-up (máximo 5 linhas) para um lead que não respondeu.
+Tom: leve, próximo, sem cobrar resposta, sem insistência. Transmita valor, deixe a porta aberta.
 
-Com base no que foi abordado acima, gere uma mensagem de reengajamento pertinente ao contexto real desse lead.`}]
+ETAPA DO LEAD (use isso como fio condutor da mensagem):
+- Agendamento → foque em marcar uma conversa rápida, 15 minutos
+- Proposta → retome o valor da proposta enviada, pergunte se ficou alguma dúvida
+- Tráfego → fale sobre resultados de anúncios ou oportunidade de campanha
+- Redes → fale sobre presença digital, engajamento ou conteúdo
+- Outro → faça uma pergunta genuína e simples sobre o negócio deles
+
+Sem asteriscos. Sem formalidade. Sem "Atenciosamente". Primeira pessoa, linguagem natural.`,
+        messages:[{role:'user',content:`Lead: ${p.nome}${p.empresa?' ('+p.empresa+')':''}
+Etapa marcada: ${p.etapa||'não definida — use o diagnóstico como referência'}
+Diagnóstico / contexto da abordagem: ${p.diag||'não informado'}
+Últimos contatos:
+${(p.registros||[]).slice(-3).map(r=>`- ${r.nota}`).join('\n')||'- nenhum registro'}
+Dias sem resposta: ${diasSemAtividade(p)}
+
+Gere a mensagem de reengajamento considerando a etapa marcada acima.`}]
       })
     });
     const d = await r.json();

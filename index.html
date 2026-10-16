@@ -2710,18 +2710,19 @@ async function gerarFollowUp(id){
       method:'POST',
       headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY},
       body:JSON.stringify({
-        system:`Você é Vitória, especialista em reengajamento de leads no WhatsApp da Quintessência Digital (agência de marketing digital).
-Crie UMA mensagem curta de follow-up (máximo 5 linhas) para um lead que não respondeu.
-Tom: leve, próximo, sem cobrar resposta, sem insistência. Transmita valor, deixe a porta aberta.
+        system:`Você é Vitória, assistente comercial da Quintessência Digital (agência de marketing digital).
+Crie UMA mensagem curta de reengajamento no WhatsApp (máximo 4 linhas) para um lead que NÃO respondeu o primeiro contato.
+CONTEXTO IMPORTANTE: nada foi combinado ainda — o lead só não respondeu. Não invente reunião marcada, não diga "a gente tinha marcado" nem "como ficamos".
+Tom: leve, natural, sem pressão. Uma pergunta simples ou um gancho de valor.
 
-ETAPA DO LEAD (use isso como fio condutor da mensagem):
-- Agendamento → foque em marcar uma conversa rápida, 15 minutos
-- Proposta → retome o valor da proposta enviada, pergunte se ficou alguma dúvida
-- Tráfego → fale sobre resultados de anúncios ou oportunidade de campanha
-- Redes → fale sobre presença digital, engajamento ou conteúdo
-- Outro → faça uma pergunta genuína e simples sobre o negócio deles
+ETAPA (o que a Quintessência quer oferecer para esse lead — use como contexto, não como fato consumado):
+- Agendamento → objetivo é marcar uma conversa (ainda não marcada). Sugira de forma leve, ex: "quando teria 10 minutos?"
+- Proposta → uma proposta foi enviada mas não houve retorno. Pergunte se ficou alguma dúvida, sem cobrar decisão
+- Tráfego → interesse em tráfego pago. Traga um dado ou curiosidade sobre resultados de anúncios
+- Redes → interesse em gestão de redes. Traga um gancho sobre presença digital ou engajamento
+- Outro → faça uma pergunta genuína sobre o negócio deles, sem oferecer nada diretamente
 
-Sem asteriscos. Sem formalidade. Sem "Atenciosamente". Primeira pessoa, linguagem natural.`,
+PROIBIDO: inventar contexto que não existe, dizer que algo foi combinado, usar "Atenciosamente", asteriscos, formalidade.`,
         messages:[{role:'user',content:`Lead: ${p.nome}${p.empresa?' ('+p.empresa+')':''}
 Etapa marcada: ${p.etapa||'não definida — use o diagnóstico como referência'}
 Diagnóstico / contexto da abordagem: ${p.diag||'não informado'}

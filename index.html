@@ -2658,7 +2658,7 @@ function prospectoCard(p){
     <div style="font-size:11.5px;color:rgba(240,240,255,0.35);margin-bottom:6px">${p.empresa||''}</div>
     <!-- seletor de etapa -->
     <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px" id="etapa-row-${p.id}">
-      ${['Agendamento','Proposta','Tráfego','Redes','Outro'].map(e=>{
+      ${['App Agenda','Proposta','Tráfego Pago','Gestão de Redes','Outro'].map(e=>{
         const sel = (p.etapa||'')=== e;
         return `<button onclick="setEtapa('${p.id}','${e}')" style="font-size:10px;padding:2px 8px;border-radius:20px;border:1px solid ${sel?'#A78BFA':'rgba(255,255,255,0.1)'};background:${sel?'rgba(167,139,250,0.15)':'transparent'};color:${sel?'#A78BFA':'rgba(240,240,255,0.4)'};cursor:pointer;font-family:var(--font);transition:all .15s">${e}</button>`;
       }).join('')}
@@ -2691,7 +2691,7 @@ function setEtapa(id, etapa){
   const row = document.getElementById(`etapa-row-${id}`);
   if(row){
     const p = prospectos[idx];
-    row.innerHTML = ['Agendamento','Proposta','Tráfego','Redes','Outro'].map(e=>{
+    row.innerHTML = ['App Agenda','Proposta','Tráfego Pago','Gestão de Redes','Outro'].map(e=>{
       const sel = (p.etapa||'')=== e;
       return `<button onclick="setEtapa('${id}','${e}')" style="font-size:10px;padding:2px 8px;border-radius:20px;border:1px solid ${sel?'#A78BFA':'rgba(255,255,255,0.1)'};background:${sel?'rgba(167,139,250,0.15)':'transparent'};color:${sel?'#A78BFA':'rgba(240,240,255,0.4)'};cursor:pointer;font-family:var(--font);transition:all .15s">${e}</button>`;
     }).join('');
@@ -2710,19 +2710,27 @@ async function gerarFollowUp(id){
       method:'POST',
       headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY},
       body:JSON.stringify({
-        system:`Você é Vitória, assistente comercial da Quintessência Digital (agência de marketing digital).
-Crie UMA mensagem curta de reengajamento no WhatsApp (máximo 4 linhas) para um lead que NÃO respondeu o primeiro contato.
-CONTEXTO IMPORTANTE: nada foi combinado ainda — o lead só não respondeu. Não invente reunião marcada, não diga "a gente tinha marcado" nem "como ficamos".
-Tom: leve, natural, sem pressão. Uma pergunta simples ou um gancho de valor.
+        system:`Você é Vitória, do comercial da Quintessência Digital. Escreva UMA mensagem curta de WhatsApp para reengajar um lead que não respondeu o primeiro contato.
 
-ETAPA (o que a Quintessência quer oferecer para esse lead — use como contexto, não como fato consumado):
-- Agendamento → objetivo é marcar uma conversa (ainda não marcada). Sugira de forma leve, ex: "quando teria 10 minutos?"
-- Proposta → uma proposta foi enviada mas não houve retorno. Pergunte se ficou alguma dúvida, sem cobrar decisão
-- Tráfego → interesse em tráfego pago. Traga um dado ou curiosidade sobre resultados de anúncios
-- Redes → interesse em gestão de redes. Traga um gancho sobre presença digital ou engajamento
-- Outro → faça uma pergunta genuína sobre o negócio deles, sem oferecer nada diretamente
+ESTILO — escreva exatamente como nesses exemplos reais da Vitória:
+- "Oi! Tava pensando aqui — como você organiza sua agenda hoje em dia?"
+- "Acontece ahaha. Quer que eu mande de novo ou você consegue ver aqui?"
+- "Esse é um problema bem comum por aqui. Você não está sozinha haha"
+- "Você tem todo tempo do mundo pra pensar, sem compromisso nenhum."
 
-PROIBIDO: inventar contexto que não existe, dizer que algo foi combinado, usar "Atenciosamente", asteriscos, formalidade.`,
+REGRAS:
+- Máximo 2 a 3 linhas. Uma ideia só. Uma pergunta só no final.
+- Casual, próximo, como alguém que genuinamente quer ajudar — não um vendedor.
+- NÃO invente que algo foi combinado. NÃO mencione reunião anterior. NÃO use "turbinar", "alavancar", "potencializar".
+- Emoji: no máximo 1, só se natural. Sem "Atenciosamente". Sem abertura longa.
+- A mensagem deve parecer escrita por uma pessoa, não por uma IA.
+
+CONTEXTO DO SERVIÇO abordado com esse lead:
+- App Agenda → sistema de agendamento online. Pergunta curta sobre como ele gerencia a agenda hoje.
+- Proposta → proposta enviada sem retorno. Uma frase leve retomando, pergunta se ficou dúvida — sem cobrar.
+- Tráfego Pago → anúncios. Pergunta sobre o momento atual dos anúncios ou dos resultados deles.
+- Gestão de Redes → presença digital. Pergunta sobre como estão as redes ou o que falta no conteúdo deles.
+- Outro → pergunta aberta e genuína sobre o negócio, sem citar serviço.`,
         messages:[{role:'user',content:`Lead: ${p.nome}${p.empresa?' ('+p.empresa+')':''}
 Etapa marcada: ${p.etapa||'não definida — use o diagnóstico como referência'}
 Diagnóstico / contexto da abordagem: ${p.diag||'não informado'}

@@ -262,7 +262,7 @@ function viewAuth(){
 
   $app.replaceChildren(h('div',{class:'auth'},
     h('img',{class:'logo-big',src:LOGO_FULL,alt:'Numen'}),
-    h('p',{style:'text-align:center'}, EMBED ? 'Área da profissional. Entre para configurar o atendimento e acompanhar a agenda.' : 'Sistema inteligente de agendamento e gestão na nuvem. Monte o seu em minutos: a assistente conversa com seus clientes e marca os horários sozinha.'),
+    h('p',{style:'text-align:center'}, 'Sistema inteligente de agendamento e gestão na nuvem'),
     h('div',{class:'card'},
       EMBED ? null : h('div',{class:'tabs'},tEntrar,tCriar),
       h('label',{},'E-mail'),email,
@@ -912,7 +912,7 @@ function topbar(){
   return h('div',{class:'topbar'}, h('div',{class:'logo'},h('img',{src:LOGO_NUVEM,alt:''}),'Numen'),
     h('div',{style:'display:flex;gap:10px;align-items:center'}, S.isAdmin && !EMBED ? h('button',{class:'btn sm ghost',type:'button',onclick:()=>{ S.adminLista=true; S.adminEditando=false; render(); }},'Todos os negócios') : null,
       S.user ? h('span',{style:'font-size:.85rem;color:var(--muted)'}, S.user.email) : null,
-      S.user ? h('button',{class:'btn sm ghost',type:'button',onclick:async()=>{ await sb.auth.signOut(); }},'Sair') : null,
+      S.user ? h('button',{class:'btn sm ghost',type:'button',onclick:sair},'Sair') : null,
       EMBED ? h('button',{class:'btn sm',type:'button',onclick:()=>parent.postMessage({type:'numen-fechar'},'*')},'Voltar ao atendimento') : null));
 }
 
@@ -921,9 +921,15 @@ function viewSemAcesso(){
   $app.replaceChildren(topbar(), h('div',{class:'auth'}, h('div',{class:'card'},
     h('h3',{},'Acesso não liberado'),
     h('p',{},'Esta conta não é a dona deste atendimento. Entre com o e-mail e a senha que você criou no painel de configuração.'),
-    h('div',{class:'actions'}, h('button',{class:'btn ghost',type:'button',onclick:()=>sb.auth.signOut()},'Entrar com outro e-mail')))));
+    h('div',{class:'actions'}, h('button',{class:'btn ghost',type:'button',onclick:sair},'Entrar com outro e-mail')))));
 }
 
+async function sair(){
+  try{ await sb.auth.signOut({ scope:'local' }); }catch(e){}
+  try{ Object.keys(localStorage).filter(k=>/^sb-.*auth/.test(k)).forEach(k=>localStorage.removeItem(k)); }catch(e){}
+  S.user=null; S.tenant=null; S.wizard=false; S.carregado=false; S.isAdmin=false; S.adminLista=false;
+  render();
+}
 function render(){
   if(!S.user) return viewAuth();
   if(EMBED){

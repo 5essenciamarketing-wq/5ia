@@ -2686,18 +2686,24 @@ async function gerarFollowUp(id){
       headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY},
       body:JSON.stringify({
         system:`Você é especialista em reengajamento de leads no WhatsApp para a 5essência Marketing (agência de marketing digital).
-Crie uma mensagem de follow-up curta (máximo 5 linhas) para um lead que não respondeu o primeiro contato.
-Tom: leve, sem cobrar resposta, sem insistência agressiva. Transmita valor, deixe a porta aberta.
-Estratégias: nova prova social, novo ângulo do benefício, ou uma pergunta simples e genuína.
-IMPORTANTE: adapte o contexto ao serviço/etapa informado (ex: se é sobre agendamento, fale sobre agendar; se é sobre proposta, fale sobre a proposta; se é sobre tráfego pago, fale sobre resultados de anúncios).
-Sem asteriscos. Sem formalidade. Sem "Atenciosamente". Linguagem próxima e natural.`,
-        messages:[{role:'user',content:`Lead: ${p.nome}${p.empresa?' — '+p.empresa:''}
-Etapa atual: ${p.etapa||p.status||'prospecção'}
-Diagnóstico/observações: ${p.diag||'sem diagnóstico registrado'}
-Último contato registrado: ${(p.registros||[]).slice(-1)[0]?.nota||'nenhum'}
-Dias sem resposta: ${diasSemAtividade(p)}
+Crie UMA mensagem de follow-up curta (máximo 5 linhas) para um lead que não respondeu.
+Tom: leve, sem cobrar resposta, sem insistência. Transmita valor, deixe a porta aberta.
+Estratégia: use o diagnóstico/serviço descrito para dar contexto relevante — fale sobre o que foi abordado.
+REGRAS:
+- Se o diagnóstico menciona agendamento → fale sobre marcar uma conversa
+- Se menciona proposta ou orçamento → retome o valor da proposta
+- Se menciona tráfego pago/anúncios → fale sobre resultados ou oportunidade
+- Se menciona gestão de redes → aborde o serviço de redes
+- Se não houver diagnóstico → faça uma pergunta genuína sobre o negócio deles
+Sem asteriscos. Sem formalidade. Sem "Atenciosamente". Primeira pessoa, linguagem próxima.`,
+        messages:[{role:'user',content:`Lead: ${p.nome}${p.empresa?' ('+p.empresa+')':''}
+O que foi abordado / diagnóstico: ${p.diag||'não informado'}
+Estágio no funil: ${p.status==='followup'?'aguardando retorno (follow-up)':'em prospecção inicial'}
+Histórico de contatos:
+${(p.registros||[]).slice(-3).map(r=>`- ${r.nota}`).join('\n')||'- nenhum registro'}
+Dias sem atividade: ${diasSemAtividade(p)}
 
-Gere a mensagem de follow-up considerando o contexto acima.`}]
+Com base no que foi abordado acima, gere uma mensagem de reengajamento pertinente ao contexto real desse lead.`}]
       })
     });
     const d = await r.json();

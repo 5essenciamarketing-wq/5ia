@@ -2831,7 +2831,7 @@ async function gerarPitchProspec(){
     });
     const d = await r.json();
     pitchEl.value = d.resposta||'Não consegui gerar.';
-    sendBtn.style.display = 'block';
+    // textarea already visible
   }catch(e){
     pitchEl.value = 'Erro de conexão.';
   }
@@ -2844,18 +2844,21 @@ function salvarProspecto(){
   const diag    = document.getElementById('pr-diag')?.value.trim()||'';
   if(!nome){ toast('Preencha o nome','er'); return; }
 
+  const pitch = document.getElementById('pr-pitch')?.value.trim()||'';
+  const registrosIniciais = [{data: new Date().toISOString(), tipo:'criação', nota:'Prospecto adicionado.'}];
+  if(pitch) registrosIniciais.push({data: new Date().toISOString(), tipo:'contato', nota:'Mensagem: '+pitch});
   const novo = {
     id: Date.now().toString(),
     nome, empresa, contato, diag,
     status: 'prospecto',
+    etapa: servicoSelecionado||null,
     criado: new Date().toISOString(),
-    registros: [{data: new Date().toISOString(), tipo:'criação', nota:'Prospecto adicionado.'}]
+    registros: registrosIniciais
   };
   prospectos.unshift(novo);
   salvarProspectoSB(novo);
   ['pr-nome','pr-empresa','pr-contato','pr-diag'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
-  document.getElementById('pr-pitch').style.display='none';
-  document.getElementById('pr-pitch-send').style.display='none';
+  document.getElementById('pr-pitch').value='';
   renderComercial();
   toast('Prospecto salvo!');
 }
@@ -2876,8 +2879,8 @@ async function enviarPitch(){
   const pitch   = document.getElementById('pr-pitch')?.value||'';
   if(!contato){ toast('Preencha o WhatsApp do lead','er'); return; }
   const num = '55'+contato.replace(/\D/g,'');
-  const btn = document.getElementById('pr-pitch-send');
-  btn.disabled=true; btn.textContent='Enviando…';
+  const btn = document.querySelector('[onclick="enviarPitch()"]');
+  if(btn){ btn.disabled=true; btn.textContent='Enviando…'; }
 
   try{
     // 1. Envia o texto
@@ -2896,9 +2899,9 @@ async function enviarPitch(){
     }
 
     if(r1.zaapId||r1.messageId||r1.id){
-      btn.textContent = enviarVideo ? 'Mensagem + vídeo enviados!' : 'Enviado!';
+      if(btn){ btn.textContent = enviarVideo ? 'Mensagem + vídeo enviados!' : 'Enviado!';
       btn.style.background='rgba(45,212,122,0.15)';
-      btn.style.color='var(--green)';
+      btn.style.color='var(--green)'; }
       toast(enviarVideo ? '· Pitch + vídeo enviados!' : 'Pitch enviado!');
       // Registra "contato enviado" no prospecto correspondente
       const numLimpo = contato.replace(/\D/g,'');
@@ -2909,7 +2912,7 @@ async function enviarPitch(){
         atualizarProspectoSB(prospectos[idx]);
       }
     } else {
-      btn.textContent='Erro ao enviar'; btn.disabled=false;
+      btn.textContent='Erro ao enviar'; if(btn) btn.disabled=false;
     }
   }catch(e){ btn.textContent='Erro de conexão'; btn.disabled=false; }
 }

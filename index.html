@@ -2585,12 +2585,13 @@ function renderProspec(body){
         <div id="video-dot" style="width:14px;height:14px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.2);flex-shrink:0;transition:all 0.15s"></div>
         <span style="font-size:12px;font-weight:600;color:rgba(240,240,255,0.5)">Enviar vídeo de apresentação junto</span>
       </div>
-      <div style="display:flex;gap:7px">
-        <button onclick="gerarPitchProspec()" style="${btnSecStyle()}flex:1">Gerar pitch</button>
-        <button onclick="salvarProspecto()" style="${btnPriStyle()}flex:1">+ Salvar</button>
+      <div style="font-size:10px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">Mensagem de abordagem</div>
+      <textarea id="pr-pitch" rows="5" placeholder="Escreva sua mensagem de abordagem aqui… ou clique em Sugerir para a IA gerar uma base." style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.10);border-radius:10px;padding:12px;font-size:12.5px;color:rgba(240,240,255,0.85);line-height:1.65;resize:none;height:130px;font-family:var(--font);outline:none;display:block;margin-bottom:8px"></textarea>
+      <div style="display:flex;gap:7px;flex-wrap:wrap">
+        <button onclick="enviarPitch()" style="${btnPriStyle()}flex:1">· Salvar e enviar WhatsApp</button>
+        <button onclick="salvarProspecto()" style="${btnSecStyle()}flex:1">+ Só salvar</button>
+        <button onclick="gerarPitchProspec()" style="${btnSecStyle()}font-size:11px;padding:6px 10px;color:rgba(240,240,255,0.4);border-color:rgba(255,255,255,0.07)" title="Deixar a IA sugerir uma mensagem">✦ Sugerir</button>
       </div>
-      <textarea id="pr-pitch" style="display:none;margin-top:10px;width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.10);border-radius:10px;padding:12px;font-size:12.5px;color:rgba(240,240,255,0.85);line-height:1.65;resize:none;height:160px;font-family:var(--font);outline:none"></textarea>
-      <button id="pr-pitch-send" onclick="enviarPitch()" style="display:none;width:100%;margin-top:8px;${btnPriStyle()}">· Enviar via WhatsApp</button>
     </div>
 
     <div id="prospec-lista-wrap">${renderProspecLista()}</div>
@@ -2817,9 +2818,7 @@ async function gerarPitchProspec(){
   if(!diag){ toast('Escreva o diagnóstico primeiro','er'); return; }
 
   const pitchEl = document.getElementById('pr-pitch');
-  const sendBtn = document.getElementById('pr-pitch-send');
-  pitchEl.style.display='block';
-  pitchEl.value='Gerando pitch…';
+  pitchEl.value='Gerando sugestão…';
 
   try{
     const r = await fetch(`${SB_URL}/functions/v1/chat-assistant`,{

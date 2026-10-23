@@ -757,13 +757,16 @@ input:-webkit-autofill,input:-webkit-autofill:focus{
   });
 
   window.usarNoticia = function(titulo, link){
-    const t = document.getElementById('em-topico');
-    const l = document.getElementById('em-link');
-    if(t) t.value = titulo;
-    if(l) l.value = link;
+    localStorage.removeItem('em_auto_topico');
     const tabEmail = document.getElementById('tab-email');
     if(tabEmail) tabEmail.click();
-    if(typeof toast === 'function') toast('Notícia carregada no Email Marketing!','ok');
+    setTimeout(function(){
+      const t = document.getElementById('em-topico');
+      const l = document.getElementById('em-link');
+      if(t){ t.value = titulo; }
+      if(l){ l.value = link||''; }
+      if(typeof toast === 'function') toast('Notícia carregada no Email Marketing!','ok');
+    }, 80);
   };
 })();
 </script>

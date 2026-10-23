@@ -964,6 +964,7 @@ input:-webkit-autofill,input:-webkit-autofill:focus{
       <button onclick="setTabComercial('followup')" id="tab-followup" class="modo-tab">Follow-up</button>
       <button onclick="setTabComercial('pipeline')" id="tab-pipeline" class="modo-tab">Pipeline</button>
       <button onclick="setTabComercial('registros')" id="tab-registros" class="modo-tab">Registros</button>
+      <button onclick="setTabComercial('intel')" id="tab-intel" class="modo-tab">🔍 Intel</button>
       <button onclick="setTabComercial('email')" id="tab-email" class="modo-tab">✉ E-mail</button>
     </div>
   </div>
@@ -2502,7 +2503,7 @@ function toggleComercial(){
 
 function setTabComercial(tab){
   tabComercial = tab;
-  ['prospec','followup','pipeline','registros'].forEach(t=>{
+  ['prospec','followup','pipeline','registros','intel','email'].forEach(t=>{
     const el = document.getElementById('tab-'+t);
     if(!el) return;
     if(t===tab){
@@ -2529,6 +2530,7 @@ function renderComercial(){
   if(tabComercial==='followup')  renderFollowup(body);
   if(tabComercial==='pipeline')  renderPipeline(body);
   if(tabComercial==='registros') renderRegistros(body);
+  if(tabComercial==='intel')     renderIntel(body);
   if(tabComercial==='email')     renderEmailMarketing(body);
 }
 
@@ -3767,6 +3769,388 @@ function mobileNav(aba){
     render();
   };
   if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',render);}else{render();}
+})();
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     MÓDULO: INTELIGÊNCIA COMERCIAL B2B
+     Tabela Supabase necessária (rodar no SQL Editor do Supabase):
+
+     CREATE TABLE IF NOT EXISTS prospeccao_intel (
+       id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+       place_id TEXT UNIQUE,
+       nome TEXT NOT NULL,
+       empresa TEXT,
+       segmento TEXT,
+       cidade TEXT,
+       endereco TEXT,
+       telefone TEXT,
+       website TEXT,
+       google_rating NUMERIC,
+       google_reviews INT,
+       google_url TEXT,
+       instagram_handle TEXT,
+       instagram_url TEXT,
+       instagram_followers INT,
+       score INT DEFAULT 0,
+       oportunidades TEXT,
+       servicos_rec TEXT,
+       status TEXT DEFAULT 'novo',
+       fonte JSONB,
+       criado TIMESTAMPTZ DEFAULT now()
+     );
+     ALTER TABLE prospeccao_intel ENABLE ROW LEVEL SECURITY;
+     CREATE POLICY "anon_all" ON prospeccao_intel FOR ALL USING (true) WITH CHECK (true);
+═══════════════════════════════════════════════════════════════ -->
+
+<script>
+// ── INTELIGÊNCIA COMERCIAL B2B ──────────────────────────────────
+(function(){
+
+var intelResultados = [];
+var intelBuscando   = false;
+
+// ── Carrega Google Maps Places JS dinamicamente ─────────────────
+function carregarGMaps(apiKey){
+  return new Promise(function(resolve, reject){
+    if(window.google && window.google.maps && window.google.maps.places){ resolve(); return; }
+    var s = document.createElement('script');
+    s.src = 'https://maps.googleapis.com/maps/api/js?key='+encodeURIComponent(apiKey)+'&libraries=places&language=pt-BR';
+    s.async = true;
+    s.onload  = resolve;
+    s.onerror = function(){ reject(new Error('Chave Google inválida ou sem billing ativo')); };
+    document.head.appendChild(s);
+  });
+}
+
+// ── Deduplicar pela tabela Supabase ─────────────────────────────
+async function placeIdsExistentes(){
+  try{
+    var r = await fetch(SB_URL+'/rest/v1/prospeccao_intel?select=place_id',
+      {headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY}});
+    var arr = await r.json();
+    return (arr||[]).map(function(x){ return x.place_id; });
+  }catch(e){ return []; }
+}
+
+// ── Normalizar slug para busca Instagram ─────────────────────────
+function slugify(s){
+  return (s||'').toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g,'')
+    .replace(/[^a-z0-9]/g,'');
+}
+
+// ── Busca Instagram via Apify ───────────────────────────────────
+async function buscarInstagramLote(empresas, apifyToken){
+  try{
+    var usernames = empresas.map(function(e){ return slugify(e.nome); }).slice(0,15);
+    var run = await fetch(
+      'https://api.apify.com/v2/acts/apify~instagram-profile-scraper/run-sync-get-dataset-items?token='+apifyToken+'&timeout=90',
+      {method:'POST', headers:{'Content-Type':'application/json'},
+       body:JSON.stringify({usernames:usernames, proxy:{useApifyProxy:true}})
+      }
+    );
+    if(!run.ok) return;
+    var profiles = await run.json();
+    if(!Array.isArray(profiles)) return;
+    profiles.forEach(function(prof){
+      var slug = prof.username||'';
+      var emp  = empresas.find(function(e){ return slugify(e.nome)===slug; });
+      if(emp && prof.followersCount){
+        emp.instagram_handle    = prof.username;
+        emp.instagram_url       = 'https://instagram.com/'+prof.username;
+        emp.instagram_followers = prof.followersCount||0;
+        emp.fonte.apify         = true;
+      }
+    });
+  }catch(e){ console.warn('Apify:', e.message); }
+}
+
+// ── Score IA via chat-assistant existente ───────────────────────
+async function scoreUmaEmpresa(emp){
+  try{
+    var prompt = 'Você é um especialista em marketing digital B2B. Analise e retorne SOMENTE JSON:\n'
+      +'{"score":0-100,"oportunidades":"2-3 linhas sobre oportunidades de marketing","servicos":["serviço1","serviço2"]}\n\n'
+      +'Empresa: '+emp.nome+'\nSegmento: '+emp.segmento+'\nCidade: '+emp.cidade
+      +'\nWebsite: '+(emp.website||'sem website')
+      +'\nGoogle: '+(emp.google_rating?emp.google_rating+' estrelas ('+emp.google_reviews+' avaliações)':'sem avaliações')
+      +'\nInstagram: '+(emp.instagram_handle?'@'+emp.instagram_handle+' – '+(emp.instagram_followers||0)+' seguidores':'não encontrado');
+
+    var r = await fetch(SB_URL+'/functions/v1/chat-assistant',{
+      method:'POST',
+      headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json'},
+      body:JSON.stringify({message:prompt})
+    });
+    if(!r.ok) return;
+    var data = await r.json();
+    var text = data.reply||data.message||data.content||'';
+    var m = text.match(/\{[\s\S]*?\}/);
+    if(m){
+      var json = JSON.parse(m[0]);
+      emp.score         = Math.max(0,Math.min(100, parseInt(json.score)||0));
+      emp.oportunidades = json.oportunidades||'';
+      emp.servicos_rec  = (json.servicos||[]).join(', ');
+    }
+  }catch(e){ emp.score=50; emp.oportunidades='Análise indisponível'; }
+}
+
+async function scoreEmLote(empresas){
+  for(var i=0; i<empresas.length; i+=3){
+    var lote = empresas.slice(i,i+3);
+    await Promise.all(lote.map(scoreUmaEmpresa));
+    await new Promise(function(r){ setTimeout(r,600); });
+  }
+}
+
+// ── Salvar na tabela Supabase ───────────────────────────────────
+async function salvarIntelSB(emp){
+  try{
+    await fetch(SB_URL+'/rest/v1/prospeccao_intel',{
+      method:'POST',
+      headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},
+      body:JSON.stringify(emp)
+    });
+  }catch(e){}
+}
+
+// ── Adicionar empresa ao pipeline de prospecção ─────────────────
+window.adicionarAoPipelineIntel = async function(placeId){
+  var e = intelResultados.find(function(x){ return x.place_id===placeId; });
+  if(!e) return;
+  var p = {
+    id: crypto.randomUUID(),
+    nome: e.nome,
+    empresa: e.empresa||e.nome,
+    contato: e.telefone||'',
+    status:'prospecto',
+    registros:[{data:new Date().toISOString(),tipo:'nota',
+      texto:'Encontrado via Intel B2B | Score: '+e.score+' | '+e.oportunidades}],
+    criado: new Date().toISOString(),
+    etapa: null
+  };
+  await salvarProspectoSB(p);
+  prospectos.push(p);
+  try{
+    await fetch(SB_URL+'/rest/v1/prospeccao_intel?place_id=eq.'+placeId,{
+      method:'PATCH',
+      headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json'},
+      body:JSON.stringify({status:'adicionado'})
+    });
+  }catch(e){}
+  e.status = 'adicionado';
+  renderIntel(document.getElementById('comercial-body'));
+  if(typeof toast==='function') toast('Lead adicionado ao pipeline!','ok');
+};
+
+// ── Carregar buscas anteriores do Supabase ──────────────────────
+window.carregarIntelSalvos = async function(){
+  try{
+    var r = await fetch(SB_URL+'/rest/v1/prospeccao_intel?order=criado.desc&limit=60',
+      {headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY}});
+    intelResultados = await r.json()||[];
+    renderIntel(document.getElementById('comercial-body'));
+  }catch(e){
+    if(typeof toast==='function') toast('Erro ao carregar','err');
+  }
+};
+
+// ── Busca principal ─────────────────────────────────────────────
+window.buscarEmpresasIntel = async function(){
+  var nicho    = (document.getElementById('intel-nicho')?.value||'').trim();
+  var cidade   = (document.getElementById('intel-cidade')?.value||'').trim();
+  var qtd      = parseInt(document.getElementById('intel-qtd')?.value)||10;
+  var gKey     = (document.getElementById('intel-gkey')?.value||'').trim();
+  var apifyKey = (document.getElementById('intel-apify')?.value||'').trim();
+
+  if(!nicho||!cidade){ if(typeof toast==='function') toast('Preencha nicho e cidade','err'); return; }
+  if(!gKey){ if(typeof toast==='function') toast('Informe a chave Google Places','err'); return; }
+
+  if(gKey)     localStorage.setItem('intel_gkey',  gKey);
+  if(apifyKey) localStorage.setItem('intel_apify', apifyKey);
+
+  intelBuscando   = true;
+  intelResultados = [];
+  renderIntel(document.getElementById('comercial-body'));
+
+  try{
+    await carregarGMaps(gKey);
+
+    // Div oculto necessário para PlacesService
+    var mapDiv = document.getElementById('_intel_mapbox');
+    if(!mapDiv){
+      mapDiv = document.createElement('div');
+      mapDiv.id = '_intel_mapbox';
+      mapDiv.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:1px;height:1px';
+      document.body.appendChild(mapDiv);
+    }
+    var map     = new google.maps.Map(mapDiv, {center:{lat:-27.0,lng:-48.6},zoom:12});
+    var service = new google.maps.places.PlacesService(map);
+
+    service.textSearch({query: nicho+' em '+cidade, language:'pt-BR'},
+      async function(results, status){
+        if(status!==google.maps.places.PlacesServiceStatus.OK || !results){
+          if(typeof toast==='function') toast('Nenhum resultado ('+status+')','err');
+          intelBuscando=false; renderIntel(document.getElementById('comercial-body')); return;
+        }
+
+        var lote = results.slice(0, Math.min(qtd,20));
+        var empresas = [];
+
+        // Obter detalhes de cada lugar
+        for(var i=0; i<lote.length; i++){
+          await new Promise(function(resolve){
+            service.getDetails({
+              placeId: lote[i].place_id,
+              fields:['name','formatted_phone_number','website','formatted_address','rating','user_ratings_total','url']
+            }, function(det, st){
+              if(st===google.maps.places.PlacesServiceStatus.OK && det){
+                empresas.push({
+                  place_id: lote[i].place_id,
+                  nome: det.name||'',
+                  empresa: det.name||'',
+                  segmento: nicho,
+                  cidade: cidade,
+                  endereco: det.formatted_address||'',
+                  telefone: (det.formatted_phone_number||'').replace(/\D/g,''),
+                  website: det.website||'',
+                  google_rating: det.rating||0,
+                  google_reviews: det.user_ratings_total||0,
+                  google_url: det.url||'',
+                  instagram_handle:'', instagram_url:'', instagram_followers:0,
+                  score:0, oportunidades:'', servicos_rec:'',
+                  status:'novo',
+                  fonte:{google:true, apify:false},
+                  criado: new Date().toISOString()
+                });
+              }
+              resolve();
+            });
+          });
+          await new Promise(function(r){ setTimeout(r,200); }); // rate limit
+        }
+
+        // Deduplicar
+        var existentes = await placeIdsExistentes();
+        var novos = empresas.filter(function(e){ return !existentes.includes(e.place_id); });
+        var dups  = empresas.filter(function(e){ return  existentes.includes(e.place_id); })
+                            .map(function(e){ return Object.assign({},e,{status:'duplicado'}); });
+
+        // Instagram via Apify
+        if(apifyKey && novos.length){
+          await buscarInstagramLote(novos, apifyKey);
+        }
+
+        // Score IA
+        await scoreEmLote(novos);
+
+        // Salvar novos no Supabase
+        for(var j=0; j<novos.length; j++){
+          await salvarIntelSB(novos[j]);
+        }
+
+        intelResultados = novos.concat(dups);
+        intelBuscando   = false;
+        renderIntel(document.getElementById('comercial-body'));
+        if(typeof toast==='function') toast(novos.length+' novas empresas qualificadas!','ok');
+      }
+    );
+
+  }catch(err){
+    if(typeof toast==='function') toast('Erro: '+err.message,'err');
+    intelBuscando=false;
+    renderIntel(document.getElementById('comercial-body'));
+  }
+};
+
+// ── Render do módulo ────────────────────────────────────────────
+window.renderIntel = function(body){
+  if(!body) return;
+  var gKey     = localStorage.getItem('intel_gkey')||'';
+  var apifyKey = localStorage.getItem('intel_apify')||'';
+  var sC = function(s){ return s>=70?'#27C76E':s>=40?'#F59E0B':'#EF4444'; };
+  var sL = function(s){ return s>=70?'Alto':s>=40?'Médio':'Baixo'; };
+
+  var cards = '';
+  if(intelResultados.length){
+    intelResultados.forEach(function(e){
+      var sc   = e.score||0;
+      var isDup = e.status==='duplicado';
+      var isDone= e.status==='adicionado';
+      var fone = e.telefone||'';
+      var link55 = fone ? 'https://wa.me/55'+fone.replace(/\D/g,'') : '';
+      cards += '<div style="background:rgba(255,255,255,0.03);border:1px solid '
+        +(isDup?'rgba(255,255,255,0.05)':isDone?'rgba(39,199,110,0.2)':'rgba(255,255,255,0.09)')
+        +';border-radius:12px;padding:12px;opacity:'+(isDup?'0.5':'1')+';margin-bottom:10px">'
+        +'<div style="display:flex;align-items:flex-start;gap:10px">'
+        // Score badge
+        +'<div style="flex-shrink:0;text-align:center;background:'+sC(sc)+'18;border:1px solid '+sC(sc)+'44;border-radius:10px;padding:6px 8px;min-width:46px">'
+        +'<div style="font-size:17px;font-weight:800;color:'+sC(sc)+';line-height:1">'+sc+'</div>'
+        +'<div style="font-size:9px;font-weight:700;color:'+sC(sc)+';opacity:0.8">'+sL(sc)+'</div>'
+        +'</div>'
+        // Info
+        +'<div style="flex:1;min-width:0">'
+        +'<div style="font-size:13px;font-weight:700;color:#F0F0FF;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+e.nome+'</div>'
+        +'<div style="font-size:11px;color:var(--ink3);margin-bottom:4px">'+e.cidade+' · '+e.segmento+'</div>'
+        +(e.google_rating?'<div style="font-size:10.5px;color:#F59E0B">★ '+e.google_rating+' ('+e.google_reviews+' avaliações)</div>':'')
+        +(e.instagram_handle?'<div style="font-size:10.5px;color:#E1306C;margin-top:2px">📸 @'+e.instagram_handle+' · '+(e.instagram_followers||0).toLocaleString('pt-BR')+' seguidores</div>':'')
+        +(e.oportunidades?'<div style="font-size:11px;color:rgba(240,240,255,0.5);margin-top:6px;line-height:1.55">'+e.oportunidades+'</div>':'')
+        +(e.servicos_rec?'<div style="font-size:10px;color:rgba(61,123,245,0.7);margin-top:4px">'+e.servicos_rec+'</div>':'')
+        +'</div></div>'
+        // Ações
+        +'<div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;align-items:center">'
+        +(link55?'<a href="'+link55+'" target="_blank" style="font-size:11px;font-weight:600;background:rgba(39,199,110,0.12);border:1px solid rgba(39,199,110,0.25);border-radius:7px;color:#27C76E;padding:3px 9px;text-decoration:none">WhatsApp</a>':'')
+        +(e.website?'<a href="'+e.website+'" target="_blank" style="font-size:11px;font-weight:600;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:7px;color:var(--ink2);padding:3px 9px;text-decoration:none">Site</a>':'')
+        +(e.instagram_url?'<a href="'+e.instagram_url+'" target="_blank" style="font-size:11px;font-weight:600;background:rgba(225,48,108,0.1);border:1px solid rgba(225,48,108,0.25);border-radius:7px;color:#E1306C;padding:3px 9px;text-decoration:none">Instagram</a>':'')
+        +(e.google_url?'<a href="'+e.google_url+'" target="_blank" style="font-size:11px;font-weight:600;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);border-radius:7px;color:#F59E0B;padding:3px 9px;text-decoration:none">Maps</a>':'')
+        +(!isDup&&!isDone?'<button onclick="adicionarAoPipelineIntel(\''+e.place_id+'\')" style="font-size:11px;font-weight:700;background:rgba(61,123,245,0.15);border:1px solid rgba(61,123,245,0.3);border-radius:7px;color:#3D7BF5;padding:3px 10px;cursor:pointer;margin-left:auto">+ Pipeline</button>'
+          :isDone?'<span style="font-size:11px;font-weight:600;color:#27C76E;margin-left:auto">✓ No pipeline</span>'
+          :'<span style="font-size:11px;color:var(--ink3);margin-left:auto">já cadastrado</span>')
+        +'</div></div>';
+    });
+  }
+
+  body.innerHTML =
+    '<div style="display:flex;flex-direction:column;gap:12px">'
+
+    // Config APIs
+    +'<details '+(gKey?'':'open')+' style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:12px">'
+    +'<summary style="font-size:11px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:0.08em;cursor:pointer;list-style:none">⚙ APIs'+(gKey?' <span style="color:#27C76E;font-size:10px">✓ configurado</span>':'')+'</summary>'
+    +'<div style="margin-top:10px;display:flex;flex-direction:column;gap:8px">'
+    +'<div><div style="font-size:10.5px;color:var(--ink3);margin-bottom:4px">Google Places API Key <a href="https://console.cloud.google.com/apis/credentials" target="_blank" style="color:var(--blue);text-decoration:none;font-size:10px">→ obter</a></div>'
+    +'<input id="intel-gkey" value="'+gKey+'" placeholder="AIza..." style="'+inputStyle()+'font-size:12px"></div>'
+    +'<div><div style="font-size:10.5px;color:var(--ink3);margin-bottom:4px">Apify API Token <span style="color:var(--ink3)">(opcional — Instagram)</span> <a href="https://console.apify.com/account/integrations" target="_blank" style="color:var(--blue);text-decoration:none;font-size:10px">→ obter</a></div>'
+    +'<input id="intel-apify" value="'+apifyKey+'" placeholder="apify_api_..." style="'+inputStyle()+'font-size:12px"></div>'
+    +'</div></details>'
+
+    // Busca
+    +'<div style="background:rgba(61,123,245,0.07);border:1px solid rgba(61,123,245,0.2);border-radius:12px;padding:14px">'
+    +'<div style="font-size:11px;font-weight:700;color:#3D7BF5;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px">🔍 Descobrir empresas</div>'
+    +'<input id="intel-nicho" placeholder="Nicho (ex: clínica de estética, advocacia, academia…)" style="'+inputStyle()+'margin-bottom:7px">'
+    +'<div style="display:flex;gap:7px;margin-bottom:8px">'
+    +'<input id="intel-cidade" placeholder="Cidade" style="'+inputStyle()+'flex:1">'
+    +'<select id="intel-qtd" style="'+inputStyle()+'width:86px;flex-shrink:0"><option value="5">5</option><option value="10" selected>10</option><option value="20">20</option></select>'
+    +'</div>'
+    +'<button onclick="buscarEmpresasIntel()" '+(intelBuscando?'disabled':'')+' style="'+btnPriStyle()+'width:100%">'
+    +(intelBuscando?'<span style="display:inline-block;animation:spin 0.7s linear infinite">⟳</span> Buscando e pontuando com IA…':'🚀 Buscar + IA Score')
+    +'</button>'
+    +'</div>'
+
+    // Resultados ou empty state
+    +(intelResultados.length
+      ? '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">'
+        +'<div style="font-size:10.5px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:0.07em">'+intelResultados.length+' empresas</div>'
+        +'<button onclick="carregarIntelSalvos()" style="font-size:11px;background:none;border:none;color:var(--blue);cursor:pointer">↺ recarregar</button>'
+        +'</div>'+cards
+      : '<div style="text-align:center;padding:28px 16px;color:var(--ink3)">'
+        +'<div style="font-size:30px;margin-bottom:8px">🔍</div>'
+        +'<div style="font-size:13px;font-weight:700;color:var(--ink2);margin-bottom:6px">Inteligência Comercial B2B</div>'
+        +'<div style="font-size:11.5px;line-height:1.65;max-width:280px;margin:0 auto">Encontre empresas reais por nicho e cidade, valide Instagram via Apify e receba score de potencial comercial gerado por IA.</div>'
+        +'<button onclick="carregarIntelSalvos()" style="'+btnSecStyle()+'margin-top:14px;font-size:12px">Carregar buscas anteriores</button>'
+        +'</div>'
+    )
+    +'</div>';
+};
+
 })();
 </script>
 </body>

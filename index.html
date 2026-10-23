@@ -659,36 +659,48 @@ input:-webkit-autofill,input:-webkit-autofill:focus{
 #news-ticker .news-pill .use-btn:hover{background:rgba(76,130,251,0.35)}
 </style>
 
-<script>
-(function(){
+<script>(function(){
   const FEEDS = [
-    {url:'https://forbes.com.br/feed/',      cor:'#EF4444', label:'Forbes'},
-    {url:'https://exame.com/feed/',           cor:'#3D7BF5', label:'Exame'},
-    {url:'https://g4educacao.com/feed/',      cor:'#27C76E', label:'G4'},
+    {url:'https://forbes.com.br/feed/',           cor:'#EF4444', label:'Forbes'},
+    {url:'https://exame.com/feed/',                cor:'#3D7BF5', label:'Exame'},
+    {url:'https://g4educacao.com/feed/',           cor:'#27C76E', label:'G4'},
     {url:'https://g1.globo.com/rss/g1/economia/', cor:'#F59E0B', label:'G1 Econ'},
   ];
-  const PROXY = 'https://api.rss2json.com/v1/api.json?rss_url=';
+  // Proxy CORS confiável — busca o XML e devolve como string
+  const PROXY = 'https://api.allorigins.win/get?url=';
   let allItems = [];
   let tickPos  = 0;
   let tickAnim = null;
 
   async function loadFeed(f){
     try{
-      const r = await fetch(PROXY + encodeURIComponent(f.url));
+      const r = await fetch(PROXY + encodeURIComponent(f.url), {cache:'no-store'});
       const d = await r.json();
-      return (d.items||[]).slice(0,6).map(i=>({title:i.title,link:i.link,src:f.label,cor:f.cor}));
-    }catch{ return []; }
+      if(!d.contents) return [];
+      const parser = new DOMParser();
+      const xml = parser.parseFromString(d.contents, 'text/xml');
+      const items = Array.from(xml.querySelectorAll('item')).slice(0,6);
+      return items.map(it=>({
+        title: it.querySelector('title')?.textContent || '',
+        link:  it.querySelector('link')?.textContent || it.querySelector('guid')?.textContent || '#',
+        src:   f.label,
+        cor:   f.cor
+      })).filter(it=>it.title);
+    }catch(e){ return []; }
   }
 
   function renderTicker(){
     const tk = document.getElementById('news-ticker');
-    if(!tk||!allItems.length) return;
-    // duplica para loop contínuo
+    if(!tk) return;
+    if(!allItems.length){
+      tk.innerHTML = '<div class="news-pill"><span class="tit" style="opacity:.4">Carregando notícias…</span></div>';
+      return;
+    }
     const items = [...allItems,...allItems];
     tk.innerHTML = items.map((it,i)=>`
       <div class="news-pill" onclick="window.open('${it.link}','_blank')">
         <span class="src" style="background:${it.cor}22;color:${it.cor}">${it.src}</span>
-        <span class="tit">${it.title}</span>
+        <span class="tit">${it.title.replace(/'/g,"&#39;")}</span>
         <button class="use-btn" onclick="event.stopPropagation();usarNoticia('${encodeURIComponent(it.title)}','${encodeURIComponent(it.link)}')">▶ Usar</button>
       </div>`).join('');
     startTick();
@@ -708,16 +720,17 @@ input:-webkit-autofill,input:-webkit-autofill:focus{
     tickAnim = requestAnimationFrame(step);
   }
 
-  // pausa ao hover
   document.addEventListener('DOMContentLoaded',()=>{
     const bar = document.getElementById('news-bar');
     if(bar){
       bar.addEventListener('mouseenter',()=>{ if(tickAnim){ cancelAnimationFrame(tickAnim); tickAnim=null; } });
       bar.addEventListener('mouseleave',()=>{ if(!tickAnim) startTick(); });
     }
-    // carrega feeds
+    // Mostra "carregando" imediatamente
+    renderTicker();
+    // Carrega todos os feeds em paralelo
     Promise.all(FEEDS.map(loadFeed)).then(results=>{
-      allItems = results.flat();
+      allItems = results.flat().filter(i=>i.title);
       renderTicker();
     });
   });
@@ -727,10 +740,9 @@ input:-webkit-autofill,input:-webkit-autofill:focus{
     const l = document.getElementById('em-link');
     if(t) t.value = decodeURIComponent(titulo);
     if(l) l.value = decodeURIComponent(link);
-    // Navega para aba de email marketing
     const tabEmail = document.getElementById('tab-email');
     if(tabEmail) tabEmail.click();
-    toast('Notícia carregada no Email Marketing!','ok');
+    if(typeof toast === 'function') toast('Notícia carregada no Email Marketing!','ok');
   };
 })();
 </script>

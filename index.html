@@ -703,44 +703,6 @@ input:-webkit-autofill,input:-webkit-autofill:focus{
   let tickPos  = 0;
   let tickAnim = null;
 
-  async function loadFeed(f){
-    const proxies = [
-      `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(f.url)}&count=6`,
-      `https://api.allorigins.win/get?url=${encodeURIComponent(f.url)}`,
-    ];
-    // Tenta rss2json (retorna JSON)
-    try{
-      const r = await fetch(proxies[0], {cache:'no-store'});
-      if(r.ok){
-        const j = await r.json();
-        if(j.status==='ok' && j.items && j.items.length){
-          return j.items.slice(0,6).map(it=>({
-            title: (it.title||'').trim(),
-            link:  it.link||it.guid||f.url,
-            src: f.label, cor: f.cor
-          })).filter(it=>it.title);
-        }
-      }
-    }catch(e){}
-    // Fallback allorigins (XML)
-    try{
-      const r = await fetch(proxies[1], {cache:'no-store'});
-      if(r.ok){
-        const j = await r.json();
-        const xml = j.contents||'';
-        if(xml.includes('<item')){
-          const doc = new DOMParser().parseFromString(xml,'text/xml');
-          return Array.from(doc.querySelectorAll('item')).slice(0,6).map(it=>({
-            title: (it.querySelector('title')?.textContent||'').trim(),
-            link:  it.querySelector('link')?.textContent||f.url,
-            src: f.label, cor: f.cor
-          })).filter(it=>it.title);
-        }
-      }
-    }catch(e){}
-    return [];
-  }
-
   function renderTicker(){
     const tk = document.getElementById('news-ticker');
     if(!tk) return;
@@ -797,31 +759,7 @@ input:-webkit-autofill,input:-webkit-autofill:focus{
       bar.addEventListener('mouseenter',()=>{ if(tickAnim){ cancelAnimationFrame(tickAnim); tickAnim=null; } });
       bar.addEventListener('mouseleave',()=>{ if(!tickAnim) startTick(); });
     }
-    renderTicker(); // mostra estático imediatamente
-    Promise.all(FEEDS.map(loadFeed)).then(results=>{
-      // Palavras-chave de notícias dominantes para filtrar (atualizar se necessário)
-      const BLOQUEADAS = ['escala 6','escala6','6x1','6×1'];
-      function isDominante(titulo){
-        const tl = (titulo||'').toLowerCase();
-        return BLOQUEADAS.some(function(k){ return tl.includes(k); });
-      }
-      let merged = [];
-      FEEDS.forEach(function(f, fi){
-        // Live: exclui notícias dominantes/repetidas
-        const live = ((results[fi]||[]).filter(function(x){
-          return x.title && !isDominante(x.title);
-        })).slice(0,3);
-        // Estático daquela fonte como fallback
-        const stat = STATIC.filter(function(s){ return s.src===f.label; }).slice(0,3);
-        const combined = live.slice();
-        stat.forEach(function(s){ if(combined.length < 3) combined.push(s); });
-        merged = merged.concat(combined);
-      });
-      if(merged.length > 0){
-        allItems = merged;
-        renderTicker();
-      }
-    });
+    renderTicker();
   });
 
   window.usarNoticia = function(titulo, link){

@@ -746,14 +746,16 @@ input:-webkit-autofill,input:-webkit-autofill:focus{
     if(!tk) return;
     tickPos = 0;
     const itens2x = [...allItems,...allItems];
-    window._tickItens = itens2x;
-    tk.innerHTML = itens2x.map((it,i)=>{
-      const tEsc = it.title.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-      return `<div class="news-pill" onclick="window.open(window._tickItens[${i}].link,'_blank')">
-        <span class="src" style="background:${it.cor}22;color:${it.cor}">${it.src}</span>
-        <span class="tit">${tEsc}</span>
-        <button class="use-btn" onclick="event.stopPropagation();usarNoticia(window._tickItens[${i}].title,window._tickItens[${i}].link)">▶ Usar</button>
-      </div>`;
+    tk.innerHTML = itens2x.map(it=>{
+      const esc = s => (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      return '<div class="news-pill" onclick="window.open(this.querySelector(\'.use-btn\').getAttribute(\'data-link\'),\'_blank\')">'
+        +'<span class="src" style="background:'+it.cor+'22;color:'+it.cor+'">'+esc(it.src)+'</span>'
+        +'<span class="tit">'+esc(it.title)+'</span>'
+        +'<button class="use-btn"'
+        +' data-title="'+esc(it.title)+'"'
+        +' data-link="'+esc(it.link)+'"'
+        +' onclick="event.stopPropagation();usarNoticia(this.getAttribute(\'data-title\'),this.getAttribute(\'data-link\'))">▶ Usar</button>'
+        +'</div>';
     }).join('');
     startTick();
   }

@@ -780,9 +780,20 @@ input:-webkit-autofill,input:-webkit-autofill:focus{
     }
     renderTicker(); // mostra estático imediatamente
     Promise.all(FEEDS.map(loadFeed)).then(results=>{
-      const live = results.flat().filter(i=>i.title);
-      if(live.length >= 4){
-        allItems = live; // substitui só se chegaram notícias reais
+      // Para cada fonte: usa live se chegou, senão mantém os estáticos daquela fonte
+      let merged = [];
+      FEEDS.forEach((f, idx) => {
+        const liveItens = (results[idx]||[]).filter(i=>i.title);
+        if(liveItens.length > 0){
+          merged = merged.concat(liveItens.slice(0,3));
+        } else {
+          // mantém até 3 estáticos da mesma fonte como fallback
+          const fallback = STATIC.filter(s=>s.src===f.label).slice(0,3);
+          merged = merged.concat(fallback);
+        }
+      });
+      if(merged.length > 0){
+        allItems = merged;
         renderTicker();
       }
     });

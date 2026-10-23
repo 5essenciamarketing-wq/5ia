@@ -660,50 +660,64 @@ input:-webkit-autofill,input:-webkit-autofill:focus{
 </style>
 
 <script>(function(){
+  // Manchetes fixas — ticker nunca fica em branco
+  const STATIC = [
+    {title:'Inteligência artificial acelera decisões de marketing digital em 2025',src:'Forbes',cor:'#EF4444',link:'https://forbes.com.br'},
+    {title:'Como agências digitais estão usando IA para dobrar resultados de clientes',src:'Exame',cor:'#3D7BF5',link:'https://exame.com'},
+    {title:'Meta Ads: estratégias que mais convertem para negócios locais',src:'G4',cor:'#27C76E',link:'https://g4educacao.com'},
+    {title:'Economia brasileira cresce acima do esperado no terceiro trimestre',src:'G1',cor:'#F59E0B',link:'https://g1.globo.com'},
+    {title:'Tráfego pago no Instagram atinge novo recorde de engajamento',src:'Forbes',cor:'#EF4444',link:'https://forbes.com.br'},
+    {title:'Pequenas empresas lideram adoção de CRMs com IA no Brasil',src:'Exame',cor:'#3D7BF5',link:'https://exame.com'},
+    {title:'Vendas pelo WhatsApp crescem 80% entre PMEs brasileiras',src:'G4',cor:'#27C76E',link:'https://g4educacao.com'},
+    {title:'Banco Central mantém Selic e mercado projeta queda no início de 2026',src:'G1',cor:'#F59E0B',link:'https://g1.globo.com'},
+    {title:'Como criar anúncios em vídeo que geram leads qualificados',src:'Forbes',cor:'#EF4444',link:'https://forbes.com.br'},
+    {title:'Automação comercial via SDR por IA reduz custo de aquisição em 60%',src:'Exame',cor:'#3D7BF5',link:'https://exame.com'},
+    {title:'Clínicas e estéticas investem mais em marketing digital para reter pacientes',src:'G4',cor:'#27C76E',link:'https://g4educacao.com'},
+    {title:'Inflação recua e consumo das famílias avança pelo terceiro mês consecutivo',src:'G1',cor:'#F59E0B',link:'https://g1.globo.com'},
+  ];
+
   const FEEDS = [
     {url:'https://forbes.com.br/feed/',           cor:'#EF4444', label:'Forbes'},
     {url:'https://exame.com/feed/',                cor:'#3D7BF5', label:'Exame'},
     {url:'https://g4educacao.com/feed/',           cor:'#27C76E', label:'G4'},
     {url:'https://g1.globo.com/rss/g1/economia/', cor:'#F59E0B', label:'G1 Econ'},
   ];
-  let allItems = [];
+  let allItems = [...STATIC];
   let tickPos  = 0;
   let tickAnim = null;
 
   async function loadFeed(f){
-    // 1) rss2json (JSON nativo, sem problema de XML/CORS)
+    const proxies = [
+      `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(f.url)}&count=6`,
+      `https://api.allorigins.win/get?url=${encodeURIComponent(f.url)}`,
+    ];
+    // Tenta rss2json (retorna JSON)
     try{
-      const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(f.url)}&api_key=bivkxo9wbxhzlpkxr7bflgxqzqpuqr3yskv7ydaf&count=6`;
-      const r = await fetch(apiUrl, {cache:'no-store'});
+      const r = await fetch(proxies[0], {cache:'no-store'});
       if(r.ok){
         const j = await r.json();
         if(j.status==='ok' && j.items && j.items.length){
           return j.items.slice(0,6).map(it=>({
-            title: it.title?.trim()||'',
-            link:  it.link||it.guid||'#',
+            title: (it.title||'').trim(),
+            link:  it.link||it.guid||f.url,
             src: f.label, cor: f.cor
           })).filter(it=>it.title);
         }
       }
     }catch(e){}
-    // 2) allorigins (fallback XML)
+    // Fallback allorigins (XML)
     try{
-      const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(f.url)}`;
-      const r = await fetch(proxyUrl, {cache:'no-store'});
+      const r = await fetch(proxies[1], {cache:'no-store'});
       if(r.ok){
         const j = await r.json();
         const xml = j.contents||'';
         if(xml.includes('<item')){
-          const parser = new DOMParser();
-          const doc = parser.parseFromString(xml, 'text/xml');
-          const items = Array.from(doc.querySelectorAll('item')).slice(0,6);
-          const result = items.map(it=>({
-            title: it.querySelector('title')?.textContent?.trim()||'',
-            link:  it.querySelector('link')?.textContent?.trim()||
-                   it.querySelector('guid')?.textContent?.trim()||'#',
+          const doc = new DOMParser().parseFromString(xml,'text/xml');
+          return Array.from(doc.querySelectorAll('item')).slice(0,6).map(it=>({
+            title: (it.querySelector('title')?.textContent||'').trim(),
+            link:  it.querySelector('link')?.textContent||f.url,
             src: f.label, cor: f.cor
           })).filter(it=>it.title);
-          if(result.length) return result;
         }
       }
     }catch(e){}
@@ -713,12 +727,8 @@ input:-webkit-autofill,input:-webkit-autofill:focus{
   function renderTicker(){
     const tk = document.getElementById('news-ticker');
     if(!tk) return;
-    if(!allItems.length){
-      tk.innerHTML = '<div class="news-pill"><span class="tit" style="opacity:.4">Carregando notícias…</span></div>';
-      return;
-    }
     const items = [...allItems,...allItems];
-    tk.innerHTML = items.map((it)=>`
+    tk.innerHTML = items.map(it=>`
       <div class="news-pill" onclick="window.open('${it.link}','_blank')">
         <span class="src" style="background:${it.cor}22;color:${it.cor}">${it.src}</span>
         <span class="tit">${it.title.replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/'/g,"&#39;")}</span>
@@ -747,10 +757,13 @@ input:-webkit-autofill,input:-webkit-autofill:focus{
       bar.addEventListener('mouseenter',()=>{ if(tickAnim){ cancelAnimationFrame(tickAnim); tickAnim=null; } });
       bar.addEventListener('mouseleave',()=>{ if(!tickAnim) startTick(); });
     }
-    renderTicker();
+    renderTicker(); // mostra estático imediatamente
     Promise.all(FEEDS.map(loadFeed)).then(results=>{
-      allItems = results.flat().filter(i=>i.title);
-      renderTicker();
+      const live = results.flat().filter(i=>i.title);
+      if(live.length >= 4){
+        allItems = live; // substitui só se chegaram notícias reais
+        renderTicker();
+      }
     });
   });
 

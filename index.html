@@ -744,6 +744,7 @@ input:-webkit-autofill,input:-webkit-autofill:focus{
   function renderTicker(){
     const tk = document.getElementById('news-ticker');
     if(!tk) return;
+    tickPos = 0; // resetar posição ao re-renderizar — evita desalinhamento visual
     window._tickItens = [...allItems,...allItems];
     tk.innerHTML = window._tickItens.map((it,i)=>`
       <div class="news-pill" data-i="${i}" onclick="var it=window._tickItens[+this.dataset.i];window.open(it.link,'_blank')">

@@ -682,15 +682,15 @@ input:-webkit-autofill,input:-webkit-autofill:focus{
     {title:'Inteligência artificial acelera decisões de marketing digital em 2025',src:'Forbes',cor:'#EF4444',link:'https://forbes.com.br'},
     {title:'Como agências digitais estão usando IA para dobrar resultados de clientes',src:'Exame',cor:'#3D7BF5',link:'https://exame.com'},
     {title:'Meta Ads: estratégias que mais convertem para negócios locais',src:'G4',cor:'#27C76E',link:'https://g4educacao.com'},
-    {title:'Economia brasileira cresce acima do esperado no terceiro trimestre',src:'G1',cor:'#F59E0B',link:'https://g1.globo.com'},
+    {title:'Economia brasileira cresce acima do esperado no terceiro trimestre',src:'G1 Econ',cor:'#F59E0B',link:'https://g1.globo.com'},
     {title:'Tráfego pago no Instagram atinge novo recorde de engajamento',src:'Forbes',cor:'#EF4444',link:'https://forbes.com.br'},
     {title:'Pequenas empresas lideram adoção de CRMs com IA no Brasil',src:'Exame',cor:'#3D7BF5',link:'https://exame.com'},
     {title:'Vendas pelo WhatsApp crescem 80% entre PMEs brasileiras',src:'G4',cor:'#27C76E',link:'https://g4educacao.com'},
-    {title:'Banco Central mantém Selic e mercado projeta queda no início de 2026',src:'G1',cor:'#F59E0B',link:'https://g1.globo.com'},
+    {title:'Banco Central mantém Selic e mercado projeta queda no início de 2026',src:'G1 Econ',cor:'#F59E0B',link:'https://g1.globo.com'},
     {title:'Como criar anúncios em vídeo que geram leads qualificados',src:'Forbes',cor:'#EF4444',link:'https://forbes.com.br'},
     {title:'Automação comercial via SDR por IA reduz custo de aquisição em 60%',src:'Exame',cor:'#3D7BF5',link:'https://exame.com'},
     {title:'Clínicas e estéticas investem mais em marketing digital para reter pacientes',src:'G4',cor:'#27C76E',link:'https://g4educacao.com'},
-    {title:'Inflação recua e consumo das famílias avança pelo terceiro mês consecutivo',src:'G1',cor:'#F59E0B',link:'https://g1.globo.com'},
+    {title:'Inflação recua e consumo das famílias avança pelo terceiro mês consecutivo',src:'G1 Econ',cor:'#F59E0B',link:'https://g1.globo.com'},
   ];
 
   const FEEDS = [
@@ -780,17 +780,14 @@ input:-webkit-autofill,input:-webkit-autofill:focus{
     }
     renderTicker(); // mostra estático imediatamente
     Promise.all(FEEDS.map(loadFeed)).then(results=>{
-      // Para cada fonte: usa live se chegou, senão mantém os estáticos daquela fonte
       let merged = [];
-      FEEDS.forEach((f, idx) => {
-        const liveItens = (results[idx]||[]).filter(i=>i.title);
-        if(liveItens.length > 0){
-          merged = merged.concat(liveItens.slice(0,3));
-        } else {
-          // mantém até 3 estáticos da mesma fonte como fallback
-          const fallback = STATIC.filter(s=>s.src===f.label).slice(0,3);
-          merged = merged.concat(fallback);
-        }
+      FEEDS.forEach((f, fi) => {
+        const live3 = ((results[fi]||[]).filter(x=>x.title)).slice(0,3);
+        const static3 = STATIC.filter(s=>s.src===f.label).slice(0,3);
+        // sempre 3 por fonte: live primeiro, completa com estático
+        const combined = [...live3];
+        static3.forEach(s=>{ if(combined.length < 3) combined.push(s); });
+        merged = merged.concat(combined);
       });
       if(merged.length > 0){
         allItems = merged;

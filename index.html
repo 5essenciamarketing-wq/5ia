@@ -2037,7 +2037,7 @@ function emAutoSalvar(){
   localStorage.setItem('em_auto_topico', topico);
 }
 
-function iniciarVerificacaoAutoEmail(){
+async function iniciarVerificacaoAutoEmail(){
   clearInterval(emailAutoTimer);
   emailAutoTimer = setInterval(async ()=>{
     if(localStorage.getItem('em_auto')!=='1') return;

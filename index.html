@@ -3959,11 +3959,10 @@ window.buscarEmpresasIntel = async function(){
   var nicho    = (document.getElementById('intel-nicho')?.value||'').trim();
   var cidade   = (document.getElementById('intel-cidade')?.value||'').trim();
   var qtd      = parseInt(document.getElementById('intel-qtd')?.value)||10;
-  var gKey     = (document.getElementById('intel-gkey')?.value||'').trim();
-  var apifyKey = (document.getElementById('intel-apify')?.value||'').trim();
+  var gKey     = (document.getElementById('intel-gkey')?.value||'').trim()||'AIzaSyAWx4IsO9yIH1QRBDJSxyH0NKlhSOMHyhM';
+  var apifyKey = (document.getElementById('intel-apify')?.value||'').trim()||'apify_api_cxY1015q0I4Rh2OdclKBAlvMqkQlAM32VyiN';
 
   if(!nicho||!cidade){ if(typeof toast==='function') toast('Preencha nicho e cidade','err'); return; }
-  if(!gKey){ if(typeof toast==='function') toast('Informe a chave Google Places','err'); return; }
 
   if(gKey)     localStorage.setItem('intel_gkey',  gKey);
   if(apifyKey) localStorage.setItem('intel_apify', apifyKey);
@@ -4065,8 +4064,13 @@ window.buscarEmpresasIntel = async function(){
 // ── Render do módulo ────────────────────────────────────────────
 window.renderIntel = function(body){
   if(!body) return;
-  var gKey     = localStorage.getItem('intel_gkey')||'';
-  var apifyKey = localStorage.getItem('intel_apify')||'';
+  var GKEY_DEFAULT     = 'AIzaSyAWx4IsO9yIH1QRBDJSxyH0NKlhSOMHyhM';
+  var APIFY_DEFAULT    = 'apify_api_cxY1015q0I4Rh2OdclKBAlvMqkQlAM32VyiN';
+  var gKey     = localStorage.getItem('intel_gkey')||GKEY_DEFAULT;
+  var apifyKey = localStorage.getItem('intel_apify')||APIFY_DEFAULT;
+  // Garante persistência imediata dos defaults
+  if(!localStorage.getItem('intel_gkey'))  localStorage.setItem('intel_gkey',  GKEY_DEFAULT);
+  if(!localStorage.getItem('intel_apify')) localStorage.setItem('intel_apify', APIFY_DEFAULT);
   var sC = function(s){ return s>=70?'#27C76E':s>=40?'#F59E0B':'#EF4444'; };
   var sL = function(s){ return s>=70?'Alto':s>=40?'Médio':'Baixo'; };
 

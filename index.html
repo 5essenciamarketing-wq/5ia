@@ -744,12 +744,12 @@ input:-webkit-autofill,input:-webkit-autofill:focus{
   function renderTicker(){
     const tk = document.getElementById('news-ticker');
     if(!tk) return;
-    const items = [...allItems,...allItems];
-    tk.innerHTML = items.map((it,i)=>`
-      <div class="news-pill" data-link="${encodeURIComponent(it.link)}" onclick="window.open(decodeURIComponent(this.dataset.link),'_blank')">
+    window._tickItens = [...allItems,...allItems];
+    tk.innerHTML = window._tickItens.map((it,i)=>`
+      <div class="news-pill" data-i="${i}" onclick="var it=window._tickItens[+this.dataset.i];window.open(it.link,'_blank')">
         <span class="src" style="background:${it.cor}22;color:${it.cor}">${it.src}</span>
         <span class="tit">${it.title.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}</span>
-        <button class="use-btn" data-t="${encodeURIComponent(it.title)}" data-l="${encodeURIComponent(it.link)}" onclick="event.stopPropagation();usarNoticia(this.dataset.t,this.dataset.l)">▶ Usar</button>
+        <button class="use-btn" data-i="${i}" onclick="event.stopPropagation();var it=window._tickItens[+this.dataset.i];usarNoticia(it.title,it.link)">▶ Usar</button>
       </div>`).join('');
     startTick();
   }
@@ -787,8 +787,8 @@ input:-webkit-autofill,input:-webkit-autofill:focus{
   window.usarNoticia = function(titulo, link){
     const t = document.getElementById('em-topico');
     const l = document.getElementById('em-link');
-    if(t) t.value = decodeURIComponent(titulo);
-    if(l) l.value = decodeURIComponent(link);
+    if(t) t.value = titulo;
+    if(l) l.value = link;
     const tabEmail = document.getElementById('tab-email');
     if(tabEmail) tabEmail.click();
     if(typeof toast === 'function') toast('Notícia carregada no Email Marketing!','ok');

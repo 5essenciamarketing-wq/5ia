@@ -671,29 +671,42 @@ input:-webkit-autofill,input:-webkit-autofill:focus{
   let tickAnim = null;
 
   async function loadFeed(f){
-    // Tenta corsproxy.io, fallback para allorigins.win
-    const proxies = [
-      `https://corsproxy.io/?${encodeURIComponent(f.url)}`,
-      `https://api.allorigins.win/raw?url=${encodeURIComponent(f.url)}`,
-    ];
-    for(const proxyUrl of proxies){
-      try{
-        const r = await fetch(proxyUrl, {cache:'no-store'});
-        if(!r.ok) continue;
-        const xml = await r.text();
-        if(!xml.includes('<item')) continue;
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(xml, 'text/xml');
-        const items = Array.from(doc.querySelectorAll('item')).slice(0,6);
-        const result = items.map(it=>({
-          title: it.querySelector('title')?.textContent?.trim()||'',
-          link:  it.querySelector('link')?.textContent?.trim()||
-                 it.querySelector('guid')?.textContent?.trim()||'#',
-          src: f.label, cor: f.cor
-        })).filter(it=>it.title);
-        if(result.length) return result;
-      }catch(e){ continue; }
-    }
+    // 1) rss2json (JSON nativo, sem problema de XML/CORS)
+    try{
+      const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(f.url)}&api_key=bivkxo9wbxhzlpkxr7bflgxqzqpuqr3yskv7ydaf&count=6`;
+      const r = await fetch(apiUrl, {cache:'no-store'});
+      if(r.ok){
+        const j = await r.json();
+        if(j.status==='ok' && j.items && j.items.length){
+          return j.items.slice(0,6).map(it=>({
+            title: it.title?.trim()||'',
+            link:  it.link||it.guid||'#',
+            src: f.label, cor: f.cor
+          })).filter(it=>it.title);
+        }
+      }
+    }catch(e){}
+    // 2) allorigins (fallback XML)
+    try{
+      const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(f.url)}`;
+      const r = await fetch(proxyUrl, {cache:'no-store'});
+      if(r.ok){
+        const j = await r.json();
+        const xml = j.contents||'';
+        if(xml.includes('<item')){
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(xml, 'text/xml');
+          const items = Array.from(doc.querySelectorAll('item')).slice(0,6);
+          const result = items.map(it=>({
+            title: it.querySelector('title')?.textContent?.trim()||'',
+            link:  it.querySelector('link')?.textContent?.trim()||
+                   it.querySelector('guid')?.textContent?.trim()||'#',
+            src: f.label, cor: f.cor
+          })).filter(it=>it.title);
+          if(result.length) return result;
+        }
+      }
+    }catch(e){}
     return [];
   }
 

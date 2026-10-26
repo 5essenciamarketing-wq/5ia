@@ -3425,10 +3425,10 @@ function toast(msg, tipo = 'ok') {
   const wrap = document.getElementById('toasts');
   const el   = document.createElement('div');
   el.className = 'toast';
-  const cor = tipo === 'er' ? '#FF3B45' : '#2DD47A';
+  const cor = (tipo==='er'||tipo==='err') ? '#FF3B45' : tipo==='info' ? '#3D7BF5' : '#2DD47A';
   el.innerHTML = `<div class="tdot" style="background:${cor};box-shadow:0 0 8px ${cor}"></div>${msg}`;
   wrap.appendChild(el);
-  setTimeout(() => el.remove(), 3200);
+  setTimeout(() => el.remove(), tipo==='info'?8000:3200);
 }
 
 // Spin animation para o botão IA
@@ -3811,74 +3811,30 @@ var intelResultados = [];
 var intelBuscando   = false;
 
 // ── Carrega Google Maps Places JS dinamicamente ─────────────────
-// Places API REST — sem JS Library, sem problema de CORS
-// Places via JS Library (carrega uma vez, reutiliza)
-var _gmapsLoaded = false;
-var _gmapsLoading = false;
-var _gmapsCbs = [];
-function carregarGMaps(apiKey){
-  return new Promise(function(resolve, reject){
-    if(_gmapsLoaded && window.google && window.google.maps && window.google.maps.places){ resolve(); return; }
-    _gmapsCbs.push({resolve, reject});
-    if(_gmapsLoading) return;
-    _gmapsLoading = true;
-    // timeout de segurança
-    var t = setTimeout(function(){
-      _gmapsLoading=false;
-      _gmapsCbs.forEach(function(c){ c.reject(new Error('Timeout ao carregar Google Maps — verifique a chave API')); });
-      _gmapsCbs=[];
-    }, 12000);
-    window._gmapsReady = function(){
-      clearTimeout(t);
-      _gmapsLoaded=true; _gmapsLoading=false;
-      _gmapsCbs.forEach(function(c){ c.resolve(); });
-      _gmapsCbs=[];
-    };
-    var s = document.createElement('script');
-    s.src = 'https://maps.googleapis.com/maps/api/js?key='+encodeURIComponent(apiKey)+'&libraries=places&language=pt-BR&callback=_gmapsReady';
-    s.async = true;
-    s.onerror = function(){
-      clearTimeout(t); _gmapsLoading=false;
-      _gmapsCbs.forEach(function(c){ c.reject(new Error('Chave Google inválida, sem billing ou domínio não autorizado')); });
-      _gmapsCbs=[];
-    };
-    document.head.appendChild(s);
-  });
-}
+// Places via Supabase Edge Function (proxy server-side — sem CORS)
+var PLACES_PROXY = SB_URL+'/functions/v1/places-proxy';
 
 async function buscarPlacesREST(query, apiKey, maxResults){
-  await carregarGMaps(apiKey);
-  return new Promise(function(resolve, reject){
-    var mapDiv = document.getElementById('_intel_mapbox');
-    if(!mapDiv){
-      mapDiv = document.createElement('div');
-      mapDiv.id='_intel_mapbox';
-      mapDiv.style.cssText='position:fixed;left:-9999px;top:-9999px;width:1px;height:1px';
-      document.body.appendChild(mapDiv);
-    }
-    var map = new google.maps.Map(mapDiv,{center:{lat:-27,lng:-48.6},zoom:12});
-    var svc = new google.maps.places.PlacesService(map);
-    svc.textSearch({query:query, language:'pt-BR'}, function(results, status){
-      if(status==='OK' && results) resolve(results.slice(0, maxResults||20));
-      else if(status==='ZERO_RESULTS') resolve([]);
-      else reject(new Error('Places textSearch: '+status));
-    });
+  var r = await fetch(PLACES_PROXY, {
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+SB_KEY},
+    body: JSON.stringify({action:'textsearch', query:query})
   });
+  var data = await r.json();
+  if(data.error) throw new Error('Places: '+data.error);
+  if(data.status!=='OK' && data.status!=='ZERO_RESULTS')
+    throw new Error('Google Places: '+(data.status||'erro')+(data.error_message?' — '+data.error_message:''));
+  return (data.results||[]).slice(0, maxResults||20);
 }
 
 async function detalhesPlaceREST(placeId, apiKey){
-  await carregarGMaps(apiKey);
-  return new Promise(function(resolve){
-    var mapDiv = document.getElementById('_intel_mapbox');
-    var map = new google.maps.Map(mapDiv,{center:{lat:-27,lng:-48.6},zoom:12});
-    var svc = new google.maps.places.PlacesService(map);
-    svc.getDetails({
-      placeId: placeId,
-      fields:['name','formatted_phone_number','website','formatted_address','rating','user_ratings_total','url']
-    }, function(det, st){
-      resolve(st==='OK' ? det : null);
-    });
+  var r = await fetch(PLACES_PROXY, {
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+SB_KEY},
+    body: JSON.stringify({action:'details', placeId:placeId})
   });
+  var data = await r.json();
+  return (data.status==='OK') ? data.result : null;
 }
 
 // ── Deduplicar pela tabela Supabase ─────────────────────────────
@@ -4030,8 +3986,9 @@ window.buscarEmpresasIntel = async function(){
   renderIntel(document.getElementById('comercial-body'));
 
   try{
-    // Busca via REST (sem JS Library)
+    if(typeof toast==='function') toast('⏳ Carregando Google Maps…','info');
     var results = await buscarPlacesREST(nicho+' em '+cidade, gKey, Math.min(qtd,20));
+    if(typeof toast==='function') toast('🔍 Buscando empresas…','info');
     if(!results.length){
       if(typeof toast==='function') toast('Nenhuma empresa encontrada','err');
       intelBuscando=false; renderIntel(document.getElementById('comercial-body')); return;

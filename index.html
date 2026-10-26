@@ -3811,34 +3811,81 @@ var intelResultados = [];
 var intelBuscando   = false;
 
 // ── Carrega Google Maps Places JS dinamicamente ─────────────────
-// Places via Supabase Edge Function (proxy server-side — sem CORS)
-var PLACES_PROXY = SB_URL+'/functions/v1/places-proxy';
+// ── OpenStreetMap Overpass API — gratuito, sem chave, sem billing ──
+var OVERPASS_URL = 'https://overpass-api.de/api/interpreter';
 
-async function buscarPlacesREST(query, apiKey, maxResults){
-  var r = await fetchTimeout(PLACES_PROXY, {
-    method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+SB_KEY},
-    body: JSON.stringify({action:'textsearch', query:query})
-  }, 15000);
-  if(!r.ok) throw new Error('Edge Function retornou '+r.status+' — verifique se foi deployada no Supabase');
-  var data = await r.json();
-  if(data.error) throw new Error(data.error);
-  if(data.status==='REQUEST_DENIED') throw new Error('Chave Google negada: '+( data.error_message||'sem billing ou Places API não ativada'));
-  if(data.status!=='OK' && data.status!=='ZERO_RESULTS')
-    throw new Error('Google Places: '+(data.status||'erro')+(data.error_message?' — '+data.error_message:''));
-  return (data.results||[]).slice(0, maxResults||20);
+// Mapeia nichos em português para tags OSM
+function nichoParaOSM(nicho){
+  var n = nicho.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+  var mapa = [
+    [/clinic|estetica|estetico|dermato|beleza|spa|laser/,'amenity=clinic'],
+    [/medic|hospital|saude|odonto|denti|ortod/,'amenity=doctors'],
+    [/academia|gym|fitness|muscula/,'leisure=fitness_centre'],
+    [/restaur|comida|lanch|pizza|hambur|sushi/,'amenity=restaurant'],
+    [/hotel|pousada|hostel|hospedagem/,'tourism=hotel'],
+    [/advogad|advocac|juridic/,'office=lawyer'],
+    [/contab|contabil|contador/,'office=accountant'],
+    [/imobi|imobili|corretor/,'office=estate_agent'],
+    [/auto|carro|mecanica|oficina|funilaria/,'shop=car_repair'],
+    [/salon|cabelei|barbearia|barber/,'shop=hairdresser'],
+    [/farmac|drogar/,'amenity=pharmacy'],
+    [/supermercad|mercad|mercearia/,'shop=supermarket'],
+    [/pet|veterin/,'shop=pet'],
+    [/escola|colegio|curso|idioma/,'amenity=school'],
+    [/padaria|confeit|cafe/,'shop=bakery'],
+  ];
+  for(var i=0;i<mapa.length;i++){
+    if(mapa[i][0].test(n)) return mapa[i][1];
+  }
+  return 'name~"'+nicho+'",i'; // fallback: busca por nome
 }
 
-async function detalhesPlaceREST(placeId, apiKey){
-  try{
-    var r = await fetchTimeout(PLACES_PROXY, {
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+SB_KEY},
-      body: JSON.stringify({action:'details', placeId:placeId})
-    }, 8000);
-    var data = await r.json();
-    return (data.status==='OK') ? data.result : null;
-  }catch(e){ return null; }
+async function buscarPlacesREST(query, apiKey, maxResults){
+  // Extrai cidade da query "nicho em cidade"
+  var partes = query.split(' em ');
+  var nicho  = partes[0]||query;
+  var cidade = partes[1]||'Brasil';
+  var tag    = nichoParaOSM(nicho);
+  var tagKey = tag.includes('=') ? tag.split('=')[0] : 'name';
+  var tagVal = tag.includes('=') ? tag.split('=')[1] : tag.split('"')[1];
+
+  var overpassQ;
+  if(tag.includes('~')){
+    // fallback por nome
+    overpassQ = '[out:json][timeout:20];'+
+      'area["name"~"'+cidade+'","i"]["boundary"="administrative"]->.a;'+
+      '(node['+tag+'](area.a);way['+tag+'](area.a););out center '+( maxResults||20)+';';
+  } else {
+    overpassQ = '[out:json][timeout:20];'+
+      'area["name"~"'+cidade+'","i"]["boundary"="administrative"]->.a;'+
+      '(node["'+tagKey+'"="'+tagVal+'"](area.a);way["'+tagKey+'"="'+tagVal+'"](area.a););out center '+(maxResults||20)+';';
+  }
+
+  var r = await fetchTimeout(OVERPASS_URL, {
+    method:'POST',
+    headers:{'Content-Type':'application/x-www-form-urlencoded'},
+    body:'data='+encodeURIComponent(overpassQ)
+  }, 20000);
+  if(!r.ok) throw new Error('Overpass API retornou '+r.status);
+  var data = await r.json();
+  return (data.elements||[]).slice(0, maxResults||20);
+}
+
+async function detalhesPlaceREST(element, apiKey){
+  if(!element) return null;
+  var tags = element.tags||{};
+  var lat  = element.lat||(element.center&&element.center.lat)||0;
+  var lon  = element.lon||(element.center&&element.center.lon)||0;
+  return {
+    place_id: (element.type||'node')+'/'+element.id,
+    name:     tags.name||tags['name:pt']||'',
+    phone:    tags.phone||tags['contact:phone']||tags['contact:mobile']||'',
+    website:  tags.website||tags['contact:website']||'',
+    address:  [tags['addr:street'],tags['addr:housenumber'],tags['addr:city']].filter(Boolean).join(', '),
+    rating:0, reviews:0,
+    google_url: lat&&lon ? 'https://www.openstreetmap.org/'+element.type+'/'+element.id : '',
+    lat:lat, lon:lon
+  };
 }
 
 // ── Deduplicar pela tabela Supabase ─────────────────────────────
@@ -4029,24 +4076,25 @@ window.buscarEmpresasIntel = async function(){
     var empresas = [];
     for(var i=0; i<results.length; i++){
       try{
-        var det = await detalhesPlaceREST(results[i].place_id, gKey);
-        empresas.push({
-          place_id: results[i].place_id,
-          nome: (det&&det.name)||results[i].name||'',
-          empresa: (det&&det.name)||results[i].name||'',
-          segmento: nicho, cidade: cidade,
-          endereco: (det&&det.formatted_address)||'',
-          telefone: ((det&&det.formatted_phone_number)||'').replace(/\D/g,''),
-          website: (det&&det.website)||'',
-          google_rating: (det&&det.rating)||0,
-          google_reviews: (det&&det.user_ratings_total)||0,
-          google_url: (det&&det.url)||'',
-          instagram_handle:'', instagram_url:'', instagram_followers:0,
-          score:0, oportunidades:'', servicos_rec:'', status:'novo',
-          fonte:{google:true,apify:false}, criado:new Date().toISOString()
-        });
-      }catch(e){ /* ignora falha em detalhe individual */ }
-      await new Promise(function(r){ setTimeout(r,150); });
+        var det = await detalhesPlaceREST(results[i], gKey);
+        if(det && det.name){
+          empresas.push({
+            place_id: det.place_id||('osm/'+i),
+            nome: det.name,
+            empresa: det.name,
+            segmento: nicho, cidade: cidade,
+            endereco: det.address||'',
+            telefone: (det.phone||'').replace(/\D/g,''),
+            website: det.website||'',
+            google_rating: 0,
+            google_reviews: 0,
+            google_url: det.google_url||'',
+            instagram_handle:'', instagram_url:'', instagram_followers:0,
+            score:0, oportunidades:'', servicos_rec:'', status:'novo',
+            fonte:{osm:true,apify:false}, criado:new Date().toISOString()
+          });
+        }
+      }catch(e){}
     }
 
     if(!empresas.length){

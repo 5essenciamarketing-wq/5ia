@@ -3815,26 +3815,30 @@ var intelBuscando   = false;
 var PLACES_PROXY = SB_URL+'/functions/v1/places-proxy';
 
 async function buscarPlacesREST(query, apiKey, maxResults){
-  var r = await fetch(PLACES_PROXY, {
+  var r = await fetchTimeout(PLACES_PROXY, {
     method:'POST',
     headers:{'Content-Type':'application/json','Authorization':'Bearer '+SB_KEY},
     body: JSON.stringify({action:'textsearch', query:query})
-  });
+  }, 15000);
+  if(!r.ok) throw new Error('Edge Function retornou '+r.status+' — verifique se foi deployada no Supabase');
   var data = await r.json();
-  if(data.error) throw new Error('Places: '+data.error);
+  if(data.error) throw new Error(data.error);
+  if(data.status==='REQUEST_DENIED') throw new Error('Chave Google negada: '+( data.error_message||'sem billing ou Places API não ativada'));
   if(data.status!=='OK' && data.status!=='ZERO_RESULTS')
     throw new Error('Google Places: '+(data.status||'erro')+(data.error_message?' — '+data.error_message:''));
   return (data.results||[]).slice(0, maxResults||20);
 }
 
 async function detalhesPlaceREST(placeId, apiKey){
-  var r = await fetch(PLACES_PROXY, {
-    method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+SB_KEY},
-    body: JSON.stringify({action:'details', placeId:placeId})
-  });
-  var data = await r.json();
-  return (data.status==='OK') ? data.result : null;
+  try{
+    var r = await fetchTimeout(PLACES_PROXY, {
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+SB_KEY},
+      body: JSON.stringify({action:'details', placeId:placeId})
+    }, 8000);
+    var data = await r.json();
+    return (data.status==='OK') ? data.result : null;
+  }catch(e){ return null; }
 }
 
 // ── Deduplicar pela tabela Supabase ─────────────────────────────
@@ -3969,6 +3973,14 @@ window.carregarIntelSalvos = async function(){
 };
 
 // ── Busca principal ─────────────────────────────────────────────
+// Helper: fetch com timeout
+function fetchTimeout(url, opts, ms){
+  return new Promise(function(resolve, reject){
+    var t = setTimeout(function(){ reject(new Error('Timeout ('+ms/1000+'s)')); }, ms);
+    fetch(url, opts).then(function(r){ clearTimeout(t); resolve(r); }).catch(function(e){ clearTimeout(t); reject(e); });
+  });
+}
+
 window.buscarEmpresasIntel = async function(){
   var nicho    = (document.getElementById('intel-nicho')?.value||'').trim();
   var cidade   = (document.getElementById('intel-cidade')?.value||'').trim();
@@ -3985,69 +3997,98 @@ window.buscarEmpresasIntel = async function(){
   intelResultados = [];
   renderIntel(document.getElementById('comercial-body'));
 
+  var toastFn = typeof toast==='function' ? toast : function(){};
+
   try{
-    if(typeof toast==='function') toast('⏳ Carregando Google Maps…','info');
-    var results = await buscarPlacesREST(nicho+' em '+cidade, gKey, Math.min(qtd,20));
-    if(typeof toast==='function') toast('🔍 Buscando empresas…','info');
-    if(!results.length){
-      if(typeof toast==='function') toast('Nenhuma empresa encontrada','err');
+    // ── ETAPA 1: buscar no Google Places ──
+    toastFn('🔍 Buscando no Google Places…','info');
+    var results;
+    try{
+      results = await buscarPlacesREST(nicho+' em '+cidade, gKey, Math.min(qtd,20));
+    }catch(e){
+      toastFn('Erro Google Places: '+e.message,'err');
       intelBuscando=false; renderIntel(document.getElementById('comercial-body')); return;
     }
 
+    if(!results||!results.length){
+      toastFn('Nenhuma empresa encontrada para "'+nicho+' em '+cidade+'"','err');
+      intelBuscando=false; renderIntel(document.getElementById('comercial-body')); return;
+    }
+    toastFn('✅ '+results.length+' empresas encontradas — buscando detalhes…','info');
+
+    // ── ETAPA 2: detalhes de cada empresa ──
     var empresas = [];
     for(var i=0; i<results.length; i++){
-      var det = await detalhesPlaceREST(results[i].place_id, gKey);
-      if(det){
+      try{
+        var det = await detalhesPlaceREST(results[i].place_id, gKey);
         empresas.push({
           place_id: results[i].place_id,
-          nome: det.name||results[i].name||'',
-          empresa: det.name||results[i].name||'',
-          segmento: nicho,
-          cidade: cidade,
-          endereco: det.formatted_address||'',
-          telefone: (det.formatted_phone_number||'').replace(/\D/g,''),
-          website: det.website||'',
-          google_rating: det.rating||0,
-          google_reviews: det.user_ratings_total||0,
-          google_url: det.url||'',
+          nome: (det&&det.name)||results[i].name||'',
+          empresa: (det&&det.name)||results[i].name||'',
+          segmento: nicho, cidade: cidade,
+          endereco: (det&&det.formatted_address)||'',
+          telefone: ((det&&det.formatted_phone_number)||'').replace(/\D/g,''),
+          website: (det&&det.website)||'',
+          google_rating: (det&&det.rating)||0,
+          google_reviews: (det&&det.user_ratings_total)||0,
+          google_url: (det&&det.url)||'',
           instagram_handle:'', instagram_url:'', instagram_followers:0,
-          score:0, oportunidades:'', servicos_rec:'',
-          status:'novo',
-          fonte:{google:true, apify:false},
-          criado: new Date().toISOString()
+          score:0, oportunidades:'', servicos_rec:'', status:'novo',
+          fonte:{google:true,apify:false}, criado:new Date().toISOString()
         });
-      }
-      await new Promise(function(r){ setTimeout(r,200); });
+      }catch(e){ /* ignora falha em detalhe individual */ }
+      await new Promise(function(r){ setTimeout(r,150); });
     }
 
-    {
-        // Deduplicar
-        var existentes = await placeIdsExistentes();
-        var novos = empresas.filter(function(e){ return !existentes.includes(e.place_id); });
-        var dups  = empresas.filter(function(e){ return  existentes.includes(e.place_id); })
-                            .map(function(e){ return Object.assign({},e,{status:'duplicado'}); });
-
-        // Instagram via Apify
-        if(apifyKey && novos.length){
-          await buscarInstagramLote(novos, apifyKey);
-        }
-
-        // Score IA
-        await scoreEmLote(novos);
-
-        // Salvar novos no Supabase
-        for(var j=0; j<novos.length; j++){
-          await salvarIntelSB(novos[j]);
-        }
-
-        intelResultados = novos.concat(dups);
-        intelBuscando   = false;
-        renderIntel(document.getElementById('comercial-body'));
-        if(typeof toast==='function') toast(novos.length+' novas empresas qualificadas!','ok');
+    if(!empresas.length){
+      toastFn('Não foi possível obter detalhes das empresas','err');
+      intelBuscando=false; renderIntel(document.getElementById('comercial-body')); return;
     }
+
+    // ── ETAPA 3: deduplicar (opcional — ignora se tabela não existe) ──
+    var existentes = [];
+    try{ existentes = await placeIdsExistentes(); }catch(e){}
+    var novos = empresas.filter(function(e){ return !existentes.includes(e.place_id); });
+    var dups  = empresas.filter(function(e){ return  existentes.includes(e.place_id); })
+                        .map(function(e){ return Object.assign({},e,{status:'duplicado'}); });
+
+    // Mostra resultado parcial imediato (sem score ainda)
+    intelResultados = novos.concat(dups);
+    renderIntel(document.getElementById('comercial-body'));
+    toastFn('📋 '+novos.length+' novas empresas — calculando score IA…','info');
+
+    // ── ETAPA 4: score IA (com timeout de 30s por lote) ──
+    try{
+      await Promise.race([
+        scoreEmLote(novos),
+        new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout score')); }, 30000); })
+      ]);
+    }catch(e){
+      toastFn('Score IA ignorado ('+e.message+') — exibindo sem score','info');
+    }
+
+    // ── ETAPA 5: Instagram Apify (opcional) ──
+    if(apifyKey && novos.length){
+      try{
+        await Promise.race([
+          buscarInstagramLote(novos, apifyKey),
+          new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, 25000); })
+        ]);
+      }catch(e){ /* ignora */ }
+    }
+
+    // ── ETAPA 6: salvar no Supabase (opcional) ──
+    for(var j=0; j<novos.length; j++){
+      try{ await salvarIntelSB(novos[j]); }catch(e){}
+    }
+
+    intelResultados = novos.concat(dups);
+    intelBuscando   = false;
+    renderIntel(document.getElementById('comercial-body'));
+    toastFn(novos.length+' empresas qualificadas!','ok');
 
   }catch(err){
-    if(typeof toast==='function') toast('Erro: '+err.message,'err');
+    toastFn('Erro: '+err.message,'err');
     intelBuscando=false;
     renderIntel(document.getElementById('comercial-body'));
   }

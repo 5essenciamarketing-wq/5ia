@@ -3973,12 +3973,13 @@ window.carregarIntelSalvos = async function(){
 };
 
 // ── Busca principal ─────────────────────────────────────────────
-// Helper: fetch com timeout
+// Helper: fetch com abort real
 function fetchTimeout(url, opts, ms){
-  return new Promise(function(resolve, reject){
-    var t = setTimeout(function(){ reject(new Error('Timeout ('+ms/1000+'s)')); }, ms);
-    fetch(url, opts).then(function(r){ clearTimeout(t); resolve(r); }).catch(function(e){ clearTimeout(t); reject(e); });
-  });
+  var ctrl = new AbortController();
+  var t = setTimeout(function(){ ctrl.abort(); }, ms);
+  return fetch(url, Object.assign({}, opts, {signal: ctrl.signal}))
+    .then(function(r){ clearTimeout(t); return r; })
+    .catch(function(e){ clearTimeout(t); throw new Error(e.name==='AbortError'?'Timeout '+ms/1000+'s — edge function não respondeu':e.message); });
 }
 
 window.buscarEmpresasIntel = async function(){
@@ -3998,6 +3999,14 @@ window.buscarEmpresasIntel = async function(){
   renderIntel(document.getElementById('comercial-body'));
 
   var toastFn = typeof toast==='function' ? toast : function(){};
+
+  // Safety net: para tudo depois de 25s
+  var _safetyTimer = setTimeout(function(){
+    if(!intelBuscando) return;
+    intelBuscando = false;
+    toastFn('Tempo esgotado (25s) — verifique a Edge Function no Supabase','err');
+    renderIntel(document.getElementById('comercial-body'));
+  }, 25000);
 
   try{
     // ── ETAPA 1: buscar no Google Places ──
@@ -4082,12 +4091,14 @@ window.buscarEmpresasIntel = async function(){
       try{ await salvarIntelSB(novos[j]); }catch(e){}
     }
 
+    clearTimeout(_safetyTimer);
     intelResultados = novos.concat(dups);
     intelBuscando   = false;
     renderIntel(document.getElementById('comercial-body'));
     toastFn(novos.length+' empresas qualificadas!','ok');
 
   }catch(err){
+    clearTimeout(_safetyTimer);
     toastFn('Erro: '+err.message,'err');
     intelBuscando=false;
     renderIntel(document.getElementById('comercial-body'));

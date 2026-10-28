@@ -2900,7 +2900,7 @@ async function gerarPitchProspec(){
       method:'POST',
       headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY},
       body:JSON.stringify({
-        system:'Você é especialista em vendas pelo WhatsApp para a agência 5essência Marketing. Escreva uma mensagem de primeiro contato curta e comercial, no estilo abaixo:\n\n"Oi [Nome]! Tudo bem?\nTrabalhamos com profissionais da sua área e nos últimos 30 dias uma das nossas clientes fechou 18 novos agendamentos sem responder uma mensagem sequer — foi tudo automático.\nGravei um vídeo rápido mostrando exatamente como funciona \n\n[vídeo]\n\nE o melhor: custa R$ 29,90 por mês. Menos que um lanche. \nSe quiser testar, é só me falar!"\n\nAdapte o nome, segmento e resultado com base no diagnóstico do lead. Use prova social real e mostre o preço no final, depois do vídeo. Sem asteriscos. Sem formalidade excessiva. Sem "Atenciosamente". Máximo 6 linhas.',
+        system:'Você escreve mensagens de primeiro contato no WhatsApp para a agência 5essência Marketing (Balneário Camboriú, SC).\n\nFOCO DESTA MENSAGEM: mostrar a CONVENIÊNCIA e FACILIDADE do sistema de agendamento automático — não números inventados, não preço, não promessas exageradas. O lead precisa sentir que a vida vai ficar mais fácil.\n\nESTILO:\n- Tom leve, humano, direto — como se fosse um amigo avisando de algo útil\n- Menciona o segmento/contexto do lead de forma natural\n- Destaca que o sistema cuida dos agendamentos enquanto o profissional faz o que sabe fazer\n- Sem perder tempo com mensagens, sem esquecimento, sem cliente sem resposta\n- Oferece mostrar como funciona (não vende, apenas abre a conversa)\n- Sem asteriscos, sem bullet points, sem "Atenciosamente", sem números inventados\n- Máximo 4 parágrafos curtos\n\nEXEMPLO DE TOM (adapte ao nicho, NÃO copie):\n"Oi [Nome]! Vi que vocês trabalham com [segmento] — imagino que a agenda é uma parte que consome bastante energia, né?\nA gente criou um sistema que cuida disso automaticamente: confirma, lembra o cliente, reorganiza em caso de cancelamento — tudo sem você precisar parar o que está fazendo para responder.\nSe quiser, te mostro como funciona em uns 10 minutos. Sem compromisso."',
         messages:[{role:'user',content:'Diagnóstico: '+diag+'\nLead: '+nome+(empresa?' — '+empresa:'')+(servicoSelecionado?'\nServiço a ofertar: '+servicoSelecionado:'')+'\n\nCrie a mensagem de primeiro contato conforme o estilo definido.'}]
       })
     });
@@ -4561,7 +4561,7 @@ window.dispararPitchZapiInline = async function(placeId){
         renderIntel(document.getElementById('comercial-body'));
       }catch(e){}
 
-      // 2. Cria prospecto no pipeline
+      // 2. Cria prospecto no pipeline (salva direto no Supabase)
       try{
         var diagIntel = 'Lead via Intel B2B\n'
           +'Segmento: '+(emp.segmento||'')+(emp.cidade ? ' | Cidade: '+emp.cidade : '')+'\n'
@@ -4583,14 +4583,20 @@ window.dispararPitchZapiInline = async function(placeId){
             {data:new Date().toISOString(), tipo:'contato', nota:'Pitch enviado por WhatsApp: '+pitch}
           ]
         };
-        prospectos.unshift(novoProsp);
-        await fetch(SB_URL+'/rest/v1/prospectos',{
+        var rProsp = await fetch(SB_URL+'/rest/v1/prospectos',{
           method:'POST',
           headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},
           body:JSON.stringify(novoProsp)
         });
-        toast(emp.nome+' adicionado ao pipeline! 📋','ok');
-      }catch(e){}
+        if(rProsp.ok){
+          toast(emp.nome+' salvo no pipeline! 📋','ok');
+        } else {
+          var errText = await rProsp.text();
+          toast('Pitch enviado, mas erro ao salvar: '+errText.slice(0,60),'err');
+        }
+      }catch(eSave){
+        toast('Pitch enviado, mas falha ao salvar lead: '+eSave.message,'err');
+      }
 
     } else {
       throw new Error(d.error||d.message||JSON.stringify(d));

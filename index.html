@@ -4057,29 +4057,94 @@ function slugify(s){
 }
 
 // ── Busca Instagram via Apify ───────────────────────────────────
+// Extrai handle do Instagram a partir do website da empresa (se for link direto)
+function extrairInstagramDoWebsite(url){
+  if(!url) return null;
+  var m = url.match(/instagram\.com\/([A-Za-z0-9_.]+)/);
+  return m ? m[1].replace(/\/$/, '') : null;
+}
+
+// Gera variações de @ para tentar no Apify
+function gerarVariacoesUsername(nome, cidade){
+  var base = (nome||'').toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g,'')
+    .replace(/[^a-z0-9\s]/g,'').trim();
+  var cidadeSlug = (cidade||'').toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g,'')
+    .replace(/[^a-z0-9]/g,'').replace(/^(balneario|camboriú|camboriú|florianopolis|itapema|itajai)/,'').trim();
+
+  var palavras = base.split(/\s+/).filter(function(p){ return p.length>2 && !['restaurante','clinica','studio','atelie','loja','mercado','farmacia','academia','salao','barbearia','sorveteria','padaria','hotel','pousada','imobiliaria','academia'].includes(p); });
+
+  var vars = [];
+  // Nome completo sem espaços
+  vars.push(base.replace(/\s+/g,''));
+  // Palavras significativas unidas
+  if(palavras.length) vars.push(palavras.join(''));
+  // Primeira palavra significativa
+  if(palavras[0]) vars.push(palavras[0]);
+  // Primeira palavra + cidade abreviada
+  if(palavras[0] && cidadeSlug) vars.push(palavras[0]+cidadeSlug.slice(0,3));
+  // Duas primeiras palavras
+  if(palavras.length>=2) vars.push(palavras[0]+palavras[1]);
+  // Com underscore
+  if(palavras.length>=2) vars.push(palavras[0]+'_'+palavras[1]);
+
+  // Remove duplicatas e limita
+  return vars.filter(function(v,i,a){ return v.length>2 && a.indexOf(v)===i; }).slice(0,4);
+}
+
 async function buscarInstagramLote(empresas, apifyToken){
   try{
-    var usernames = empresas.map(function(e){ return slugify(e.nome); }).slice(0,15);
+    // PASSO 1: extrair Instagram direto do website (gratuito, sem Apify)
+    empresas.forEach(function(emp){
+      if(emp.instagram_handle) return; // já tem
+      var handle = extrairInstagramDoWebsite(emp.website);
+      if(handle){
+        emp.instagram_handle    = handle;
+        emp.instagram_url       = 'https://instagram.com/'+handle;
+        emp.instagram_followers = 0; // followers só via Apify
+        emp.fonte.website       = true;
+      }
+    });
+
+    // PASSO 2: para quem ainda não tem Instagram, tentar via Apify
+    var semInsta = empresas.filter(function(e){ return !e.instagram_handle; }).slice(0,10);
+    if(!semInsta.length) return;
+
+    // Mapeia todas as variações e guarda de qual empresa cada uma veio
+    var mapaUsername = {}; // username → empresa
+    var todosUsernames = [];
+    semInsta.forEach(function(emp){
+      var vars = gerarVariacoesUsername(emp.nome, emp.cidade);
+      vars.forEach(function(v){
+        if(!mapaUsername[v]){
+          mapaUsername[v] = emp;
+          todosUsernames.push(v);
+        }
+      });
+    });
+
     var run = await fetch(
-      'https://api.apify.com/v2/acts/apify~instagram-profile-scraper/run-sync-get-dataset-items?token='+apifyToken+'&timeout=90',
+      'https://api.apify.com/v2/acts/apify~instagram-profile-scraper/run-sync-get-dataset-items?token='+apifyToken+'&timeout=60',
       {method:'POST', headers:{'Content-Type':'application/json'},
-       body:JSON.stringify({usernames:usernames, proxy:{useApifyProxy:true}})
+       body:JSON.stringify({usernames:todosUsernames, proxy:{useApifyProxy:true}})
       }
     );
     if(!run.ok) return;
     var profiles = await run.json();
     if(!Array.isArray(profiles)) return;
+
     profiles.forEach(function(prof){
-      var slug = prof.username||'';
-      var emp  = empresas.find(function(e){ return slugify(e.nome)===slug; });
-      if(emp && prof.followersCount){
+      if(!prof.username || !prof.followersCount) return;
+      var emp = mapaUsername[prof.username.toLowerCase()];
+      if(emp && !emp.instagram_handle){
         emp.instagram_handle    = prof.username;
         emp.instagram_url       = 'https://instagram.com/'+prof.username;
         emp.instagram_followers = prof.followersCount||0;
         emp.fonte.apify         = true;
       }
     });
-  }catch(e){ console.warn('Apify:', e.message); }
+  }catch(e){ console.warn('Apify Instagram:', e.message); }
 }
 
 // ── Score IA via chat-assistant existente ───────────────────────

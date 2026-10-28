@@ -4589,7 +4589,16 @@ window.dispararPitchZapiInline = async function(placeId){
           body:JSON.stringify(novoProsp)
         });
         if(rProsp.ok){
-          toast(emp.nome+' salvo no pipeline! 📋','ok');
+          // Atualiza array local e re-renderiza a lista de prospectos
+          if(typeof prospectos !== 'undefined') prospectos.unshift(novoProsp);
+          if(typeof carregarProspectos === 'function'){
+            carregarProspectos().then(function(){
+              if(typeof renderComercial === 'function') renderComercial();
+            }).catch(function(){
+              if(typeof renderComercial === 'function') renderComercial();
+            });
+          }
+          toast(emp.nome+' salvo como prospecto! 📋','ok');
         } else {
           var errText = await rProsp.text();
           toast('Pitch enviado, mas erro ao salvar: '+errText.slice(0,60),'err');

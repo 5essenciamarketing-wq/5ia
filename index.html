@@ -841,7 +841,10 @@ input:-webkit-autofill,input:-webkit-autofill:focus{
   </div>
 
   <div class="field">
-    <label>Cliente</label>
+    <label style="display:flex;align-items:center;justify-content:space-between">
+      Cliente
+      <span onclick="carregarClientes().then(()=>toast('Clientes atualizados'))" title="Atualizar lista de clientes" style="font-size:10px;color:var(--blue);cursor:pointer;font-weight:600;opacity:0.7">↻ Atualizar</span>
+    </label>
     <select id="sel-cliente" onchange="onClienteChange()">
       <option value="">Carregando…</option>
     </select>
@@ -1197,15 +1200,30 @@ document.addEventListener('DOMContentLoaded', () => {
     hoje.toLocaleDateString('pt-BR', { weekday:'short', day:'numeric', month:'short' })
         .replace(/^\w/, c => c.toUpperCase());
   carregarClientes();
+  carregarAtvDoSupabase(); // recupera atividades do dia mesmo trocando de URL
 });
 
 async function carregarClientes() {
   try {
+    // Aceita status 'ativo' ou nulo (clientes cadastrados sem status explícito)
     const r = await fetch(
-      `${SB_URL}/rest/v1/clientes?select=id,nome_completo,empresa,whatsapp,whatsapp_financeiro&status=eq.ativo&order=nome_completo`,
+      `${SB_URL}/rest/v1/clientes?select=id,nome_completo,empresa,whatsapp,whatsapp_financeiro&or=(status.eq.ativo,status.is.null)&order=nome_completo`,
       { headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY } }
     );
     const data = await r.json();
+
+    // Detecta clientes novos em relação à lista anterior e adiciona ao diário
+    const idsAntigos = new Set(clientes.map(c => c.id));
+    const novos = (data || []).filter(c => !idsAntigos.has(c.id));
+    novos.forEach(c => {
+      // Evita duplicar se já tiver atividade hoje para este cliente
+      const jaExiste = atividadesDia.some(a => a.clienteId === c.id && a.titulo.startsWith('Novo cliente:'));
+      if(!jaExiste && idsAntigos.size > 0){ // idsAntigos.size > 0 evita criar na carga inicial
+        _adicionarAtvDiario({nome: c.nome_completo, empresa: c.empresa||''}, c.id);
+        toast(`Novo cliente no sistema: ${c.nome_completo.split(' ')[0]} 🎉`);
+      }
+    });
+
     clientes = data || [];
     const sel = document.getElementById('sel-cliente');
     sel.innerHTML = '<option value="">Selecionar cliente…</option>';
@@ -1219,6 +1237,15 @@ async function carregarClientes() {
     });
   } catch(e) { toast('Erro ao carregar clientes', 'er'); }
 }
+
+// ── Polling: verifica novos clientes a cada 30s (sincroniza com sistema matriz) ──
+(function iniciarPollingClientes(){
+  // Aguarda a carga inicial antes de começar
+  setTimeout(function poll(){
+    carregarClientes().catch(()=>{});
+    setTimeout(poll, 30000);
+  }, 30000);
+})();
 
 function getCtx() {
   const sel = document.getElementById('sel-cliente');
@@ -2625,6 +2652,10 @@ function renderProspec(body){
       </div>
       <div style="font-size:10px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">Mensagem de abordagem</div>
       <textarea id="pr-pitch" rows="5" placeholder="Escreva sua mensagem de abordagem aqui… ou clique em Sugerir para a IA gerar uma base." style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.10);border-radius:10px;padding:12px;font-size:12.5px;color:rgba(240,240,255,0.85);line-height:1.65;resize:none;height:130px;font-family:var(--font);outline:none;display:block;margin-bottom:8px"></textarea>
+      <div style="margin-bottom:8px">
+        <div style="font-size:10px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:5px">Arquivo / Diagnóstico <span style="font-weight:400;text-transform:none;font-size:10px">(opcional — cole o link)</span></div>
+        <input id="pr-arquivo" placeholder="https://drive.google.com/... ou qualquer link público" style="${inputStyle()}font-size:12px">
+      </div>
       <div style="display:flex;gap:7px;flex-wrap:wrap">
         <button onclick="enviarPitch()" style="${btnPriStyle()}flex:1">· Salvar e enviar WhatsApp</button>
         <button onclick="salvarProspecto()" style="${btnSecStyle()}flex:1">+ Só salvar</button>
@@ -2909,12 +2940,56 @@ function moverProspecto(id, status){
   prospectos[idx].registros.push({data:new Date().toISOString(),tipo:status,nota:`Status atualizado para ${status}`});
   atualizarProspectoSB(prospectos[idx]);
   renderComercial();
-  toast(status==='cliente'?'Cliente fechado!':'Status atualizado');
+  toast(status==='cliente'?'Cliente fechado! 🎉':'Status atualizado');
+
+  // ── Quando vira cliente: insere na tabela clientes e cria atividade no diário ──
+  if(status === 'cliente') _registrarNovoCliente(prospectos[idx]);
+}
+
+// ── Helper: registra prospecto fechado como cliente ativo ─────────
+function _registrarNovoCliente(p){
+  const novoCliente = {
+    nome_completo: p.nome,
+    empresa: p.empresa||'',
+    whatsapp: p.contato||'',
+    status: 'ativo',
+    created_at: new Date().toISOString()
+  };
+  fetch(`${SB_URL}/rest/v1/clientes`, {
+    method:'POST',
+    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=representation'},
+    body: JSON.stringify(novoCliente)
+  }).then(r=>r.json()).then(data=>{
+    const clienteId = Array.isArray(data)&&data[0] ? data[0].id : null;
+    carregarClientes();
+    _adicionarAtvDiario(p, clienteId);
+  }).catch(()=>{
+    carregarClientes();
+    _adicionarAtvDiario(p, null);
+  });
+}
+
+function _adicionarAtvDiario(p, clienteId){
+  const atv = {
+    id: Date.now().toString(),
+    titulo: `Novo cliente: ${p.nome}${p.empresa?' ('+p.empresa+')':''}`,
+    categoria: 'cliente',
+    clienteId: clienteId||'',
+    clienteNome: p.nome,
+    semana: getSemanaStr(),
+    data: hoje(),
+    concluida: false
+  };
+  atividadesDia.unshift(atv);
+  salvarAtv();
+  renderListaDia();
+  if(clienteId) salvarAtvSupabase(atv);
 }
 
 async function enviarPitch(){
   const contato = document.getElementById('pr-contato')?.value.trim()||'';
   const pitch   = document.getElementById('pr-pitch')?.value||'';
+  const arquivo = (document.getElementById('pr-arquivo')?.value||'').trim();
   if(!contato){ toast('Preencha o WhatsApp do lead','er'); return; }
   const num = '55'+contato.replace(/\D/g,'');
   const btn = document.querySelector('[onclick="enviarPitch()"]');
@@ -2929,30 +3004,39 @@ async function enviarPitch(){
 
     // 2. Se toggle ativo, envia vídeo
     if(enviarVideo){
-      await new Promise(r=>setTimeout(r,1200)); // pequeno delay
+      await new Promise(r=>setTimeout(r,1000));
       await fetch(`https://api.z-api.io/instances/${ZAPI_I}/token/${ZAPI_T}/send-video`,{
         method:'POST',headers:{'Content-Type':'application/json','Client-Token':ZAPI_C},
         body:JSON.stringify({phone:num,video:VIDEO_APRESENTACAO,caption:'Veja como funciona na prática'})
       });
     }
 
+    // 3. Se há arquivo, envia como documento
+    if(arquivo){
+      await new Promise(r=>setTimeout(r,1200));
+      await fetch(`https://api.z-api.io/instances/${ZAPI_I}/token/${ZAPI_T}/send-document/pdf`,{
+        method:'POST',headers:{'Content-Type':'application/json','Client-Token':ZAPI_C},
+        body:JSON.stringify({phone:num,document:arquivo,fileName:'Diagnóstico_Quintessência.pdf'})
+      });
+    }
+
+    const extras = (enviarVideo?'+vídeo':'')+(arquivo?'+arquivo':'');
     if(r1.zaapId||r1.messageId||r1.id){
-      if(btn){ btn.textContent = enviarVideo ? 'Mensagem + vídeo enviados!' : 'Enviado!';
-      btn.style.background='rgba(45,212,122,0.15)';
-      btn.style.color='var(--green)'; }
-      toast(enviarVideo ? '· Pitch + vídeo enviados!' : 'Pitch enviado!');
-      // Registra "contato enviado" no prospecto correspondente
+      if(btn){ btn.textContent='Enviado'+(extras?' '+extras:'')+'!';
+        btn.style.background='rgba(45,212,122,0.15)'; btn.style.color='var(--green)'; }
+      toast('Pitch enviado'+(extras?' '+extras:'')+'!');
       const numLimpo = contato.replace(/\D/g,'');
       const idx = prospectos.findIndex(p=>(p.contato||'').replace(/\D/g,'').endsWith(numLimpo.slice(-9)));
       if(idx>=0){
         prospectos[idx].registros = prospectos[idx].registros||[];
-        prospectos[idx].registros.push({data:new Date().toISOString(),tipo:'contato',nota:'Pitch enviado via WhatsApp'+(enviarVideo?' + vídeo':'')+'.'});
+        prospectos[idx].registros.push({data:new Date().toISOString(),tipo:'contato',
+          nota:'Pitch enviado via WhatsApp'+(enviarVideo?' + vídeo':'')+(arquivo?' + arquivo':'')+'.'});
         atualizarProspectoSB(prospectos[idx]);
       }
     } else {
-      btn.textContent='Erro ao enviar'; if(btn) btn.disabled=false;
+      if(btn){ btn.textContent='Erro ao enviar'; btn.disabled=false; }
     }
-  }catch(e){ btn.textContent='Erro de conexão'; btn.disabled=false; }
+  }catch(e){ if(btn){ btn.textContent='Erro de conexão'; btn.disabled=false; } }
 }
 
 // ── FOLLOW-UP ───────────────────────────────────────────────────
@@ -3074,11 +3158,15 @@ function moverProspectoVer(id, novoStatus){
   const idx = prospectos.findIndex(p=>p.id===id);
   if(idx<0) return;
   prospectos[idx].status = novoStatus;
+  prospectos[idx].registros = prospectos[idx].registros||[];
+  prospectos[idx].registros.push({data:new Date().toISOString(),tipo:novoStatus,nota:`Status atualizado para ${novoStatus}`});
   atualizarProspectoSB(prospectos[idx]);
   // Rerender in place
   verRegistros(id);
-  const labels = {prospecto:'Prospecção',followup:'Follow-up',proposta:'Proposta',cliente:'Fechado',perdido:'Perdido'};
+  const labels = {prospecto:'Prospecção',followup:'Follow-up',proposta:'Proposta',cliente:'Fechado 🎉',perdido:'Perdido'};
   toast(`Estágio: ${labels[novoStatus]}`,'ok');
+  // Mesmo fluxo de fechamento: insere em clientes + diário
+  if(novoStatus === 'cliente') _registrarNovoCliente(prospectos[idx]);
 }
 
 
@@ -3099,6 +3187,48 @@ async function salvarAtvSupabase(ativ){
         created_at: ativ.created_at||new Date().toISOString()
       })
     });
+  } catch(e){}
+}
+
+// ── Carrega atividades do dia do Supabase (resiliente a troca de URL/deployment) ──
+async function carregarAtvDoSupabase(){
+  try {
+    const dataHoje = hoje();
+    // Busca tarefas criadas hoje no Supabase
+    const r = await fetch(
+      `${SB_URL}/rest/v1/tarefas?select=id,titulo,categoria,status,cliente_id,created_at,clientes(nome_completo)&created_at=gte.${dataHoje}T00:00:00&created_at=lte.${dataHoje}T23:59:59&order=created_at.asc`,
+      { headers: {'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY} }
+    );
+    if(!r.ok) return;
+    const data = await r.json();
+    if(!Array.isArray(data) || !data.length) return;
+
+    // Mescla com o que já existe no localStorage, sem duplicar
+    const idsLocais = new Set(atividadesDia.map(a=>a.id));
+    let adicionou = false;
+    data.forEach(t => {
+      // Usa o id do Supabase; se já existe localmente ignora
+      if(idsLocais.has(t.id)) return;
+      // Evita duplicar por título+dia (atividades criadas sem clienteId não vão ao Supabase)
+      const jaExiste = atividadesDia.some(a => a.titulo === t.titulo && a.data === dataHoje);
+      if(jaExiste) return;
+      atividadesDia.push({
+        id: t.id,
+        titulo: t.titulo,
+        categoria: t.categoria||'geral',
+        clienteId: t.cliente_id||'',
+        clienteNome: t.clientes?.nome_completo||'',
+        semana: getSemanaStr(),
+        data: dataHoje,
+        concluida: t.status==='concluida',
+        _saved: true
+      });
+      adicionou = true;
+    });
+    if(adicionou){
+      salvarAtv();
+      renderListaDia();
+    }
   } catch(e){}
 }
 
@@ -3809,10 +3939,9 @@ function mobileNav(aba){
 
 var intelResultados = [];
 var intelBuscando   = false;
+var intelDuplicados = 0;
 
-// ── Carrega Google Maps Places JS dinamicamente ─────────────────
-// ── OpenStreetMap Overpass API — gratuito, sem chave, sem billing ──
-var OVERPASS_URL = 'https://overpass-api.de/api/interpreter';
+// ── Google Places via Supabase Edge Function (places-proxy) ──
 
 // Mapeia nichos em português para tags OSM
 function nichoParaOSM(nicho){
@@ -3837,54 +3966,70 @@ function nichoParaOSM(nicho){
   for(var i=0;i<mapa.length;i++){
     if(mapa[i][0].test(n)) return mapa[i][1];
   }
-  return 'name~"'+nicho+'",i'; // fallback: busca por nome
+  return 'name~"'+nicho+'",i';
 }
 
+// (bounding boxes mantidas como fallback, não usadas com Google Places)
+var CIDADE_BBOX = {
+  'balneario camboriu': [-27.02,-48.70,-26.93,-48.58],
+  'balneário camboriú': [-27.02,-48.70,-26.93,-48.58],
+  'itapema': [-27.12,-48.63,-27.06,-48.58],
+  'florianopolis': [-27.82,-48.67,-27.45,-48.37],
+  'florianópolis': [-27.82,-48.67,-27.45,-48.37],
+  'porto alegre': [-30.24,-51.32,-29.95,-51.06],
+  'sao paulo': [-23.65,-46.83,-23.46,-46.56],
+  'são paulo': [-23.65,-46.83,-23.46,-46.56],
+  'curitiba': [-25.54,-49.39,-25.35,-49.20],
+  'belo horizonte': [-20.05,-44.10,-19.79,-43.84],
+  'rio de janeiro': [-23.08,-43.80,-22.74,-43.10],
+  'brasilia': [-15.87,-48.28,-15.60,-47.73],
+  'brasília': [-15.87,-48.28,-15.60,-47.73],
+  'salvador': [-13.01,-38.57,-12.85,-38.30],
+  'fortaleza': [-3.84,-38.63,-3.69,-38.43],
+  'recife': [-8.17,-35.03,-7.99,-34.86],
+  'manaus': [-3.17,-60.10,-2.97,-59.89],
+  'belem': [-1.50,-48.56,-1.37,-48.43],
+  'belém': [-1.50,-48.56,-1.37,-48.43],
+  'goiania': [-16.76,-49.40,-16.60,-49.22],
+  'goiânia': [-16.76,-49.40,-16.60,-49.22],
+  'bage': [-31.37,-54.17,-31.29,-54.07],
+  'bagé': [-31.37,-54.17,-31.29,-54.07],
+  'camboriu': [-27.04,-48.68,-26.97,-48.63],
+  'camboriú': [-27.04,-48.68,-26.97,-48.63],
+};
+
+function getBBox(cidade){
+  var c = cidade.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+  for(var k in CIDADE_BBOX){ if(k.normalize('NFD').replace(/[̀-ͯ]/g,'')==c) return CIDADE_BBOX[k]; }
+  return null;
+}
+
+// ── Google Places via Supabase proxy ───────────────────────────────
 async function buscarPlacesREST(query, apiKey, maxResults){
-  // Extrai cidade da query "nicho em cidade"
-  var partes = query.split(' em ');
-  var nicho  = partes[0]||query;
-  var cidade = partes[1]||'Brasil';
-  var tag    = nichoParaOSM(nicho);
-  var tagKey = tag.includes('=') ? tag.split('=')[0] : 'name';
-  var tagVal = tag.includes('=') ? tag.split('=')[1] : tag.split('"')[1];
-
-  var overpassQ;
-  if(tag.includes('~')){
-    // fallback por nome
-    overpassQ = '[out:json][timeout:20];'+
-      'area["name"~"'+cidade+'","i"]["boundary"="administrative"]->.a;'+
-      '(node['+tag+'](area.a);way['+tag+'](area.a););out center '+( maxResults||20)+';';
-  } else {
-    overpassQ = '[out:json][timeout:20];'+
-      'area["name"~"'+cidade+'","i"]["boundary"="administrative"]->.a;'+
-      '(node["'+tagKey+'"="'+tagVal+'"](area.a);way["'+tagKey+'"="'+tagVal+'"](area.a););out center '+(maxResults||20)+';';
-  }
-
-  var r = await fetchTimeout(OVERPASS_URL, {
-    method:'POST',
-    headers:{'Content-Type':'application/x-www-form-urlencoded'},
-    body:'data='+encodeURIComponent(overpassQ)
+  var r = await fetchTimeout(SB_URL+'/functions/v1/places-proxy', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY},
+    body: JSON.stringify({ query: query, maxResults: maxResults||20 })
   }, 20000);
-  if(!r.ok) throw new Error('Overpass API retornou '+r.status);
+  if(!r.ok) throw new Error('places-proxy retornou '+r.status);
   var data = await r.json();
-  return (data.elements||[]).slice(0, maxResults||20);
+  if(data.error) throw new Error(data.error);
+  return (data.results||[]).slice(0, maxResults||20);
 }
 
-async function detalhesPlaceREST(element, apiKey){
-  if(!element) return null;
-  var tags = element.tags||{};
-  var lat  = element.lat||(element.center&&element.center.lat)||0;
-  var lon  = element.lon||(element.center&&element.center.lon)||0;
+async function detalhesPlaceREST(place, apiKey){
+  if(!place) return null;
   return {
-    place_id: (element.type||'node')+'/'+element.id,
-    name:     tags.name||tags['name:pt']||'',
-    phone:    tags.phone||tags['contact:phone']||tags['contact:mobile']||'',
-    website:  tags.website||tags['contact:website']||'',
-    address:  [tags['addr:street'],tags['addr:housenumber'],tags['addr:city']].filter(Boolean).join(', '),
-    rating:0, reviews:0,
-    google_url: lat&&lon ? 'https://www.openstreetmap.org/'+element.type+'/'+element.id : '',
-    lat:lat, lon:lon
+    place_id: place.place_id||place.id||'',
+    name:     place.name||'',
+    phone:    place.formatted_phone_number||place.phone||'',
+    website:  place.website||'',
+    address:  place.formatted_address||place.address||'',
+    rating:   place.rating||0,
+    reviews:  (place.user_ratings_total||place.reviews)||0,
+    google_url: place.url||place.google_url||(place.place_id?'https://maps.google.com/?cid='+place.place_id:''),
+    lat: (place.geometry&&place.geometry.location&&place.geometry.location.lat)||place.lat||0,
+    lon: (place.geometry&&place.geometry.location&&place.geometry.location.lng)||place.lon||0
   };
 }
 
@@ -3982,37 +4127,60 @@ async function salvarIntelSB(emp){
 window.adicionarAoPipelineIntel = async function(placeId){
   var e = intelResultados.find(function(x){ return x.place_id===placeId; });
   if(!e) return;
-  var p = {
-    id: crypto.randomUUID(),
-    nome: e.nome,
-    empresa: e.empresa||e.nome,
-    contato: e.telefone||'',
-    status:'prospecto',
-    registros:[{data:new Date().toISOString(),tipo:'nota',
-      texto:'Encontrado via Intel B2B | Score: '+e.score+' | '+e.oportunidades}],
-    criado: new Date().toISOString(),
-    etapa: null
-  };
-  await salvarProspectoSB(p);
-  prospectos.push(p);
+
+  // Marca como adicionado no Intel
   try{
     await fetch(SB_URL+'/rest/v1/prospeccao_intel?place_id=eq.'+placeId,{
       method:'PATCH',
       headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json'},
       body:JSON.stringify({status:'adicionado'})
     });
-  }catch(e){}
+  }catch(_){}
   e.status = 'adicionado';
   renderIntel(document.getElementById('comercial-body'));
-  if(typeof toast==='function') toast('Lead adicionado ao pipeline!','ok');
+
+  // Muda para a aba Prospecção com os dados pré-preenchidos
+  setTabComercial('prospec');
+  setTimeout(function(){
+    var nEl = document.getElementById('pr-nome');
+    var emEl = document.getElementById('pr-empresa');
+    var ctEl = document.getElementById('pr-contato');
+    var dgEl = document.getElementById('pr-diag');
+    var ptEl = document.getElementById('pr-pitch');
+    if(nEl) nEl.value = e.nome;
+    if(emEl) emEl.value = (e.segmento||e.empresa||e.nome);
+    if(ctEl) ctEl.value = e.telefone||'';
+    var diag = 'Empresa encontrada via Intel B2B\n'
+      +'Segmento: '+e.segmento+' | Cidade: '+e.cidade+'\n'
+      +(e.google_rating ? 'Google: '+e.google_rating+'★ ('+e.google_reviews+' avaliações)\n' : '')
+      +(e.instagram_handle ? 'Instagram: @'+e.instagram_handle+' – '+(e.instagram_followers||0)+' seguidores\n' : '')
+      +(e.oportunidades ? '\nOportunidades: '+e.oportunidades : '')
+      +(e.servicos_rec ? '\nServiços recomendados: '+e.servicos_rec : '');
+    if(dgEl) dgEl.value = diag;
+    // Pré-selecionar serviços sugeridos
+    if(e.servicos_rec){
+      var chips = document.querySelectorAll('#chips-servico div');
+      chips.forEach(function(chip){
+        if(e.servicos_rec.toLowerCase().includes(chip.textContent.toLowerCase())){
+          chip.style.background='rgba(61,123,245,0.15)';
+          chip.style.borderColor='rgba(61,123,245,0.4)';
+          chip.style.color='#6BA3FF';
+        }
+      });
+    }
+    // Gera pitch automaticamente
+    if(ptEl && dgEl) gerarPitchProspec();
+    toast('Lead carregado na Prospecção — revise e dispare!','ok');
+  }, 200);
 };
 
 // ── Carregar buscas anteriores do Supabase ──────────────────────
 window.carregarIntelSalvos = async function(){
   try{
-    var r = await fetch(SB_URL+'/rest/v1/prospeccao_intel?order=criado.desc&limit=60',
+    var r = await fetch(SB_URL+'/rest/v1/prospeccao_intel?order=criado.desc&limit=60&status=neq.duplicado',
       {headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY}});
     intelResultados = await r.json()||[];
+    intelDuplicados = 0;
     renderIntel(document.getElementById('comercial-body'));
   }catch(e){
     if(typeof toast==='function') toast('Erro ao carregar','err');
@@ -4047,13 +4215,14 @@ window.buscarEmpresasIntel = async function(){
 
   var toastFn = typeof toast==='function' ? toast : function(){};
 
-  // Safety net: para tudo depois de 25s
+  // Safety net: para tudo depois de 40s
   var _safetyTimer = setTimeout(function(){
     if(!intelBuscando) return;
     intelBuscando = false;
-    toastFn('Tempo esgotado (25s) — verifique a Edge Function no Supabase','err');
+    toastFn('Tempo esgotado (40s) — tente uma cidade menor ou nicho diferente','err');
+
     renderIntel(document.getElementById('comercial-body'));
-  }, 25000);
+  }, 40000);
 
   try{
     // ── ETAPA 1: buscar no Google Places ──
@@ -4062,7 +4231,7 @@ window.buscarEmpresasIntel = async function(){
     try{
       results = await buscarPlacesREST(nicho+' em '+cidade, gKey, Math.min(qtd,20));
     }catch(e){
-      toastFn('Erro Google Places: '+e.message,'err');
+      toastFn('Erro Places: '+e.message,'err');
       intelBuscando=false; renderIntel(document.getElementById('comercial-body')); return;
     }
 
@@ -4109,10 +4278,11 @@ window.buscarEmpresasIntel = async function(){
     var dups  = empresas.filter(function(e){ return  existentes.includes(e.place_id); })
                         .map(function(e){ return Object.assign({},e,{status:'duplicado'}); });
 
-    // Mostra resultado parcial imediato (sem score ainda)
-    intelResultados = novos.concat(dups);
+    // Mostra apenas os novos (duplicados ficam ocultos, apenas contados)
+    intelDuplicados = dups.length;
+    intelResultados = novos;
     renderIntel(document.getElementById('comercial-body'));
-    toastFn('📋 '+novos.length+' novas empresas — calculando score IA…','info');
+    toastFn('📋 '+novos.length+' novas empresas'+(dups.length?' ('+dups.length+' já cadastrados ocultados)':'')+' — calculando score IA…','info');
 
     // ── ETAPA 4: score IA (com timeout de 30s por lote) ──
     try{
@@ -4140,16 +4310,123 @@ window.buscarEmpresasIntel = async function(){
     }
 
     clearTimeout(_safetyTimer);
-    intelResultados = novos.concat(dups);
+    intelResultados = novos;
+    intelDuplicados = dups.length;
     intelBuscando   = false;
     renderIntel(document.getElementById('comercial-body'));
-    toastFn(novos.length+' empresas qualificadas!','ok');
+    toastFn(novos.length+' empresas qualificadas!'+(dups.length?' · '+dups.length+' duplicadas ocultadas':''),'ok');
 
   }catch(err){
     clearTimeout(_safetyTimer);
     toastFn('Erro: '+err.message,'err');
     intelBuscando=false;
     renderIntel(document.getElementById('comercial-body'));
+  }
+};
+
+// ── Disparar Pitch via Z-API ────────────────────────────────────
+window.dispararPitchZapi = async function(placeId){
+  var emp = intelResultados.find(function(e){ return e.place_id===placeId; });
+  if(!emp) return;
+  var fone = '55'+(emp.telefone||'').replace(/\D/g,'');
+  if(!fone || fone.length < 12){ toast('Telefone inválido','err'); return; }
+
+  var pitchEl = document.getElementById('intel-pitch-content');
+  var pitch = pitchEl ? pitchEl.innerText : '';
+  if(!pitch || pitch.length < 10){ toast('Gere o pitch primeiro','err'); return; }
+
+  var btn = document.getElementById('intel-zapi-btn');
+  if(btn){ btn.disabled=true; btn.textContent='⟳ Enviando…'; }
+
+  try{
+    var r = await fetch('https://api.z-api.io/instances/'+ZAPI_I+'/token/'+ZAPI_T+'/send-text',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Client-Token':ZAPI_C},
+      body:JSON.stringify({phone:fone, message:pitch})
+    });
+    var d = await r.json();
+    if(r.ok && (d.zaapId||d.id||d.messageId)){
+      if(btn){ btn.disabled=false; btn.textContent='✓ Enviado!'; btn.style.background='rgba(39,199,110,0.25)'; }
+      toast('Pitch enviado para '+emp.nome+'!','ok');
+      // Atualizar status no Supabase
+      try{
+        await fetch(SB_URL+'/rest/v1/prospeccao_intel?place_id=eq.'+encodeURIComponent(placeId),{
+          method:'PATCH',
+          headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+          body:JSON.stringify({status:'contactado'})
+        });
+        emp.status='contactado';
+      }catch(e){}
+    } else {
+      throw new Error(d.error||d.message||JSON.stringify(d));
+    }
+  }catch(e){
+    toast('Erro Z-API: '+e.message,'err');
+    if(btn){ btn.disabled=false; btn.textContent='💬 Disparar pelo CRM'; }
+  }
+};
+
+// ── Gerar Pitch IA ──────────────────────────────────────────────
+window.gerarPitchIntel = async function(placeId){
+  var emp = intelResultados.find(function(e){ return e.place_id===placeId; });
+  if(!emp) return;
+
+  // Abrir modal imediatamente com loading
+  var modal = document.getElementById('intel-pitch-modal');
+  if(!modal){
+    modal = document.createElement('div');
+    modal.id = 'intel-pitch-modal';
+    modal.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;padding:16px';
+    document.body.appendChild(modal);
+  }
+  var fone = (emp.telefone||'').replace(/\D/g,'');
+  modal.innerHTML = '<div style="background:#0E0E1A;border:1px solid rgba(61,123,245,0.3);border-radius:16px;padding:20px;width:100%;max-width:460px;max-height:90vh;overflow-y:auto">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">'
+    +'<div style="font-size:14px;font-weight:800;color:#F0F0FF">📋 Pitch para '+emp.nome+'</div>'
+    +'<button onclick="document.getElementById(\'intel-pitch-modal\').remove()" style="background:none;border:none;color:var(--ink3);font-size:18px;cursor:pointer">✕</button>'
+    +'</div>'
+    +'<div id="intel-pitch-content" style="font-size:13px;color:var(--ink3);line-height:1.7;background:rgba(255,255,255,0.03);border-radius:10px;padding:14px;min-height:80px">'
+    +'<span style="animation:spin 0.7s linear infinite;display:inline-block">⟳</span> Gerando pitch personalizado com IA…'
+    +'</div>'
+    +'<div id="intel-pitch-actions" style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap"></div>'
+    +'</div>';
+
+  // Gerar pitch via chat-assistant
+  var contexto = 'Empresa: '+emp.nome+'\nSegmento: '+emp.segmento+'\nCidade: '+emp.cidade
+    +'\nOportunidades identificadas: '+(emp.oportunidades||'marketing digital')
+    +'\nServiços recomendados: '+(emp.servicos_rec||'tráfego pago, gestão de redes')
+    +'\nGoogle: '+(emp.google_rating ? emp.google_rating+' estrelas ('+emp.google_reviews+' avaliações)' : 'sem avaliações')
+    +'\nInstagram: '+(emp.instagram_handle ? '@'+emp.instagram_handle+' – '+(emp.instagram_followers||0)+' seguidores' : 'não encontrado');
+
+  var prompt = 'Você é um especialista em vendas B2B de marketing digital para a agência Quintessência Digital (Balneário Camboriú, SC). '
+    +'Crie uma mensagem de prospecção para WhatsApp, em português informal mas profissional, de 3-4 linhas no máximo. '
+    +'Seja direto, mencione um ponto de melhoria específico observado, e termine com uma pergunta aberta. '
+    +'NÃO use asteriscos nem markdown. Retorne SOMENTE o texto da mensagem.\n\n'+contexto;
+
+  try{
+    var r = await fetch(SB_URL+'/functions/v1/chat-assistant',{
+      method:'POST',
+      headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json'},
+      body:JSON.stringify({message:prompt})
+    });
+    var data = await r.json();
+    var pitch = data.reply||data.message||data.content||'Não foi possível gerar o pitch.';
+
+    var pitchContent = document.getElementById('intel-pitch-content');
+    if(pitchContent) pitchContent.innerHTML = '<div style="color:#F0F0FF">'+pitch.replace(/\n/g,'<br>')+'</div>';
+
+    var actions = document.getElementById('intel-pitch-actions');
+    if(actions){
+      actions.innerHTML = fone
+        ? '<button id="intel-zapi-btn" onclick="dispararPitchZapi(\''+placeId+'\')" style="flex:1;font-size:12px;font-weight:700;background:rgba(39,199,110,0.15);border:1px solid rgba(39,199,110,0.3);border-radius:8px;color:#27C76E;padding:8px 12px;cursor:pointer">💬 Disparar pelo CRM</button>'
+        : '<span style="font-size:11px;color:var(--ink3)">Sem telefone cadastrado</span>';
+      actions.innerHTML +=
+        '<button onclick="navigator.clipboard.writeText(document.getElementById(\'intel-pitch-content\').innerText).then(function(){toast(\'Copiado!\',\'ok\')})" style="font-size:12px;font-weight:600;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--ink2);padding:8px 12px;cursor:pointer">📋 Copiar</button>'
+        +'<button onclick="gerarPitchIntel(\''+placeId+'\')" style="font-size:12px;font-weight:600;background:rgba(61,123,245,0.1);border:1px solid rgba(61,123,245,0.25);border-radius:8px;color:#3D7BF5;padding:8px 12px;cursor:pointer">↺ Novo</button>';
+    }
+  }catch(e){
+    var pitchContent2 = document.getElementById('intel-pitch-content');
+    if(pitchContent2) pitchContent2.innerHTML = '<span style="color:#EF4444">Erro: '+e.message+'</span>';
   }
 };
 
@@ -4198,9 +4475,9 @@ window.renderIntel = function(body){
         +(e.website?'<a href="'+e.website+'" target="_blank" style="font-size:11px;font-weight:600;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:7px;color:var(--ink2);padding:3px 9px;text-decoration:none">Site</a>':'')
         +(e.instagram_url?'<a href="'+e.instagram_url+'" target="_blank" style="font-size:11px;font-weight:600;background:rgba(225,48,108,0.1);border:1px solid rgba(225,48,108,0.25);border-radius:7px;color:#E1306C;padding:3px 9px;text-decoration:none">Instagram</a>':'')
         +(e.google_url?'<a href="'+e.google_url+'" target="_blank" style="font-size:11px;font-weight:600;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);border-radius:7px;color:#F59E0B;padding:3px 9px;text-decoration:none">Maps</a>':'')
-        +(!isDup&&!isDone?'<button onclick="adicionarAoPipelineIntel(\''+e.place_id+'\')" style="font-size:11px;font-weight:700;background:rgba(61,123,245,0.15);border:1px solid rgba(61,123,245,0.3);border-radius:7px;color:#3D7BF5;padding:3px 10px;cursor:pointer;margin-left:auto">+ Pipeline</button>'
-          :isDone?'<span style="font-size:11px;font-weight:600;color:#27C76E;margin-left:auto">✓ No pipeline</span>'
-          :'<span style="font-size:11px;color:var(--ink3);margin-left:auto">já cadastrado</span>')
+        +'<button onclick="gerarPitchIntel(\''+e.place_id+'\')" style="font-size:11px;font-weight:700;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25);border-radius:7px;color:#F59E0B;padding:3px 10px;cursor:pointer">📋 Pitch</button>'
+        +(!isDone?'<button onclick="adicionarAoPipelineIntel(\''+e.place_id+'\')" style="font-size:11px;font-weight:700;background:rgba(61,123,245,0.15);border:1px solid rgba(61,123,245,0.3);border-radius:7px;color:#3D7BF5;padding:3px 10px;cursor:pointer;margin-left:auto">+ Pipeline</button>'
+          :'<span style="font-size:11px;font-weight:600;color:#27C76E;margin-left:auto">✓ No pipeline</span>')
         +'</div></div>';
     });
   }
@@ -4234,7 +4511,7 @@ window.renderIntel = function(body){
     // Resultados ou empty state
     +(intelResultados.length
       ? '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">'
-        +'<div style="font-size:10.5px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:0.07em">'+intelResultados.length+' empresas</div>'
+        +'<div style="font-size:10.5px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:0.07em">'+intelResultados.length+' empresas'+(intelDuplicados?' <span style="color:var(--ink3);font-weight:400;text-transform:none">('+intelDuplicados+' já cadastradas ocultadas)</span>':'')+'</div>'
         +'<button onclick="carregarIntelSalvos()" style="font-size:11px;background:none;border:none;color:var(--blue);cursor:pointer">↺ recarregar</button>'
         +'</div>'+cards
       : '<div style="text-align:center;padding:28px 16px;color:var(--ink3)">'

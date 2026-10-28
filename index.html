@@ -4399,7 +4399,7 @@ window.gerarPitchIntel = async function(placeId){
     +'</div>'
     // Diagnóstico editável
     +'<div style="font-size:10.5px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:5px">📝 Diagnóstico (editável)</div>'
-    +'<textarea id="intel-diag-text" rows="5" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px 12px;color:#F0F0FF;font-size:12px;resize:vertical;line-height:1.65;font-family:inherit">'+diagDefault+'</textarea>'
+    +'<textarea id="intel-diag-text" rows="5" placeholder="Descreva o que você observou sobre essa empresa: problemas visíveis, presença fraca nas redes, site desatualizado, poucas avaliações, sem anúncios…" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px 12px;color:#F0F0FF;font-size:12px;resize:vertical;line-height:1.65;font-family:inherit">'+diagDefault+'</textarea>'
     // Telefone inline editável
     +'<div style="display:flex;align-items:center;gap:8px;margin-top:8px;margin-bottom:10px">'
     +'<div style="font-size:10.5px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:0.07em;white-space:nowrap">📱 WhatsApp</div>'
@@ -4434,8 +4434,8 @@ window.gerarPitchIntel = async function(placeId){
         method:'POST',
         headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json'},
         body:JSON.stringify({
-          system:'Você é especialista em vendas pelo WhatsApp para a agência 5essência Marketing (Balneário Camboriú, SC). Escreva uma mensagem de primeiro contato curta e comercial, no estilo:\n\n"Oi [Nome]! Tudo bem?\nTrabalhamos com empresas do seu segmento e nos últimos 30 dias um dos nossos clientes fechou 18 novos contratos sem responder uma mensagem sequer — foi tudo automático.\nGravei um vídeo rápido mostrando exatamente como funciona.\n\n[vídeo]\n\nSe quiser, posso te mostrar como ficaria para o seu negócio!"\n\nAdapte nome, segmento e resultado com base no diagnóstico. Use prova social real. Sem asteriscos. Sem formalidade. Máximo 5 linhas.',
-          messages:[{role:'user',content:'Diagnóstico do lead:\n'+diagAtual+'\n\nCrie a mensagem de primeiro contato.'}]
+          system:'Você é especialista em vendas B2B para a agência 5essência Marketing (Balneário Camboriú, SC).\n\nPREMISSA FIXA: A abordagem é sempre oferecer um DIAGNÓSTICO GRATUITO — você vai mostrar, sem custo, como a 5essência faz negócios do nicho dele crescerem (mais clientes, mais reservas, mais vendas, mais agendamentos — depende do segmento).\n\nRegras da mensagem:\n1. Tom: informal, direto, humano — como se fosse um amigo que entende do negócio dele\n2. Adapte ao segmento real (restaurante, clínica, loja, imobiliária, academia, etc.) — mencione o resultado específico que esse nicho quer\n3. Apresente o diagnóstico gratuito como o CTA — não venda nada, apenas convide para o diagnóstico\n4. Máximo 4 linhas. Sem asteriscos. Sem "Atenciosamente". Sem formalidade.\n5. Termine com uma pergunta simples abrindo espaço para resposta\n\nExemplo de estilo (adapte ao nicho):\n"Oi [Nome]! Vi o [restaurante/clínica/loja] de vocês aqui em [cidade] e tive algumas ideias de como a gente consegue trazer mais [mesas cheias/agendamentos/vendas] pra vocês.\nA gente faz isso com outros [restaurantes/clínicas/lojas] aqui na região e os resultados têm sido bem legais.\nQue tal um diagnóstico gratuito? Mostro exatamente o que daria pra fazer no seu caso — sem compromisso.\nTem um minutinho essa semana?"',
+          messages:[{role:'user',content:'Diagnóstico do lead:\n'+diagAtual+'\n\nCrie a mensagem de primeiro contato seguindo a premissa do diagnóstico gratuito, adaptada ao negócio acima.'}]
         })
       });
       var data = await r.json();

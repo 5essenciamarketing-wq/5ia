@@ -4474,9 +4474,7 @@ window.gerarPitchIntel = async function(placeId){
     +'<button id="intel-gerar-btn" onclick="gerarPitchIntelComDiag(\''+placeId+'\')" style="width:100%;font-size:12px;font-weight:700;background:linear-gradient(135deg,#3B6FE8,#6C3AED);border:none;border-radius:10px;color:#fff;padding:10px;cursor:pointer;margin-bottom:10px">🤖 Gerar Pitch com IA</button>'
     // Pitch gerado
     +'<div style="font-size:10.5px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:5px">💬 Pitch gerado</div>'
-    +'<div id="intel-pitch-content" style="font-size:13px;color:var(--ink3);line-height:1.7;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:14px;min-height:60px">'
-    +'Clique em <strong style="color:#6BA3FF">Gerar Pitch com IA</strong> para criar a mensagem personalizada.'
-    +'</div>'
+    +'<textarea id="intel-pitch-content" rows="7" placeholder="Clique em Gerar Pitch com IA para criar a mensagem — depois edite à vontade antes de enviar." style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:14px;color:#F0F0FF;font-size:13px;line-height:1.7;resize:vertical;font-family:inherit;outline:none"></textarea>'
     +'<div id="intel-pitch-actions" style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"></div>'
     +'</div>';
 
@@ -4486,7 +4484,7 @@ window.gerarPitchIntel = async function(placeId){
     var pitchEl = document.getElementById('intel-pitch-content');
     var actEl   = document.getElementById('intel-pitch-actions');
     if(btn){ btn.disabled=true; btn.textContent='⟳ Gerando…'; }
-    if(pitchEl) pitchEl.innerHTML = '<span style="animation:spin 0.7s linear infinite;display:inline-block">⟳</span> Gerando pitch personalizado com IA…';
+    if(pitchEl) pitchEl.value = '⟳ Gerando pitch personalizado com IA…';
     if(actEl) actEl.innerHTML = '';
 
     var diagAtual = (document.getElementById('intel-diag-text')||{}).value || diagDefault;
@@ -4499,8 +4497,8 @@ window.gerarPitchIntel = async function(placeId){
         method:'POST',
         headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json'},
         body:JSON.stringify({
-          system:'Você é especialista em vendas B2B para a agência 5essência Marketing (Balneário Camboriú, SC).\n\nPREMISSA FIXA: A abordagem é sempre oferecer um DIAGNÓSTICO GRATUITO — você vai mostrar, sem custo, como a 5essência faz negócios do nicho dele crescerem (mais clientes, mais reservas, mais vendas, mais agendamentos — depende do segmento).\n\nRegras da mensagem:\n1. Tom: informal, direto, humano — como se fosse um amigo que entende do negócio dele\n2. Adapte ao segmento real (restaurante, clínica, loja, imobiliária, academia, etc.) — mencione o resultado específico que esse nicho quer\n3. Apresente o diagnóstico gratuito como o CTA — não venda nada, apenas convide para o diagnóstico\n4. Máximo 4 linhas. Sem asteriscos. Sem "Atenciosamente". Sem formalidade.\n5. Termine com uma pergunta simples abrindo espaço para resposta\n\nExemplo de estilo (adapte ao nicho):\n"Oi [Nome]! Vi o [restaurante/clínica/loja] de vocês aqui em [cidade] e tive algumas ideias de como a gente consegue trazer mais [mesas cheias/agendamentos/vendas] pra vocês.\nA gente faz isso com outros [restaurantes/clínicas/lojas] aqui na região e os resultados têm sido bem legais.\nQue tal um diagnóstico gratuito? Mostro exatamente o que daria pra fazer no seu caso — sem compromisso.\nTem um minutinho essa semana?"',
-          messages:[{role:'user',content:'Diagnóstico do lead:\n'+diagAtual+'\n\nCrie a mensagem de primeiro contato seguindo a premissa do diagnóstico gratuito, adaptada ao negócio acima.'}]
+          system:'Você escreve mensagens de WhatsApp de prospecção para a agência 5essência Marketing (Balneário Camboriú, SC).\n\nESTILO OBRIGATÓRIO — siga exatamente esse tom e estrutura:\n1. Abre com um elogio genuíno e específico ao negócio (não genérico)\n2. Reconhece que pode não ser hora oportuna ("não sei se é uma hora oportuna, mas...")\n3. Menciona UM problema específico que você observou no negócio DELES (usa o diagnóstico)\n4. Oferece o diagnóstico gratuito como próximo passo — sem vender nada\n5. Cita que já conduz negócios similares na região com resultado\n6. Pede para repassar ao responsável caso quem leu não seja o dono\n7. Tom: quente, humano, cuidadoso — parece escrito à mão, não disparado em massa\n\nEXEMPLO DO ESTILO (adapte ao nicho e ao diagnóstico, NÃO copie o texto):\n"Encontramos o [negócio] de vocês e achamos incrível o que fazem.\nNão sei se é uma hora oportuna, mas queria falar com o responsável sobre um diagnóstico que fazemos no nicho de [segmento] na região de Balneário Camboriú — percebi que [problema específico observado], o que acaba [consequência para o negócio].\nGostaria de oferecer um diagnóstico sem compromisso e mostrar como conduzimos negócios como o de vocês que já são um sucesso a serem ainda mais reconhecidos.\nCaso você não seja o proprietário, peço com carinho que repasse essa mensagem ao responsável — vimos muito potencial em uma futura parceria."\n\nREGRAS: Sem asteriscos. Sem "Atenciosamente". Sem bullet points. Português brasileiro natural. Máximo 5 parágrafos curtos. Use APENAS o que está no diagnóstico — não invente dados.',
+          messages:[{role:'user',content:'Diagnóstico do lead:\n'+diagAtual+'\n\nEscreva a mensagem de primeiro contato seguindo EXATAMENTE o estilo e estrutura definidos.'}]
         })
       });
       var data = await r.json();
@@ -4508,18 +4506,18 @@ window.gerarPitchIntel = async function(placeId){
       // Salva o pitch no objeto para dispararPitchZapi usar
       emp._pitchGerado = pitch;
 
-      if(pitchEl) pitchEl.innerHTML = '<div style="color:#F0F0FF;line-height:1.7">'+pitch.replace(/\n/g,'<br>')+'</div>';
+      if(pitchEl) pitchEl.value = pitch;
 
       if(actEl){
         actEl.innerHTML = foneAtual
           ? '<button id="intel-zapi-btn" onclick="dispararPitchZapiInline(\''+pid+'\')" style="flex:1;font-size:12px;font-weight:700;background:rgba(39,199,110,0.15);border:1px solid rgba(39,199,110,0.3);border-radius:8px;color:#27C76E;padding:8px 12px;cursor:pointer">💬 Enviar pelo CRM</button>'
           : '<span style="font-size:11px;color:var(--ink3)">⚠ Sem telefone — edite o campo acima</span>';
         actEl.innerHTML +=
-          '<button onclick="navigator.clipboard.writeText(emp._pitchGerado||\'\').then(function(){toast(\'Copiado!\',\'ok\')})" style="font-size:12px;font-weight:600;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--ink2);padding:8px 12px;cursor:pointer">📋 Copiar</button>'
+          '<button onclick="var t=document.getElementById(\'intel-pitch-content\');navigator.clipboard.writeText(t?t.value:\'\').then(function(){toast(\'Copiado!\',\'ok\')})" style="font-size:12px;font-weight:600;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--ink2);padding:8px 12px;cursor:pointer">📋 Copiar</button>'
           +'<button onclick="gerarPitchIntelComDiag(\''+pid+'\')" style="font-size:12px;font-weight:600;background:rgba(61,123,245,0.1);border:1px solid rgba(61,123,245,0.25);border-radius:8px;color:#3D7BF5;padding:8px 12px;cursor:pointer">↺ Regerar</button>';
       }
     }catch(e){
-      if(pitchEl) pitchEl.innerHTML = '<span style="color:#EF4444">Erro: '+e.message+'</span>';
+      if(pitchEl) pitchEl.value = 'Erro: '+e.message;
     }
     if(btn){ btn.disabled=false; btn.textContent='🤖 Gerar Pitch com IA'; }
   };
@@ -4534,7 +4532,8 @@ window.dispararPitchZapiInline = async function(placeId){
   var fone = '55'+((foneInput ? foneInput.value : emp.telefone)||'').replace(/\D/g,'');
   if(!fone || fone.length < 12){ toast('Telefone inválido — preencha o campo WhatsApp','err'); return; }
 
-  var pitch = emp._pitchGerado || '';
+  var pitchTA = document.getElementById('intel-pitch-content');
+  var pitch = (pitchTA ? pitchTA.value : null) || emp._pitchGerado || '';
   if(!pitch || pitch.length < 10){ toast('Gere o pitch primeiro','err'); return; }
 
   var btn = document.getElementById('intel-zapi-btn');

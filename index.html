@@ -4549,6 +4549,8 @@ window.dispararPitchZapiInline = async function(placeId){
     if(r.ok && (d.zaapId||d.id||d.messageId)){
       if(btn){ btn.disabled=false; btn.textContent='✓ Enviado!'; btn.style.background='rgba(39,199,110,0.25)'; }
       toast('Pitch enviado para '+emp.nome+'! 🚀','ok');
+
+      // 1. Atualiza status no Intel
       try{
         await fetch(SB_URL+'/rest/v1/prospeccao_intel?place_id=eq.'+encodeURIComponent(placeId),{
           method:'PATCH',
@@ -4558,6 +4560,38 @@ window.dispararPitchZapiInline = async function(placeId){
         emp.status='contactado';
         renderIntel(document.getElementById('comercial-body'));
       }catch(e){}
+
+      // 2. Cria prospecto no pipeline
+      try{
+        var diagIntel = 'Lead via Intel B2B\n'
+          +'Segmento: '+(emp.segmento||'')+(emp.cidade ? ' | Cidade: '+emp.cidade : '')+'\n'
+          +(emp.google_rating ? 'Google: '+emp.google_rating+'★ ('+emp.google_reviews+' avaliações)\n' : '')
+          +(emp.instagram_handle ? 'Instagram: @'+emp.instagram_handle+' – '+(emp.instagram_followers||0)+' seguidores\n' : '')
+          +(emp.oportunidades ? '\nOportunidades: '+emp.oportunidades : '')
+          +(emp.servicos_rec ? '\nServiços recomendados: '+emp.servicos_rec : '');
+        var novoProsp = {
+          id: Date.now().toString(),
+          nome: emp.nome,
+          empresa: emp.segmento||emp.nome,
+          contato: fone.replace(/^55/,''),
+          diag: diagIntel,
+          status: 'prospecto',
+          etapa: emp.servicos_rec||null,
+          criado: new Date().toISOString(),
+          registros: [
+            {data:new Date().toISOString(), tipo:'criação', nota:'Prospecto criado via Intel B2B.'},
+            {data:new Date().toISOString(), tipo:'contato', nota:'Pitch enviado por WhatsApp: '+pitch}
+          ]
+        };
+        prospectos.unshift(novoProsp);
+        await fetch(SB_URL+'/rest/v1/prospectos',{
+          method:'POST',
+          headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},
+          body:JSON.stringify(novoProsp)
+        });
+        toast(emp.nome+' adicionado ao pipeline! 📋','ok');
+      }catch(e){}
+
     } else {
       throw new Error(d.error||d.message||JSON.stringify(d));
     }

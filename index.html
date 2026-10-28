@@ -2472,10 +2472,10 @@ function selecionarServico(el, servico){
 }
 
 let tabComercial = 'prospec';
-let prospectos = [];
-let buscaLead = '';
+var prospectos = [];
+var buscaLead = '';
 
-async function carregarProspectos(){
+window.carregarProspectos = async function carregarProspectos(){
   try{
     const r = await fetch(`${SB_URL}/rest/v1/prospectos?order=criado.desc`,
       {headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});
@@ -2497,7 +2497,8 @@ async function carregarProspectos(){
     }
   }catch(e){ prospectos = JSON.parse(localStorage.getItem('prospectos5')||'[]'); }
   renderComercial();
-}
+};
+var carregarProspectos = window.carregarProspectos;
 
 async function salvarProspectoSB(p){
   try{
@@ -4263,7 +4264,7 @@ window.adicionarAoPipelineIntel = async function(placeId){
 // ── Carregar buscas anteriores do Supabase ──────────────────────
 window.carregarIntelSalvos = async function(){
   try{
-    var r = await fetch(SB_URL+'/rest/v1/prospeccao_intel?order=criado.desc&limit=60&status=neq.duplicado&status=neq.descartado',
+    var r = await fetch(SB_URL+'/rest/v1/prospeccao_intel?order=criado.desc&limit=60&status=not.in.(duplicado,descartado)',
       {headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY}});
     intelResultados = await r.json()||[];
     intelDuplicados = 0;

@@ -4195,6 +4195,21 @@ async function salvarIntelSB(emp){
 }
 
 // ── Adicionar empresa ao pipeline de prospecção ─────────────────
+window.descartarIntel = async function(placeId){
+  var emp = intelResultados.find(function(e){ return e.place_id===placeId; });
+  if(!emp) return;
+  emp.status = 'descartado';
+  renderIntel(document.getElementById('comercial-body'));
+  try{
+    await fetch(SB_URL+'/rest/v1/prospeccao_intel?place_id=eq.'+encodeURIComponent(placeId),{
+      method:'PATCH',
+      headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+      body:JSON.stringify({status:'descartado'})
+    });
+  }catch(e){}
+  toast('Lead descartado — não aparecerá em buscas futuras','ok');
+};
+
 window.adicionarAoPipelineIntel = async function(placeId){
   var e = intelResultados.find(function(x){ return x.place_id===placeId; });
   if(!e) return;
@@ -4248,7 +4263,7 @@ window.adicionarAoPipelineIntel = async function(placeId){
 // ── Carregar buscas anteriores do Supabase ──────────────────────
 window.carregarIntelSalvos = async function(){
   try{
-    var r = await fetch(SB_URL+'/rest/v1/prospeccao_intel?order=criado.desc&limit=60&status=neq.duplicado',
+    var r = await fetch(SB_URL+'/rest/v1/prospeccao_intel?order=criado.desc&limit=60&status=neq.duplicado&status=neq.descartado',
       {headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY}});
     intelResultados = await r.json()||[];
     intelDuplicados = 0;
@@ -4661,12 +4676,17 @@ window.renderIntel = function(body){
         +(e.website?'<a href="'+e.website+'" target="_blank" style="font-size:11px;font-weight:600;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:7px;color:var(--ink2);padding:3px 9px;text-decoration:none">Site</a>':'')
         +(e.instagram_url?'<a href="'+e.instagram_url+'" target="_blank" style="font-size:11px;font-weight:600;background:rgba(225,48,108,0.1);border:1px solid rgba(225,48,108,0.25);border-radius:7px;color:#E1306C;padding:3px 9px;text-decoration:none">Instagram</a>':'')
         +(e.google_url?'<a href="'+e.google_url+'" target="_blank" style="font-size:11px;font-weight:600;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);border-radius:7px;color:#F59E0B;padding:3px 9px;text-decoration:none">Maps</a>':'')
-        +(e.status==='contactado'
-          ? '<span style="font-size:11px;font-weight:600;color:#27C76E;margin-left:auto">✓ Pitch enviado</span>'
-          : isDone
-            ? '<button onclick="gerarPitchIntel(\''+e.place_id+'\')" style="font-size:11px;font-weight:700;background:rgba(61,123,245,0.1);border:1px solid rgba(61,123,245,0.3);border-radius:7px;color:#3D7BF5;padding:3px 10px;cursor:pointer;margin-left:auto">📋 Pitch / Enviar</button>'
-            : '<button onclick="gerarPitchIntel(\''+e.place_id+'\')" style="font-size:11px;font-weight:700;background:linear-gradient(135deg,rgba(61,123,245,0.2),rgba(108,58,237,0.2));border:1px solid rgba(61,123,245,0.4);border-radius:7px;color:#6BA3FF;padding:4px 12px;cursor:pointer;margin-left:auto">🎯 Prospectar</button>'
+        +(e.status==='descartado'
+          ? '<span style="font-size:11px;color:rgba(255,255,255,0.2);margin-left:auto">✗ Descartado</span>'
+          : e.status==='contactado'
+            ? '<span style="font-size:11px;font-weight:600;color:#27C76E;margin-left:auto">✓ Pitch enviado</span>'
+            : isDone
+              ? '<button onclick="gerarPitchIntel(\''+e.place_id+'\')" style="font-size:11px;font-weight:700;background:rgba(61,123,245,0.1);border:1px solid rgba(61,123,245,0.3);border-radius:7px;color:#3D7BF5;padding:3px 10px;cursor:pointer;margin-left:auto">📋 Pitch / Enviar</button>'
+              : '<button onclick="gerarPitchIntel(\''+e.place_id+'\')" style="font-size:11px;font-weight:700;background:linear-gradient(135deg,rgba(61,123,245,0.2),rgba(108,58,237,0.2));border:1px solid rgba(61,123,245,0.4);border-radius:7px;color:#6BA3FF;padding:4px 12px;cursor:pointer;margin-left:auto">🎯 Prospectar</button>'
           )
+        +(e.status!=='contactado'&&e.status!=='descartado'
+          ? '<button onclick="descartarIntel(\''+e.place_id+'\')" title="Descartar este lead" style="font-size:11px;background:none;border:none;color:rgba(255,255,255,0.2);cursor:pointer;padding:2px 6px;margin-left:4px" onmouseover="this.style.color=\'#EF4444\'" onmouseout="this.style.color=\'rgba(255,255,255,0.2)\'">✕</button>'
+          : '')
         +'</div></div>';
     });
   }

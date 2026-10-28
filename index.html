@@ -581,7 +581,7 @@ input:-webkit-autofill,input:-webkit-autofill:focus{
 <body>
 
 <!-- LOGIN OVERLAY -->
-<div id="loginOverlay" style="display:none;position:fixed;inset:0;z-index:99999;background:#0A0A12;align-items:center;justify-content:center;flex-direction:column;">
+<div id="loginOverlay" style="display:flex;position:fixed;inset:0;z-index:99999;background:#0A0A12;align-items:center;justify-content:center;flex-direction:column;">
   <style>
     #loginBox{background:#0F0F1A;border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:40px 36px;width:320px;text-align:center;box-shadow:0 24px 64px rgba(0,0,0,0.6);}
     #loginBox .logo{font-size:28px;font-weight:800;letter-spacing:-1px;color:#EEEEFF;margin-bottom:4px;}
@@ -2557,7 +2557,13 @@ function renderComercial(){
   if(tabComercial==='followup')  renderFollowup(body);
   if(tabComercial==='pipeline')  renderPipeline(body);
   if(tabComercial==='registros') renderRegistros(body);
-  if(tabComercial==='intel')     renderIntel(body);
+  if(tabComercial==='intel'){
+    renderIntel(body);
+    // Auto-carrega histórico se ainda não tem resultados em memória
+    if(!intelResultados.length && !intelBuscando){
+      carregarIntelSalvos().catch(function(){});
+    }
+  }
   if(tabComercial==='email')     renderEmailMarketing(body);
 }
 
@@ -4332,7 +4338,7 @@ window.dispararPitchZapi = async function(placeId){
   if(!fone || fone.length < 12){ toast('Telefone inválido','err'); return; }
 
   var pitchEl = document.getElementById('intel-pitch-content');
-  var pitch = pitchEl ? pitchEl.innerText : '';
+  var pitch = (emp && emp._pitchGerado) ? emp._pitchGerado : (pitchEl ? pitchEl.innerText : '');
   if(!pitch || pitch.length < 10){ toast('Gere o pitch primeiro','err'); return; }
 
   var btn = document.getElementById('intel-zapi-btn');
@@ -4380,53 +4386,122 @@ window.gerarPitchIntel = async function(placeId){
     document.body.appendChild(modal);
   }
   var fone = (emp.telefone||'').replace(/\D/g,'');
-  modal.innerHTML = '<div style="background:#0E0E1A;border:1px solid rgba(61,123,245,0.3);border-radius:16px;padding:20px;width:100%;max-width:460px;max-height:90vh;overflow-y:auto">'
+  var diagDefault = 'Empresa: '+emp.nome+'\nSegmento: '+emp.segmento+' | Cidade: '+emp.cidade
+    +(emp.google_rating ? '\nGoogle: '+emp.google_rating+'★ ('+emp.google_reviews+' avaliações)' : '')
+    +(emp.instagram_handle ? '\nInstagram: @'+emp.instagram_handle+' – '+(emp.instagram_followers||0).toLocaleString('pt-BR')+' seguidores' : '\nInstagram: não encontrado')
+    +(emp.oportunidades ? '\nOportunidades: '+emp.oportunidades : '')
+    +(emp.servicos_rec ? '\nServiços indicados: '+emp.servicos_rec : '');
+
+  modal.innerHTML = '<div style="background:#0E0E1A;border:1px solid rgba(61,123,245,0.3);border-radius:16px;padding:20px;width:100%;max-width:500px;max-height:92vh;overflow-y:auto">'
     +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">'
-    +'<div style="font-size:14px;font-weight:800;color:#F0F0FF">📋 Pitch para '+emp.nome+'</div>'
+    +'<div style="font-size:14px;font-weight:800;color:#F0F0FF">🎯 Prospectar — '+emp.nome+'</div>'
     +'<button onclick="document.getElementById(\'intel-pitch-modal\').remove()" style="background:none;border:none;color:var(--ink3);font-size:18px;cursor:pointer">✕</button>'
     +'</div>'
-    +'<div id="intel-pitch-content" style="font-size:13px;color:var(--ink3);line-height:1.7;background:rgba(255,255,255,0.03);border-radius:10px;padding:14px;min-height:80px">'
-    +'<span style="animation:spin 0.7s linear infinite;display:inline-block">⟳</span> Gerando pitch personalizado com IA…'
+    // Diagnóstico editável
+    +'<div style="font-size:10.5px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:5px">📝 Diagnóstico (editável)</div>'
+    +'<textarea id="intel-diag-text" rows="5" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px 12px;color:#F0F0FF;font-size:12px;resize:vertical;line-height:1.65;font-family:inherit">'+diagDefault+'</textarea>'
+    // Telefone inline editável
+    +'<div style="display:flex;align-items:center;gap:8px;margin-top:8px;margin-bottom:10px">'
+    +'<div style="font-size:10.5px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:0.07em;white-space:nowrap">📱 WhatsApp</div>'
+    +'<input id="intel-fone-edit" value="'+fone+'" placeholder="DDD + número (só números)" style="flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:7px 10px;color:#F0F0FF;font-size:13px;outline:none">'
     +'</div>'
-    +'<div id="intel-pitch-actions" style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap"></div>'
+    // Botão gerar pitch
+    +'<button id="intel-gerar-btn" onclick="gerarPitchIntelComDiag(\''+placeId+'\')" style="width:100%;font-size:12px;font-weight:700;background:linear-gradient(135deg,#3B6FE8,#6C3AED);border:none;border-radius:10px;color:#fff;padding:10px;cursor:pointer;margin-bottom:10px">🤖 Gerar Pitch com IA</button>'
+    // Pitch gerado
+    +'<div style="font-size:10.5px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:5px">💬 Pitch gerado</div>'
+    +'<div id="intel-pitch-content" style="font-size:13px;color:var(--ink3);line-height:1.7;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:14px;min-height:60px">'
+    +'Clique em <strong style="color:#6BA3FF">Gerar Pitch com IA</strong> para criar a mensagem personalizada.'
+    +'</div>'
+    +'<div id="intel-pitch-actions" style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"></div>'
     +'</div>';
 
-  // Gerar pitch via chat-assistant
-  var contexto = 'Empresa: '+emp.nome+'\nSegmento: '+emp.segmento+'\nCidade: '+emp.cidade
-    +'\nOportunidades identificadas: '+(emp.oportunidades||'marketing digital')
-    +'\nServiços recomendados: '+(emp.servicos_rec||'tráfego pago, gestão de redes')
-    +'\nGoogle: '+(emp.google_rating ? emp.google_rating+' estrelas ('+emp.google_reviews+' avaliações)' : 'sem avaliações')
-    +'\nInstagram: '+(emp.instagram_handle ? '@'+emp.instagram_handle+' – '+(emp.instagram_followers||0)+' seguidores' : 'não encontrado');
+  // Expõe globalmente para o botão no modal
+  window.gerarPitchIntelComDiag = async function(pid){
+    var btn = document.getElementById('intel-gerar-btn');
+    var pitchEl = document.getElementById('intel-pitch-content');
+    var actEl   = document.getElementById('intel-pitch-actions');
+    if(btn){ btn.disabled=true; btn.textContent='⟳ Gerando…'; }
+    if(pitchEl) pitchEl.innerHTML = '<span style="animation:spin 0.7s linear infinite;display:inline-block">⟳</span> Gerando pitch personalizado com IA…';
+    if(actEl) actEl.innerHTML = '';
 
-  var prompt = 'Você é um especialista em vendas B2B de marketing digital para a agência Quintessência Digital (Balneário Camboriú, SC). '
-    +'Crie uma mensagem de prospecção para WhatsApp, em português informal mas profissional, de 3-4 linhas no máximo. '
-    +'Seja direto, mencione um ponto de melhoria específico observado, e termine com uma pergunta aberta. '
-    +'NÃO use asteriscos nem markdown. Retorne SOMENTE o texto da mensagem.\n\n'+contexto;
+    var diagAtual = (document.getElementById('intel-diag-text')||{}).value || diagDefault;
+    var foneAtual = ((document.getElementById('intel-fone-edit')||{}).value||'').replace(/\D/g,'');
+    // Atualiza telefone no objeto se o usuário editou
+    if(foneAtual) emp.telefone = foneAtual;
+
+    var prompt = 'Você é um especialista em vendas B2B de marketing digital para a agência Quintessência Digital (Balneário Camboriú, SC). '
+      +'Crie uma mensagem de prospecção para WhatsApp, em português informal mas profissional, de 3-4 linhas no máximo. '
+      +'Seja direto, mencione um ponto de melhoria específico observado, e termine com uma pergunta aberta. '
+      +'NÃO use asteriscos nem markdown. Retorne SOMENTE o texto da mensagem.\n\n'+diagAtual;
+
+    try{
+      var r = await fetch(SB_URL+'/functions/v1/chat-assistant',{
+        method:'POST',
+        headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json'},
+        body:JSON.stringify({message:prompt})
+      });
+      var data = await r.json();
+      var pitch = data.reply||data.message||data.content||'Não foi possível gerar o pitch.';
+      // Salva o pitch no objeto para dispararPitchZapi usar
+      emp._pitchGerado = pitch;
+
+      if(pitchEl) pitchEl.innerHTML = '<div style="color:#F0F0FF;line-height:1.7">'+pitch.replace(/\n/g,'<br>')+'</div>';
+
+      if(actEl){
+        actEl.innerHTML = foneAtual
+          ? '<button id="intel-zapi-btn" onclick="dispararPitchZapiInline(\''+pid+'\')" style="flex:1;font-size:12px;font-weight:700;background:rgba(39,199,110,0.15);border:1px solid rgba(39,199,110,0.3);border-radius:8px;color:#27C76E;padding:8px 12px;cursor:pointer">💬 Enviar pelo CRM</button>'
+          : '<span style="font-size:11px;color:var(--ink3)">⚠ Sem telefone — edite o campo acima</span>';
+        actEl.innerHTML +=
+          '<button onclick="navigator.clipboard.writeText(emp._pitchGerado||\'\').then(function(){toast(\'Copiado!\',\'ok\')})" style="font-size:12px;font-weight:600;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--ink2);padding:8px 12px;cursor:pointer">📋 Copiar</button>'
+          +'<button onclick="gerarPitchIntelComDiag(\''+pid+'\')" style="font-size:12px;font-weight:600;background:rgba(61,123,245,0.1);border:1px solid rgba(61,123,245,0.25);border-radius:8px;color:#3D7BF5;padding:8px 12px;cursor:pointer">↺ Regerar</button>';
+      }
+    }catch(e){
+      if(pitchEl) pitchEl.innerHTML = '<span style="color:#EF4444">Erro: '+e.message+'</span>';
+    }
+    if(btn){ btn.disabled=false; btn.textContent='🤖 Gerar Pitch com IA'; }
+  };
+};
+
+// Envia pitch direto do modal Intel (usa _pitchGerado salvo no objeto)
+window.dispararPitchZapiInline = async function(placeId){
+  var emp = intelResultados.find(function(e){ return e.place_id===placeId; });
+  if(!emp) return;
+  // Tenta pegar fone do input inline se aberto
+  var foneInput = document.getElementById('intel-fone-edit');
+  var fone = '55'+((foneInput ? foneInput.value : emp.telefone)||'').replace(/\D/g,'');
+  if(!fone || fone.length < 12){ toast('Telefone inválido — preencha o campo WhatsApp','err'); return; }
+
+  var pitch = emp._pitchGerado || '';
+  if(!pitch || pitch.length < 10){ toast('Gere o pitch primeiro','err'); return; }
+
+  var btn = document.getElementById('intel-zapi-btn');
+  if(btn){ btn.disabled=true; btn.textContent='⟳ Enviando…'; }
 
   try{
-    var r = await fetch(SB_URL+'/functions/v1/chat-assistant',{
+    var r = await fetch('https://api.z-api.io/instances/'+ZAPI_I+'/token/'+ZAPI_T+'/send-text',{
       method:'POST',
-      headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json'},
-      body:JSON.stringify({message:prompt})
+      headers:{'Content-Type':'application/json','Client-Token':ZAPI_C},
+      body:JSON.stringify({phone:fone, message:pitch})
     });
-    var data = await r.json();
-    var pitch = data.reply||data.message||data.content||'Não foi possível gerar o pitch.';
-
-    var pitchContent = document.getElementById('intel-pitch-content');
-    if(pitchContent) pitchContent.innerHTML = '<div style="color:#F0F0FF">'+pitch.replace(/\n/g,'<br>')+'</div>';
-
-    var actions = document.getElementById('intel-pitch-actions');
-    if(actions){
-      actions.innerHTML = fone
-        ? '<button id="intel-zapi-btn" onclick="dispararPitchZapi(\''+placeId+'\')" style="flex:1;font-size:12px;font-weight:700;background:rgba(39,199,110,0.15);border:1px solid rgba(39,199,110,0.3);border-radius:8px;color:#27C76E;padding:8px 12px;cursor:pointer">💬 Disparar pelo CRM</button>'
-        : '<span style="font-size:11px;color:var(--ink3)">Sem telefone cadastrado</span>';
-      actions.innerHTML +=
-        '<button onclick="navigator.clipboard.writeText(document.getElementById(\'intel-pitch-content\').innerText).then(function(){toast(\'Copiado!\',\'ok\')})" style="font-size:12px;font-weight:600;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--ink2);padding:8px 12px;cursor:pointer">📋 Copiar</button>'
-        +'<button onclick="gerarPitchIntel(\''+placeId+'\')" style="font-size:12px;font-weight:600;background:rgba(61,123,245,0.1);border:1px solid rgba(61,123,245,0.25);border-radius:8px;color:#3D7BF5;padding:8px 12px;cursor:pointer">↺ Novo</button>';
+    var d = await r.json();
+    if(r.ok && (d.zaapId||d.id||d.messageId)){
+      if(btn){ btn.disabled=false; btn.textContent='✓ Enviado!'; btn.style.background='rgba(39,199,110,0.25)'; }
+      toast('Pitch enviado para '+emp.nome+'! 🚀','ok');
+      try{
+        await fetch(SB_URL+'/rest/v1/prospeccao_intel?place_id=eq.'+encodeURIComponent(placeId),{
+          method:'PATCH',
+          headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+          body:JSON.stringify({status:'contactado'})
+        });
+        emp.status='contactado';
+        renderIntel(document.getElementById('comercial-body'));
+      }catch(e){}
+    } else {
+      throw new Error(d.error||d.message||JSON.stringify(d));
     }
   }catch(e){
-    var pitchContent2 = document.getElementById('intel-pitch-content');
-    if(pitchContent2) pitchContent2.innerHTML = '<span style="color:#EF4444">Erro: '+e.message+'</span>';
+    toast('Erro Z-API: '+e.message,'err');
+    if(btn){ btn.disabled=false; btn.textContent='💬 Enviar pelo CRM'; }
   }
 };
 
@@ -4475,9 +4550,12 @@ window.renderIntel = function(body){
         +(e.website?'<a href="'+e.website+'" target="_blank" style="font-size:11px;font-weight:600;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:7px;color:var(--ink2);padding:3px 9px;text-decoration:none">Site</a>':'')
         +(e.instagram_url?'<a href="'+e.instagram_url+'" target="_blank" style="font-size:11px;font-weight:600;background:rgba(225,48,108,0.1);border:1px solid rgba(225,48,108,0.25);border-radius:7px;color:#E1306C;padding:3px 9px;text-decoration:none">Instagram</a>':'')
         +(e.google_url?'<a href="'+e.google_url+'" target="_blank" style="font-size:11px;font-weight:600;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);border-radius:7px;color:#F59E0B;padding:3px 9px;text-decoration:none">Maps</a>':'')
-        +'<button onclick="gerarPitchIntel(\''+e.place_id+'\')" style="font-size:11px;font-weight:700;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25);border-radius:7px;color:#F59E0B;padding:3px 10px;cursor:pointer">📋 Pitch</button>'
-        +(!isDone?'<button onclick="adicionarAoPipelineIntel(\''+e.place_id+'\')" style="font-size:11px;font-weight:700;background:rgba(61,123,245,0.15);border:1px solid rgba(61,123,245,0.3);border-radius:7px;color:#3D7BF5;padding:3px 10px;cursor:pointer;margin-left:auto">+ Pipeline</button>'
-          :'<span style="font-size:11px;font-weight:600;color:#27C76E;margin-left:auto">✓ No pipeline</span>')
+        +(e.status==='contactado'
+          ? '<span style="font-size:11px;font-weight:600;color:#27C76E;margin-left:auto">✓ Pitch enviado</span>'
+          : isDone
+            ? '<button onclick="gerarPitchIntel(\''+e.place_id+'\')" style="font-size:11px;font-weight:700;background:rgba(61,123,245,0.1);border:1px solid rgba(61,123,245,0.3);border-radius:7px;color:#3D7BF5;padding:3px 10px;cursor:pointer;margin-left:auto">📋 Pitch / Enviar</button>'
+            : '<button onclick="gerarPitchIntel(\''+e.place_id+'\')" style="font-size:11px;font-weight:700;background:linear-gradient(135deg,rgba(61,123,245,0.2),rgba(108,58,237,0.2));border:1px solid rgba(61,123,245,0.4);border-radius:7px;color:#6BA3FF;padding:4px 12px;cursor:pointer;margin-left:auto">🎯 Prospectar</button>'
+          )
         +'</div></div>';
     });
   }

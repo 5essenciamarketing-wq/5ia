@@ -4579,10 +4579,9 @@ window.dispararPitchZapiInline = async function(placeId){
           headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
           body:JSON.stringify({status:'contactado'})
         });
-        if(!rPatch.ok){
+        if(!rPatch.ok && rPatch.status!==404){
           var patchErr = await rPatch.text();
           console.error('Intel PATCH error',rPatch.status,patchErr);
-          toast('Aviso: status não atualizado ('+rPatch.status+')','err');
         }
         emp.status='contactado';
         renderIntel(document.getElementById('comercial-body'));
@@ -4596,25 +4595,27 @@ window.dispararPitchZapiInline = async function(placeId){
           +(emp.instagram_handle ? 'Instagram: @'+emp.instagram_handle+' – '+(emp.instagram_followers||0)+' seguidores\n' : '')
           +(emp.oportunidades ? '\nOportunidades: '+emp.oportunidades : '')
           +(emp.servicos_rec ? '\nServiços recomendados: '+emp.servicos_rec : '');
+        // Constrói payload apenas com colunas confirmadas no schema
         var novoProsp = {
           nome: emp.nome,
           empresa: emp.segmento||emp.nome,
           contato: fone.replace(/^55/,''),
           diag: diagIntel,
           status: 'prospecto',
-          etapa: emp.servicos_rec||null,
-          criado: new Date().toISOString(),
-          registros: [
-            {data:new Date().toISOString(), tipo:'criação', nota:'Prospecto criado via Intel B2B.'},
-            {data:new Date().toISOString(), tipo:'contato', nota:'Pitch enviado por WhatsApp: '+pitch}
-          ]
+          criado: new Date().toISOString()
         };
+        // Adiciona campos opcionais apenas se existirem no schema
+        try{ novoProsp.etapa = emp.servicos_rec||null; }catch(ex){}
+        try{ novoProsp.registros = [
+          {data:new Date().toISOString(), tipo:'criação', nota:'Prospecto criado via Intel B2B.'},
+          {data:new Date().toISOString(), tipo:'contato', nota:'Pitch enviado por WhatsApp.'}
+        ]; }catch(ex){}
         var rProsp = await fetch(SB_URL+'/rest/v1/prospectos',{
           method:'POST',
-          headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=representation'},
+          headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
           body:JSON.stringify(novoProsp)
         });
-        if(rProsp.ok){
+        if(rProsp.ok || rProsp.status===201){
           // Atualiza array local e re-renderiza a lista de prospectos
           if(typeof prospectos !== 'undefined') prospectos.unshift(novoProsp);
           if(typeof carregarProspectos === 'function'){

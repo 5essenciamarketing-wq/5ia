@@ -4011,6 +4011,41 @@ function getBBox(cidade){
   return null;
 }
 
+// ── Preview Instagram inline ────────────────────────────────────────
+window.abrirPreviewInstagram = function(handle){
+  var existing = document.getElementById('ig-preview-modal');
+  if(existing) existing.remove();
+
+  var overlay = document.createElement('div');
+  overlay.id = 'ig-preview-modal';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;padding:16px';
+  overlay.onclick = function(ev){ if(ev.target===overlay) overlay.remove(); };
+
+  overlay.innerHTML =
+    '<div style="background:#1A1A2E;border:1px solid rgba(225,48,108,0.3);border-radius:16px;width:100%;max-width:420px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column">'
+    // header
+    +'<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.07)">'
+    +'<div style="display:flex;align-items:center;gap:8px">'
+    +'<span style="font-size:18px">📷</span>'
+    +'<div>'
+    +'<div style="font-size:13px;font-weight:700;color:#F0F0FF">@'+handle+'</div>'
+    +'<div style="font-size:10.5px;color:var(--ink3)">Prévia do perfil</div>'
+    +'</div>'
+    +'</div>'
+    +'<div style="display:flex;gap:8px;align-items:center">'
+    +'<a href="https://instagram.com/'+handle+'" target="_blank" rel="noopener noreferrer" style="font-size:11px;font-weight:600;background:rgba(225,48,108,0.15);border:1px solid rgba(225,48,108,0.3);border-radius:7px;color:#E1306C;padding:4px 10px;text-decoration:none">Abrir ↗</a>'
+    +'<button onclick="document.getElementById(\'ig-preview-modal\').remove()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:7px;color:var(--ink2);font-size:18px;line-height:1;padding:2px 8px;cursor:pointer">×</button>'
+    +'</div>'
+    +'</div>'
+    // iframe com embed público
+    +'<div style="flex:1;overflow:auto;padding:0">'
+    +'<iframe src="https://www.instagram.com/'+handle+'/embed" frameborder="0" scrolling="yes" allowtransparency="true" style="width:100%;height:520px;background:#fff;border:none"></iframe>'
+    +'</div>'
+    +'</div>';
+
+  document.body.appendChild(overlay);
+};
+
 // ── Google Places via Supabase proxy ───────────────────────────────
 async function buscarPlacesREST(query, apiKey, maxResults){
   var r = await fetchTimeout(SB_URL+'/functions/v1/places-proxy', {
@@ -4264,7 +4299,7 @@ window.adicionarAoPipelineIntel = async function(placeId){
 // ── Carregar buscas anteriores do Supabase ──────────────────────
 window.carregarIntelSalvos = async function(){
   try{
-    var r = await fetch(SB_URL+'/rest/v1/prospeccao_intel?order=criado.desc&limit=60&status=not.in.(duplicado,descartado,contactado)',
+    var r = await fetch(SB_URL+'/rest/v1/prospeccao_intel?order=criado.desc&limit=100&status=not.in.(duplicado,descartado,contactado)',
       {headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY}});
     intelResultados = await r.json()||[];
     intelDuplicados = 0;
@@ -4302,30 +4337,44 @@ window.buscarEmpresasIntel = async function(){
 
   var toastFn = typeof toast==='function' ? toast : function(){};
 
-  // Safety net: para tudo depois de 40s
+  // Safety net: para tudo depois de 90s (busca maior precisa de mais tempo)
   var _safetyTimer = setTimeout(function(){
     if(!intelBuscando) return;
     intelBuscando = false;
-    toastFn('Tempo esgotado (40s) — tente uma cidade menor ou nicho diferente','err');
-
+    toastFn('Tempo esgotado — exibindo resultados parciais','err');
     renderIntel(document.getElementById('comercial-body'));
-  }, 40000);
+  }, 90000);
 
   try{
-    // ── ETAPA 1: buscar no Google Places ──
+    // ── ETAPA 1: buscar no Google Places (múltiplas buscas para atingir qtd) ──
     toastFn('🔍 Buscando no Google Places…','info');
-    var results;
-    try{
-      results = await buscarPlacesREST(nicho+' em '+cidade, gKey, Math.min(qtd,20));
-    }catch(e){
-      toastFn('Erro Places: '+e.message,'err');
-      intelBuscando=false; renderIntel(document.getElementById('comercial-body')); return;
+    var results = [];
+    var queries = [nicho+' em '+cidade];
+    // Variações para ampliar resultados quando qtd > 20
+    if(qtd > 20){
+      queries.push(nicho+' '+cidade);
+      queries.push(nicho+' no '+cidade);
     }
-
-    if(!results||!results.length){
+    var seenIds = {};
+    for(var qi=0; qi<queries.length; qi++){
+      if(results.length >= qtd) break;
+      try{
+        var partial = await buscarPlacesREST(queries[qi], gKey, 20);
+        (partial||[]).forEach(function(p){
+          var pid = p.place_id||p.id||p.name;
+          if(pid && !seenIds[pid]){
+            seenIds[pid] = true;
+            results.push(p);
+          }
+        });
+      }catch(e){ toastFn('Aviso Places: '+e.message,'err'); }
+    }
+    results = results.slice(0, qtd);
+    if(!results.length){
       toastFn('Nenhuma empresa encontrada para "'+nicho+' em '+cidade+'"','err');
       intelBuscando=false; renderIntel(document.getElementById('comercial-body')); return;
     }
+
     toastFn('✅ '+results.length+' empresas encontradas — buscando detalhes…','info');
 
     // ── ETAPA 2: detalhes de cada empresa ──
@@ -4707,7 +4756,7 @@ window.renderIntel = function(body){
         +'<div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;align-items:center">'
         +(link55?'<a href="'+link55+'" target="_blank" style="font-size:11px;font-weight:600;background:rgba(39,199,110,0.12);border:1px solid rgba(39,199,110,0.25);border-radius:7px;color:#27C76E;padding:3px 9px;text-decoration:none">WhatsApp</a>':'')
         +(e.website?'<a href="'+e.website+'" target="_blank" style="font-size:11px;font-weight:600;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:7px;color:var(--ink2);padding:3px 9px;text-decoration:none">Site</a>':'')
-        +(e.instagram_url?(function(){var ig=(e.instagram_url.startsWith('http')?e.instagram_url:'https://'+e.instagram_url);return '<a href="'+ig+'" target="_blank" rel="noopener noreferrer" onclick="window.open(\''+ig+'\',\'_blank\');return false;" style="font-size:11px;font-weight:600;background:rgba(225,48,108,0.1);border:1px solid rgba(225,48,108,0.25);border-radius:7px;color:#E1306C;padding:3px 9px;text-decoration:none">Instagram</a>';})():'')
+        +(e.instagram_handle?'<button onclick="abrirPreviewInstagram(\''+e.instagram_handle+'\')" style="font-size:11px;font-weight:600;background:rgba(225,48,108,0.1);border:1px solid rgba(225,48,108,0.25);border-radius:7px;color:#E1306C;padding:3px 9px;cursor:pointer">📷 Instagram</button>':'')
         +(e.google_url?'<a href="'+e.google_url+'" target="_blank" style="font-size:11px;font-weight:600;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);border-radius:7px;color:#F59E0B;padding:3px 9px;text-decoration:none">Maps</a>':'')
         +(e.status==='descartado'
           ? '<span style="font-size:11px;color:rgba(255,255,255,0.2);margin-left:auto">✗ Descartado</span>'
@@ -4743,7 +4792,7 @@ window.renderIntel = function(body){
     +'<input id="intel-nicho" placeholder="Nicho (ex: clínica de estética, advocacia, academia…)" style="'+inputStyle()+'margin-bottom:7px">'
     +'<div style="display:flex;gap:7px;margin-bottom:8px">'
     +'<input id="intel-cidade" placeholder="Cidade" style="'+inputStyle()+'flex:1">'
-    +'<select id="intel-qtd" style="'+inputStyle()+'width:86px;flex-shrink:0"><option value="5">5</option><option value="10" selected>10</option><option value="20">20</option></select>'
+    +'<select id="intel-qtd" style="'+inputStyle()+'width:86px;flex-shrink:0"><option value="20">20</option><option value="30">30</option><option value="50" selected>50</option></select>'
     +'</div>'
     +'<button onclick="buscarEmpresasIntel()" '+(intelBuscando?'disabled':'')+' style="'+btnPriStyle()+'width:100%">'
     +(intelBuscando?'<span style="display:inline-block;animation:spin 0.7s linear infinite">⟳</span> Buscando e pontuando com IA…':'🚀 Buscar + IA Score')

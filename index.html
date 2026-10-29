@@ -4609,9 +4609,10 @@ window.dispararPitchZapiInline = async function(placeId){
             {data:new Date().toISOString(),tipo:'contato',nota:'Pitch enviado por WhatsApp.'}
           ]
         };
-        // Adiciona local e renderiza imediatamente — igual ao fluxo manual que funciona
+        // Adiciona local, troca para aba prospecção e renderiza
         prospectos.unshift(novoProsp);
-        salvarProspectoSB(novoProsp); // fire-and-forget no background
+        salvarProspectoSB(novoProsp);
+        tabComercial = 'prospec';
         renderComercial();
         toast(emp.nome+' salvo como prospecto! 📋','ok');
       }catch(eSave){

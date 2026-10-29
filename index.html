@@ -51,19 +51,33 @@ body{
   -moz-osx-font-smoothing:grayscale;
   text-rendering:optimizeLegibility;
   display:grid;
-  grid-template-columns:1fr 1fr 1fr;
+  grid-template-columns:340px 1fr;
   background:var(--bg);
   padding-top:38px;
 }
 
 #toasts{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:6px;align-items:center;pointer-events:none;}
 
-/* ── COLUNA ESQUERDA — Atividades ── */
+/* ── COLUNA LATERAL — Atividades + Report + Agenda em abas ── */
 #col-ativ{
   display:flex;flex-direction:column;overflow:hidden;
   background:var(--s1);
   border-right:1px solid var(--b1);
+  grid-column:1;
 }
+/* abas laterais */
+#sidebar-tabs{
+  display:flex;border-bottom:1px solid var(--b1);flex-shrink:0;
+}
+.sidebar-tab{
+  flex:1;padding:9px 6px;font-size:11px;font-weight:700;color:var(--ink3);
+  background:none;border:none;cursor:pointer;font-family:var(--font);
+  letter-spacing:0.03em;text-transform:uppercase;transition:color 0.15s,border-color 0.15s;
+  border-bottom:2px solid transparent;margin-bottom:-1px;
+}
+.sidebar-tab.active{color:var(--blue);border-bottom-color:var(--blue);}
+.sidebar-pane{display:none;flex:1;overflow:hidden;flex-direction:column;}
+.sidebar-pane.visible{display:flex;}
 
 /* Cabeçalho da coluna */
 .ativ-col-head{
@@ -360,12 +374,19 @@ body{
 .h-nome{font-size:12px;font-weight:600;}
 .h-meta{font-size:10px;color:var(--ink3);margin-top:1px;}
 
-/* ── PAINEL COMERCIAL — 3ª coluna, sempre visível ── */
+/* ── PAINEL COMERCIAL — coluna principal ── */
 #painel-comercial{
   overflow:hidden;
   background:var(--s1);
   border-left:1px solid var(--b1);
   display:flex;flex-direction:column;
+  grid-column:2;
+}
+/* col-report fica dentro da sidebar agora */
+#col-report{
+  display:flex;flex-direction:column;
+  overflow:hidden;
+  flex:1;min-height:0;
 }
 
 /* Botão comercial no header */
@@ -771,138 +792,103 @@ input:-webkit-autofill,input:-webkit-autofill:focus{
 })();
 </script>
 
-<!-- COLUNA ESQUERDA -->
+<!-- SIDEBAR (Tarefas / Report / Agenda) -->
 <div id="col-ativ">
-  <div style="padding:20px 18px 12px;border-bottom:1px solid var(--b1);flex-shrink:0">
+  <!-- Cabeçalho fixo com data -->
+  <div style="padding:16px 18px 10px;border-bottom:1px solid var(--b1);flex-shrink:0">
     <div style="font-size:13px;font-weight:700;margin-bottom:2px" id="ativ-date-label"></div>
     <div style="font-size:11px;color:var(--ink3)">Use <span style="color:var(--blue);font-weight:600">/Cliente</span> para associar</div>
   </div>
-  <div class="ativ-input-wrap">
-    <textarea id="campo-livre" rows="2" style="width:100%;background:var(--bg2);border:1px solid var(--b1);border-radius:10px;color:var(--ink);font-family:var(--font);font-size:13px;padding:10px 12px;outline:none;resize:none;line-height:1.6;margin-bottom:8px" placeholder="Editar vídeo /Kalu, Ligar /Sibele, Reunião…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();adicionarLivre()}"></textarea>
-    <button onclick="adicionarLivre()" class="ativ-add-btn">+ Adicionar</button>
-  </div>
-  <div id="lista-dia"></div>
 
-  <!-- AGENDA GOOGLE -->
-  <div id="agenda-section" style="margin:10px 0 4px;border-top:1px solid var(--b1);padding-top:10px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-      <span style="font-size:12px;font-weight:600;color:var(--ink2);letter-spacing:.5px;text-transform:uppercase">Agenda</span>
-      <div style="display:flex;gap:6px;align-items:center">
-        <button id="btn-add-evento" onclick="abrirModalEvento()" title="Novo evento" style="display:none;background:rgba(76,130,251,0.15);border:1px solid rgba(76,130,251,0.3);color:var(--blue);border-radius:6px;padding:3px 8px;font-size:12px;cursor:pointer">+ Novo</button>
-        <button id="btn-conectar-gcal" onclick="conectarGcal()" style="background:rgba(76,130,251,0.12);border:1px solid rgba(76,130,251,0.25);color:var(--blue);border-radius:6px;padding:3px 9px;font-size:11px;cursor:pointer;white-space:nowrap">Conectar</button>
-        <button id="btn-desconectar-gcal" onclick="desconectarGcal()" title="Desconectar" style="display:none;background:transparent;border:none;color:var(--ink3);font-size:11px;cursor:pointer">×</button>
+  <!-- Abas da sidebar -->
+  <div id="sidebar-tabs">
+    <button class="sidebar-tab active" onclick="setSidebarTab('tarefas')" id="stab-tarefas">Tarefas</button>
+    <button class="sidebar-tab" onclick="setSidebarTab('report')" id="stab-report">Report</button>
+    <button class="sidebar-tab" onclick="setSidebarTab('agenda')" id="stab-agenda">Agenda</button>
+  </div>
+
+  <!-- PANE: Tarefas -->
+  <div class="sidebar-pane visible" id="pane-tarefas" style="overflow:hidden">
+    <div class="ativ-input-wrap">
+      <textarea id="campo-livre" rows="2" style="width:100%;background:var(--bg2);border:1px solid var(--b1);border-radius:10px;color:var(--ink);font-family:var(--font);font-size:13px;padding:10px 12px;outline:none;resize:none;line-height:1.6;margin-bottom:8px" placeholder="Editar vídeo /Kalu, Ligar /Sibele, Reunião…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();adicionarLivre()}"></textarea>
+      <button onclick="adicionarLivre()" class="ativ-add-btn">+ Adicionar</button>
+    </div>
+    <div id="lista-dia" style="flex:1;overflow-y:auto"></div>
+    <div class="ativ-footer" style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
+      <button onclick="abrirResumoSemanal()" class="resumo-btn">Resumo semanal</button>
+      <button onclick="otimizarTitulos()" id="btn-otimizar" class="resumo-btn" style="border-color:rgba(168,85,247,0.3);color:var(--purple)">Otimizar títulos dos projetos</button>
+    </div>
+  </div>
+
+  <!-- PANE: Report -->
+  <div class="sidebar-pane" id="pane-report" style="overflow-y:auto">
+    <div id="report-inner">
+    <div class="card" style="box-shadow:none;border:none;background:transparent">
+    <div id="card-form" style="padding:16px 14px">
+
+      <div class="field">
+        <label style="display:flex;align-items:center;justify-content:space-between">
+          Cliente
+          <span onclick="carregarClientes().then(()=>toast('Clientes atualizados'))" title="Atualizar lista de clientes" style="font-size:10px;color:var(--blue);cursor:pointer;font-weight:600;opacity:0.7">↻ Atualizar</span>
+        </label>
+        <select id="sel-cliente" onchange="onClienteChange()">
+          <option value="">Carregando…</option>
+        </select>
       </div>
-    </div>
-    <div id="agenda-lista" style="font-size:12px;color:var(--ink2)">
-      <div style="color:var(--ink3);font-size:11px;text-align:center;padding:8px 0">Conecte o Google Calendar para ver seus compromissos</div>
-    </div>
-  </div>
 
-  <!-- MODAL NOVO EVENTO -->
-  <div id="modal-evento" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.7);align-items:center;justify-content:center">
-    <div style="background:var(--s1);border:1px solid var(--b2);border-radius:16px;padding:24px;width:320px;max-width:90vw">
-      <div style="font-size:14px;font-weight:600;color:var(--ink);margin-bottom:16px">Novo evento</div>
-      <input id="ev-titulo" placeholder="Título do evento" style="width:100%;background:var(--bg);border:1px solid var(--b1);border-radius:8px;padding:9px 12px;color:var(--ink);font-size:13px;outline:none;margin-bottom:8px;box-sizing:border-box">
-      <div style="display:flex;gap:8px;margin-bottom:8px">
-        <input id="ev-data" type="date" style="flex:1;background:var(--bg);border:1px solid var(--b1);border-radius:8px;padding:9px 10px;color:var(--ink);font-size:12px;outline:none;box-sizing:border-box">
-        <input id="ev-hora" type="time" style="width:100px;background:var(--bg);border:1px solid var(--b1);border-radius:8px;padding:9px 10px;color:var(--ink);font-size:12px;outline:none;box-sizing:border-box">
+      <div class="field">
+        <label>O que está sendo feito</label>
+        <textarea id="inp-acao" rows="2" style="height:60px"
+          placeholder="Ex: Criando linha editorial de outubro, editando vídeo do produto X…"
+          oninput="onInputChange()"></textarea>
       </div>
-      <input id="ev-desc" placeholder="Descrição (opcional)" style="width:100%;background:var(--bg);border:1px solid var(--b1);border-radius:8px;padding:9px 12px;color:var(--ink);font-size:13px;outline:none;margin-bottom:12px;box-sizing:border-box">
-      <div style="display:flex;gap:8px">
-        <button onclick="fecharModalEvento()" style="flex:1;padding:10px;background:var(--s2);border:1px solid var(--b1);border-radius:8px;color:var(--ink2);font-size:13px;cursor:pointer">Cancelar</button>
-        <button onclick="salvarEvento()" id="btn-salvar-ev" style="flex:2;padding:10px;background:var(--blue-g);border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:600;cursor:pointer">Salvar</button>
+
+      <div class="row2">
+        <div class="field">
+          <label>Etapa <span class="opt">(opcional)</span></label>
+          <select id="sel-etapa" onchange="onInputChange()">
+            <option value="">— Selecionar —</option>
+            <option value="iniciando">Iniciando</option>
+            <option value="em_desenvolvimento">Em desenvolvimento</option>
+            <option value="50">50% concluído</option>
+            <option value="finalizando">Finalizando</option>
+            <option value="revisao">Em revisão</option>
+            <option value="aguardando_aprovacao">Aguardando aprovação</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Previsão <span class="opt">(opcional)</span></label>
+          <select id="sel-prev" onchange="onInputChange()">
+            <option value="">— Selecionar —</option>
+            <option value="hoje">Hoje</option>
+            <option value="amanha">Amanhã</option>
+            <option value="essa_semana">Essa semana</option>
+            <option value="semana_que_vem">Semana que vem</option>
+            <option value="proximos_dias">Próximos dias</option>
+          </select>
+        </div>
       </div>
-    </div>
-  </div>
 
-  <div class="ativ-footer" style="display:flex;flex-direction:column;gap:6px">
-    <button onclick="abrirResumoSemanal()" class="resumo-btn">Resumo semanal</button>
-    <button onclick="otimizarTitulos()" id="btn-otimizar" class="resumo-btn" style="border-color:rgba(168,85,247,0.3);color:var(--purple)">Otimizar títulos dos projetos</button>
-  </div>
-</div>
-
-<!-- COLUNA DIREITA -->
-<div id="col-report">
-<div id="report-inner">
-<div class="card">
-<div id="card-form">
-  <div class="header">
-    <div class="logo">
-      <div class="logo-dot" style="background:transparent;padding:0;overflow:hidden"><img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAASABIAAD/4QBMRXhpZgAATU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAACBKADAAQAAAABAAAB7QAAAAD/7QA4UGhvdG9zaG9wIDMuMAA4QklNBAQAAAAAAAA4QklNBCUAAAAAABDUHYzZjwCyBOmACZjs+EJ+/8AAEQgB7QIEAwEiAAIRAQMRAf/EAB8AAAEFAQEBAQEBAAAAAAAAAAABAgMEBQYHCAkKC//EALUQAAIBAwMCBAMFBQQEAAABfQECAwAEEQUSITFBBhNRYQcicRQygZGhCCNCscEVUtHwJDNicoIJChYXGBkaJSYnKCkqNDU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6g4SFhoeIiYqSk5SVlpeYmZqio6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2drh4uPk5ebn6Onq8fLz9PX29/j5+v/EAB8BAAMBAQEBAQEBAQEAAAAAAAABAgMEBQYHCAkKC//EALURAAIBAgQEAwQHBQQEAAECdwABAgMRBAUhMQYSQVEHYXETIjKBCBRCkaGxwQkjM1LwFWJy0QoWJDThJfEXGBkaJicoKSo1Njc4OTpDREVGR0hJSlNUVVZXWFlaY2RlZmdoaWpzdHV2d3h5eoKDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uLj5OXm5+jp6vLz9PX29/j5+v/bAEMAAQEBAQEBAgEBAgMCAgIDBAMDAwMEBAQEBAQEBAUEBAQEBAQFBQUFBQUFBQYGBgYGBggICAgICAgICAgICAgICP/bAEMBAQEBAgICBAICBAkGBQYJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCf/dAAQAIf/aAAwDAQACEQMRAD8A/jXooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigD/0P416KKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooA/9H+NeiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKAP/S/jXooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigD/0/416KKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooA/9T+NeiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKAP/V/jXooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigD/1v416KKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAo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q+4r8HP2wv8Ag7/8E2OnXfhn9hj4dXWoXzBki1zxayQW8ZxjzItLs5JJZxk5UyXMOMfNGc4AB/U/+3D+3R+zz/wT6+Bd/wDHf9ojWEsLKANHYWMZVr3U7vaWjsrCAkGWV8cn7sa5eRlRSw/ybv2+/wBt34r/APBQv9qLxF+078XNkF3qzLBY2ELFoNO0+DK2ljASF3LEhJd8AySM8hALkVx/7V37ZP7Sv7bvxOl+Lv7Tviy88U6wwZIBOwW3tImbd9nsbSMLBbQg87IkUE/M2WJJ+Y6ACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKAP//S/jXooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooA/vg/4M2/D4tvgt8cvFWOb3W9GtM+v2a0u5Mfh9pr+jn/AIKGf8FM/wBln/gmp8LP+FgftB6yBqd/FMdE0C0/eajqs0SgmO3iAIjjDFRJcSlYkyAWLMqt/Np/wasfF34d/s7/APBOf4/fHz4sX66Z4c8K68dS1G5ILFLe00eKVwiD5pJHztijUFncqigswFfx6ft4ftr/ABd/4KBftNeIf2lvjFOftmrS+XY2KOzQadp8bN9k0+2B6RwoeTgF3LyMN7saAP1N/bZ/4OVv+CkH7VmrXml/DHXz8IPCchYQad4YkaO/2H7puNbKreNKOfmtjboc/wCryAa/Bvxn498dfEfW5PEvxD1q/wBe1KX791qNzNdTtk5+aWdnc8+prk6KACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKAP/T/jXooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooA/YX4bftF3/w0/wCCHvxG+BuhztFcfEP4paXb3ahiN+n2Wkm/lHHX/Sre0yOmM1+PVdI/i7xHJ4Qj8BPdE6RDePfpb7VwLmSJIXl3Y3kmONVwWwMcAEnPN0AFFFFABRRX0f8ACD9jn9rr9oXw1P40+AXwr8X+ONHtblrKa/8AD+h6nqdtHcpHHK9u89lbyxrMscsbtGW3BXViMMCQD5wor7k/4dhf8FKv+jefiZ/4SWv/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ACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooA/9D+NeiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKAP/R/jXooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigD/0v416KKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooA/9P+NeiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKAP/U/jXooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigD/1f416KKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooA/9k=" style="width:34px;height:34px;object-fit:cover;border-radius:10px"></div>
-      <div>
-        <div class="logo-nome">Vitória</div>
-        <div class="logo-sub">Quintessência Digital · Comercial</div>
+      <div class="field">
+        <label>Link <span class="opt">(opcional — drive, loom, figma…)</span></label>
+        <input id="inp-link" type="url" placeholder="https://…" oninput="onInputChange()">
       </div>
-    </div>
-    <div style="display:flex;align-items:center;gap:8px">
-      <div class="date-pill" id="date-pill"></div>
-      <button onclick="toggleComercial()" id="btn-comercial" class="btn-comercial">Comercial</button>
-    </div>
-  </div>
 
-  <div class="field">
-    <label style="display:flex;align-items:center;justify-content:space-between">
-      Cliente
-      <span onclick="carregarClientes().then(()=>toast('Clientes atualizados'))" title="Atualizar lista de clientes" style="font-size:10px;color:var(--blue);cursor:pointer;font-weight:600;opacity:0.7">↻ Atualizar</span>
-    </label>
-    <select id="sel-cliente" onchange="onClienteChange()">
-      <option value="">Carregando…</option>
-    </select>
-  </div>
+      <button class="btn-main" id="btn-main" onclick="enviar()" style="margin-top:12px">Enviar report</button>
+    </div><!-- /card-form -->
 
-  <div class="field">
-    <label>O que está sendo feito</label>
-    <textarea id="inp-acao" rows="2" style="height:60px"
-      placeholder="Ex: Criando linha editorial de outubro, editando vídeo do produto X, desenvolvendo criativos para campanha de lançamento…"
-      oninput="onInputChange()"></textarea>
-  </div>
-
-  <div class="row2">
-    <div class="field">
-      <label>Etapa <span class="opt">(opcional)</span></label>
-      <select id="sel-etapa" onchange="onInputChange()">
-        <option value="">— Selecionar —</option>
-        <option value="iniciando">Iniciando</option>
-        <option value="em_desenvolvimento">Em desenvolvimento</option>
-        <option value="50">50% concluído</option>
-        <option value="finalizando">Finalizando</option>
-        <option value="revisao">Em revisão</option>
-        <option value="aguardando_aprovacao">Aguardando aprovação</option>
-      </select>
-    </div>
-    <div class="field">
-      <label>Previsão <span class="opt">(opcional)</span></label>
-      <select id="sel-prev" onchange="onInputChange()">
-        <option value="">— Selecionar —</option>
-        <option value="hoje">Hoje</option>
-        <option value="amanha">Amanhã</option>
-        <option value="essa_semana">Essa semana</option>
-        <option value="semana_que_vem">Semana que vem</option>
-        <option value="proximos_dias">Próximos dias</option>
-      </select>
-    </div>
-  </div>
-
-  <div class="field">
-    <label>Link <span class="opt">(opcional — drive, loom, figma…)</span></label>
-    <input id="inp-link" type="url" placeholder="https://…" oninput="onInputChange()">
-  </div>
-
-  <button class="btn-main" id="btn-main" onclick="enviar()" style="margin-top:12px">Enviar report</button>
-</div><!-- /card-form -->
-
-<div id="card-right">
-  <!-- Preview -->
-  <div class="preview-wrap" id="pw">
-    <div class="preview-head">
-      <div class="preview-head-left">
-        <span class="preview-lbl">Mensagem WhatsApp</span>
-        <span class="preview-badge badge-tpl" id="pbadge">Template</span>
-      </div>
+    <div id="card-right" style="padding:0 14px 16px">
+      <!-- Preview -->
+      <div class="preview-wrap" id="pw">
+        <div class="preview-head">
+          <div class="preview-head-left">
+            <span class="preview-lbl">Mensagem WhatsApp</span>
+            <span class="preview-badge badge-tpl" id="pbadge">Template</span>
+          </div>
       <button class="btn-ia" id="btn-ia" onclick="gerarIA()" disabled>
         <span class="star"></span>&nbsp;Gerar com IA
       </button>
-    </div>
+    </div><!-- /preview-head -->
     <div class="preview-body empty" id="pbody" onclick="abrirEdicao()">
       Preencha os campos para ver o preview…
     </div>
@@ -913,9 +899,8 @@ input:-webkit-autofill,input:-webkit-autofill:focus{
         <button class="btn-sm" onclick="cancelarEdit()">Cancelar</button>
       </div>
     </div>
-  </div>
+  </div><!-- /preview-wrap -->
 
-  <!-- WPP -->
   <!-- FOTO ANEXADA -->
   <div id="foto-preview-wrap" style="display:none;margin-bottom:10px;position:relative">
     <img id="foto-preview" style="width:100%;border-radius:12px;max-height:200px;object-fit:cover;border:1px solid var(--b1)">
@@ -923,7 +908,6 @@ input:-webkit-autofill,input:-webkit-autofill:focus{
   </div>
   <input type="file" id="foto-input" accept="image/*" style="display:none" onchange="onFotoSelecionada(event)">
 
-  <!-- BOTÃO ANEXAR FOTO -->
   <div onclick="document.getElementById('foto-input').click()" style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);margin-bottom:8px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.borderColor='rgba(76,130,251,0.3)'" onmouseout="this.style.borderColor='var(--b1)'">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--ink3);flex-shrink:0"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
     <span id="foto-label" style="font-size:12.5px;font-weight:500;color:var(--ink3)">Anexar foto ao report</span>
@@ -948,9 +932,58 @@ input:-webkit-autofill,input:-webkit-autofill:focus{
   </div>
 </div><!-- /card-right -->
 </div><!-- /card -->
-
 </div><!-- /report-inner -->
-</div><!-- /col-report -->
+</div><!-- /pane-report -->
+
+<!-- PANE: Agenda -->
+<div class="sidebar-pane" id="pane-agenda" style="overflow:hidden;flex-direction:column">
+  <div style="padding:10px 14px 8px;border-bottom:1px solid var(--b1);flex-shrink:0;display:flex;align-items:center;justify-content:space-between">
+    <span style="font-size:11px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:0.04em">Próximos compromissos</span>
+    <div style="display:flex;gap:6px">
+      <button id="btn-add-evento" onclick="abrirModalEvento()" style="display:none;font-size:10px;font-weight:700;color:var(--blue);background:rgba(76,130,251,0.1);border:1px solid rgba(76,130,251,0.3);border-radius:6px;padding:3px 8px;cursor:pointer">+ Novo</button>
+      <button id="btn-conectar-gcal" onclick="conectarGcal()" style="font-size:10px;font-weight:700;color:var(--ink3);background:var(--s2);border:1px solid var(--b1);border-radius:6px;padding:3px 8px;cursor:pointer">Conectar Google</button>
+      <button id="btn-desconectar-gcal" onclick="desconectarGcal()" style="display:none;font-size:10px;font-weight:700;color:#FF3B45;background:rgba(255,59,69,0.1);border:1px solid rgba(255,59,69,0.3);border-radius:6px;padding:3px 8px;cursor:pointer">Desconectar</button>
+    </div>
+  </div>
+  <div id="agenda-lista" style="flex:1;overflow-y:auto;padding:10px 14px">
+    <span style="color:var(--ink3);font-size:12px">Conecte o Google Calendar para ver seus compromissos.</span>
+  </div>
+</div><!-- /pane-agenda -->
+
+</div><!-- /col-ativ -->
+
+<!-- MODAL NOVO EVENTO -->
+<div id="modal-evento" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center">
+  <div style="background:var(--s1);border-radius:16px;padding:24px;width:min(360px,90vw);box-shadow:0 20px 60px rgba(0,0,0,0.4)">
+    <div style="font-size:14px;font-weight:700;color:var(--ink1);margin-bottom:16px">Novo evento</div>
+    <div class="field" style="margin-bottom:10px">
+      <label>Título</label>
+      <input id="ev-titulo" type="text" placeholder="Ex: Reunião com cliente">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <div class="field">
+        <label>Data</label>
+        <input id="ev-data" type="date">
+      </div>
+      <div class="field">
+        <label>Hora</label>
+        <input id="ev-hora" type="time">
+      </div>
+    </div>
+    <div class="field" style="margin-bottom:16px">
+      <label>Descrição <span class="opt">(opcional)</span></label>
+      <textarea id="ev-desc" rows="2" style="height:52px" placeholder="Detalhes do evento…"></textarea>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button onclick="salvarEvento()" style="flex:1;padding:10px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer">Salvar</button>
+      <button onclick="fecharModalEvento()" style="padding:10px 14px;background:var(--s2);color:var(--ink2);border:1px solid var(--b1);border-radius:8px;font-weight:600;font-size:13px;cursor:pointer">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- HIDDEN col-report anchor for legacy JS -->
+<div id="col-report" style="display:none"></div>
+<div id="date-pill" style="display:none"></div>
 
 <!-- PAINEL COMERCIAL -->
 <div id="painel-comercial">
@@ -3750,6 +3783,18 @@ async function salvarEvento() {
 // ── NAVEGAÇÃO MOBILE ──────────────────────────────────────────────
 function isMobile(){ return window.innerWidth <= 700; }
 
+function setSidebarTab(tab){
+  // Update tab buttons
+  document.querySelectorAll('.sidebar-tab').forEach(btn => btn.classList.remove('active'));
+  const activeBtn = document.getElementById('stab-' + tab);
+  if(activeBtn) activeBtn.classList.add('active');
+
+  // Show/hide panes
+  document.querySelectorAll('.sidebar-pane').forEach(pane => pane.classList.remove('visible'));
+  const activePane = document.getElementById('pane-' + tab);
+  if(activePane) activePane.classList.add('visible');
+}
+
 function mobileNav(aba){
   if(!isMobile()) return;
   const colAtiv      = document.getElementById('col-ativ');
@@ -4718,8 +4763,8 @@ window.salvarLeadPipeline = async function(placeId, fone){
 
   var novoProsp = {
     id: Date.now().toString(),
-    nome: emp.nome,
-    empresa: emp.segmento||emp.nome,
+    nome: emp.nome||emp.empresa||'Lead Intel',
+    empresa: emp.nome||emp.empresa||emp.segmento||'',
     contato: (fone||'').replace(/^55/,''),
     diag: diagIntel,
     status: 'prospecto',

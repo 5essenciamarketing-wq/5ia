@@ -4264,7 +4264,7 @@ window.adicionarAoPipelineIntel = async function(placeId){
 // ── Carregar buscas anteriores do Supabase ──────────────────────
 window.carregarIntelSalvos = async function(){
   try{
-    var r = await fetch(SB_URL+'/rest/v1/prospeccao_intel?order=criado.desc&limit=60&status=not.in.(duplicado,descartado)',
+    var r = await fetch(SB_URL+'/rest/v1/prospeccao_intel?order=criado.desc&limit=60&status=not.in.(duplicado,descartado,contactado)',
       {headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY}});
     intelResultados = await r.json()||[];
     intelDuplicados = 0;
@@ -4574,14 +4574,19 @@ window.dispararPitchZapiInline = async function(placeId){
 
       // 1. Atualiza status no Intel
       try{
-        await fetch(SB_URL+'/rest/v1/prospeccao_intel?place_id=eq.'+encodeURIComponent(placeId),{
+        var rPatch = await fetch(SB_URL+'/rest/v1/prospeccao_intel?place_id=eq.'+encodeURIComponent(placeId),{
           method:'PATCH',
           headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
           body:JSON.stringify({status:'contactado'})
         });
+        if(!rPatch.ok){
+          var patchErr = await rPatch.text();
+          console.error('Intel PATCH error',rPatch.status,patchErr);
+          toast('Aviso: status não atualizado ('+rPatch.status+')','err');
+        }
         emp.status='contactado';
         renderIntel(document.getElementById('comercial-body'));
-      }catch(e){}
+      }catch(e){ console.error('Intel PATCH exception',e); }
 
       // 2. Cria prospecto no pipeline (salva direto no Supabase)
       try{

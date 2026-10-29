@@ -4012,38 +4012,80 @@ function getBBox(cidade){
 }
 
 // ── Preview Instagram inline ────────────────────────────────────────
-window.abrirPreviewInstagram = function(handle){
+window.abrirPreviewInstagram = function(handle, followers, nome){
   var existing = document.getElementById('ig-preview-modal');
   if(existing) existing.remove();
 
   var overlay = document.createElement('div');
   overlay.id = 'ig-preview-modal';
-  overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;padding:16px';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.78);display:flex;align-items:center;justify-content:center;padding:16px';
   overlay.onclick = function(ev){ if(ev.target===overlay) overlay.remove(); };
 
+  var fmtNum = function(n){ n=parseInt(n)||0; return n>=1000?(n/1000).toFixed(1)+'k':n; };
+  var avatarUrl = 'https://unavatar.io/instagram/'+handle+'?fallback=https://ui-avatars.com/api/?name='+encodeURIComponent(handle)+'&background=E1306C&color=fff&size=120';
+
   overlay.innerHTML =
-    '<div style="background:#1A1A2E;border:1px solid rgba(225,48,108,0.3);border-radius:16px;width:100%;max-width:420px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column">'
-    // header
-    +'<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.07)">'
-    +'<div style="display:flex;align-items:center;gap:8px">'
-    +'<span style="font-size:18px">📷</span>'
-    +'<div>'
-    +'<div style="font-size:13px;font-weight:700;color:#F0F0FF">@'+handle+'</div>'
-    +'<div style="font-size:10.5px;color:var(--ink3)">Prévia do perfil</div>'
+    '<div style="background:#0F0F1A;border:1px solid rgba(225,48,108,0.35);border-radius:20px;width:100%;max-width:380px;overflow:hidden;font-family:inherit">'
+
+    // Header gradiente Instagram
+    +'<div style="background:linear-gradient(135deg,#833AB4,#FD1D1D,#F77737);padding:3px 0 0 0">'
+    +'<div style="background:#0F0F1A;margin:3px 3px 0;border-radius:17px 17px 0 0;padding:20px 20px 16px">'
+
+    // Foto + info
+    +'<div style="display:flex;align-items:center;gap:16px;margin-bottom:16px">'
+    +'<div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#833AB4,#FD1D1D,#F77737);padding:2px;flex-shrink:0">'
+    +'<img src="'+avatarUrl+'" style="width:100%;height:100%;border-radius:50%;object-fit:cover;background:#1A1A2E" onerror="this.src=\'https://ui-avatars.com/api/?name='+encodeURIComponent(handle)+'&background=2a1a2e&color=E1306C&size=120\'">'
+    +'</div>'
+    +'<div style="flex:1;min-width:0">'
+    +'<div style="font-size:15px;font-weight:700;color:#F0F0FF;margin-bottom:2px">@'+handle+'</div>'
+    +(nome?'<div style="font-size:12px;color:var(--ink3);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+nome+'</div>':'')
+    +(followers?'<div style="font-size:13px;font-weight:600;color:#E1306C">'+fmtNum(followers)+' seguidores</div>':'')
     +'</div>'
     +'</div>'
-    +'<div style="display:flex;gap:8px;align-items:center">'
-    +'<a href="https://instagram.com/'+handle+'" target="_blank" rel="noopener noreferrer" style="font-size:11px;font-weight:600;background:rgba(225,48,108,0.15);border:1px solid rgba(225,48,108,0.3);border-radius:7px;color:#E1306C;padding:4px 10px;text-decoration:none">Abrir ↗</a>'
-    +'<button onclick="document.getElementById(\'ig-preview-modal\').remove()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:7px;color:var(--ink2);font-size:18px;line-height:1;padding:2px 8px;cursor:pointer">×</button>'
+
+    // Botões
+    +'<div style="display:flex;gap:8px">'
+    +'<a href="https://instagram.com/'+handle+'" target="_blank" rel="noopener noreferrer" style="flex:1;text-align:center;font-size:12px;font-weight:700;background:linear-gradient(135deg,#833AB4,#FD1D1D);border:none;border-radius:9px;color:#fff;padding:9px 0;text-decoration:none;display:block">Ver perfil completo ↗</a>'
+    +'<button onclick="document.getElementById(\'ig-preview-modal\').remove()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:9px;color:var(--ink2);font-size:20px;line-height:1;padding:6px 14px;cursor:pointer">×</button>'
     +'</div>'
-    +'</div>'
-    // iframe com embed público
-    +'<div style="flex:1;overflow:auto;padding:0">'
-    +'<iframe src="https://www.instagram.com/'+handle+'/embed" frameborder="0" scrolling="yes" allowtransparency="true" style="width:100%;height:520px;background:#fff;border:none"></iframe>'
+
+    +'</div></div>'
+
+    // Posts recentes via oEmbed/scraper público
+    +'<div id="ig-posts-wrap" style="padding:0 12px 14px;display:grid;grid-template-columns:repeat(3,1fr);gap:3px">'
+    +'<div style="grid-column:1/-1;text-align:center;padding:14px;font-size:11px;color:var(--ink3)">Carregando posts…</div>'
     +'</div>'
     +'</div>';
 
   document.body.appendChild(overlay);
+
+  // Tenta carregar thumbnail dos posts via oEmbed
+  (async function(){
+    try{
+      var wrap = document.getElementById('ig-posts-wrap');
+      // Tenta 6 posts genéricos usando unavatar para simular grade
+      // Usa API pública de recents posts via scrape leve
+      var resp = await fetch('https://www.instagram.com/'+handle+'/?__a=1&__d=dis',{
+        headers:{'Accept':'application/json'}
+      });
+      if(!resp.ok) throw new Error('blocked');
+      var data = await resp.json();
+      var edges = (data.graphql&&data.graphql.user&&data.graphql.user.edge_owner_to_timeline_media&&data.graphql.user.edge_owner_to_timeline_media.edges)||[];
+      if(!edges.length) throw new Error('no posts');
+      wrap.innerHTML = edges.slice(0,9).map(function(e){
+        var n = e.node;
+        var img = n.thumbnail_src||n.display_url||'';
+        var likes = (n.edge_media_preview_like&&n.edge_media_preview_like.count)||0;
+        return '<a href="https://www.instagram.com/p/'+n.shortcode+'/" target="_blank" rel="noopener noreferrer" style="aspect-ratio:1;overflow:hidden;border-radius:4px;display:block;position:relative">'
+          +'<img src="'+img+'" style="width:100%;height:100%;object-fit:cover">'
+          +(likes?'<span style="position:absolute;bottom:3px;left:4px;font-size:9px;color:#fff;text-shadow:0 1px 2px #000">❤ '+fmtNum(likes)+'</span>':'')
+          +'</a>';
+      }).join('');
+    }catch(e){
+      var wrap2 = document.getElementById('ig-posts-wrap');
+      if(wrap2) wrap2.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:10px 16px;font-size:11px;color:var(--ink3)">Posts não disponíveis para prévia — <a href="https://instagram.com/'+handle+'" target="_blank" style="color:#E1306C">ver no Instagram ↗</a></div>';
+    }
+  })();
 };
 
 // ── Google Places via Supabase proxy ───────────────────────────────
@@ -4756,7 +4798,7 @@ window.renderIntel = function(body){
         +'<div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;align-items:center">'
         +(link55?'<a href="'+link55+'" target="_blank" style="font-size:11px;font-weight:600;background:rgba(39,199,110,0.12);border:1px solid rgba(39,199,110,0.25);border-radius:7px;color:#27C76E;padding:3px 9px;text-decoration:none">WhatsApp</a>':'')
         +(e.website?'<a href="'+e.website+'" target="_blank" style="font-size:11px;font-weight:600;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:7px;color:var(--ink2);padding:3px 9px;text-decoration:none">Site</a>':'')
-        +(e.instagram_handle?'<button onclick="abrirPreviewInstagram(\''+e.instagram_handle+'\')" style="font-size:11px;font-weight:600;background:rgba(225,48,108,0.1);border:1px solid rgba(225,48,108,0.25);border-radius:7px;color:#E1306C;padding:3px 9px;cursor:pointer">📷 Instagram</button>':'')
+        +(e.instagram_handle?'<button onclick="abrirPreviewInstagram(\''+e.instagram_handle+'\','+(e.instagram_followers||0)+',\''+e.nome.replace(/'/g,'')+'\')" style="font-size:11px;font-weight:600;background:rgba(225,48,108,0.1);border:1px solid rgba(225,48,108,0.25);border-radius:7px;color:#E1306C;padding:3px 9px;cursor:pointer">📷 Instagram</button>':'')
         +(e.google_url?'<a href="'+e.google_url+'" target="_blank" style="font-size:11px;font-weight:600;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);border-radius:7px;color:#F59E0B;padding:3px 9px;text-decoration:none">Maps</a>':'')
         +(e.status==='descartado'
           ? '<span style="font-size:11px;color:rgba(255,255,255,0.2);margin-left:auto">✗ Descartado</span>'

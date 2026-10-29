@@ -4568,7 +4568,7 @@ window.dispararPitchZapiInline = async function(placeId){
       body:JSON.stringify({phone:fone, message:pitch})
     });
     var d = await r.json();
-    if(r.ok && (d.zaapId||d.id||d.messageId)){
+    if(r.ok){
       if(btn){ btn.disabled=false; btn.textContent='✓ Enviado!'; btn.style.background='rgba(39,199,110,0.25)'; }
       toast('Pitch enviado para '+emp.nome+'! 🚀','ok');
 
@@ -4592,7 +4592,6 @@ window.dispararPitchZapiInline = async function(placeId){
           +(emp.oportunidades ? '\nOportunidades: '+emp.oportunidades : '')
           +(emp.servicos_rec ? '\nServiços recomendados: '+emp.servicos_rec : '');
         var novoProsp = {
-          id: Date.now().toString(),
           nome: emp.nome,
           empresa: emp.segmento||emp.nome,
           contato: fone.replace(/^55/,''),
@@ -4607,7 +4606,7 @@ window.dispararPitchZapiInline = async function(placeId){
         };
         var rProsp = await fetch(SB_URL+'/rest/v1/prospectos',{
           method:'POST',
-          headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},
+          headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=representation'},
           body:JSON.stringify(novoProsp)
         });
         if(rProsp.ok){
@@ -4623,7 +4622,8 @@ window.dispararPitchZapiInline = async function(placeId){
           toast(emp.nome+' salvo como prospecto! 📋','ok');
         } else {
           var errText = await rProsp.text();
-          toast('Pitch enviado, mas erro ao salvar: '+errText.slice(0,60),'err');
+          toast('Erro ao salvar ('+rProsp.status+'): '+errText.slice(0,80),'err');
+          console.error('Supabase prospectos POST error',rProsp.status,errText);
         }
       }catch(eSave){
         toast('Pitch enviado, mas falha ao salvar lead: '+eSave.message,'err');

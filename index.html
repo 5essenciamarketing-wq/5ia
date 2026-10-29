@@ -4640,11 +4640,11 @@ window.gerarPitchIntel = async function(placeId){
     +'<input id="intel-fone-edit" value="'+fone+'" placeholder="DDD + número (só números)" style="flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:7px 10px;color:#F0F0FF;font-size:13px;outline:none">'
     +'</div>'
     // Toggle vídeo demo
-    +'<div id="intel-video-toggle" onclick="var a=document.getElementById(\'intel-video-on\');var on=a.dataset.on===\'1\';a.dataset.on=on?\'0\':\'1\';a.style.background=on?\'rgba(255,255,255,0.06)\':\' var(--blue)\';a.style.borderColor=on?\'rgba(255,255,255,0.12)\':\' var(--blue)\';document.getElementById(\'intel-video-dot\').style.background=on?\'rgba(255,255,255,0.2)\':\' #fff\';document.getElementById(\'intel-link-material\').value=on?\'\':\' \'+VIDEO_LINK_WHATSAPP;" style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:8px 10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;cursor:pointer">'
+    +'<div id="intel-video-toggle" onclick="var a=document.getElementById(\'intel-video-on\');var on=a.dataset.on===\'1\';a.dataset.on=on?\'0\':\'1\';a.style.background=on?\'rgba(255,255,255,0.06)\':\'var(--blue)\';a.style.borderColor=on?\'rgba(255,255,255,0.12)\':\'var(--blue)\';document.getElementById(\'intel-video-dot\').style.background=on?\'rgba(255,255,255,0.2)\':\'#fff\';var lm=document.getElementById(\'intel-link-material\');lm.value=on?\'\':VIDEO_LINK_WHATSAPP;lm.style.display=on?\'none\':\'block\';" style="display:flex;align-items:center;gap:8px;margin-bottom:6px;padding:8px 10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;cursor:pointer">'
     +'<div id="intel-video-on" data-on="0" style="display:flex;align-items:center;justify-content:center;width:34px;height:18px;border-radius:9px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(255,255,255,0.12);flex-shrink:0;transition:all 0.15s"><div id="intel-video-dot" style="width:11px;height:11px;border-radius:50%;background:rgba(255,255,255,0.2);transition:all 0.15s"></div></div>'
     +'<span style="font-size:12px;font-weight:600;color:rgba(240,240,255,0.55)">Enviar vídeo demo junto</span>'
     +'</div>'
-    +'<input id="intel-link-material" type="hidden" value="">'
+    +'<input id="intel-link-material" value="" placeholder="🔗 Link do material (opcional)" style="display:none;width:100%;box-sizing:border-box;background:rgba(255,255,255,0.04);border:1px solid rgba(61,123,245,0.3);border-radius:8px;padding:7px 10px;color:#F0F0FF;font-size:12px;outline:none;margin-bottom:8px">'
     // Botão gerar pitch
     +'<button id="intel-gerar-btn" onclick="gerarPitchIntelComDiag(\''+placeId+'\')" style="width:100%;font-size:12px;font-weight:700;background:linear-gradient(135deg,#3B6FE8,#6C3AED);border:none;border-radius:10px;color:#fff;padding:10px;cursor:pointer;margin-bottom:10px">🤖 Gerar Pitch com IA</button>'
     // Pitch gerado
@@ -4725,6 +4725,16 @@ window.dispararPitchZapiInline = async function(placeId){
     });
     var d = await r.json();
     if(r.ok){
+      // Envia vídeo se toggle ativo
+      var videoOn = (document.getElementById('intel-video-on')||{}).dataset && document.getElementById('intel-video-on').dataset.on === '1';
+      if(videoOn){
+        await new Promise(function(res){ setTimeout(res, 1000); });
+        await fetch('https://api.z-api.io/instances/'+ZAPI_I+'/token/'+ZAPI_T+'/send-video',{
+          method:'POST',
+          headers:{'Content-Type':'application/json','Client-Token':ZAPI_C},
+          body:JSON.stringify({phone:fone, video:VIDEO_APRESENTACAO, caption:'Veja como funciona na prática 🎥'})
+        });
+      }
       if(btn){ btn.disabled=false; btn.textContent='✓ Enviado!'; btn.style.background='rgba(39,199,110,0.25)'; }
       toast('Pitch enviado para '+emp.nome+'! 🚀','ok');
 

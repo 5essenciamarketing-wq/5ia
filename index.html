@@ -4486,6 +4486,9 @@ window.gerarPitchIntel = async function(placeId){
     +'<div style="font-size:10.5px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:0.07em;white-space:nowrap">📱 WhatsApp</div>'
     +'<input id="intel-fone-edit" value="'+fone+'" placeholder="DDD + número (só números)" style="flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:7px 10px;color:#F0F0FF;font-size:13px;outline:none">'
     +'</div>'
+    // Link de material (Drive, vídeo, etc.)
+    +'<div style="font-size:10.5px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:5px">🔗 Link do material (opcional)</div>'
+    +'<input id="intel-link-material" placeholder="Cole aqui o link do Drive, vídeo ou apresentação — será anexado no final da mensagem" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:8px 12px;color:#F0F0FF;font-size:12px;outline:none;margin-bottom:10px">'
     // Botão gerar pitch
     +'<button id="intel-gerar-btn" onclick="gerarPitchIntelComDiag(\''+placeId+'\')" style="width:100%;font-size:12px;font-weight:700;background:linear-gradient(135deg,#3B6FE8,#6C3AED);border:none;border-radius:10px;color:#fff;padding:10px;cursor:pointer;margin-bottom:10px">🤖 Gerar Pitch com IA</button>'
     // Pitch gerado
@@ -4519,6 +4522,9 @@ window.gerarPitchIntel = async function(placeId){
       });
       var data = await r.json();
       var pitch = data.resposta||data.reply||data.message||data.content||'Não foi possível gerar o pitch.';
+      // Anexa link do material se preenchido
+      var linkMat = ((document.getElementById('intel-link-material')||{}).value||'').trim();
+      if(linkMat) pitch = pitch + '\n\n' + linkMat;
       // Salva o pitch no objeto para dispararPitchZapi usar
       emp._pitchGerado = pitch;
 

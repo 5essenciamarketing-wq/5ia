@@ -4328,10 +4328,11 @@ window.descartarIntel = async function(placeId){
   emp.status = 'descartado';
   renderIntel(document.getElementById('comercial-body'));
   try{
-    await fetch(SB_URL+'/rest/v1/prospeccao_intel?place_id=eq.'+encodeURIComponent(placeId),{
-      method:'PATCH',
-      headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
-      body:JSON.stringify({status:'descartado'})
+    // Upsert garante que o registro existe mesmo que ainda não tenha sido salvo
+    await fetch(SB_URL+'/rest/v1/prospeccao_intel',{
+      method:'POST',
+      headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'},
+      body:JSON.stringify(Object.assign({},emp,{status:'descartado'}))
     });
   }catch(e){}
   toast('Lead descartado — não aparecerá em buscas futuras','ok');
@@ -4341,12 +4342,12 @@ window.adicionarAoPipelineIntel = async function(placeId){
   var e = intelResultados.find(function(x){ return x.place_id===placeId; });
   if(!e) return;
 
-  // Marca como adicionado no Intel
+  // Upsert garante que o registro existe mesmo que ainda não tenha sido salvo
   try{
-    await fetch(SB_URL+'/rest/v1/prospeccao_intel?place_id=eq.'+placeId,{
-      method:'PATCH',
-      headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json'},
-      body:JSON.stringify({status:'adicionado'})
+    await fetch(SB_URL+'/rest/v1/prospeccao_intel',{
+      method:'POST',
+      headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'},
+      body:JSON.stringify(Object.assign({},e,{status:'adicionado'}))
     });
   }catch(_){}
   e.status = 'adicionado';
@@ -4818,8 +4819,12 @@ window.renderIntel = function(body){
   var sL = function(s){ return s>=70?'Alto':s>=40?'Médio':'Baixo'; };
 
   var cards = '';
-  if(intelResultados.length){
-    intelResultados.forEach(function(e){
+  // Filtra descartados e contactados — nunca devem aparecer na lista
+  var resultadosVisiveis = intelResultados.filter(function(e){
+    return e.status !== 'descartado' && e.status !== 'contactado';
+  });
+  if(resultadosVisiveis.length){
+    resultadosVisiveis.forEach(function(e){
       var sc   = e.score||0;
       var isDup = e.status==='duplicado';
       var isDone= e.status==='adicionado';
@@ -4891,9 +4896,9 @@ window.renderIntel = function(body){
     +'</div>'
 
     // Resultados ou empty state
-    +(intelResultados.length
+    +(resultadosVisiveis.length
       ? '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">'
-        +'<div style="font-size:10.5px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:0.07em">'+intelResultados.length+' empresas'+(intelDuplicados?' <span style="color:var(--ink3);font-weight:400;text-transform:none">('+intelDuplicados+' já cadastradas ocultadas)</span>':'')+'</div>'
+        +'<div style="font-size:10.5px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:0.07em">'+resultadosVisiveis.length+' empresas'+(intelDuplicados?' <span style="color:var(--ink3);font-weight:400;text-transform:none">('+intelDuplicados+' já cadastradas ocultadas)</span>':'')+'</div>'
         +'<button onclick="carregarIntelSalvos()" style="font-size:11px;background:none;border:none;color:var(--blue);cursor:pointer">↺ recarregar</button>'
         +'</div>'+cards
       : '<div style="text-align:center;padding:28px 16px;color:var(--ink3)">'

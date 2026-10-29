@@ -4587,36 +4587,18 @@ window.dispararPitchZapiInline = async function(placeId){
         renderIntel(document.getElementById('comercial-body'));
       }catch(e){ console.error('Intel PATCH exception',e); }
 
-      // 2. Cria prospecto no pipeline (salva direto no Supabase)
-      try{
-        var diagIntel = 'Lead via Intel B2B\n'
-          +'Segmento: '+(emp.segmento||'')+(emp.cidade ? ' | Cidade: '+emp.cidade : '')+'\n'
-          +(emp.google_rating ? 'Google: '+emp.google_rating+'★ ('+emp.google_reviews+' avaliações)\n' : '')
-          +(emp.instagram_handle ? 'Instagram: @'+emp.instagram_handle+' – '+(emp.instagram_followers||0)+' seguidores\n' : '')
-          +(emp.oportunidades ? '\nOportunidades: '+emp.oportunidades : '')
-          +(emp.servicos_rec ? '\nServiços recomendados: '+emp.servicos_rec : '');
-        var novoProsp = {
-          id: Date.now().toString(),
-          nome: emp.nome,
-          empresa: emp.segmento||emp.nome,
-          contato: fone.replace(/^55/,''),
-          diag: diagIntel,
-          status: 'prospecto',
-          etapa: emp.servicos_rec||null,
-          criado: new Date().toISOString(),
-          registros: [
-            {data:new Date().toISOString(),tipo:'criação',nota:'Prospecto criado via Intel B2B.'},
-            {data:new Date().toISOString(),tipo:'contato',nota:'Pitch enviado por WhatsApp.'}
-          ]
-        };
-        // Adiciona local, troca para aba prospecção e renderiza
-        prospectos.unshift(novoProsp);
-        salvarProspectoSB(novoProsp);
-        tabComercial = 'prospec';
-        renderComercial();
-        toast(emp.nome+' salvo como prospecto! 📋','ok');
-      }catch(eSave){
-        toast('Pitch enviado, mas falha ao salvar lead: '+eSave.message,'err');
+      // 2. Mostra botão para salvar no pipeline manualmente
+      var actEl2 = document.getElementById('intel-pitch-actions');
+      if(actEl2){
+        // remove botão anterior se já existir
+        var oldBtn = document.getElementById('btn-salvar-pipeline');
+        if(oldBtn) oldBtn.remove();
+        var btnSalvar = document.createElement('button');
+        btnSalvar.id = 'btn-salvar-pipeline';
+        btnSalvar.textContent = '📋 Salvar no Pipeline';
+        btnSalvar.setAttribute('onclick','salvarLeadPipeline(\''+placeId+'\',\''+fone+'\')');
+        btnSalvar.style.cssText = 'flex:1;font-size:12px;font-weight:700;background:rgba(99,102,241,0.2);border:1px solid rgba(99,102,241,0.4);border-radius:8px;color:#818CF8;padding:8px 12px;cursor:pointer';
+        actEl2.appendChild(btnSalvar);
       }
 
     } else {
@@ -4625,6 +4607,65 @@ window.dispararPitchZapiInline = async function(placeId){
   }catch(e){
     toast('Erro Z-API: '+e.message,'err');
     if(btn){ btn.disabled=false; btn.textContent='💬 Enviar pelo CRM'; }
+  }
+};
+
+// Salva lead do Intel no pipeline de prospecção
+window.salvarLeadPipeline = async function(placeId, fone){
+  var emp = intelResultados.find(function(e){ return e.place_id===placeId; });
+  if(!emp){ toast('Lead não encontrado','err'); return; }
+
+  var btn = document.getElementById('btn-salvar-pipeline-'+placeId);
+  if(btn){ btn.disabled=true; btn.textContent='⟳ Salvando…'; }
+
+  var diagIntel = 'Lead via Intel B2B\n'
+    +'Segmento: '+(emp.segmento||'')+(emp.cidade ? ' | Cidade: '+emp.cidade : '')+'\n'
+    +(emp.google_rating ? 'Google: '+emp.google_rating+'★ ('+emp.google_reviews+' avaliações)\n' : '')
+    +(emp.instagram_handle ? 'Instagram: @'+emp.instagram_handle+' – '+(emp.instagram_followers||0)+' seguidores\n' : '')
+    +(emp.oportunidades ? '\nOportunidades: '+emp.oportunidades : '')
+    +(emp.servicos_rec ? '\nServiços recomendados: '+emp.servicos_rec : '');
+
+  var novoProsp = {
+    id: Date.now().toString(),
+    nome: emp.nome,
+    empresa: emp.segmento||emp.nome,
+    contato: (fone||'').replace(/^55/,''),
+    diag: diagIntel,
+    status: 'prospecto',
+    etapa: emp.servicos_rec||null,
+    criado: new Date().toISOString(),
+    registros: [
+      {data:new Date().toISOString(),tipo:'criação',nota:'Prospecto criado via Intel B2B.'},
+      {data:new Date().toISOString(),tipo:'contato',nota:'Pitch enviado por WhatsApp.'}
+    ]
+  };
+
+  try{
+    var resp = await fetch(SB_URL+'/rest/v1/prospectos',{
+      method:'POST',
+      headers:{
+        apikey:SB_KEY,
+        Authorization:'Bearer '+SB_KEY,
+        'Content-Type':'application/json',
+        'Prefer':'return=minimal,resolution=merge-duplicates'
+      },
+      body:JSON.stringify(novoProsp)
+    });
+    if(!resp.ok){
+      var errTxt = await resp.text();
+      throw new Error('HTTP '+resp.status+': '+errTxt);
+    }
+    prospectos.unshift(novoProsp);
+    if(btn){ btn.textContent='✓ Salvo!'; btn.style.background='rgba(39,199,110,0.2)'; btn.style.color='#27C76E'; btn.style.borderColor='rgba(39,199,110,0.4)'; }
+    toast(emp.nome+' salvo no pipeline! 🎉','ok');
+    setTimeout(function(){
+      tabComercial = 'prospec';
+      renderComercial();
+    }, 1500);
+  }catch(e){
+    if(btn){ btn.disabled=false; btn.textContent='📋 Salvar no Pipeline'; }
+    toast('Erro ao salvar: '+e.message,'err');
+    console.error('salvarLeadPipeline erro:',e);
   }
 };
 

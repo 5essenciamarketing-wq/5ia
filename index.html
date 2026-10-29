@@ -4595,30 +4595,30 @@ window.dispararPitchZapiInline = async function(placeId){
           +(emp.instagram_handle ? 'Instagram: @'+emp.instagram_handle+' – '+(emp.instagram_followers||0)+' seguidores\n' : '')
           +(emp.oportunidades ? '\nOportunidades: '+emp.oportunidades : '')
           +(emp.servicos_rec ? '\nServiços recomendados: '+emp.servicos_rec : '');
-        // Payload mínimo — só colunas que o Supabase confirmou via carregarProspectos
         var novoProsp = {
+          id: Date.now().toString(),
           nome: emp.nome,
           empresa: emp.segmento||emp.nome,
           contato: fone.replace(/^55/,''),
           diag: diagIntel,
           status: 'prospecto',
-          criado: new Date().toISOString()
+          etapa: emp.servicos_rec||null,
+          criado: new Date().toISOString(),
+          registros: [
+            {data:new Date().toISOString(),tipo:'criação',nota:'Prospecto criado via Intel B2B.'},
+            {data:new Date().toISOString(),tipo:'contato',nota:'Pitch enviado por WhatsApp.'}
+          ]
         };
-        console.log('Salvando prospecto:', JSON.stringify(novoProsp));
         var rProsp = await fetch(SB_URL+'/rest/v1/prospectos',{
           method:'POST',
-          headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+          headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},
           body:JSON.stringify(novoProsp)
         });
-        console.log('Supabase resposta:', rProsp.status);
-        if(rProsp.ok || rProsp.status===201){
+        if(rProsp.ok){
           if(typeof carregarProspectos === 'function'){
-            carregarProspectos().then(function(){
-              if(typeof renderComercial === 'function') renderComercial();
-            }).catch(function(){
-              if(typeof renderComercial === 'function') renderComercial();
-            });
+            await carregarProspectos();
           }
+          if(typeof renderComercial === 'function') renderComercial();
           toast(emp.nome+' salvo como prospecto! 📋','ok');
         } else {
           var errText = await rProsp.text();

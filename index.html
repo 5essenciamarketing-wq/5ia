@@ -4632,12 +4632,7 @@ window.salvarLeadPipeline = async function(placeId, fone){
     contato: (fone||'').replace(/^55/,''),
     diag: diagIntel,
     status: 'prospecto',
-    etapa: emp.servicos_rec||null,
-    criado: new Date().toISOString(),
-    registros: [
-      {data:new Date().toISOString(),tipo:'criação',nota:'Prospecto criado via Intel B2B.'},
-      {data:new Date().toISOString(),tipo:'contato',nota:'Pitch enviado por WhatsApp.'}
-    ]
+    criado: new Date().toISOString()
   };
 
   try{

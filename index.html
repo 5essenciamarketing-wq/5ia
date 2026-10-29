@@ -4609,22 +4609,11 @@ window.dispararPitchZapiInline = async function(placeId){
             {data:new Date().toISOString(),tipo:'contato',nota:'Pitch enviado por WhatsApp.'}
           ]
         };
-        var rProsp = await fetch(SB_URL+'/rest/v1/prospectos',{
-          method:'POST',
-          headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},
-          body:JSON.stringify(novoProsp)
-        });
-        if(rProsp.ok){
-          if(typeof carregarProspectos === 'function'){
-            await carregarProspectos();
-          }
-          if(typeof renderComercial === 'function') renderComercial();
-          toast(emp.nome+' salvo como prospecto! 📋','ok');
-        } else {
-          var errText = await rProsp.text();
-          toast('Erro ao salvar ('+rProsp.status+'): '+errText.slice(0,80),'err');
-          console.error('Supabase prospectos POST error',rProsp.status,errText);
-        }
+        // Adiciona local e renderiza imediatamente — igual ao fluxo manual que funciona
+        prospectos.unshift(novoProsp);
+        salvarProspectoSB(novoProsp); // fire-and-forget no background
+        renderComercial();
+        toast(emp.nome+' salvo como prospecto! 📋','ok');
       }catch(eSave){
         toast('Pitch enviado, mas falha ao salvar lead: '+eSave.message,'err');
       }

@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Talismã · CRM</title>
+<style>
+:root{--bg:#0c0b09;--card:#17150f;--line:#2b281e;--gold:#c9a961;--txt:#f2ede4;--mut:#8d8674;--red:#d0695c;--green:#7fb08a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:15px}
+h1,h2{font-family:Georgia,"Times New Roman",serif;font-weight:normal;letter-spacing:.02em;margin:0}
+header{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;border-bottom:1px solid var(--line)}
+.brand{color:var(--gold);font-family:Georgia,serif;font-size:20px}
+.wrap{max-width:1100px;margin:0 auto;padding:20px}
+.btn{background:var(--gold);color:#120f08;border:0;border-radius:6px;padding:9px 16px;font-weight:600;cursor:pointer;font:inherit;font-weight:600}
+.btn.ghost{background:transparent;color:var(--gold);border:1px solid var(--line)}
+.btn:disabled{opacity:.5;cursor:default}
+input,select,textarea{width:100%;background:#0f0e0b;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:9px 10px;font:inherit}
+label{display:block;font-size:12px;color:var(--mut);margin:10px 0 4px;text-transform:uppercase;letter-spacing:.06em}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px}
+.stat b{display:block;font-family:Georgia,serif;font-size:28px;color:var(--gold);font-weight:normal}
+.stat span{color:var(--mut);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+.tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.tab{background:none;border:1px solid var(--line);color:var(--mut);padding:8px 14px;border-radius:999px;cursor:pointer;font:inherit}
+.tab.on{color:var(--gold);border-color:var(--gold)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:10px}
+.row{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.nome{font-weight:600;font-size:16px}
+.meta{color:var(--mut);font-size:13px;margin-top:4px}
+.pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;border:1px solid var(--line)}
+.pill.atras{border-color:var(--red);color:var(--red)}
+.pill.venda{border-color:var(--green);color:var(--green)}
+.pill.perd{border-color:var(--mut);color:var(--mut)}
+.alert{background:#2a1a17;border:1px solid var(--red);color:#f0c0b8;padding:10px 12px;border-radius:8px;margin-bottom:12px;font-size:14px}
+.erro{color:var(--red);font-size:14px;margin-top:10px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;padding:16px;z-index:10}
+.modal.on{display:flex}
+.box{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px;width:100%;max-width:480px;max-height:90vh;overflow:auto}
+.login{max-width:360px;margin:12vh auto;padding:0 20px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:600px){.grid2{grid-template-columns:1fr}}
+.hidden{display:none!important}
+.muted{color:var(--mut)}
+a.wa{color:var(--gold);text-decoration:none;border:1px solid var(--line);border-radius:6px;padding:6px 10px;font-size:13px}
+</style>
+</head>
+<body>
+
+<div id="login" class="login hidden">
+  <h1 style="text-align:center;margin-bottom:6px;color:var(--gold)">Talismã</h1>
+  <p class="muted" style="text-align:center;margin-top:0">CRM de leads</p>
+  <form id="formLogin">
+    <label>Usuário</label><input id="lUsuario" autocomplete="username" required>
+    <label>Senha</label><input id="lSenha" type="password" autocomplete="current-password" required>
+    <div style="margin-top:16px"><button class="btn" style="width:100%">Entrar</button></div>
+    <div id="lErro" class="erro"></div>
+  </form>
+</div>
+
+<div id="app" class="hidden">
+  <header>
+    <div><div class="brand">Talismã</div><div class="muted" id="quem"></div></div>
+    <button class="btn ghost" id="btnSair">Sair</button>
+  </header>
+  <div class="wrap">
+    <div id="avisos"></div>
+    <div class="stats" id="stats"></div>
+    <div class="tabs" id="tabs"></div>
+    <div id="conteudo"></div>
+  </div>
+</div>
+
+<div class="modal" id="modalLead">
+  <div class="box">
+    <div class="row"><h2 id="mNome"></h2><button class="btn ghost" id="mFechar">Fechar</button></div>
+    <div class="meta" id="mInfo"></div>
+    <form id="formAtualiza">
+      <div id="mCorretorWrap"><label>Corretor responsável</label><select id="mCorretor"></select></div>
+      <label>Status</label>
+      <select id="mStatus"></select>
+      <label>Observações (obrigatória se perdido)</label>
+      <textarea id="mObs" rows="4"></textarea>
+      <div style="margin-top:14px;text-align:right"><button class="btn" id="mSalvar">Salvar atualização</button></div>
+      <div id="mErro" class="erro"></div>
+    </form>
+  </div>
+</div>
+
+<script>
+const STATUS = ['Novo','Em contato','Visita agendada','Proposta enviada','Negociação','Venda fechada','Sem resposta','Perdido'];
+let sess = null, painel = {leads:[], corretores:[]}, tab = 'entrada', atual = null;
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+// Chamada ao servidor (Apps Script) como Promise
+function chamar(fn, ...args){
+  return new Promise((res, rej) => {
+    google.script.run
+      .withSuccessHandler(res)
+      .withFailureHandler(e => rej(new Error(e && e.message ? e.message : String(e))))
+      [fn](...args);
+  });
+}
+
+function salvarSessao(s){ try{ localStorage.setItem('talisma_sessao', JSON.stringify(s)); }catch(e){} }
+function lerSessao(){ try{ return JSON.parse(localStorage.getItem('talisma_sessao') || 'null'); }catch(e){ return null; } }
+function limparSessao(){ try{ localStorage.removeItem('talisma_sessao'); }catch(e){} }
+
+function sair(){
+  limparSessao(); sess = null;
+  $('app').classList.add('hidden');
+  $('login').classList.remove('hidden');
+}
+$('btnSair').onclick = sair;
+
+$('formLogin').onsubmit = async e => {
+  e.preventDefault(); $('lErro').textContent = '';
+  try{
+    sess = await chamar('login', $('lUsuario').value, $('lSenha').value);
+    salvarSessao(sess);
+    await entrar();
+  }catch(err){ $('lErro').textContent = err.message; }
+};
+
+async function entrar(){
+  $('login').classList.add('hidden');
+  $('app').classList.remove('hidden');
+  $('quem').textContent = sess.nome + (sess.papel === 'matriz' ? ' · Matriz' : ' · Corretor');
+  tab = sess.papel === 'matriz' ? 'entrada' : 'meus';
+  await carregar();
+}
+
+async function carregar(){
+  try{
+    painel = await chamar('carregarPainel', sess.token);
+    render();
+  }catch(err){
+    if (/Sessão/.test(err.message)){
+      sair(); $('lErro').textContent = err.message; return;
+    }
+    $('conteudo').innerHTML = '<div class="alert">' + esc(err.message) + '</div>';
+  }
+}
+
+// ---------- Renderização ----------
+
+function pillClass(st){ return st === 'Venda fechada' ? 'venda' : st === 'Perdido' ? 'perd' : ''; }
+
+function render(){
+  renderStats(); renderTabs(); renderAvisos();
+  const c = $('conteudo');
+  if (tab === 'entrada') c.innerHTML = htmlEntrada();
+  else if (tab === 'todos') c.innerHTML = htmlLista(painel.leads, true);
+  else if (tab === 'corretores') c.innerHTML = htmlCorretores();
+  else c.innerHTML = htmlLista(painel.leads, false);
+  ligarEventos();
+}
+
+function renderStats(){
+  const L = painel.leads;
+  const fechados = ['Venda fechada','Perdido'];
+  const ativos = L.filter(l => l.corretorUsuario && !fechados.includes(l.status)).length;
+  const atrasados = L.filter(l => l.atrasado).length;
+  const vendas = L.filter(l => l.status === 'Venda fechada').length;
+  const entrada = L.filter(l => l.status === 'Entrada').length;
+  const cards = sess.papel === 'matriz'
+    ? [['Aguardando distribuição', entrada], ['Em andamento', ativos], ['Sem atualização', atrasados], ['Vendas', vendas]]
+    : [['Meus leads ativos', ativos], ['Sem atualização', atrasados], ['Vendas', vendas]];
+  $('stats').innerHTML = cards.map(([t, n]) => '<div class="stat"><b>' + n + '</b><span>' + t + '</span></div>').join('');
+}
+
+function renderAvisos(){
+  const n = painel.leads.filter(l => l.atrasado).length;
+  if (!n){ $('avisos').innerHTML = ''; return; }
+  const txt = sess.papel === 'matriz'
+    ? n + ' lead(s) com corretor sem atualização há mais de 2 dias.'
+    : 'Você tem ' + n + ' lead(s) sem atualização há mais de 2 dias. Atualize o status.';
+  $('avisos').innerHTML = '<div class="alert">' + txt + '</div>';
+}
+
+function renderTabs(){
+  const t = sess.papel === 'matriz'
+    ? [['entrada','Entrada'], ['todos','Todos os leads'], ['corretores','Corretores']]
+    : [['meus','Meus leads']];
+  $('tabs').innerHTML = t.map(([k, n]) => '<button class="tab' + (tab === k ? ' on' : '') + '" data-t="' + k + '">' + n + '</button>').join('');
+  $('tabs').querySelectorAll('.tab').forEach(b => b.onclick = () => { tab = b.dataset.t; render(); });
+}
+
+function htmlEntrada(){
+  const entrada = painel.leads.filter(l => l.status === 'Entrada');
+  const opts = painel.corretores.filter(c => c.papel === 'corretor' && c.ativo)
+    .map(c => '<option value="' + esc(c.usuario) + '">' + esc(c.nome) + '</option>').join('');
+
+  let h = '<div class="card"><div class="nome" style="margin-bottom:8px">Novo lead manual</div><div class="grid2">' +
+    '<div><label>Nome</label><input id="nNome"></div><div><label>Telefone</label><input id="nTel"></div>' +
+    '<div><label>E-mail</label><input id="nEmail"></div><div><label>Origem</label><input id="nOrigem" placeholder="Meta Ads, site, indicação..."></div>' +
+    '</div><label>Interesse (imóvel / empreendimento)</label><input id="nInteresse">' +
+    '<label>Observações da matriz</label><textarea id="nObs" rows="2"></textarea>' +
+    '<div style="margin-top:10px;text-align:right"><button class="btn" id="btnNovo">Registrar lead</button></div></div>';
+
+  if (!entrada.length) return h + '<p class="muted">Nenhum lead aguardando distribuição.</p>';
+
+  h += entrada.map(l =>
+    '<div class="card"><div class="row"><div>' +
+    '<div class="nome">' + esc(l.nome) + '</div>' +
+    '<div class="meta">' + esc(l.telefone) + (l.origem ? ' · ' + esc(l.origem) : '') + (l.interesse ? ' · ' + esc(l.interesse) : '') + ' · entrou em ' + esc(l.dataEntrada) + '</div>' +
+    (l.obsEntrada ? '<div class="meta">' + esc(l.obsEntrada) + '</div>' : '') +
+    '</div><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">' +
+    '<select data-sel="' + esc(l.id) + '" style="width:200px"><option value="">Escolher corretor…</option>' + opts + '</select>' +
+    '<button class="btn" data-atr="' + esc(l.id) + '">Atribuir</button></div></div></div>'
+  ).join('');
+  return h;
+}
+
+function htmlLista(leads, mostrarCorretor){
+  const visiveis = leads.filter(l => l.status !== 'Entrada')
+    .slice().sort((a, b) => (b.atrasado - a.atrasado));
+  if (!visiveis.length) return '<p class="muted">Nenhum lead por aqui.</p>';
+
+  return visiveis.map(l => {
+    const dig = l.telefone.replace(/\D/g, '');
+    const num = dig.length <= 11 ? '55' + dig : dig;
+    const zap = dig ? '<a class="wa" href="https://wa.me/' + esc(num) + '" target="_blank" onclick="event.stopPropagation()">WhatsApp</a>' : '';
+    return '<div class="card" data-lead="' + esc(l.id) + '" style="cursor:pointer"><div class="row"><div>' +
+      '<div class="nome">' + esc(l.nome) + '</div>' +
+      '<div class="meta">' + esc(l.telefone) + (l.interesse ? ' · ' + esc(l.interesse) : '') +
+        (mostrarCorretor && l.corretorNome ? ' · Corretor: ' + esc(l.corretorNome) : '') + '</div>' +
+      '<div class="meta">Última atualização: ' + esc(l.ultimaAtualizacao || '—') + '</div>' +
+      '</div><div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">' +
+      '<span class="pill ' + pillClass(l.status) + (l.atrasado ? ' atras' : '') + '">' + esc(l.status) + '</span>' +
+      (l.atrasado ? '<span class="pill atras">sem atualização</span>' : '') +
+      zap + '</div></div></div>';
+  }).join('');
+}
+
+function htmlCorretores(){
+  const ativos = {}, atrasos = {};
+  painel.leads.forEach(l => {
+    if (l.corretorUsuario && !['Venda fechada','Perdido'].includes(l.status))
+      ativos[l.corretorUsuario] = (ativos[l.corretorUsuario] || 0) + 1;
+    if (l.atrasado) atrasos[l.corretorUsuario] = (atrasos[l.corretorUsuario] || 0) + 1;
+  });
+  let h = '<div class="card"><div class="nome" style="margin-bottom:8px">Novo corretor</div><div class="grid2">' +
+    '<div><label>Nome</label><input id="cNome"></div><div><label>Usuário (login)</label><input id="cUsuario"></div>' +
+    '<div><label>Senha inicial (mín. 6)</label><input id="cSenha" type="password"></div><div><label>Telefone</label><input id="cTel"></div>' +
+    '</div><div style="margin-top:10px;text-align:right"><button class="btn" id="btnCorretor">Cadastrar corretor</button></div></div>';
+  h += painel.corretores.map(c =>
+    '<div class="card"><div class="row"><div><div class="nome">' + esc(c.nome) + '</div>' +
+    '<div class="meta">Login: ' + esc(c.usuario) + ' · ' + esc(c.papel) + (c.telefone ? ' · ' + esc(c.telefone) : '') + '</div></div>' +
+    '<span class="pill">' + (ativos[c.usuario] || 0) + ' ativos</span> <span class="pill' + (atrasos[c.usuario] ? ' atras' : '') + '">' + (atrasos[c.usuario] || 0) + ' sem atualização</span></div></div>'
+  ).join('');
+  return h;
+}
+
+function ligarEventos(){
+  const b = $('btnNovo'); if (b) b.onclick = novoLead;
+  const cb = $('btnCorretor'); if (cb) cb.onclick = novoCorretor;
+
+  document.querySelectorAll('[data-atr]').forEach(btn => btn.onclick = async () => {
+    const sel = document.querySelector('[data-sel="' + btn.dataset.atr + '"]');
+    if (!sel.value) return alert('Escolha um corretor.');
+    btn.disabled = true;
+    try{ await chamar('atribuirLead', sess.token, btn.dataset.atr, sel.value); await carregar(); }
+    catch(err){ alert(err.message); btn.disabled = false; }
+  });
+
+  document.querySelectorAll('[data-lead]').forEach(el => el.onclick = () => abrirLead(el.dataset.lead));
+}
+
+// ---------- Ações ----------
+
+async function novoLead(){
+  const dados = {
+    nome: $('nNome').value.trim(), telefone: $('nTel').value.trim(), email: $('nEmail').value.trim(),
+    origem: $('nOrigem').value.trim(), interesse: $('nInteresse').value.trim(), obsEntrada: $('nObs').value.trim()
+  };
+  if (!dados.nome) return alert('Informe o nome do lead.');
+  try{ await chamar('criarLead', sess.token, dados); await carregar(); }
+  catch(err){ alert(err.message); }
+}
+
+async function novoCorretor(){
+  const dados = {
+    nome: $('cNome').value.trim(), usuario: $('cUsuario').value.trim(),
+    senha: $('cSenha').value, telefone: $('cTel').value.trim()
+  };
+  try{ await chamar('criarCorretor', sess.token, dados); await carregar(); }
+  catch(err){ alert(err.message); }
+}
+
+function abrirLead(id){
+  const l = painel.leads.find(x => x.id === id);
+  if (!l) return;
+  atual = l;
+  $('mNome').textContent = l.nome;
+  $('mInfo').textContent = [l.telefone, l.interesse, l.origem].filter(Boolean).join(' · ');
+  $('mStatus').innerHTML = STATUS.map(s => '<option' + (s === l.status ? ' selected' : '') + '>' + esc(s) + '</option>').join('');
+  $('mCorretorWrap').classList.toggle('hidden', sess.papel !== 'matriz');
+  $('mCorretor').innerHTML = '<option value="">Sem corretor</option>' +
+    painel.corretores.filter(c => c.papel === 'corretor' && c.ativo)
+      .map(c => '<option value="' + esc(c.usuario) + '"' + (c.usuario === l.corretorUsuario ? ' selected' : '') + '>' + esc(c.nome) + '</option>').join('');
+  $('mObs').value = l.obsCorretor || '';
+  $('mErro').textContent = '';
+  $('modalLead').classList.add('on');
+}
+
+$('mFechar').onclick = () => $('modalLead').classList.remove('on');
+
+$('formAtualiza').onsubmit = async e => {
+  e.preventDefault();
+  const status = $('mStatus').value, obs = $('mObs').value.trim();
+  if (status === 'Perdido' && !obs){ $('mErro').textContent = 'Registre o motivo para marcar como perdido.'; return; }
+  const btn = $('mSalvar'); btn.disabled = true;
+  try{
+    const novo = $('mCorretor').value;
+    if (sess.papel === 'matriz' && novo && novo !== atual.corretorUsuario) {
+      await chamar('atribuirLead', sess.token, atual.id, novo);
+    }
+    await chamar('atualizarLead', sess.token, atual.id, status, obs);
+    $('modalLead').classList.remove('on');
+    await carregar();
+  }catch(err){ $('mErro').textContent = err.message; }
+  finally{ btn.disabled = false; }
+};
+
+// ---------- Início ----------
+(function init(){
+  const s = lerSessao();
+  if (s && s.token){ sess = s; entrar(); }
+  else $('login').classList.remove('hidden');
+})();
+</script>
+</body>
+</html>

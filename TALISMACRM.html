@@ -160,7 +160,14 @@ let fTexto = '', fStatus = '', fCorr = '';
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
+// Endereço do App da web (URL /exec). Usado quando a tela não roda dentro do Apps Script (ex.: GitHub Pages).
+const API_URL = 'https://script.google.com/macros/s/AKfycbxPPF7iUW18adnMDb7RcbGAHXLOWjJc_9uISw-74RXyeeoD4dqZ7gVBfCy8N76VxUKpDQ/exec';
+
 function chamar(fn, ...args){
+  if (typeof google === 'undefined' || !google.script || !google.script.run) {
+    const url = API_URL + '?p=' + encodeURIComponent(JSON.stringify({ fn: fn, args: args }));
+    return fetch(url).then(r => r.json()).then(j => { if (!j.ok) throw new Error(j.erro); return j.data; });
+  }
   return new Promise((res, rej) => {
     google.script.run
       .withSuccessHandler(res)

@@ -81,6 +81,9 @@ tr.linha:hover td{background:#f4faf9}
 .box .sub{margin-bottom:6px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .acoes-modal{margin-top:16px;display:flex;justify-content:flex-end;gap:8px}
+.det{display:grid;grid-template-columns:150px 1fr;gap:8px 12px;margin:14px 0 6px;font-size:13px;padding:12px 14px;background:#fbfcfc;border:1px solid var(--line);border-radius:8px}
+.det dt{color:var(--mut);font-weight:600}
+.det dd{margin:0;color:var(--txt)}
 @media(max-width:800px){aside{display:none}main{padding:16px}.barra input,.barra select{width:100%}.grid2{grid-template-columns:1fr}}
 </style>
 </head>
@@ -124,6 +127,7 @@ tr.linha:hover td{background:#f4faf9}
   <div class="box">
     <h2 id="mNome"></h2>
     <div class="sub" id="mInfo"></div>
+    <div id="mDetalhes"></div>
     <form id="formAtualiza">
       <div id="mCorretorWrap"><label>Corretor responsável</label><select id="mCorretor"></select></div>
       <label>Status</label>
@@ -337,7 +341,7 @@ function tabelaEntrada(){
     .map(c => '<option value="' + esc(c.usuario) + '">' + esc(c.nome) + '</option>').join('');
   return '<table><thead><tr><th>Nome</th><th>Telefone</th><th>Origem</th><th>Interesse</th><th>Entrou em</th><th>Distribuir para</th></tr></thead><tbody>' +
     entrada.map(l => '<tr>' +
-      '<td><div class="nome">' + esc(l.nome) + '</div>' + (l.obsEntrada ? '<div class="sub">' + esc(l.obsEntrada) + '</div>' : '') + '</td>' +
+      '<td><div class="nome">' + esc(l.nome) + '</div>' + '' + '</td>' +
       '<td>' + esc(l.telefone) + '</td>' +
       '<td>' + esc(l.origem) + '</td>' +
       '<td>' + esc(l.interesse) + '</td>' +
@@ -394,6 +398,20 @@ function ligarLinhas(){
   document.querySelectorAll('tr[data-lead]').forEach(el => el.onclick = () => abrirLead(el.dataset.lead));
 }
 
+// Transforma a observação ("Rótulo: valor | Rótulo: valor") em uma ficha de dois campos
+function detalhes(texto){
+  const partes = String(texto || '').split(' | ').map(p => p.trim()).filter(Boolean);
+  if (!partes.length) return '';
+  return '<dl class="det">' + partes.map(p => {
+    const i = p.indexOf(':');
+    if (i === -1) {
+      const m = p.match(/ID HubSpot #(\d+)/);
+      return m ? '<dt>ID HubSpot</dt><dd>' + esc(m[1]) + '</dd>' : '<dt>Observação</dt><dd>' + esc(p) + '</dd>';
+    }
+    return '<dt>' + esc(p.slice(0, i)) + '</dt><dd>' + esc(p.slice(i + 1).trim()) + '</dd>';
+  }).join('') + '</dl>';
+}
+
 // ---------- Modal do lead ----------
 function abrirLead(id){
   const l = painel.leads.find(x => x.id === id);
@@ -406,6 +424,7 @@ function abrirLead(id){
     painel.corretores.filter(c => c.papel === 'corretor' && c.ativo)
       .map(c => '<option value="' + esc(c.usuario) + '"' + (c.usuario === l.corretorUsuario ? ' selected' : '') + '>' + esc(c.nome) + '</option>').join('');
   $('mStatus').innerHTML = STATUS.map(s => '<option' + (s === l.status ? ' selected' : '') + '>' + esc(s) + '</option>').join('');
+  $('mDetalhes').innerHTML = detalhes(l.obsEntrada);
   $('mObs').value = l.obsCorretor || '';
   $('mErro').textContent = '';
   $('modalLead').classList.add('on');

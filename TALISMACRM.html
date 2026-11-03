@@ -81,6 +81,8 @@ tr.linha:hover td{background:#f4faf9}
 .box .sub{margin-bottom:6px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .acoes-modal{margin-top:16px;display:flex;justify-content:flex-end;gap:8px}
+.meu{display:flex;gap:10px;align-items:center;margin-bottom:6px;color:#fff;font-weight:600}
+.row-av{display:flex;gap:10px;align-items:center}
 .det{display:grid;grid-template-columns:150px 1fr;gap:8px 12px;margin:14px 0 6px;font-size:13px;padding:12px 14px;background:#fbfcfc;border:1px solid var(--line);border-radius:8px}
 .det dt{color:var(--mut);font-weight:600}
 .det dd{margin:0;color:var(--txt)}
@@ -107,7 +109,8 @@ tr.linha:hover td{background:#f4faf9}
     <div class="marca">Talismã</div>
     <div id="nav"></div>
     <div class="rodape">
-      <div id="quem"></div>
+      <div class="meu" id="meuBloco"><div id="avatarMeu"></div><div id="quem"></div></div>
+      <button id="btnConta">Minha conta</button>
       <button id="btnSair">Sair</button>
     </div>
   </aside>
@@ -187,8 +190,8 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbxPPF7iUW18adnMDb7RcbGA
 
 function chamar(fn, ...args){
   if (typeof google === 'undefined' || !google.script || !google.script.run) {
-    const url = API_URL + '?p=' + encodeURIComponent(JSON.stringify({ fn: fn, args: args }));
-    return fetch(url).then(r => r.json()).then(j => { if (!j.ok) throw new Error(j.erro); return j.data; });
+    return fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn: fn, args: args }) })
+      .then(r => r.json()).then(j => { if (!j.ok) throw new Error(j.erro); return j.data; });
   }
   return new Promise((res, rej) => {
     google.script.run
@@ -208,6 +211,7 @@ function sair(){
   $('login').classList.remove('hidden');
 }
 $('btnSair').onclick = sair;
+$('btnConta').onclick = () => abrirMinhaConta();
 
 $('formLogin').onsubmit = async e => {
   e.preventDefault(); $('lErro').textContent = '';
@@ -222,6 +226,8 @@ async function entrar(){
   $('login').classList.add('hidden');
   $('app').classList.remove('hidden');
   $('quem').textContent = sess.nome + (sess.papel === 'matriz' ? ' · Matriz' : ' · Corretor');
+  fotos = await chamar('fotosCorretores', sess.token).catch(() => ({}));
+  $('avatarMeu').innerHTML = avatar(sess.usuario, sess.nome, 36);
   secao = sess.papel === 'matriz' ? 'entrada' : 'meus';
   await carregar();
 }
@@ -360,7 +366,7 @@ function tabelaCorretores(){
   });
   return '<table><thead><tr><th>Nome</th><th>Login</th><th>Telefone</th><th>Leads ativos</th><th>Sem atualização</th></tr></thead><tbody>' +
     painel.corretores.map(c => '<tr>' +
-      '<td><div class="nome">' + esc(c.nome) + '</div><div class="sub">' + esc(c.papel) + '</div></td>' +
+      '<td><div class="row-av">' + avatar(c.usuario, c.nome, 34) + '<div><div class="nome">' + esc(c.nome) + '</div><div class="sub">' + esc(c.papel) + '</div></div></div></td>' +
       '<td>' + esc(c.usuario) + '</td>' +
       '<td>' + esc(c.telefone) + '</td>' +
       '<td><span class="pill acc">' + (ativos[c.usuario] || 0) + '</span></td>' +
@@ -396,6 +402,58 @@ function ligar(){
 
 function ligarLinhas(){
   document.querySelectorAll('tr[data-lead]').forEach(el => el.onclick = () => abrirLead(el.dataset.lead));
+}
+
+// ---------- Fotos e conta ----------
+let fotos = {};
+const iniciais = nome => String(nome || '?').split(' ').filter(Boolean).slice(0, 2).map(p => p[0]).join('').toUpperCase();
+
+function avatar(usuario, nome, tam){
+  const st = 'width:' + tam + 'px;height:' + tam + 'px;border-radius:50%;flex:none;';
+  const f = fotos[usuario];
+  return f
+    ? '<img src="' + f + '" style="' + st + 'object-fit:cover">'
+    : '<span style="' + st + 'display:inline-flex;align-items:center;justify-content:center;background:var(--acc-soft);color:var(--acc);font-weight:700;font-size:' + Math.round(tam * 0.38) + 'px">' + esc(iniciais(nome)) + '</span>';
+}
+
+// Reduz a foto para 160x160 (quadrada) antes de enviar
+function redimensionar(arquivo){
+  return new Promise((res, rej) => {
+    const img = new Image();
+    img.onload = () => {
+      const T = 160, lado = Math.min(img.width, img.height);
+      const c = document.createElement('canvas'); c.width = T; c.height = T;
+      c.getContext('2d').drawImage(img, (img.width - lado) / 2, (img.height - lado) / 2, lado, lado, 0, 0, T, T);
+      res(c.toDataURL('image/jpeg', 0.85));
+    };
+    img.onerror = () => rej(new Error('Não consegui ler essa imagem.'));
+    img.src = URL.createObjectURL(arquivo);
+  });
+}
+
+function abrirMinhaConta(){
+  abrirForm('Minha conta',
+    '<div style="display:flex;gap:14px;align-items:center">' + avatar(sess.usuario, sess.nome, 72) +
+    '<div style="flex:1"><label>Foto (qualquer imagem)</label><input id="cFoto" type="file" accept="image/*"></div></div>' +
+    '<h3 style="font-size:14px;margin:22px 0 0">Trocar senha</h3>' +
+    '<label>Senha atual</label><input id="cSenhaAtual" type="password">' +
+    '<div class="grid2"><div><label>Nova senha (mín. 6)</label><input id="cSenhaNova" type="password"></div>' +
+    '<div><label>Repita a nova senha</label><input id="cSenhaNova2" type="password"></div></div>',
+    async () => {
+      const arq = $('cFoto').files[0];
+      const sn = $('cSenhaNova').value, sn2 = $('cSenhaNova2').value, sa = $('cSenhaAtual').value;
+      if (!arq && !sn) throw new Error('Escolha uma foto ou preencha a troca de senha.');
+      if (sn) {
+        if (sn !== sn2) throw new Error('As senhas novas não coincidem.');
+        await chamar('alterarSenha', sess.token, sa, sn);
+      }
+      if (arq) {
+        const dataUrl = await redimensionar(arq);
+        await chamar('salvarFoto', sess.token, dataUrl);
+        fotos = await chamar('fotosCorretores', sess.token).catch(() => fotos);
+        $('avatarMeu').innerHTML = avatar(sess.usuario, sess.nome, 36);
+      }
+    });
 }
 
 // Transforma a observação ("Rótulo: valor | Rótulo: valor") em uma ficha de dois campos

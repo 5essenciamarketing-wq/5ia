@@ -156,6 +156,24 @@ tr.linha:hover td{background:#f4faf9}
 const STATUS = ['Novo','Em contato','Visita agendada','Proposta enviada','Negociação','Venda fechada','Sem resposta','Perdido'];
 let sess = null, painel = {leads:[], corretores:[]}, secao = 'entrada', atual = null;
 let fTexto = '', fStatus = '', fCorr = '';
+let fMes = mesAtual();
+
+function mesAtual(){
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+}
+// Lead entra no filtro se a data de entrada for do mês escolhido ('' = todos os meses)
+const noMes = l => !fMes || (l.dataEntrada && l.dataEntrada.slice(6, 10) + '-' + l.dataEntrada.slice(3, 5) === fMes);
+const nomesMeses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+function nomeMes(m){ const p = m.split('-'); return nomesMeses[+p[1] - 1] + ' de ' + p[0]; }
+
+function barraMes(){
+  const meses = [...new Set([mesAtual(), ...painel.leads.map(l => l.dataEntrada && l.dataEntrada.slice(6, 10) + '-' + l.dataEntrada.slice(3, 5))].filter(Boolean))]
+    .sort().reverse();
+  return '<select id="fMesSel" style="width:190px"><option value="">Todos os meses</option>' +
+    meses.map(m => '<option value="' + m + '"' + (fMes === m ? ' selected' : '') + '>' + nomeMes(m) + '</option>').join('') +
+    '</select>';
+}
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -226,7 +244,7 @@ function filtrados(){
   if (t) lista = lista.filter(l => (l.nome + ' ' + l.telefone + ' ' + l.interesse + ' ' + l.origem).toLowerCase().indexOf(t) !== -1);
   if (fStatus) lista = lista.filter(l => l.status === fStatus);
   if (fCorr) lista = lista.filter(l => l.corretorUsuario === fCorr);
-  return lista.slice().sort((a, b) => (b.atrasado - a.atrasado));
+  return lista.filter(noMes).slice().sort((a, b) => (b.atrasado - a.atrasado));
 }
 
 // ---------- Renderização ----------
@@ -251,7 +269,7 @@ function render(){
     secao === 'entrada' ? '<button class="btn" id="btnNovoLead">+ Novo lead</button>' :
     secao === 'corretores' ? '<button class="btn" id="btnNovoCorr">+ Novo corretor</button>' : '';
 
-  if (secao === 'entrada'){ $('barra').innerHTML = ''; $('conteudo').innerHTML = tabelaEntrada(); }
+  if (secao === 'entrada'){ $('barra').innerHTML = barraMes(); $('conteudo').innerHTML = tabelaEntrada(); }
   else if (secao === 'corretores'){ $('barra').innerHTML = ''; $('conteudo').innerHTML = tabelaCorretores(); }
   else { $('barra').innerHTML = barraFiltros(); $('conteudo').innerHTML = tabelaLeads(filtrados()); }
   ligar();
@@ -259,7 +277,7 @@ function render(){
 
 function renderNav(){
   const L = painel.leads;
-  const entrada = L.filter(l => l.status === 'Entrada').length;
+  const entrada = L.filter(l => l.status === 'Entrada' && !l.corretorUsuario).length;
   const atrasados = L.filter(ehAtrasado).length;
   const itens = sess.papel === 'matriz'
     ? [['entrada','Entrada', entrada, false], ['todos','Todos os leads', '', false], ['atrasados','Sem atualização', atrasados, atrasados > 0], ['corretores','Corretores', '', false]]
@@ -288,7 +306,7 @@ function barraFiltros(){
       painel.corretores.filter(c => c.papel === 'corretor').map(c =>
         '<option value="' + esc(c.usuario) + '"' + (fCorr === c.usuario ? ' selected' : '') + '>' + esc(c.nome) + '</option>').join('') +
       '</select>' : '';
-  return '<input id="fTexto" placeholder="Pesquisar nome, telefone, interesse…" value="' + esc(fTexto) + '">' +
+  return barraMes() + '<input id="fTexto" placeholder="Pesquisar nome, telefone, interesse…" value="' + esc(fTexto) + '">' +
     '<select id="fStatusSel"><option value="">Todos os status</option>' +
     STATUS.map(s => '<option' + (fStatus === s ? ' selected' : '') + '>' + esc(s) + '</option>').join('') +
     '</select>' + opcCorr;
@@ -313,7 +331,7 @@ function tabelaLeads(lista){
 }
 
 function tabelaEntrada(){
-  const entrada = painel.leads.filter(l => l.status === 'Entrada');
+  const entrada = painel.leads.filter(l => l.status === 'Entrada' && !l.corretorUsuario && noMes(l));
   if (!entrada.length) return '<div class="vazio">Nenhum lead aguardando distribuição.</div>';
   const opts = painel.corretores.filter(c => c.papel === 'corretor' && c.ativo)
     .map(c => '<option value="' + esc(c.usuario) + '">' + esc(c.nome) + '</option>').join('');
@@ -352,6 +370,8 @@ function ligar(){
   const bNovo = $('btnNovoLead'); if (bNovo) bNovo.onclick = abrirNovoLead;
   const bCorr = $('btnNovoCorr'); if (bCorr) bCorr.onclick = abrirNovoCorr;
 
+  const fm = $('fMesSel');
+  if (fm) fm.onchange = e => { fMes = e.target.value; render(); };
   const ft = $('fTexto');
   if (ft) ft.oninput = e => { fTexto = e.target.value; $('conteudo').innerHTML = tabelaLeads(filtrados()); ligarLinhas(); };
   const fs = $('fStatusSel');

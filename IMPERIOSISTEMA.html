@@ -33,6 +33,7 @@
     background: var(--fundo); color: var(--texto); font-size: 14px;
   }
   input:focus, select:focus { outline: none; border-color: var(--destaque); }
+  input:disabled { opacity: .5; }
   button {
     padding: 10px 16px; border: 0; border-radius: 8px; background: var(--destaque);
     color: #15130e; font-weight: 600; font-size: 14px; cursor: pointer;
@@ -44,7 +45,6 @@
   .msg.erro { color: var(--erro); }
   .msg.ok { color: var(--ok); }
 
-  /* Barra superior */
   .topbar {
     display: flex; align-items: center; justify-content: space-between; gap: 16px;
     padding: 14px 24px; border-bottom: 1px solid var(--borda); background: var(--painel);
@@ -76,6 +76,9 @@
     text-align: center; color: var(--suave);
   }
   .data-hoje { color: var(--suave); font-size: 13px; }
+  .resultado { margin-top: 18px; border-top: 1px solid var(--borda); padding-top: 16px; }
+  .resultado div { margin: 8px 0; }
+  .destaque-valor { font-size: 22px; color: var(--destaque); font-weight: 600; }
 </style>
 </head>
 <body>
@@ -101,10 +104,14 @@
   <div class="topbar">
     <div class="marca">Sistema Containers</div>
     <nav class="abas">
-      <button class="aba ativa" data-aba="fornecedores">Fornecedores</button>
-      <button class="aba" data-aba="frete">Frete</button>
-      <button class="aba" data-aba="comercial">Comercial</button>
-      <button class="aba admin-so oculto" data-aba="usuarios">Usuários</button>
+      <button class="aba" data-aba="fornecedores" data-papeis="admin,operacional">Fornecedores</button>
+      <button class="aba" data-aba="frete" data-papeis="admin,operacional">Frete</button>
+      <button class="aba" data-aba="dashboard" data-papeis="admin,comercial">Dashboard</button>
+      <button class="aba" data-aba="leads" data-papeis="admin,comercial">Leads</button>
+      <button class="aba" data-aba="followup" data-papeis="admin,comercial">Follow-up</button>
+      <button class="aba" data-aba="listas" data-papeis="admin,comercial">Listas</button>
+      <button class="aba" data-aba="calculadora" data-papeis="admin,comercial">Calculadora</button>
+      <button class="aba" data-aba="usuarios" data-papeis="admin">Usuários</button>
     </nav>
     <div class="usuario">
       <span id="info-usuario"></span>
@@ -114,7 +121,7 @@
 
   <div class="conteudo">
 
-    <!-- Fornecedores -->
+    <!-- Fornecedores (admin e operacional) -->
     <section id="aba-fornecedores">
       <div class="grade">
         <div class="cartao">
@@ -179,11 +186,34 @@
       </div>
     </section>
 
-    <!-- Comercial -->
-    <section id="aba-comercial" class="oculto">
-      <div class="placeholder">
-        <h2>Comercial</h2>
-        Leads e encaminhamento para consultores. Vem depois da etapa de frete.
+    <!-- Comercial: placeholders -->
+    <section id="aba-dashboard" class="oculto">
+      <div class="placeholder"><h2>Dashboard</h2>Indicadores de leads e vendas. Próxima etapa.</div>
+    </section>
+    <section id="aba-leads" class="oculto">
+      <div class="placeholder"><h2>Leads</h2>Entrada e gestão de leads. Próxima etapa.</div>
+    </section>
+    <section id="aba-followup" class="oculto">
+      <div class="placeholder"><h2>Follow-up</h2>Acompanhamento dos leads. Próxima etapa.</div>
+    </section>
+    <section id="aba-listas" class="oculto">
+      <div class="placeholder"><h2>Listas</h2>Listas de contatos e carteiras. Próxima etapa.</div>
+    </section>
+
+    <!-- Calculadora por CEP (admin e comercial) -->
+    <section id="aba-calculadora" class="oculto">
+      <div class="cartao" style="max-width:520px;">
+        <h2>Calculadora por CEP</h2>
+        <p class="suave">Digite o CEP do cliente e o produto. O sistema acha a região mais próxima e mostra a cotação do dia.</p>
+        <form id="form-calculo">
+          <label for="c-cep">CEP do cliente</label>
+          <input id="c-cep" placeholder="00000-000" inputmode="numeric" required>
+          <label for="c-produto">Produto</label>
+          <select id="c-produto" required></select>
+          <button type="submit" id="btn-calcular" class="bloco">Calcular</button>
+          <div id="c-msg" class="msg"></div>
+        </form>
+        <div id="c-resultado" class="resultado oculto"></div>
       </div>
     </section>
 
@@ -220,13 +250,15 @@
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
   const $ = (id) => document.getElementById(id);
-  // Data de hoje no fuso de Brasília (evita virar o dia às 21h, quando o UTC já mudou)
+  // Data de hoje no fuso de Brasília (evita virar o dia às 21h)
   const hoje = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
   let usuario = null;   // { id, nome, papel }
   let produtos = [];
+  let fornecedoresCache = [];
 
   function msg(el, texto, tipo) { el.textContent = texto; el.className = 'msg ' + (tipo || ''); }
   function escapar(t) { return String(t ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function temAcessoFornecedores() { return ['admin', 'operacional'].includes(usuario.papel); }
 
   // ---------- Sessão e tela ----------
   async function iniciar() {
@@ -243,6 +275,12 @@
 
     usuario = perfil;
     $('info-usuario').textContent = perfil.nome + ' · ' + perfil.papel;
+
+    // Mostra só as abas do papel de quem entrou
+    document.querySelectorAll('.aba').forEach(b => {
+      const pode = b.dataset.papeis.split(',').includes(perfil.papel);
+      b.classList.toggle('oculto', !pode);
+    });
     document.querySelectorAll('.admin-so').forEach(el =>
       el.classList.toggle('oculto', perfil.papel !== 'admin'));
 
@@ -250,7 +288,12 @@
     $('tela-app').classList.remove('oculto');
     $('data-hoje').textContent = 'Cotações de ' + new Date().toLocaleDateString('pt-BR');
 
-    await Promise.all([carregarProdutos(), carregarRegioes(), carregarFornecedores()]);
+    await carregarProdutos();
+    if (temAcessoFornecedores()) {
+      await Promise.all([carregarRegioes(), carregarFornecedores()]);
+    }
+
+    trocarAba(document.querySelector('.aba:not(.oculto)').dataset.aba);
   }
 
   function mostrarLogin(aviso) {
@@ -285,6 +328,8 @@
   async function carregarProdutos() {
     const { data } = await sb.from('produtos').select('id, nome').eq('ativo', true).order('nome');
     produtos = data || [];
+    $('c-produto').innerHTML = produtos.map(p => `<option value="${p.id}">${escapar(p.nome)}</option>`).join('')
+      || '<option value="">Nenhum produto cadastrado</option>';
     renderCotacoes();
   }
 
@@ -294,7 +339,6 @@
       || '<option value="">Cadastre uma região primeiro</option>';
   }
 
-  let fornecedoresCache = [];
   async function carregarFornecedores() {
     const { data } = await sb.from('fornecedores')
       .select('id, nome, contato, regioes(nome)').eq('ativo', true).order('nome');
@@ -310,6 +354,7 @@
 
   function renderCotacoes() {
     const tabela = $('tabela-cotacoes');
+    if (!temAcessoFornecedores()) return;
     if (!produtos.length || !fornecedoresCache.length) {
       tabela.innerHTML = '<tr><td class="vazio">Cadastre produtos e fornecedores para lançar cotações.</td></tr>';
       return;
@@ -320,8 +365,7 @@
     const linhas = fornecedoresCache.map(f => {
       const celulas = produtos.map(p => {
         const v = window._cotHoje?.[f.id + '|' + p.id] ?? '';
-        const bloqueado = usuario.papel === 'comercial' ? 'disabled' : '';
-        return `<td><input type="number" step="0.01" min="0" value="${v}" ${bloqueado}
+        return `<td><input type="number" step="0.01" min="0" value="${v}"
                   data-f="${f.id}" data-p="${p.id}" placeholder="—"></td>`;
       }).join('');
       return `<tr><td>${escapar(f.nome)}</td><td class="etiqueta">${escapar(f.regioes?.nome)}</td>${celulas}</tr>`;
@@ -384,6 +428,55 @@
     e.preventDefault();
     await cadastrar('produtos', { nome: $('p-nome').value.trim() }, $('p-msg'), 'Produto cadastrado.', 'form-produto');
     carregarProdutos();
+  });
+
+  // ---------- Calculadora por CEP ----------
+  // Transforma o CEP em coordenadas (OpenStreetMap / Nominatim)
+  async function localizarCep(cep) {
+    const numeros = cep.replace(/\D/g, '');
+    if (numeros.length !== 8) throw new Error('CEP precisa ter 8 números.');
+    const url = 'https://nominatim.openstreetmap.org/search?' +
+      new URLSearchParams({ postalcode: numeros, country: 'Brazil', format: 'json', limit: '1' });
+    const resp = await fetch(url, { headers: { 'Accept-Language': 'pt-BR' } });
+    const lista = await resp.json();
+    if (!lista.length) throw new Error('Não encontrei esse CEP no mapa.');
+    return { lat: Number(lista[0].lat), lng: Number(lista[0].lon) };
+  }
+
+  $('form-calculo').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = $('btn-calcular');
+    btn.disabled = true;
+    $('c-resultado').classList.add('oculto');
+    msg($('c-msg'), 'Calculando...');
+
+    try {
+      const { lat, lng } = await localizarCep($('c-cep').value);
+      const { data, error } = await sb.rpc('fornecedor_para_cliente', {
+        p_produto_id: $('c-produto').value,
+        p_latitude: lat,
+        p_longitude: lng,
+      });
+      if (error) throw new Error(error.message);
+      if (!data || !data.length) {
+        throw new Error('Nenhum fornecedor com cotação de hoje para esse produto.');
+      }
+
+      const r = data[0];
+      const valor = Number(r.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      $('c-resultado').innerHTML = `
+        <div class="etiqueta">Fornecedor mais próximo</div>
+        <div><strong>${escapar(r.fornecedor)}</strong> · ${escapar(r.regiao)}</div>
+        <div class="etiqueta">Distância aproximada: ${Number(r.distancia_km).toLocaleString('pt-BR')} km</div>
+        <div class="etiqueta">Cotação de hoje</div>
+        <div class="destaque-valor">${valor}</div>`;
+      $('c-resultado').classList.remove('oculto');
+      msg($('c-msg'), '');
+    } catch (err) {
+      msg($('c-msg'), err.message, 'erro');
+    } finally {
+      btn.disabled = false;
+    }
   });
 
   // ---------- Criar login (Edge Function) ----------

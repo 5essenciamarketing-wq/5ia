@@ -318,6 +318,8 @@
         <span class="data-hoje" id="data-hoje-inicio"></span>
       </div>
       <div id="inicio-conteudo"></div>
+      <div id="inicio-vendas"></div>
+      <div id="venda-container" style="margin-top:18px;"></div>
     </section>
 
     <!-- Fornecedores -->
@@ -426,6 +428,13 @@
           <div class="tabela-wrap"><table id="tabela-equipe"></table></div>
         </div>
         <div class="cartao">
+          <h2>Comissão por produto</h2>
+          <p class="suave">Valor pago por unidade vendida. Vendas já registradas mantêm o valor da época.</p>
+          <div class="tabela-wrap"><table id="tabela-comissoes"></table></div>
+          <div id="cm-msg" class="msg"></div>
+        </div>
+
+        <div class="cartao">
           <h2>Freteiros</h2>
           <p class="suave">Cadastre a cidade-base de cada freteiro. Ela é usada para sugerir o mais perto da saída.</p>
           <form id="form-freteiro">
@@ -480,7 +489,7 @@
     </section>
     <section id="pag-dashboard" class="oculto">
       <div class="principal-topo"><div><h1>Dashboard</h1><div class="sub">Indicadores de leads e vendas</div></div></div>
-      <div class="placeholder"><div class="icone-grande">▲</div><h2>Em construção</h2>Próxima etapa.</div>
+      <div id="dashboard-conteudo"></div>
     </section>
 
     <!-- Calculadora por CEP -->
@@ -669,6 +678,7 @@
     fornecedores = forn.data || [];
     cotacoesHoje = cot.data || [];
     equipe = eq.data || [];
+    await carregarVendas();
     renderTudo();
   }
 
@@ -680,6 +690,7 @@
     renderCotacoes();
     renderEquipe();
     renderInicio();
+    renderPainelVendas();
   }
 
   function valorHoje(fornecedorId, produtoId) {
@@ -1071,6 +1082,180 @@
     } finally {
       btn.disabled = false;
     }
+  });
+
+  // ---------- Comissões e vendas ----------
+  let comissoesProduto = {};   // produto_id -> comissão por unidade
+  let vendas = [];             // vendas que o usuário pode ver
+  const mesAtual = hoje.slice(0, 7);
+  const ehComercial = () => ['admin', 'comercial'].includes(usuario.papel);
+  const nomeProdutoPorId = id => produtos.find(p => p.id === id)?.nome || '—';
+  const nomeConsultorPorId = id => equipe.find(p => p.id === id)?.nome || '—';
+  const dataBR = d => new Date(d + 'T12:00').toLocaleDateString('pt-BR');
+  const comissaoDe = v => v.quantidade * Number(v.comissao_unitaria);
+  const totalComissao = lista => lista.reduce((soma, v) => soma + comissaoDe(v), 0);
+
+  async function carregarVendas() {
+    const [cp, vd] = await Promise.all([
+      sb.from('comissoes_produto').select('produto_id, valor'),
+      sb.from('vendas').select('id, consultor_id, produto_id, quantidade, data_venda, comissao_unitaria, observacao')
+        .order('data_venda', { ascending: false }).limit(500),
+    ]);
+    comissoesProduto = {};
+    (cp.data || []).forEach(c => { comissoesProduto[c.produto_id] = Number(c.valor); });
+    vendas = vd.data || [];
+  }
+
+  const stat = (num, rot, extra = '') =>
+    `<div class="stat ${extra}"><div class="num">${num}</div><div class="rot">${rot}</div></div>`;
+
+  // Indicadores: usados na Início do consultor e na aba Dashboard
+  function htmlIndicadores() {
+    const doMes = vendas.filter(v => v.data_venda.startsWith(mesAtual));
+    const qtdMes = doMes.reduce((soma, v) => soma + v.quantidade, 0);
+
+    const porProduto = produtos.map(p => `
+      <tr><th style="width:48%">${escapar(p.nome)}</th><td>${
+        comissoesProduto[p.id] != null
+          ? moeda(comissoesProduto[p.id]) + ' <span class="etiqueta">por unidade</span>'
+          : '<span class="etiqueta">comissão não definida</span>'}</td></tr>`).join('');
+
+    const linhas = vendas.slice(0, 30).map(v => `
+      <tr><td>${dataBR(v.data_venda)}</td><td>${escapar(nomeProdutoPorId(v.produto_id))}</td>
+        ${ehAdmin() ? `<td>${escapar(nomeConsultorPorId(v.consultor_id))}</td>` : ''}
+        <td>${v.quantidade}</td><td>${moeda(comissaoDe(v))}</td></tr>`).join('');
+
+    return `
+      <div class="stats">
+        ${stat(qtdMes, 'Vendas no mês')}
+        ${stat(moeda(totalComissao(doMes)), 'Comissão do mês')}
+        ${stat(moeda(totalComissao(vendas)), 'Comissão acumulada')}
+        ${stat('—', 'Leads (em breve)', 'breve')}
+      </div>
+      <div class="grade duas">
+        <div class="cartao">
+          <h2>Comissão por produto</h2>
+          ${produtos.length ? `<div class="tabela-wrap"><table>${porProduto}</table></div>`
+            : '<div class="vazio">Nenhum produto cadastrado.</div>'}
+        </div>
+        <div class="cartao">
+          <h2>${ehAdmin() ? 'Últimas vendas da equipe' : 'Minhas vendas'}</h2>
+          ${vendas.length ? `<div class="tabela-wrap"><table>
+            <tr><th>Data</th><th>Produto</th>${ehAdmin() ? '<th>Consultor</th>' : ''}<th>Qtd</th><th>Comissão</th></tr>
+            ${linhas}</table></div>`
+            : '<div class="vazio">Nenhuma venda registrada ainda.</div>'}
+        </div>
+      </div>`;
+  }
+
+  // Comissão do mês de cada consultor (visão do admin)
+  function htmlComissaoPorConsultor() {
+    const doMes = vendas.filter(v => v.data_venda.startsWith(mesAtual));
+    const consultores = equipe.filter(p => p.papel === 'comercial' && p.ativo);
+    if (!consultores.length) return '<div class="vazio">Nenhum consultor cadastrado.</div>';
+    return `<div class="tabela-wrap"><table>
+      <tr><th>Consultor</th><th>Vendas no mês</th><th>Comissão do mês</th></tr>
+      ${consultores.map(c => {
+        const lista = doMes.filter(v => v.consultor_id === c.id);
+        const qtd = lista.reduce((soma, v) => soma + v.quantidade, 0);
+        return `<tr><td class="celula-nome">${escapar(c.nome)}</td><td>${qtd}</td>
+          <td><strong>${moeda(totalComissao(lista))}</strong></td></tr>`;
+      }).join('')}
+    </table></div>`;
+  }
+
+  // Formulário de venda (uma vez só, em #venda-container)
+  function renderVendaForm() {
+    const el = $('venda-container');
+    if (!ehComercial()) { el.innerHTML = ''; return; }
+    const opcoesProduto = produtos.map(p => `<option value="${p.id}">${escapar(p.nome)}</option>`).join('')
+      || '<option value="">Cadastre um produto</option>';
+    const consultores = equipe.filter(p => p.papel === 'comercial' && p.ativo);
+    el.innerHTML = `
+      <div class="cartao" style="max-width:640px;">
+        <h2>Registrar venda</h2>
+        <p class="suave">A comissão do produto é gravada no momento do registro.</p>
+        <form id="form-venda">
+          ${ehAdmin() ? `
+            <label for="vd-consultor">Consultor</label>
+            <select id="vd-consultor" required>${consultores.map(c => `<option value="${c.id}">${escapar(c.nome)}</option>`).join('')
+              || '<option value="">Cadastre um consultor</option>'}</select>` : ''}
+          <label for="vd-produto">Produto</label>
+          <select id="vd-produto" required>${opcoesProduto}</select>
+          <div class="grade duas" style="gap:12px;">
+            <div><label for="vd-qtd">Quantidade</label><input id="vd-qtd" type="number" min="1" value="1" required></div>
+            <div><label for="vd-data">Data da venda</label><input id="vd-data" type="date" value="${hoje}" required></div>
+          </div>
+          <label for="vd-obs">Observação</label>
+          <input id="vd-obs">
+          <button type="submit" id="btn-venda" class="bloco">Registrar venda</button>
+          <div id="vd-msg" class="msg"></div>
+        </form>
+      </div>`;
+  }
+
+  function renderComissoesEquipe() {
+    if (!ehAdmin()) return;
+    $('tabela-comissoes').innerHTML = produtos.length
+      ? '<tr><th>Produto</th><th>Comissão por unidade (R$)</th></tr>' +
+        produtos.map(p => `<tr><td class="celula-nome">${escapar(p.nome)}</td>
+          <td><input type="number" step="0.01" min="0" value="${comissoesProduto[p.id] ?? ''}"
+               data-cp="${p.id}" placeholder="—"></td></tr>`).join('')
+      : '<tr><td class="vazio">Cadastre produtos primeiro.</td></tr>';
+  }
+
+  function renderPainelVendas() {
+    renderComissoesEquipe();
+    renderVendaForm();
+    if (ehAdmin()) {
+      $('inicio-vendas').innerHTML = `<div class="cartao" style="margin-top:18px;">
+        <h2>Comissão do mês por consultor</h2>${htmlComissaoPorConsultor()}</div>`;
+      $('dashboard-conteudo').innerHTML = htmlIndicadores() + `<div class="cartao" style="margin-top:18px;">
+        <h2>Comissão do mês por consultor</h2>${htmlComissaoPorConsultor()}</div>`;
+    } else if (ehComercial()) {
+      $('inicio-vendas').innerHTML = htmlIndicadores();
+      $('dashboard-conteudo').innerHTML = htmlIndicadores();
+    }
+  }
+
+  // Salva a comissão por unidade de cada produto (admin)
+  $('tabela-comissoes').addEventListener('change', async (e) => {
+    const campo = e.target;
+    if (!campo.dataset.cp || campo.value === '') return;
+    const { error } = await sb.from('comissoes_produto').upsert({
+      produto_id: campo.dataset.cp,
+      valor: Number(campo.value),
+      atualizado_em: new Date().toISOString(),
+    });
+    if (error) return msg($('cm-msg'), 'Não foi possível salvar: ' + error.message, 'erro');
+    comissoesProduto[campo.dataset.cp] = Number(campo.value);
+    msg($('cm-msg'), 'Comissão salva.', 'ok');
+    renderPainelVendas();
+  });
+
+  // Registrar venda (formulário fica dentro de #venda-container)
+  $('venda-container').addEventListener('submit', async (e) => {
+    if (e.target.id !== 'form-venda') return;
+    e.preventDefault();
+    const btn = $('btn-venda'); btn.disabled = true;
+    const produtoId = $('vd-produto').value;
+    const semComissao = comissoesProduto[produtoId] == null;
+
+    const { error } = await sb.from('vendas').insert({
+      consultor_id: ehAdmin() ? $('vd-consultor').value : usuario.id,
+      produto_id: produtoId,
+      quantidade: Number($('vd-qtd').value),
+      data_venda: $('vd-data').value,
+      observacao: $('vd-obs').value.trim() || null,
+    });
+    btn.disabled = false;
+    if (error) return msg($('vd-msg'), error.message, 'erro');
+
+    await carregarVendas();
+    renderPainelVendas();
+    msg($('vd-msg'), semComissao
+      ? 'Venda registrada, mas este produto ainda não tem comissão definida (ficou em zero).'
+      : 'Venda registrada.', semComissao ? 'erro' : 'ok');
   });
 
   iniciar();

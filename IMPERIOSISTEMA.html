@@ -142,26 +142,12 @@
             <form id="form-fornecedor">
               <label for="f-nome">Nome</label>
               <input id="f-nome" required>
-              <label for="f-regiao">Região que atende</label>
-              <select id="f-regiao" required></select>
+              <label for="f-cidade">Cidade</label>
+              <input id="f-cidade" placeholder="Ex.: Santos, SP" required>
               <label for="f-contato">Contato</label>
               <input id="f-contato">
-              <button type="submit" class="bloco">Cadastrar fornecedor</button>
+              <button type="submit" id="btn-fornecedor" class="bloco">Cadastrar fornecedor</button>
               <div id="f-msg" class="msg"></div>
-            </form>
-          </div>
-
-          <div class="cartao">
-            <h2>Nova região</h2>
-            <form id="form-regiao">
-              <label for="r-nome">Nome</label>
-              <input id="r-nome" placeholder="Ex.: Sul de SC" required>
-              <label for="r-lat">Latitude do centro</label>
-              <input id="r-lat" type="number" step="any" required>
-              <label for="r-lng">Longitude do centro</label>
-              <input id="r-lng" type="number" step="any" required>
-              <button type="submit" class="bloco">Cadastrar região</button>
-              <div id="r-msg" class="msg"></div>
             </form>
           </div>
 
@@ -169,7 +155,7 @@
             <h2>Novo produto</h2>
             <form id="form-produto">
               <label for="p-nome">Nome do produto</label>
-              <input id="p-nome" placeholder="Ex.: Container 40' reformado" required>
+              <input id="p-nome" placeholder="Ex.: Container Reefer 40'" required>
               <button type="submit" class="bloco">Cadastrar produto</button>
               <div id="p-msg" class="msg"></div>
             </form>
@@ -180,10 +166,7 @@
 
     <!-- Frete -->
     <section id="aba-frete" class="oculto">
-      <div class="placeholder">
-        <h2>Frete</h2>
-        Cadastro de freteiros e designação de entregas. Próxima etapa.
-      </div>
+      <div class="placeholder"><h2>Frete</h2>Cadastro de freteiros e designação de entregas. Próxima etapa.</div>
     </section>
 
     <!-- Comercial: placeholders -->
@@ -204,7 +187,7 @@
     <section id="aba-calculadora" class="oculto">
       <div class="cartao" style="max-width:520px;">
         <h2>Calculadora por CEP</h2>
-        <p class="suave">Digite o CEP do cliente e o produto. O sistema acha a região mais próxima e mostra a cotação do dia.</p>
+        <p class="suave">Digite o CEP do cliente e o produto. O sistema acha o fornecedor mais próximo e mostra a cotação do dia.</p>
         <form id="form-calculo">
           <label for="c-cep">CEP do cliente</label>
           <input id="c-cep" placeholder="00000-000" inputmode="numeric" required>
@@ -260,6 +243,30 @@
   function escapar(t) { return String(t ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
   function temAcessoFornecedores() { return ['admin', 'operacional'].includes(usuario.papel); }
 
+  // ---------- Localização (OpenStreetMap / Nominatim) ----------
+  async function geocodificar(params) {
+    const url = 'https://nominatim.openstreetmap.org/search?' +
+      new URLSearchParams({ ...params, country: 'Brazil', format: 'json', limit: '1' });
+    const resp = await fetch(url, { headers: { 'Accept-Language': 'pt-BR' } });
+    const lista = await resp.json();
+    if (!lista.length) return null;
+    return { lat: Number(lista[0].lat), lng: Number(lista[0].lon) };
+  }
+
+  async function localizarCidade(cidade) {
+    const local = await geocodificar({ q: cidade });
+    if (!local) throw new Error('Não encontrei essa cidade. Escreva com o estado, ex.: Santos, SP.');
+    return local;
+  }
+
+  async function localizarCep(cep) {
+    const numeros = cep.replace(/\D/g, '');
+    if (numeros.length !== 8) throw new Error('CEP precisa ter 8 números.');
+    const local = await geocodificar({ postalcode: numeros });
+    if (!local) throw new Error('Não encontrei esse CEP no mapa.');
+    return local;
+  }
+
   // ---------- Sessão e tela ----------
   async function iniciar() {
     const { data: { session } } = await sb.auth.getSession();
@@ -276,7 +283,6 @@
     usuario = perfil;
     $('info-usuario').textContent = perfil.nome + ' · ' + perfil.papel;
 
-    // Mostra só as abas do papel de quem entrou
     document.querySelectorAll('.aba').forEach(b => {
       const pode = b.dataset.papeis.split(',').includes(perfil.papel);
       b.classList.toggle('oculto', !pode);
@@ -289,9 +295,7 @@
     $('data-hoje').textContent = 'Cotações de ' + new Date().toLocaleDateString('pt-BR');
 
     await carregarProdutos();
-    if (temAcessoFornecedores()) {
-      await Promise.all([carregarRegioes(), carregarFornecedores()]);
-    }
+    if (temAcessoFornecedores()) await carregarFornecedores();
 
     trocarAba(document.querySelector('.aba:not(.oculto)').dataset.aba);
   }
@@ -333,15 +337,9 @@
     renderCotacoes();
   }
 
-  async function carregarRegioes() {
-    const { data } = await sb.from('regioes').select('id, nome').eq('ativo', true).order('nome');
-    $('f-regiao').innerHTML = (data || []).map(r => `<option value="${r.id}">${escapar(r.nome)}</option>`).join('')
-      || '<option value="">Cadastre uma região primeiro</option>';
-  }
-
   async function carregarFornecedores() {
     const { data } = await sb.from('fornecedores')
-      .select('id, nome, contato, regioes(nome)').eq('ativo', true).order('nome');
+      .select('id, nome, cidade, contato').eq('ativo', true).order('nome');
     fornecedoresCache = data || [];
 
     const { data: cot } = await sb.from('cotacoes')
@@ -353,13 +351,13 @@
   }
 
   function renderCotacoes() {
-    const tabela = $('tabela-cotacoes');
     if (!temAcessoFornecedores()) return;
+    const tabela = $('tabela-cotacoes');
     if (!produtos.length || !fornecedoresCache.length) {
       tabela.innerHTML = '<tr><td class="vazio">Cadastre produtos e fornecedores para lançar cotações.</td></tr>';
       return;
     }
-    const cabecalho = '<tr><th>Fornecedor</th><th>Região</th>' +
+    const cabecalho = '<tr><th>Fornecedor</th><th>Cidade</th>' +
       produtos.map(p => `<th>${escapar(p.nome)}</th>`).join('') + '</tr>';
 
     const linhas = fornecedoresCache.map(f => {
@@ -368,7 +366,7 @@
         return `<td><input type="number" step="0.01" min="0" value="${v}"
                   data-f="${f.id}" data-p="${p.id}" placeholder="—"></td>`;
       }).join('');
-      return `<tr><td>${escapar(f.nome)}</td><td class="etiqueta">${escapar(f.regioes?.nome)}</td>${celulas}</tr>`;
+      return `<tr><td>${escapar(f.nome)}</td><td class="etiqueta">${escapar(f.cidade)}</td>${celulas}</tr>`;
     }).join('');
 
     tabela.innerHTML = cabecalho + linhas;
@@ -397,52 +395,41 @@
   });
 
   // ---------- Cadastros (admin) ----------
-  async function cadastrar(tabela, dados, el, sucesso, formId) {
-    const { error } = await sb.from(tabela).insert(dados);
-    if (error) return msg(el, error.message, 'erro');
-    msg(el, sucesso, 'ok');
-    $(formId).reset();
-  }
-
-  $('form-regiao').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    await cadastrar('regioes', {
-      nome: $('r-nome').value.trim(),
-      latitude: Number($('r-lat').value),
-      longitude: Number($('r-lng').value),
-    }, $('r-msg'), 'Região cadastrada.', 'form-regiao');
-    carregarRegioes();
-  });
-
   $('form-fornecedor').addEventListener('submit', async (e) => {
     e.preventDefault();
-    await cadastrar('fornecedores', {
-      nome: $('f-nome').value.trim(),
-      regiao_id: $('f-regiao').value,
-      contato: $('f-contato').value.trim() || null,
-    }, $('f-msg'), 'Fornecedor cadastrado.', 'form-fornecedor');
-    carregarFornecedores();
+    const btn = $('btn-fornecedor'); btn.disabled = true;
+    msg($('f-msg'), 'Localizando cidade...');
+    try {
+      const cidade = $('f-cidade').value.trim();
+      const { lat, lng } = await localizarCidade(cidade);
+      const { error } = await sb.from('fornecedores').insert({
+        nome: $('f-nome').value.trim(),
+        cidade,
+        latitude: lat,
+        longitude: lng,
+        contato: $('f-contato').value.trim() || null,
+      });
+      if (error) throw new Error(error.message);
+      msg($('f-msg'), 'Fornecedor cadastrado.', 'ok');
+      $('form-fornecedor').reset();
+      carregarFornecedores();
+    } catch (err) {
+      msg($('f-msg'), err.message, 'erro');
+    } finally {
+      btn.disabled = false;
+    }
   });
 
   $('form-produto').addEventListener('submit', async (e) => {
     e.preventDefault();
-    await cadastrar('produtos', { nome: $('p-nome').value.trim() }, $('p-msg'), 'Produto cadastrado.', 'form-produto');
+    const { error } = await sb.from('produtos').insert({ nome: $('p-nome').value.trim() });
+    if (error) return msg($('p-msg'), error.message, 'erro');
+    msg($('p-msg'), 'Produto cadastrado.', 'ok');
+    $('form-produto').reset();
     carregarProdutos();
   });
 
   // ---------- Calculadora por CEP ----------
-  // Transforma o CEP em coordenadas (OpenStreetMap / Nominatim)
-  async function localizarCep(cep) {
-    const numeros = cep.replace(/\D/g, '');
-    if (numeros.length !== 8) throw new Error('CEP precisa ter 8 números.');
-    const url = 'https://nominatim.openstreetmap.org/search?' +
-      new URLSearchParams({ postalcode: numeros, country: 'Brazil', format: 'json', limit: '1' });
-    const resp = await fetch(url, { headers: { 'Accept-Language': 'pt-BR' } });
-    const lista = await resp.json();
-    if (!lista.length) throw new Error('Não encontrei esse CEP no mapa.');
-    return { lat: Number(lista[0].lat), lng: Number(lista[0].lon) };
-  }
-
   $('form-calculo').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = $('btn-calcular');
@@ -466,7 +453,7 @@
       const valor = Number(r.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
       $('c-resultado').innerHTML = `
         <div class="etiqueta">Fornecedor mais próximo</div>
-        <div><strong>${escapar(r.fornecedor)}</strong> · ${escapar(r.regiao)}</div>
+        <div><strong>${escapar(r.fornecedor)}</strong> · ${escapar(r.cidade)}</div>
         <div class="etiqueta">Distância aproximada: ${Number(r.distancia_km).toLocaleString('pt-BR')} km</div>
         <div class="etiqueta">Cotação de hoje</div>
         <div class="destaque-valor">${valor}</div>`;

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sistema Containers</title>
+<style>
+  :root {
+    --fundo: #0d0d0f;
+    --painel: #17171b;
+    --borda: #2a2a31;
+    --texto: #ececec;
+    --suave: #9a9aa3;
+    --destaque: #c9a86a;
+    --erro: #e5484d;
+    --ok: #46a758;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh;
+    background: var(--fundo); color: var(--texto);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  .centro { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; }
+  .cartao {
+    background: var(--painel); border: 1px solid var(--borda);
+    border-radius: 12px; padding: 32px; width: 100%; max-width: 420px;
+  }
+  h1 { font-size: 20px; margin: 0 0 4px; font-weight: 600; }
+  h2 { font-size: 16px; margin: 0 0 16px; font-weight: 600; color: var(--destaque); }
+  p.suave { color: var(--suave); font-size: 14px; margin: 0 0 24px; }
+  label { display: block; font-size: 13px; color: var(--suave); margin: 14px 0 6px; }
+  input, select {
+    width: 100%; padding: 11px 12px; border-radius: 8px;
+    border: 1px solid var(--borda); background: var(--fundo); color: var(--texto);
+    font-size: 15px;
+  }
+  input:focus, select:focus { outline: none; border-color: var(--destaque); }
+  button {
+    width: 100%; margin-top: 22px; padding: 12px; border: 0; border-radius: 8px;
+    background: var(--destaque); color: #15130e; font-weight: 600; font-size: 15px; cursor: pointer;
+  }
+  button:disabled { opacity: .6; cursor: default; }
+  button.secundario { background: transparent; color: var(--suave); border: 1px solid var(--borda); }
+  .msg { margin-top: 14px; font-size: 14px; min-height: 20px; }
+  .msg.erro { color: var(--erro); }
+  .msg.ok { color: var(--ok); }
+  .topo { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+  .topo button { width: auto; margin: 0; padding: 8px 14px; font-size: 13px; }
+  .oculto { display: none !important; }
+  .sep { height: 1px; background: var(--borda); margin: 28px 0; }
+  .aviso { color: var(--suave); font-size: 13px; }
+</style>
+</head>
+<body>
+
+<!-- Tela de login -->
+<div id="tela-login" class="centro oculto">
+  <div class="cartao">
+    <h1>Sistema Containers</h1>
+    <p class="suave">Entre com seu login e senha.</p>
+    <form id="form-login">
+      <label for="login-email">E-mail</label>
+      <input id="login-email" type="email" required autocomplete="username">
+      <label for="login-senha">Senha</label>
+      <input id="login-senha" type="password" required autocomplete="current-password">
+      <button type="submit" id="btn-login">Entrar</button>
+      <div id="login-msg" class="msg"></div>
+    </form>
+  </div>
+</div>
+
+<!-- Área logada -->
+<div id="tela-app" class="centro oculto" style="align-items:flex-start;">
+  <div class="cartao" style="max-width:560px;">
+    <div class="topo">
+      <div>
+        <h1 id="boas-vindas">Sistema Containers</h1>
+        <p class="suave" id="papel-atual" style="margin:0;"></p>
+      </div>
+      <button class="secundario" id="btn-sair" type="button">Sair</button>
+    </div>
+
+    <!-- Só o admin vê esta parte -->
+    <div id="bloco-admin" class="oculto">
+      <h2>Cadastrar login da equipe</h2>
+      <form id="form-novo-usuario">
+        <label for="novo-nome">Nome</label>
+        <input id="novo-nome" required>
+        <label for="novo-email">E-mail</label>
+        <input id="novo-email" type="email" required>
+        <label for="novo-senha">Senha provisória (mínimo 8 caracteres)</label>
+        <input id="novo-senha" type="password" minlength="8" required autocomplete="new-password">
+        <label for="novo-papel">Papel</label>
+        <select id="novo-papel">
+          <option value="comercial">Comercial (consultor)</option>
+          <option value="operacional">Operacional</option>
+          <option value="admin">Admin</option>
+        </select>
+        <button type="submit" id="btn-criar">Criar login</button>
+        <div id="novo-msg" class="msg"></div>
+      </form>
+      <div class="sep"></div>
+    </div>
+
+    <p class="aviso">Os módulos de Fornecedores, Frete e Comercial entram nas próximas etapas.</p>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = 'https://tlznkchdinfwzddoooog.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_4k8dczYR97oTldsi0pI7Qw_pESKSbCi';
+
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  const $ = (id) => document.getElementById(id);
+
+  function mostrarMsg(el, texto, tipo) {
+    el.textContent = texto;
+    el.className = 'msg ' + (tipo || '');
+  }
+
+  async function carregarTela() {
+    const { data: { session } } = await sb.auth.getSession();
+
+    if (!session) {
+      $('tela-app').classList.add('oculto');
+      $('tela-login').classList.remove('oculto');
+      return;
+    }
+
+    const { data: perfil, error } = await sb
+      .from('profiles')
+      .select('nome, papel, ativo')
+      .eq('id', session.user.id)
+      .single();
+
+    if (error || !perfil || !perfil.ativo) {
+      await sb.auth.signOut();
+      mostrarMsg($('login-msg'), 'Seu acesso não está ativo. Fale com o administrador.', 'erro');
+      $('tela-app').classList.add('oculto');
+      $('tela-login').classList.remove('oculto');
+      return;
+    }
+
+    $('boas-vindas').textContent = 'Olá, ' + perfil.nome;
+    $('papel-atual').textContent = 'Papel: ' + perfil.papel;
+    $('bloco-admin').classList.toggle('oculto', perfil.papel !== 'admin');
+
+    $('tela-login').classList.add('oculto');
+    $('tela-app').classList.remove('oculto');
+  }
+
+  $('form-login').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = $('btn-login');
+    btn.disabled = true;
+    mostrarMsg($('login-msg'), '');
+
+    const { error } = await sb.auth.signInWithPassword({
+      email: $('login-email').value.trim(),
+      password: $('login-senha').value,
+    });
+
+    btn.disabled = false;
+    if (error) {
+      mostrarMsg($('login-msg'), 'E-mail ou senha incorretos.', 'erro');
+      return;
+    }
+    $('login-senha').value = '';
+    carregarTela();
+  });
+
+  $('btn-sair').addEventListener('click', async () => {
+    await sb.auth.signOut();
+    carregarTela();
+  });
+
+  $('form-novo-usuario').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = $('btn-criar');
+    btn.disabled = true;
+    mostrarMsg($('novo-msg'), 'Criando login...');
+
+    const { data, error } = await sb.functions.invoke('criar-usuario', {
+      body: {
+        nome: $('novo-nome').value.trim(),
+        email: $('novo-email').value.trim(),
+        senha: $('novo-senha').value,
+        papel: $('novo-papel').value,
+      },
+    });
+
+    btn.disabled = false;
+
+    if (error || (data && data.erro)) {
+      let msg = (data && data.erro) || 'Não foi possível criar o login.';
+      mostrarMsg($('novo-msg'), msg, 'erro');
+      return;
+    }
+
+    mostrarMsg($('novo-msg'), 'Login criado para ' + data.email + '.', 'ok');
+    $('form-novo-usuario').reset();
+    $('novo-papel').value = 'comercial';
+  });
+
+  carregarTela();
+</script>
+</body>
+</html>

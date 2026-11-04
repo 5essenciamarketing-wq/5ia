@@ -8,6 +8,7 @@
   :root {
     --fundo: #0d0d0f;
     --painel: #17171b;
+    --painel2: #1d1d23;
     --borda: #2a2a31;
     --texto: #ececec;
     --suave: #9a9aa3;
@@ -17,46 +18,71 @@
   }
   * { box-sizing: border-box; }
   body {
-    margin: 0; min-height: 100vh;
-    background: var(--fundo); color: var(--texto);
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    margin: 0; min-height: 100vh; background: var(--fundo); color: var(--texto);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; font-size: 14px;
   }
+  .oculto { display: none !important; }
   .centro { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; }
-  .cartao {
-    background: var(--painel); border: 1px solid var(--borda);
-    border-radius: 12px; padding: 32px; width: 100%; max-width: 420px;
-  }
+  .cartao { background: var(--painel); border: 1px solid var(--borda); border-radius: 12px; padding: 28px; }
   h1 { font-size: 20px; margin: 0 0 4px; font-weight: 600; }
-  h2 { font-size: 16px; margin: 0 0 16px; font-weight: 600; color: var(--destaque); }
-  p.suave { color: var(--suave); font-size: 14px; margin: 0 0 24px; }
-  label { display: block; font-size: 13px; color: var(--suave); margin: 14px 0 6px; }
+  h2 { font-size: 15px; margin: 0 0 14px; font-weight: 600; color: var(--destaque); }
+  p.suave { color: var(--suave); margin: 0 0 20px; }
+  label { display: block; font-size: 12px; color: var(--suave); margin: 12px 0 6px; }
   input, select {
-    width: 100%; padding: 11px 12px; border-radius: 8px;
-    border: 1px solid var(--borda); background: var(--fundo); color: var(--texto);
-    font-size: 15px;
+    width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--borda);
+    background: var(--fundo); color: var(--texto); font-size: 14px;
   }
   input:focus, select:focus { outline: none; border-color: var(--destaque); }
   button {
-    width: 100%; margin-top: 22px; padding: 12px; border: 0; border-radius: 8px;
-    background: var(--destaque); color: #15130e; font-weight: 600; font-size: 15px; cursor: pointer;
+    padding: 10px 16px; border: 0; border-radius: 8px; background: var(--destaque);
+    color: #15130e; font-weight: 600; font-size: 14px; cursor: pointer;
   }
   button:disabled { opacity: .6; cursor: default; }
-  button.secundario { background: transparent; color: var(--suave); border: 1px solid var(--borda); }
-  .msg { margin-top: 14px; font-size: 14px; min-height: 20px; }
+  button.sec { background: transparent; color: var(--suave); border: 1px solid var(--borda); font-weight: 500; }
+  button.bloco { width: 100%; margin-top: 18px; }
+  .msg { margin-top: 12px; font-size: 13px; min-height: 18px; }
   .msg.erro { color: var(--erro); }
   .msg.ok { color: var(--ok); }
-  .topo { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-  .topo button { width: auto; margin: 0; padding: 8px 14px; font-size: 13px; }
-  .oculto { display: none !important; }
-  .sep { height: 1px; background: var(--borda); margin: 28px 0; }
-  .aviso { color: var(--suave); font-size: 13px; }
+
+  /* Barra superior */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    padding: 14px 24px; border-bottom: 1px solid var(--borda); background: var(--painel);
+    position: sticky; top: 0; z-index: 2; flex-wrap: wrap;
+  }
+  .marca { font-weight: 600; color: var(--destaque); }
+  .abas { display: flex; gap: 6px; flex-wrap: wrap; }
+  .aba {
+    background: transparent; color: var(--suave); border: 1px solid transparent;
+    padding: 8px 14px; font-weight: 500;
+  }
+  .aba.ativa { color: var(--texto); border-color: var(--borda); background: var(--painel2); }
+  .usuario { display: flex; align-items: center; gap: 12px; color: var(--suave); }
+  .usuario button { padding: 6px 12px; font-size: 12px; }
+
+  .conteudo { padding: 24px; max-width: 1200px; margin: 0 auto; }
+  .grade { display: grid; gap: 20px; grid-template-columns: 1fr; }
+  @media (min-width: 900px) { .grade.duas { grid-template-columns: 1fr 1fr; } }
+
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--borda); font-size: 13px; }
+  th { color: var(--suave); font-weight: 500; }
+  td input { padding: 7px 8px; width: 110px; }
+  td input.salvo { border-color: var(--ok); }
+  .vazio { color: var(--suave); padding: 16px 0; }
+  .etiqueta { font-size: 12px; color: var(--suave); }
+  .placeholder {
+    border: 1px dashed var(--borda); border-radius: 12px; padding: 40px 24px;
+    text-align: center; color: var(--suave);
+  }
+  .data-hoje { color: var(--suave); font-size: 13px; }
 </style>
 </head>
 <body>
 
-<!-- Tela de login -->
+<!-- ========== Login ========== -->
 <div id="tela-login" class="centro oculto">
-  <div class="cartao">
+  <div class="cartao" style="width:100%;max-width:400px;">
     <h1>Sistema Containers</h1>
     <p class="suave">Entre com seu login e senha.</p>
     <form id="form-login">
@@ -64,46 +90,126 @@
       <input id="login-email" type="email" required autocomplete="username">
       <label for="login-senha">Senha</label>
       <input id="login-senha" type="password" required autocomplete="current-password">
-      <button type="submit" id="btn-login">Entrar</button>
+      <button type="submit" id="btn-login" class="bloco">Entrar</button>
       <div id="login-msg" class="msg"></div>
     </form>
   </div>
 </div>
 
-<!-- Área logada -->
-<div id="tela-app" class="centro oculto" style="align-items:flex-start;">
-  <div class="cartao" style="max-width:560px;">
-    <div class="topo">
-      <div>
-        <h1 id="boas-vindas">Sistema Containers</h1>
-        <p class="suave" id="papel-atual" style="margin:0;"></p>
+<!-- ========== App ========== -->
+<div id="tela-app" class="oculto">
+  <div class="topbar">
+    <div class="marca">Sistema Containers</div>
+    <nav class="abas">
+      <button class="aba ativa" data-aba="fornecedores">Fornecedores</button>
+      <button class="aba" data-aba="frete">Frete</button>
+      <button class="aba" data-aba="comercial">Comercial</button>
+      <button class="aba admin-so oculto" data-aba="usuarios">Usuários</button>
+    </nav>
+    <div class="usuario">
+      <span id="info-usuario"></span>
+      <button class="sec" id="btn-sair" type="button">Sair</button>
+    </div>
+  </div>
+
+  <div class="conteudo">
+
+    <!-- Fornecedores -->
+    <section id="aba-fornecedores">
+      <div class="grade">
+        <div class="cartao">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
+            <h2 style="margin:0;">Cotações do dia</h2>
+            <span class="data-hoje" id="data-hoje"></span>
+          </div>
+          <p class="suave" style="margin-bottom:14px;">Digite o valor de cada produto por fornecedor. Cada valor salva sozinho ao sair do campo.</p>
+          <div style="overflow-x:auto;">
+            <table id="tabela-cotacoes"></table>
+          </div>
+          <div id="cotacao-msg" class="msg"></div>
+        </div>
+
+        <div class="grade duas admin-so oculto">
+          <div class="cartao">
+            <h2>Novo fornecedor</h2>
+            <form id="form-fornecedor">
+              <label for="f-nome">Nome</label>
+              <input id="f-nome" required>
+              <label for="f-regiao">Região que atende</label>
+              <select id="f-regiao" required></select>
+              <label for="f-contato">Contato</label>
+              <input id="f-contato">
+              <button type="submit" class="bloco">Cadastrar fornecedor</button>
+              <div id="f-msg" class="msg"></div>
+            </form>
+          </div>
+
+          <div class="cartao">
+            <h2>Nova região</h2>
+            <form id="form-regiao">
+              <label for="r-nome">Nome</label>
+              <input id="r-nome" placeholder="Ex.: Sul de SC" required>
+              <label for="r-lat">Latitude do centro</label>
+              <input id="r-lat" type="number" step="any" required>
+              <label for="r-lng">Longitude do centro</label>
+              <input id="r-lng" type="number" step="any" required>
+              <button type="submit" class="bloco">Cadastrar região</button>
+              <div id="r-msg" class="msg"></div>
+            </form>
+          </div>
+
+          <div class="cartao">
+            <h2>Novo produto</h2>
+            <form id="form-produto">
+              <label for="p-nome">Nome do produto</label>
+              <input id="p-nome" placeholder="Ex.: Container 40' reformado" required>
+              <button type="submit" class="bloco">Cadastrar produto</button>
+              <div id="p-msg" class="msg"></div>
+            </form>
+          </div>
+        </div>
       </div>
-      <button class="secundario" id="btn-sair" type="button">Sair</button>
-    </div>
+    </section>
 
-    <!-- Só o admin vê esta parte -->
-    <div id="bloco-admin" class="oculto">
-      <h2>Cadastrar login da equipe</h2>
-      <form id="form-novo-usuario">
-        <label for="novo-nome">Nome</label>
-        <input id="novo-nome" required>
-        <label for="novo-email">E-mail</label>
-        <input id="novo-email" type="email" required>
-        <label for="novo-senha">Senha provisória (mínimo 8 caracteres)</label>
-        <input id="novo-senha" type="password" minlength="8" required autocomplete="new-password">
-        <label for="novo-papel">Papel</label>
-        <select id="novo-papel">
-          <option value="comercial">Comercial (consultor)</option>
-          <option value="operacional">Operacional</option>
-          <option value="admin">Admin</option>
-        </select>
-        <button type="submit" id="btn-criar">Criar login</button>
-        <div id="novo-msg" class="msg"></div>
-      </form>
-      <div class="sep"></div>
-    </div>
+    <!-- Frete -->
+    <section id="aba-frete" class="oculto">
+      <div class="placeholder">
+        <h2>Frete</h2>
+        Cadastro de freteiros e designação de entregas. Próxima etapa.
+      </div>
+    </section>
 
-    <p class="aviso">Os módulos de Fornecedores, Frete e Comercial entram nas próximas etapas.</p>
+    <!-- Comercial -->
+    <section id="aba-comercial" class="oculto">
+      <div class="placeholder">
+        <h2>Comercial</h2>
+        Leads e encaminhamento para consultores. Vem depois da etapa de frete.
+      </div>
+    </section>
+
+    <!-- Usuários (admin) -->
+    <section id="aba-usuarios" class="oculto">
+      <div class="cartao" style="max-width:520px;">
+        <h2>Cadastrar login da equipe</h2>
+        <form id="form-novo-usuario">
+          <label for="novo-nome">Nome</label>
+          <input id="novo-nome" required>
+          <label for="novo-email">E-mail</label>
+          <input id="novo-email" type="email" required>
+          <label for="novo-senha">Senha provisória (mínimo 8 caracteres)</label>
+          <input id="novo-senha" type="password" minlength="8" required autocomplete="new-password">
+          <label for="novo-papel">Papel</label>
+          <select id="novo-papel">
+            <option value="comercial">Comercial (consultor)</option>
+            <option value="operacional">Operacional</option>
+            <option value="admin">Admin</option>
+          </select>
+          <button type="submit" id="btn-criar" class="bloco">Criar login</button>
+          <div id="novo-msg" class="msg"></div>
+        </form>
+      </div>
+    </section>
+
   </div>
 </div>
 
@@ -111,78 +217,178 @@
 <script>
   const SUPABASE_URL = 'https://tlznkchdinfwzddoooog.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_4k8dczYR97oTldsi0pI7Qw_pESKSbCi';
-
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
   const $ = (id) => document.getElementById(id);
+  // Data de hoje no fuso de Brasília (evita virar o dia às 21h, quando o UTC já mudou)
+  const hoje = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
+  let usuario = null;   // { id, nome, papel }
+  let produtos = [];
 
-  function mostrarMsg(el, texto, tipo) {
-    el.textContent = texto;
-    el.className = 'msg ' + (tipo || '');
-  }
+  function msg(el, texto, tipo) { el.textContent = texto; el.className = 'msg ' + (tipo || ''); }
+  function escapar(t) { return String(t ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
-  async function carregarTela() {
+  // ---------- Sessão e tela ----------
+  async function iniciar() {
     const { data: { session } } = await sb.auth.getSession();
+    if (!session) return mostrarLogin();
 
-    if (!session) {
-      $('tela-app').classList.add('oculto');
-      $('tela-login').classList.remove('oculto');
-      return;
-    }
+    const { data: perfil } = await sb.from('profiles')
+      .select('id, nome, papel, ativo').eq('id', session.user.id).single();
 
-    const { data: perfil, error } = await sb
-      .from('profiles')
-      .select('nome, papel, ativo')
-      .eq('id', session.user.id)
-      .single();
-
-    if (error || !perfil || !perfil.ativo) {
+    if (!perfil || !perfil.ativo) {
       await sb.auth.signOut();
-      mostrarMsg($('login-msg'), 'Seu acesso não está ativo. Fale com o administrador.', 'erro');
-      $('tela-app').classList.add('oculto');
-      $('tela-login').classList.remove('oculto');
-      return;
+      return mostrarLogin('Seu acesso não está ativo. Fale com o administrador.');
     }
 
-    $('boas-vindas').textContent = 'Olá, ' + perfil.nome;
-    $('papel-atual').textContent = 'Papel: ' + perfil.papel;
-    $('bloco-admin').classList.toggle('oculto', perfil.papel !== 'admin');
+    usuario = perfil;
+    $('info-usuario').textContent = perfil.nome + ' · ' + perfil.papel;
+    document.querySelectorAll('.admin-so').forEach(el =>
+      el.classList.toggle('oculto', perfil.papel !== 'admin'));
 
     $('tela-login').classList.add('oculto');
     $('tela-app').classList.remove('oculto');
+    $('data-hoje').textContent = 'Cotações de ' + new Date().toLocaleDateString('pt-BR');
+
+    await Promise.all([carregarProdutos(), carregarRegioes(), carregarFornecedores()]);
   }
 
+  function mostrarLogin(aviso) {
+    $('tela-app').classList.add('oculto');
+    $('tela-login').classList.remove('oculto');
+    if (aviso) msg($('login-msg'), aviso, 'erro');
+  }
+
+  function trocarAba(nome) {
+    document.querySelectorAll('.aba').forEach(b => b.classList.toggle('ativa', b.dataset.aba === nome));
+    document.querySelectorAll('section[id^="aba-"]').forEach(s =>
+      s.classList.toggle('oculto', s.id !== 'aba-' + nome));
+  }
+  document.querySelectorAll('.aba').forEach(b => b.addEventListener('click', () => trocarAba(b.dataset.aba)));
+
+  // ---------- Login / sair ----------
   $('form-login').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const btn = $('btn-login');
-    btn.disabled = true;
-    mostrarMsg($('login-msg'), '');
-
+    const btn = $('btn-login'); btn.disabled = true; msg($('login-msg'), '');
     const { error } = await sb.auth.signInWithPassword({
-      email: $('login-email').value.trim(),
-      password: $('login-senha').value,
+      email: $('login-email').value.trim(), password: $('login-senha').value,
     });
-
     btn.disabled = false;
-    if (error) {
-      mostrarMsg($('login-msg'), 'E-mail ou senha incorretos.', 'erro');
+    if (error) return msg($('login-msg'), 'E-mail ou senha incorretos.', 'erro');
+    $('login-senha').value = '';
+    iniciar();
+  });
+
+  $('btn-sair').addEventListener('click', async () => { await sb.auth.signOut(); mostrarLogin(); });
+
+  // ---------- Dados ----------
+  async function carregarProdutos() {
+    const { data } = await sb.from('produtos').select('id, nome').eq('ativo', true).order('nome');
+    produtos = data || [];
+    renderCotacoes();
+  }
+
+  async function carregarRegioes() {
+    const { data } = await sb.from('regioes').select('id, nome').eq('ativo', true).order('nome');
+    $('f-regiao').innerHTML = (data || []).map(r => `<option value="${r.id}">${escapar(r.nome)}</option>`).join('')
+      || '<option value="">Cadastre uma região primeiro</option>';
+  }
+
+  let fornecedoresCache = [];
+  async function carregarFornecedores() {
+    const { data } = await sb.from('fornecedores')
+      .select('id, nome, contato, regioes(nome)').eq('ativo', true).order('nome');
+    fornecedoresCache = data || [];
+
+    const { data: cot } = await sb.from('cotacoes')
+      .select('fornecedor_id, produto_id, valor').eq('data_referencia', hoje);
+    window._cotHoje = {};
+    (cot || []).forEach(c => { window._cotHoje[c.fornecedor_id + '|' + c.produto_id] = c.valor; });
+
+    renderCotacoes();
+  }
+
+  function renderCotacoes() {
+    const tabela = $('tabela-cotacoes');
+    if (!produtos.length || !fornecedoresCache.length) {
+      tabela.innerHTML = '<tr><td class="vazio">Cadastre produtos e fornecedores para lançar cotações.</td></tr>';
       return;
     }
-    $('login-senha').value = '';
-    carregarTela();
+    const cabecalho = '<tr><th>Fornecedor</th><th>Região</th>' +
+      produtos.map(p => `<th>${escapar(p.nome)}</th>`).join('') + '</tr>';
+
+    const linhas = fornecedoresCache.map(f => {
+      const celulas = produtos.map(p => {
+        const v = window._cotHoje?.[f.id + '|' + p.id] ?? '';
+        return `<td><input type="number" step="0.01" min="0" value="${v}"
+                  data-f="${f.id}" data-p="${p.id}" placeholder="—"></td>`;
+      }).join('');
+      return `<tr><td>${escapar(f.nome)}</td><td class="etiqueta">${escapar(f.regioes?.nome)}</td>${celulas}</tr>`;
+    }).join('');
+
+    tabela.innerHTML = cabecalho + linhas;
+  }
+
+  // Salva a cotação ao sair do campo
+  $('tabela-cotacoes').addEventListener('change', async (e) => {
+    const campo = e.target;
+    if (campo.tagName !== 'INPUT' || campo.value === '') return;
+    const { error } = await sb.from('cotacoes').upsert({
+      fornecedor_id: campo.dataset.f,
+      produto_id: campo.dataset.p,
+      valor: Number(campo.value),
+      data_referencia: hoje,
+      atualizado_por: usuario.id,
+      atualizado_em: new Date().toISOString(),
+    }, { onConflict: 'fornecedor_id,produto_id,data_referencia' });
+
+    if (error) {
+      msg($('cotacao-msg'), 'Não foi possível salvar: ' + error.message, 'erro');
+      campo.classList.remove('salvo');
+    } else {
+      msg($('cotacao-msg'), 'Cotação salva.', 'ok');
+      campo.classList.add('salvo');
+    }
   });
 
-  $('btn-sair').addEventListener('click', async () => {
-    await sb.auth.signOut();
-    carregarTela();
+  // ---------- Cadastros (admin) ----------
+  async function cadastrar(tabela, dados, el, sucesso, formId) {
+    const { error } = await sb.from(tabela).insert(dados);
+    if (error) return msg(el, error.message, 'erro');
+    msg(el, sucesso, 'ok');
+    $(formId).reset();
+  }
+
+  $('form-regiao').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    await cadastrar('regioes', {
+      nome: $('r-nome').value.trim(),
+      latitude: Number($('r-lat').value),
+      longitude: Number($('r-lng').value),
+    }, $('r-msg'), 'Região cadastrada.', 'form-regiao');
+    carregarRegioes();
   });
 
+  $('form-fornecedor').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    await cadastrar('fornecedores', {
+      nome: $('f-nome').value.trim(),
+      regiao_id: $('f-regiao').value,
+      contato: $('f-contato').value.trim() || null,
+    }, $('f-msg'), 'Fornecedor cadastrado.', 'form-fornecedor');
+    carregarFornecedores();
+  });
+
+  $('form-produto').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    await cadastrar('produtos', { nome: $('p-nome').value.trim() }, $('p-msg'), 'Produto cadastrado.', 'form-produto');
+    carregarProdutos();
+  });
+
+  // ---------- Criar login (Edge Function) ----------
   $('form-novo-usuario').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const btn = $('btn-criar');
-    btn.disabled = true;
-    mostrarMsg($('novo-msg'), 'Criando login...');
-
+    const btn = $('btn-criar'); btn.disabled = true; msg($('novo-msg'), 'Criando login...');
     const { data, error } = await sb.functions.invoke('criar-usuario', {
       body: {
         nome: $('novo-nome').value.trim(),
@@ -191,21 +397,16 @@
         papel: $('novo-papel').value,
       },
     });
-
     btn.disabled = false;
-
     if (error || (data && data.erro)) {
-      let msg = (data && data.erro) || 'Não foi possível criar o login.';
-      mostrarMsg($('novo-msg'), msg, 'erro');
-      return;
+      return msg($('novo-msg'), (data && data.erro) || 'Não foi possível criar o login.', 'erro');
     }
-
-    mostrarMsg($('novo-msg'), 'Login criado para ' + data.email + '.', 'ok');
+    msg($('novo-msg'), 'Login criado para ' + data.email + '.', 'ok');
     $('form-novo-usuario').reset();
     $('novo-papel').value = 'comercial';
   });
 
-  carregarTela();
+  iniciar();
 </script>
 </body>
 </html>

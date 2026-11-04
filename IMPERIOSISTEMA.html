@@ -8,7 +8,7 @@
   :root {
     --fundo: #0d0d0f;
     --painel: #17171b;
-    --painel2: #1d1d23;
+    --painel2: #1f1f25;
     --borda: #2a2a31;
     --texto: #ececec;
     --suave: #9a9aa3;
@@ -22,63 +22,97 @@
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; font-size: 14px;
   }
   .oculto { display: none !important; }
+
+  /* Login */
   .centro { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; }
-  .cartao { background: var(--painel); border: 1px solid var(--borda); border-radius: 12px; padding: 28px; }
+  .cartao { background: var(--painel); border: 1px solid var(--borda); border-radius: 12px; padding: 24px; }
+
+  /* Tipografia e formulários */
   h1 { font-size: 20px; margin: 0 0 4px; font-weight: 600; }
   h2 { font-size: 15px; margin: 0 0 14px; font-weight: 600; color: var(--destaque); }
-  p.suave { color: var(--suave); margin: 0 0 20px; }
+  h3 { font-size: 14px; margin: 0 0 12px; font-weight: 600; }
+  p.suave { color: var(--suave); margin: 0 0 18px; }
   label { display: block; font-size: 12px; color: var(--suave); margin: 12px 0 6px; }
   input, select {
     width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--borda);
     background: var(--fundo); color: var(--texto); font-size: 14px;
   }
   input:focus, select:focus { outline: none; border-color: var(--destaque); }
-  input:disabled { opacity: .5; }
   button {
     padding: 10px 16px; border: 0; border-radius: 8px; background: var(--destaque);
     color: #15130e; font-weight: 600; font-size: 14px; cursor: pointer;
   }
   button:disabled { opacity: .6; cursor: default; }
   button.sec { background: transparent; color: var(--suave); border: 1px solid var(--borda); font-weight: 500; }
-  button.bloco { width: 100%; margin-top: 18px; }
+  button.bloco { width: 100%; margin-top: 16px; }
   .msg { margin-top: 12px; font-size: 13px; min-height: 18px; }
   .msg.erro { color: var(--erro); }
   .msg.ok { color: var(--ok); }
+  .etiqueta { font-size: 12px; color: var(--suave); }
 
-  .topbar {
-    display: flex; align-items: center; justify-content: space-between; gap: 16px;
-    padding: 14px 24px; border-bottom: 1px solid var(--borda); background: var(--painel);
-    position: sticky; top: 0; z-index: 2; flex-wrap: wrap;
+  /* Layout com barra lateral */
+  .app { display: flex; min-height: 100vh; }
+  .menu {
+    width: 230px; flex-shrink: 0; background: var(--painel); border-right: 1px solid var(--borda);
+    padding: 22px 14px; display: flex; flex-direction: column; gap: 4px;
+    position: sticky; top: 0; height: 100vh; overflow-y: auto;
   }
-  .marca { font-weight: 600; color: var(--destaque); }
-  .abas { display: flex; gap: 6px; flex-wrap: wrap; }
-  .aba {
-    background: transparent; color: var(--suave); border: 1px solid transparent;
-    padding: 8px 14px; font-weight: 500;
+  .marca { font-weight: 600; color: var(--destaque); padding: 0 12px 16px; font-size: 16px; }
+  .menu .item {
+    text-align: left; background: transparent; color: var(--suave); font-weight: 500;
+    padding: 10px 12px; border-radius: 8px; width: 100%;
   }
-  .aba.ativa { color: var(--texto); border-color: var(--borda); background: var(--painel2); }
-  .usuario { display: flex; align-items: center; gap: 12px; color: var(--suave); }
-  .usuario button { padding: 6px 12px; font-size: 12px; }
+  .menu .item:hover { color: var(--texto); }
+  .menu .item.ativo { background: var(--painel2); color: var(--texto); }
+  .menu .item.sub { padding-left: 26px; font-size: 13px; }
+  .menu .grupo {
+    font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--suave);
+    margin: 14px 0 2px 12px;
+  }
+  .menu .rodape { margin-top: auto; border-top: 1px solid var(--borda); padding: 14px 12px 0; }
+  .menu .rodape .nome { color: var(--suave); font-size: 13px; margin-bottom: 10px; }
+  .menu .rodape button { width: 100%; }
 
-  .conteudo { padding: 24px; max-width: 1200px; margin: 0 auto; }
-  .grade { display: grid; gap: 20px; grid-template-columns: 1fr; }
-  @media (min-width: 900px) { .grade.duas { grid-template-columns: 1fr 1fr; } }
+  .principal { flex: 1; padding: 28px; min-width: 0; }
+  .principal-topo { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; margin-bottom: 22px; }
+  .principal-topo h1 { font-size: 22px; }
+  .data-hoje { color: var(--suave); font-size: 13px; }
+
+  .grade { display: grid; gap: 18px; grid-template-columns: 1fr; }
+  @media (min-width: 1000px) { .grade.duas { grid-template-columns: 1fr 1fr; } }
+
+  .stats { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); margin-bottom: 18px; }
+  .stat { background: var(--painel); border: 1px solid var(--borda); border-radius: 12px; padding: 18px; }
+  .stat .num { font-size: 26px; font-weight: 600; }
+  .stat .rot { font-size: 12px; color: var(--suave); margin-top: 4px; }
+  .stat.breve { opacity: .55; }
 
   table { width: 100%; border-collapse: collapse; }
-  th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--borda); font-size: 13px; }
+  th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--borda); font-size: 13px; vertical-align: middle; }
   th { color: var(--suave); font-weight: 500; }
   td input { padding: 7px 8px; width: 110px; }
   td input.salvo { border-color: var(--ok); }
-  .vazio { color: var(--suave); padding: 16px 0; }
-  .etiqueta { font-size: 12px; color: var(--suave); }
+  .vazio { color: var(--suave); padding: 14px 0; }
+  .destaque-valor { font-size: 22px; color: var(--destaque); font-weight: 600; }
+  .resultado { margin-top: 18px; border-top: 1px solid var(--borda); padding-top: 16px; }
+  .resultado div { margin: 8px 0; }
   .placeholder {
     border: 1px dashed var(--borda); border-radius: 12px; padding: 40px 24px;
     text-align: center; color: var(--suave);
   }
-  .data-hoje { color: var(--suave); font-size: 13px; }
-  .resultado { margin-top: 18px; border-top: 1px solid var(--borda); padding-top: 16px; }
-  .resultado div { margin: 8px 0; }
-  .destaque-valor { font-size: 22px; color: var(--destaque); font-weight: 600; }
+  .alerta { color: var(--erro); }
+
+  @media (max-width: 760px) {
+    .app { flex-direction: column; }
+    .menu { width: 100%; height: auto; position: static; flex-direction: row; flex-wrap: wrap; align-items: center; padding: 12px; }
+    .menu .grupo { display: none; }
+    .menu .item { width: auto; }
+    .menu .item.sub { padding-left: 12px; }
+    .menu .rodape { margin-top: 0; border-top: 0; padding: 0; margin-left: auto; }
+    .menu .rodape .nome { display: none; }
+    .menu .rodape button { width: auto; }
+    .principal { padding: 18px; }
+  }
 </style>
 </head>
 <body>
@@ -100,39 +134,50 @@
 </div>
 
 <!-- ========== App ========== -->
-<div id="tela-app" class="oculto">
-  <div class="topbar">
+<div id="tela-app" class="app oculto">
+
+  <aside class="menu">
     <div class="marca">Sistema Containers</div>
-    <nav class="abas">
-      <button class="aba" data-aba="fornecedores" data-papeis="admin,operacional">Fornecedores</button>
-      <button class="aba" data-aba="frete" data-papeis="admin,operacional">Frete</button>
-      <button class="aba" data-aba="dashboard" data-papeis="admin,comercial">Dashboard</button>
-      <button class="aba" data-aba="leads" data-papeis="admin,comercial">Leads</button>
-      <button class="aba" data-aba="followup" data-papeis="admin,comercial">Follow-up</button>
-      <button class="aba" data-aba="listas" data-papeis="admin,comercial">Listas</button>
-      <button class="aba" data-aba="calculadora" data-papeis="admin,comercial">Calculadora</button>
-      <button class="aba" data-aba="usuarios" data-papeis="admin">Usuários</button>
-    </nav>
-    <div class="usuario">
-      <span id="info-usuario"></span>
+
+    <button class="item" data-pag="inicio" data-papeis="admin,operacional,comercial">Início</button>
+
+    <button class="item" data-pag="fornecedores" data-papeis="admin,operacional">Fornecedores</button>
+    <button class="item" data-pag="fretes" data-papeis="admin,operacional">Fretes</button>
+    <button class="item" data-pag="equipe" data-papeis="admin">Equipe</button>
+
+    <div class="grupo" data-papeis="admin,comercial">Comercial</div>
+    <button class="item sub" data-pag="leads" data-papeis="admin,comercial">Leads</button>
+    <button class="item sub" data-pag="followup" data-papeis="admin,comercial">Follow-up</button>
+    <button class="item sub" data-pag="listas" data-papeis="admin,comercial">Listas</button>
+
+    <button class="item" data-pag="dashboard" data-papeis="admin,comercial">Dashboard</button>
+    <button class="item" data-pag="calculadora" data-papeis="admin,comercial">Calculadora por CEP</button>
+
+    <div class="rodape">
+      <div class="nome" id="info-usuario"></div>
       <button class="sec" id="btn-sair" type="button">Sair</button>
     </div>
-  </div>
+  </aside>
 
-  <div class="conteudo">
+  <main class="principal">
 
-    <!-- Fornecedores (admin e operacional) -->
-    <section id="aba-fornecedores">
+    <!-- Início / overview -->
+    <section id="pag-inicio">
+      <div class="principal-topo">
+        <h1 id="titulo-inicio">Início</h1>
+        <span class="data-hoje" id="data-hoje-inicio"></span>
+      </div>
+      <div id="inicio-conteudo"></div>
+    </section>
+
+    <!-- Fornecedores -->
+    <section id="pag-fornecedores" class="oculto">
+      <div class="principal-topo"><h1>Fornecedores</h1><span class="data-hoje" id="data-hoje-forn"></span></div>
       <div class="grade">
         <div class="cartao">
-          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
-            <h2 style="margin:0;">Cotações do dia</h2>
-            <span class="data-hoje" id="data-hoje"></span>
-          </div>
-          <p class="suave" style="margin-bottom:14px;">Digite o valor de cada produto por fornecedor. Cada valor salva sozinho ao sair do campo.</p>
-          <div style="overflow-x:auto;">
-            <table id="tabela-cotacoes"></table>
-          </div>
+          <h2>Cotações do dia</h2>
+          <p class="suave">Digite o valor de cada produto por fornecedor. Cada valor salva ao sair do campo.</p>
+          <div style="overflow-x:auto;"><table id="tabela-cotacoes"></table></div>
           <div id="cotacao-msg" class="msg"></div>
         </div>
 
@@ -146,6 +191,10 @@
               <input id="f-cidade" placeholder="Ex.: Santos, SP" required>
               <label for="f-contato">Contato</label>
               <input id="f-contato">
+              <label for="f-produto">Produto</label>
+              <select id="f-produto"></select>
+              <label for="f-valor">Valor de hoje (R$)</label>
+              <input id="f-valor" type="number" step="0.01" min="0" placeholder="Ex.: 7800">
               <button type="submit" id="btn-fornecedor" class="bloco">Cadastrar fornecedor</button>
               <div id="f-msg" class="msg"></div>
             </form>
@@ -164,29 +213,64 @@
       </div>
     </section>
 
-    <!-- Frete -->
-    <section id="aba-frete" class="oculto">
-      <div class="placeholder"><h2>Frete</h2>Cadastro de freteiros e designação de entregas. Próxima etapa.</div>
+    <!-- Fretes -->
+    <section id="pag-fretes" class="oculto">
+      <div class="principal-topo"><h1>Fretes</h1></div>
+      <div class="placeholder">Cadastro de freteiros e designação de entregas. Próxima etapa.</div>
+    </section>
+
+    <!-- Equipe (admin) -->
+    <section id="pag-equipe" class="oculto">
+      <div class="principal-topo"><h1>Equipe</h1></div>
+      <div class="grade duas">
+        <div class="cartao">
+          <h2>Pessoas com acesso</h2>
+          <div style="overflow-x:auto;"><table id="tabela-equipe"></table></div>
+        </div>
+        <div class="cartao">
+          <h2>Cadastrar login</h2>
+          <form id="form-novo-usuario">
+            <label for="novo-nome">Nome</label>
+            <input id="novo-nome" required>
+            <label for="novo-email">E-mail</label>
+            <input id="novo-email" type="email" required>
+            <label for="novo-senha">Senha provisória (mínimo 8 caracteres)</label>
+            <input id="novo-senha" type="password" minlength="8" required autocomplete="new-password">
+            <label for="novo-papel">Papel</label>
+            <select id="novo-papel">
+              <option value="comercial">Comercial (consultor)</option>
+              <option value="operacional">Operacional</option>
+              <option value="admin">Admin</option>
+            </select>
+            <button type="submit" id="btn-criar" class="bloco">Criar login</button>
+            <div id="novo-msg" class="msg"></div>
+          </form>
+        </div>
+      </div>
     </section>
 
     <!-- Comercial: placeholders -->
-    <section id="aba-dashboard" class="oculto">
-      <div class="placeholder"><h2>Dashboard</h2>Indicadores de leads e vendas. Próxima etapa.</div>
+    <section id="pag-leads" class="oculto">
+      <div class="principal-topo"><h1>Leads</h1></div>
+      <div class="placeholder">Entrada e gestão de leads. Próxima etapa.</div>
     </section>
-    <section id="aba-leads" class="oculto">
-      <div class="placeholder"><h2>Leads</h2>Entrada e gestão de leads. Próxima etapa.</div>
+    <section id="pag-followup" class="oculto">
+      <div class="principal-topo"><h1>Follow-up</h1></div>
+      <div class="placeholder">Acompanhamento dos leads. Próxima etapa.</div>
     </section>
-    <section id="aba-followup" class="oculto">
-      <div class="placeholder"><h2>Follow-up</h2>Acompanhamento dos leads. Próxima etapa.</div>
+    <section id="pag-listas" class="oculto">
+      <div class="principal-topo"><h1>Listas</h1></div>
+      <div class="placeholder">Listas de contatos e carteiras. Próxima etapa.</div>
     </section>
-    <section id="aba-listas" class="oculto">
-      <div class="placeholder"><h2>Listas</h2>Listas de contatos e carteiras. Próxima etapa.</div>
+    <section id="pag-dashboard" class="oculto">
+      <div class="principal-topo"><h1>Dashboard</h1></div>
+      <div class="placeholder">Indicadores de leads e vendas. Próxima etapa.</div>
     </section>
 
-    <!-- Calculadora por CEP (admin e comercial) -->
-    <section id="aba-calculadora" class="oculto">
+    <!-- Calculadora por CEP -->
+    <section id="pag-calculadora" class="oculto">
+      <div class="principal-topo"><h1>Calculadora por CEP</h1></div>
       <div class="cartao" style="max-width:520px;">
-        <h2>Calculadora por CEP</h2>
         <p class="suave">Digite o CEP do cliente e o produto. O sistema acha o fornecedor mais próximo e mostra a cotação do dia.</p>
         <form id="form-calculo">
           <label for="c-cep">CEP do cliente</label>
@@ -200,30 +284,7 @@
       </div>
     </section>
 
-    <!-- Usuários (admin) -->
-    <section id="aba-usuarios" class="oculto">
-      <div class="cartao" style="max-width:520px;">
-        <h2>Cadastrar login da equipe</h2>
-        <form id="form-novo-usuario">
-          <label for="novo-nome">Nome</label>
-          <input id="novo-nome" required>
-          <label for="novo-email">E-mail</label>
-          <input id="novo-email" type="email" required>
-          <label for="novo-senha">Senha provisória (mínimo 8 caracteres)</label>
-          <input id="novo-senha" type="password" minlength="8" required autocomplete="new-password">
-          <label for="novo-papel">Papel</label>
-          <select id="novo-papel">
-            <option value="comercial">Comercial (consultor)</option>
-            <option value="operacional">Operacional</option>
-            <option value="admin">Admin</option>
-          </select>
-          <button type="submit" id="btn-criar" class="bloco">Criar login</button>
-          <div id="novo-msg" class="msg"></div>
-        </form>
-      </div>
-    </section>
-
-  </div>
+  </main>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -235,13 +296,19 @@
   const $ = (id) => document.getElementById(id);
   // Data de hoje no fuso de Brasília (evita virar o dia às 21h)
   const hoje = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
-  let usuario = null;   // { id, nome, papel }
-  let produtos = [];
-  let fornecedoresCache = [];
+  const dataBonita = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' });
+
+  let usuario = null;        // { id, nome, papel }
+  let produtos = [];         // [{ id, nome }]
+  let fornecedores = [];     // [{ id, nome, cidade, contato }]
+  let cotacoesHoje = [];     // [{ fornecedor_id, produto_id, valor }]
+  let equipe = [];           // [{ id, nome, papel, ativo }]
 
   function msg(el, texto, tipo) { el.textContent = texto; el.className = 'msg ' + (tipo || ''); }
   function escapar(t) { return String(t ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-  function temAcessoFornecedores() { return ['admin', 'operacional'].includes(usuario.papel); }
+  function moeda(v) { return Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+  function temFornecedores() { return ['admin', 'operacional'].includes(usuario.papel); }
+  function ehAdmin() { return usuario.papel === 'admin'; }
 
   // ---------- Localização (OpenStreetMap / Nominatim) ----------
   async function geocodificar(params) {
@@ -252,13 +319,11 @@
     if (!lista.length) return null;
     return { lat: Number(lista[0].lat), lng: Number(lista[0].lon) };
   }
-
   async function localizarCidade(cidade) {
     const local = await geocodificar({ q: cidade });
     if (!local) throw new Error('Não encontrei essa cidade. Escreva com o estado, ex.: Santos, SP.');
     return local;
   }
-
   async function localizarCep(cep) {
     const numeros = cep.replace(/\D/g, '');
     if (numeros.length !== 8) throw new Error('CEP precisa ter 8 números.');
@@ -267,7 +332,7 @@
     return local;
   }
 
-  // ---------- Sessão e tela ----------
+  // ---------- Sessão e menu ----------
   async function iniciar() {
     const { data: { session } } = await sb.auth.getSession();
     if (!session) return mostrarLogin();
@@ -282,22 +347,21 @@
 
     usuario = perfil;
     $('info-usuario').textContent = perfil.nome + ' · ' + perfil.papel;
+    $('titulo-inicio').textContent = 'Olá, ' + perfil.nome.split(' ')[0];
+    $('data-hoje-inicio').textContent = dataBonita;
+    $('data-hoje-forn').textContent = 'Cotações de ' + dataBonita;
 
-    document.querySelectorAll('.aba').forEach(b => {
-      const pode = b.dataset.papeis.split(',').includes(perfil.papel);
-      b.classList.toggle('oculto', !pode);
+    // Menu: mostra só o que o papel pode ver
+    document.querySelectorAll('.menu [data-papeis]').forEach(el => {
+      el.classList.toggle('oculto', !el.dataset.papeis.split(',').includes(perfil.papel));
     });
-    document.querySelectorAll('.admin-so').forEach(el =>
-      el.classList.toggle('oculto', perfil.papel !== 'admin'));
+    document.querySelectorAll('.admin-so').forEach(el => el.classList.toggle('oculto', !ehAdmin()));
 
     $('tela-login').classList.add('oculto');
     $('tela-app').classList.remove('oculto');
-    $('data-hoje').textContent = 'Cotações de ' + new Date().toLocaleDateString('pt-BR');
 
-    await carregarProdutos();
-    if (temAcessoFornecedores()) await carregarFornecedores();
-
-    trocarAba(document.querySelector('.aba:not(.oculto)').dataset.aba);
+    await carregarDados();
+    mostrarPagina('inicio');
   }
 
   function mostrarLogin(aviso) {
@@ -306,12 +370,14 @@
     if (aviso) msg($('login-msg'), aviso, 'erro');
   }
 
-  function trocarAba(nome) {
-    document.querySelectorAll('.aba').forEach(b => b.classList.toggle('ativa', b.dataset.aba === nome));
-    document.querySelectorAll('section[id^="aba-"]').forEach(s =>
-      s.classList.toggle('oculto', s.id !== 'aba-' + nome));
+  function mostrarPagina(nome) {
+    document.querySelectorAll('.menu .item').forEach(b =>
+      b.classList.toggle('ativo', b.dataset.pag === nome));
+    document.querySelectorAll('main > section').forEach(s =>
+      s.classList.toggle('oculto', s.id !== 'pag-' + nome));
   }
-  document.querySelectorAll('.aba').forEach(b => b.addEventListener('click', () => trocarAba(b.dataset.aba)));
+  document.querySelectorAll('.menu .item').forEach(b =>
+    b.addEventListener('click', () => mostrarPagina(b.dataset.pag)));
 
   // ---------- Login / sair ----------
   $('form-login').addEventListener('submit', async (e) => {
@@ -325,74 +391,162 @@
     $('login-senha').value = '';
     iniciar();
   });
-
   $('btn-sair').addEventListener('click', async () => { await sb.auth.signOut(); mostrarLogin(); });
 
-  // ---------- Dados ----------
-  async function carregarProdutos() {
-    const { data } = await sb.from('produtos').select('id, nome').eq('ativo', true).order('nome');
-    produtos = data || [];
-    $('c-produto').innerHTML = produtos.map(p => `<option value="${p.id}">${escapar(p.nome)}</option>`).join('')
-      || '<option value="">Nenhum produto cadastrado</option>';
-    renderCotacoes();
+  // ---------- Carregar dados ----------
+  async function carregarDados() {
+    const [prod, forn, cot, eq] = await Promise.all([
+      sb.from('produtos').select('id, nome').eq('ativo', true).order('nome'),
+      temFornecedores()
+        ? sb.from('fornecedores').select('id, nome, cidade, contato').eq('ativo', true).order('nome')
+        : Promise.resolve({ data: [] }),
+      temFornecedores()
+        ? sb.from('cotacoes').select('fornecedor_id, produto_id, valor').eq('data_referencia', hoje)
+        : Promise.resolve({ data: [] }),
+      ehAdmin()
+        ? sb.from('profiles').select('id, nome, papel, ativo').order('nome')
+        : Promise.resolve({ data: [] }),
+    ]);
+    produtos = prod.data || [];
+    fornecedores = forn.data || [];
+    cotacoesHoje = cot.data || [];
+    equipe = eq.data || [];
+    renderTudo();
   }
 
-  async function carregarFornecedores() {
-    const { data } = await sb.from('fornecedores')
-      .select('id, nome, cidade, contato').eq('ativo', true).order('nome');
-    fornecedoresCache = data || [];
-
-    const { data: cot } = await sb.from('cotacoes')
-      .select('fornecedor_id, produto_id, valor').eq('data_referencia', hoje);
-    window._cotHoje = {};
-    (cot || []).forEach(c => { window._cotHoje[c.fornecedor_id + '|' + c.produto_id] = c.valor; });
-
+  function renderTudo() {
+    const opcoes = produtos.map(p => `<option value="${p.id}">${escapar(p.nome)}</option>`).join('')
+      || '<option value="">Cadastre um produto primeiro</option>';
+    $('f-produto').innerHTML = opcoes;
+    $('c-produto').innerHTML = opcoes;
     renderCotacoes();
+    renderEquipe();
+    renderInicio();
   }
 
+  function valorHoje(fornecedorId, produtoId) {
+    const c = cotacoesHoje.find(x => x.fornecedor_id === fornecedorId && x.produto_id === produtoId);
+    return c ? c.valor : '';
+  }
+
+  // ---------- Fornecedores: tabela de cotações ----------
   function renderCotacoes() {
-    if (!temAcessoFornecedores()) return;
+    if (!temFornecedores()) return;
     const tabela = $('tabela-cotacoes');
-    if (!produtos.length || !fornecedoresCache.length) {
+    if (!produtos.length || !fornecedores.length) {
       tabela.innerHTML = '<tr><td class="vazio">Cadastre produtos e fornecedores para lançar cotações.</td></tr>';
       return;
     }
     const cabecalho = '<tr><th>Fornecedor</th><th>Cidade</th>' +
       produtos.map(p => `<th>${escapar(p.nome)}</th>`).join('') + '</tr>';
 
-    const linhas = fornecedoresCache.map(f => {
-      const celulas = produtos.map(p => {
-        const v = window._cotHoje?.[f.id + '|' + p.id] ?? '';
-        return `<td><input type="number" step="0.01" min="0" value="${v}"
-                  data-f="${f.id}" data-p="${p.id}" placeholder="—"></td>`;
-      }).join('');
+    const linhas = fornecedores.map(f => {
+      const celulas = produtos.map(p => `
+        <td><input type="number" step="0.01" min="0" value="${valorHoje(f.id, p.id)}"
+             data-f="${f.id}" data-p="${p.id}" placeholder="—"></td>`).join('');
       return `<tr><td>${escapar(f.nome)}</td><td class="etiqueta">${escapar(f.cidade)}</td>${celulas}</tr>`;
     }).join('');
 
     tabela.innerHTML = cabecalho + linhas;
   }
 
-  // Salva a cotação ao sair do campo
-  $('tabela-cotacoes').addEventListener('change', async (e) => {
-    const campo = e.target;
-    if (campo.tagName !== 'INPUT' || campo.value === '') return;
+  async function salvarCotacao(fornecedorId, produtoId, valor) {
     const { error } = await sb.from('cotacoes').upsert({
-      fornecedor_id: campo.dataset.f,
-      produto_id: campo.dataset.p,
-      valor: Number(campo.value),
+      fornecedor_id: fornecedorId,
+      produto_id: produtoId,
+      valor: Number(valor),
       data_referencia: hoje,
       atualizado_por: usuario.id,
       atualizado_em: new Date().toISOString(),
     }, { onConflict: 'fornecedor_id,produto_id,data_referencia' });
+    if (error) return error;
 
-    if (error) {
-      msg($('cotacao-msg'), 'Não foi possível salvar: ' + error.message, 'erro');
+    const existente = cotacoesHoje.find(x => x.fornecedor_id === fornecedorId && x.produto_id === produtoId);
+    if (existente) existente.valor = Number(valor);
+    else cotacoesHoje.push({ fornecedor_id: fornecedorId, produto_id: produtoId, valor: Number(valor) });
+    renderInicio();
+    return null;
+  }
+
+  $('tabela-cotacoes').addEventListener('change', async (e) => {
+    const campo = e.target;
+    if (campo.tagName !== 'INPUT' || campo.value === '') return;
+    const erro = await salvarCotacao(campo.dataset.f, campo.dataset.p, campo.value);
+    if (erro) {
+      msg($('cotacao-msg'), 'Não foi possível salvar: ' + erro.message, 'erro');
       campo.classList.remove('salvo');
     } else {
       msg($('cotacao-msg'), 'Cotação salva.', 'ok');
       campo.classList.add('salvo');
     }
   });
+
+  // ---------- Início / overview ----------
+  function renderInicio() {
+    const el = $('inicio-conteudo');
+
+    if (!ehAdmin() && !temFornecedores()) {
+      // Comercial: entrada rápida para a calculadora
+      el.innerHTML = `
+        <div class="cartao" style="max-width:520px;">
+          <h3>Atender um cliente</h3>
+          <p class="suave">Digite o CEP do cliente na Calculadora por CEP para ver o fornecedor mais próximo e o preço de hoje.</p>
+          <button type="button" onclick="mostrarPagina('calculadora')">Abrir calculadora</button>
+        </div>`;
+      return;
+    }
+
+    const totalPossivel = fornecedores.length * produtos.length;
+    const lancados = cotacoesHoje.filter(c =>
+      fornecedores.some(f => f.id === c.fornecedor_id) &&
+      produtos.some(p => p.id === c.produto_id)).length;
+
+    // Menor preço de hoje por produto
+    const menores = produtos.map(p => {
+      const doProduto = cotacoesHoje
+        .filter(c => c.produto_id === p.id)
+        .map(c => ({ ...c, f: fornecedores.find(f => f.id === c.fornecedor_id) }))
+        .filter(c => c.f);
+      if (!doProduto.length) return { produto: p.nome, texto: '<span class="etiqueta">sem preço hoje</span>' };
+      const menor = doProduto.reduce((a, b) => (Number(b.valor) < Number(a.valor) ? b : a));
+      return { produto: p.nome, texto: `${moeda(menor.valor)} · ${escapar(menor.f.nome)} (${escapar(menor.f.cidade)})` };
+    });
+
+    // Fornecedores com produto sem preço hoje
+    const pendencias = fornecedores.map(f => {
+      const faltando = produtos.filter(p => !cotacoesHoje.some(c => c.fornecedor_id === f.id && c.produto_id === p.id));
+      return { nome: f.nome, faltando: faltando.map(p => p.nome) };
+    }).filter(x => x.faltando.length);
+
+    const stat = (num, rot, extra = '') =>
+      `<div class="stat ${extra}"><div class="num">${num}</div><div class="rot">${rot}</div></div>`;
+
+    el.innerHTML = `
+      <div class="stats">
+        ${stat(fornecedores.length, 'Fornecedores ativos')}
+        ${stat(produtos.length, 'Produtos cadastrados')}
+        ${stat(`${lancados} de ${totalPossivel}`, 'Preços lançados hoje')}
+        ${ehAdmin() ? stat(equipe.filter(p => p.ativo).length, 'Pessoas na equipe') : ''}
+        ${stat('—', 'Leads (em breve)', 'breve')}
+        ${stat('—', 'Fretes (em breve)', 'breve')}
+      </div>
+
+      <div class="grade duas">
+        <div class="cartao">
+          <h2>Menor preço de hoje por produto</h2>
+          ${produtos.length ? `<table>
+            ${menores.map(m => `<tr><th style="width:38%">${escapar(m.produto)}</th><td>${m.texto}</td></tr>`).join('')}
+          </table>` : '<div class="vazio">Nenhum produto cadastrado.</div>'}
+        </div>
+
+        <div class="cartao">
+          <h2>Pendências de hoje</h2>
+          ${pendencias.length ? `<table>
+            ${pendencias.map(p => `<tr><th style="width:38%">${escapar(p.nome)}</th><td class="alerta">sem preço: ${escapar(p.faltando.join(', '))}</td></tr>`).join('')}
+          </table>` : '<div class="vazio">Todos os fornecedores têm preço lançado hoje.</div>'}
+        </div>
+      </div>`;
+  }
 
   // ---------- Cadastros (admin) ----------
   $('form-fornecedor').addEventListener('submit', async (e) => {
@@ -402,17 +556,25 @@
     try {
       const cidade = $('f-cidade').value.trim();
       const { lat, lng } = await localizarCidade(cidade);
-      const { error } = await sb.from('fornecedores').insert({
+
+      const { data: novo, error } = await sb.from('fornecedores').insert({
         nome: $('f-nome').value.trim(),
         cidade,
         latitude: lat,
         longitude: lng,
         contato: $('f-contato').value.trim() || null,
-      });
+      }).select('id').single();
       if (error) throw new Error(error.message);
+
+      const valor = $('f-valor').value;
+      if (valor !== '' && $('f-produto').value) {
+        const erroCot = await salvarCotacao(novo.id, $('f-produto').value, valor);
+        if (erroCot) throw new Error('Fornecedor salvo, mas o preço não: ' + erroCot.message);
+      }
+
       msg($('f-msg'), 'Fornecedor cadastrado.', 'ok');
       $('form-fornecedor').reset();
-      carregarFornecedores();
+      carregarDados();
     } catch (err) {
       msg($('f-msg'), err.message, 'erro');
     } finally {
@@ -426,7 +588,39 @@
     if (error) return msg($('p-msg'), error.message, 'erro');
     msg($('p-msg'), 'Produto cadastrado.', 'ok');
     $('form-produto').reset();
-    carregarProdutos();
+    carregarDados();
+  });
+
+  // ---------- Equipe ----------
+  function renderEquipe() {
+    if (!ehAdmin()) return;
+    const papelNome = { admin: 'Admin', comercial: 'Comercial', operacional: 'Operacional' };
+    $('tabela-equipe').innerHTML = equipe.length
+      ? '<tr><th>Nome</th><th>Papel</th><th>Situação</th></tr>' +
+        equipe.map(p => `<tr><td>${escapar(p.nome)}</td><td>${papelNome[p.papel] || p.papel}</td>
+          <td class="${p.ativo ? '' : 'alerta'}">${p.ativo ? 'Ativo' : 'Inativo'}</td></tr>`).join('')
+      : '<tr><td class="vazio">Nenhum login cadastrado.</td></tr>';
+  }
+
+  $('form-novo-usuario').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = $('btn-criar'); btn.disabled = true; msg($('novo-msg'), 'Criando login...');
+    const { data, error } = await sb.functions.invoke('criar-usuario', {
+      body: {
+        nome: $('novo-nome').value.trim(),
+        email: $('novo-email').value.trim(),
+        senha: $('novo-senha').value,
+        papel: $('novo-papel').value,
+      },
+    });
+    btn.disabled = false;
+    if (error || (data && data.erro)) {
+      return msg($('novo-msg'), (data && data.erro) || 'Não foi possível criar o login.', 'erro');
+    }
+    msg($('novo-msg'), 'Login criado para ' + data.email + '.', 'ok');
+    $('form-novo-usuario').reset();
+    $('novo-papel').value = 'comercial';
+    carregarDados();
   });
 
   // ---------- Calculadora por CEP ----------
@@ -450,13 +644,12 @@
       }
 
       const r = data[0];
-      const valor = Number(r.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
       $('c-resultado').innerHTML = `
         <div class="etiqueta">Fornecedor mais próximo</div>
         <div><strong>${escapar(r.fornecedor)}</strong> · ${escapar(r.cidade)}</div>
         <div class="etiqueta">Distância aproximada: ${Number(r.distancia_km).toLocaleString('pt-BR')} km</div>
         <div class="etiqueta">Cotação de hoje</div>
-        <div class="destaque-valor">${valor}</div>`;
+        <div class="destaque-valor">${moeda(r.valor)}</div>`;
       $('c-resultado').classList.remove('oculto');
       msg($('c-msg'), '');
     } catch (err) {
@@ -464,27 +657,6 @@
     } finally {
       btn.disabled = false;
     }
-  });
-
-  // ---------- Criar login (Edge Function) ----------
-  $('form-novo-usuario').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const btn = $('btn-criar'); btn.disabled = true; msg($('novo-msg'), 'Criando login...');
-    const { data, error } = await sb.functions.invoke('criar-usuario', {
-      body: {
-        nome: $('novo-nome').value.trim(),
-        email: $('novo-email').value.trim(),
-        senha: $('novo-senha').value,
-        papel: $('novo-papel').value,
-      },
-    });
-    btn.disabled = false;
-    if (error || (data && data.erro)) {
-      return msg($('novo-msg'), (data && data.erro) || 'Não foi possível criar o login.', 'erro');
-    }
-    msg($('novo-msg'), 'Login criado para ' + data.email + '.', 'ok');
-    $('form-novo-usuario').reset();
-    $('novo-papel').value = 'comercial';
   });
 
   iniciar();

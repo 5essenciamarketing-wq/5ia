@@ -320,7 +320,8 @@
     const linhas = fornecedoresCache.map(f => {
       const celulas = produtos.map(p => {
         const v = window._cotHoje?.[f.id + '|' + p.id] ?? '';
-        return `<td><input type="number" step="0.01" min="0" value="${v}"
+        const bloqueado = usuario.papel === 'comercial' ? 'disabled' : '';
+        return `<td><input type="number" step="0.01" min="0" value="${v}" ${bloqueado}
                   data-f="${f.id}" data-p="${p.id}" placeholder="—"></td>`;
       }).join('');
       return `<tr><td>${escapar(f.nome)}</td><td class="etiqueta">${escapar(f.regioes?.nome)}</td>${celulas}</tr>`;

@@ -376,26 +376,10 @@
       <div class="principal-topo">
         <div>
           <h1>Fretes</h1>
-          <div class="sub">Freteiros e entregas designadas</div>
+          <div class="sub">Designação de entregas aos freteiros</div>
         </div>
       </div>
-      <div class="grade duas">
-        <div class="cartao">
-          <h2>Novo freteiro</h2>
-          <form id="form-freteiro">
-            <label for="fr-nome">Nome</label>
-            <input id="fr-nome" required>
-            <label for="fr-telefone">Telefone</label>
-            <input id="fr-telefone" placeholder="(47) 99999-9999">
-            <label for="fr-cidade">Cidade base</label>
-            <input id="fr-cidade" placeholder="Ex.: Santos, SP" required>
-            <button type="submit" id="btn-freteiro" class="bloco">Cadastrar freteiro</button>
-            <div id="fr-msg" class="msg"></div>
-          </form>
-          <h2 style="margin-top:26px;">Freteiros cadastrados</h2>
-          <div class="tabela-wrap"><table id="tabela-freteiros"></table></div>
-        </div>
-
+      <div class="grade">
         <div class="cartao">
           <h2>Designar entrega</h2>
           <p class="suave">Use o CEP de destino para sugerir o fornecedor mais próximo.</p>
@@ -433,7 +417,7 @@
       <div class="principal-topo">
         <div>
           <h1>Equipe</h1>
-          <div class="sub">Logins e permissões de acesso</div>
+          <div class="sub">Logins, permissões e freteiros</div>
         </div>
       </div>
       <div class="grade duas">
@@ -441,6 +425,23 @@
           <h2>Pessoas com acesso</h2>
           <div class="tabela-wrap"><table id="tabela-equipe"></table></div>
         </div>
+        <div class="cartao">
+          <h2>Freteiros</h2>
+          <p class="suave">Cadastre a cidade-base de cada freteiro. Ela é usada para sugerir o mais perto da saída.</p>
+          <form id="form-freteiro">
+            <label for="fr-nome">Nome</label>
+            <input id="fr-nome" required>
+            <label for="fr-telefone">Telefone</label>
+            <input id="fr-telefone" placeholder="(47) 99999-9999">
+            <label for="fr-cidade">Cidade base</label>
+            <input id="fr-cidade" placeholder="Ex.: Santos, SP" required>
+            <button type="submit" id="btn-freteiro" class="bloco">Cadastrar freteiro</button>
+            <div id="fr-msg" class="msg"></div>
+          </form>
+          <h2 style="margin-top:26px;">Freteiros cadastrados</h2>
+          <div class="tabela-wrap"><table id="tabela-freteiros"></table></div>
+        </div>
+
         <div class="cartao">
           <h2>Cadastrar login</h2>
           <p class="suave">A senha provisória pode ser trocada pelo próprio usuário depois.</p>
@@ -565,7 +566,10 @@
   async function localizarCep(cep) {
     const numeros = cep.replace(/\D/g, '');
     if (numeros.length !== 8) throw new Error('CEP precisa ter 8 números.');
-    const local = await geocodificar({ postalcode: numeros });
+    const resp = await fetch(`https://viacep.com.br/ws/${numeros}/json/`);
+    const dados = await resp.json();
+    if (dados.erro) throw new Error('Não encontrei esse CEP.');
+    const local = await localizarCidade(`${dados.localidade}, ${dados.uf}`);
     if (!local) throw new Error('Não encontrei esse CEP no mapa.');
     return local;
   }
@@ -628,7 +632,7 @@
       b.classList.toggle('ativo', b.dataset.pag === nome));
     document.querySelectorAll('main > section').forEach(s =>
       s.classList.toggle('oculto', s.id !== 'pag-' + nome));
-    if (nome === 'fretes') carregarFretes();
+    if (nome === 'fretes' || nome === 'equipe') carregarFretes();
   }
   document.querySelectorAll('.menu .item').forEach(b =>
     b.addEventListener('click', () => mostrarPagina(b.dataset.pag)));

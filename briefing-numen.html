@@ -378,7 +378,7 @@ footer{color:var(--mut);font-size:12px;text-align:center;margin-top:28px}
     <h3>Resumo do briefing</h3>
     <div style="margin-top:10px"><pre class="sum" id="sumbox"></pre></div>
     <div class="acoes">
-      <button class="btn" id="enviar" type="button" onclick="enviar()">Enviar briefing</button>
+      <button class="btn" id="btnEnviar" type="button" onclick="enviar()">Enviar briefing</button>
       <button class="btn ghost" type="button" onclick="copyResumo()">Copiar resumo</button>
     </div>
     <div class="toast" id="toast"></div>
@@ -649,7 +649,7 @@ function mostrarConcluido() {
 }
 
 async function enviar() {
-  const btn = $('#enviar');
+  const btn = $('#btnEnviar');
   if (ENVIO_URL.includes('SEU_ID')) {
     $('#err').textContent = 'Configuração pendente: falta a URL do Apps Script no arquivo.';
     return;

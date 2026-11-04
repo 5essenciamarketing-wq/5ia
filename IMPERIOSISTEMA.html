@@ -387,9 +387,9 @@
             <input id="fr-nome" required>
             <label for="fr-telefone">Telefone</label>
             <input id="fr-telefone" placeholder="(47) 99999-9999">
-            <label for="fr-regiao">Região que atende</label>
-            <input id="fr-regiao" placeholder="Ex.: Baixada Santista">
-            <button type="submit" class="bloco">Cadastrar freteiro</button>
+            <label for="fr-cidade">Cidade base</label>
+            <input id="fr-cidade" placeholder="Ex.: Santos, SP" required>
+            <button type="submit" id="btn-freteiro" class="bloco">Cadastrar freteiro</button>
             <div id="fr-msg" class="msg"></div>
           </form>
           <h2 style="margin-top:26px;">Freteiros cadastrados</h2>
@@ -652,7 +652,7 @@
     const [prod, forn, cot, eq] = await Promise.all([
       sb.from('produtos').select('id, nome').eq('ativo', true).order('nome'),
       temFornecedores()
-        ? sb.from('fornecedores').select('id, nome, cidade, contato').eq('ativo', true).order('nome')
+        ? sb.from('fornecedores').select('id, nome, cidade, contato, latitude, longitude').eq('ativo', true).order('nome')
         : Promise.resolve({ data: [] }),
       temFornecedores()
         ? sb.from('cotacoes').select('fornecedor_id, produto_id, valor').eq('data_referencia', hoje)
@@ -885,7 +885,7 @@
 
   async function carregarFretes() {
     const [fr, en] = await Promise.all([
-      sb.from('freteiros').select('id, nome, telefone, regiao_atendimento').eq('ativo', true).order('nome'),
+      sb.from('freteiros').select('id, nome, telefone, cidade, latitude, longitude').eq('ativo', true).order('nome'),
       sb.from('entregas').select('id, data_prevista, status, destino_cep, produto_id, fornecedor_id, freteiro_id')
         .order('criado_em', { ascending: false }).limit(100),
     ]);
@@ -899,13 +899,13 @@
       || '<option value="">Cadastre um produto</option>';
     $('en-fornecedor').innerHTML = fornecedores.map(f => `<option value="${f.id}">${escapar(f.nome)} · ${escapar(f.cidade)}</option>`).join('')
       || '<option value="">Cadastre um fornecedor</option>';
-    $('en-freteiro').innerHTML = freteiros.map(f => `<option value="${f.id}">${escapar(f.nome)}</option>`).join('')
+    $('en-freteiro').innerHTML = freteiros.map(f => `<option value="${f.id}">${escapar(f.nome)} · ${escapar(f.cidade || 'sem cidade')}</option>`).join('')
       || '<option value="">Cadastre um freteiro</option>';
 
     $('tabela-freteiros').innerHTML = freteiros.length
-      ? '<tr><th>Nome</th><th>Telefone</th><th>Região</th></tr>' +
+      ? '<tr><th>Nome</th><th>Telefone</th><th>Cidade base</th></tr>' +
         freteiros.map(f => `<tr><td class="celula-nome">${escapar(f.nome)}</td><td>${escapar(f.telefone || '—')}</td>
-          <td class="etiqueta">${escapar(f.regiao_atendimento || '—')}</td></tr>`).join('')
+          <td class="etiqueta">${escapar(f.cidade || '—')}</td></tr>`).join('')
       : '<tr><td class="vazio">Nenhum freteiro cadastrado.</td></tr>';
 
     const nomeProduto = id => produtos.find(p => p.id === id)?.nome || '—';
@@ -929,15 +929,55 @@
 
   $('form-freteiro').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const { error } = await sb.from('freteiros').insert({
-      nome: $('fr-nome').value.trim(),
-      telefone: $('fr-telefone').value.trim() || null,
-      regiao_atendimento: $('fr-regiao').value.trim() || null,
-    });
-    if (error) return msg($('fr-msg'), error.message, 'erro');
-    msg($('fr-msg'), 'Freteiro cadastrado.', 'ok');
-    $('form-freteiro').reset();
-    carregarFretes();
+    const btn = $('btn-freteiro'); btn.disabled = true;
+    msg($('fr-msg'), 'Localizando cidade...');
+    try {
+      const cidade = $('fr-cidade').value.trim();
+      const { lat, lng } = await localizarCidade(cidade);
+      const { error } = await sb.from('freteiros').insert({
+        nome: $('fr-nome').value.trim(),
+        telefone: $('fr-telefone').value.trim() || null,
+        cidade,
+        latitude: lat,
+        longitude: lng,
+      });
+      if (error) throw new Error(error.message);
+      msg($('fr-msg'), 'Freteiro cadastrado.', 'ok');
+      $('form-freteiro').reset();
+      carregarFretes();
+    } catch (err) {
+      msg($('fr-msg'), err.message, 'erro');
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  // Distância em km entre dois pontos (linha reta)
+  function distanciaKm(lat1, lng1, lat2, lng2) {
+    const r = Math.PI / 180;
+    const a = Math.sin((lat2 - lat1) * r / 2) ** 2 +
+      Math.cos(lat1 * r) * Math.cos(lat2 * r) * Math.sin((lng2 - lng1) * r / 2) ** 2;
+    return 2 * 6371 * Math.asin(Math.sqrt(a));
+  }
+
+  // Sugere o freteiro mais perto da cidade de saída (o fornecedor escolhido)
+  function sugerirFreteiro() {
+    const f = fornecedores.find(x => x.id === $('en-fornecedor').value);
+    if (!f || f.latitude == null) return null;
+    const candidatos = freteiros
+      .filter(x => x.latitude != null)
+      .map(x => ({ ...x, km: distanciaKm(f.latitude, f.longitude, x.latitude, x.longitude) }))
+      .sort((a, b) => a.km - b.km);
+    if (!candidatos.length) return null;
+    $('en-freteiro').value = candidatos[0].id;
+    return candidatos[0];
+  }
+
+  // Ao trocar o fornecedor, sugere o freteiro da mesma região de saída
+  $('en-fornecedor').addEventListener('change', () => {
+    const fr = sugerirFreteiro();
+    if (fr) msg($('en-msg'), `Freteiro sugerido: ${fr.nome} (${fr.cidade}), a ${fr.km.toFixed(0)} km da saída.`, 'ok');
+    else msg($('en-msg'), 'Nenhum freteiro com cidade cadastrada.', 'erro');
   });
 
   // Sugere o fornecedor mais próximo do CEP de destino
@@ -954,7 +994,9 @@
       if (error) throw new Error(error.message);
       if (!data || !data.length) throw new Error('Nenhum fornecedor com cotação de hoje para esse produto.');
       $('en-fornecedor').value = data[0].fornecedor_id;
-      msg($('en-msg'), `Sugestão: ${data[0].fornecedor} (${data[0].cidade}), a ${Number(data[0].distancia_km).toLocaleString('pt-BR')} km.`, 'ok');
+      const fr = sugerirFreteiro();
+      msg($('en-msg'), `Fornecedor: ${data[0].fornecedor} (${data[0].cidade}), a ${Number(data[0].distancia_km).toLocaleString('pt-BR')} km do cliente.` +
+        (fr ? ` Freteiro sugerido: ${fr.nome} (${fr.km.toFixed(0)} km da saída).` : ' Nenhum freteiro com cidade cadastrada.'), 'ok');
     } catch (err) {
       msg($('en-msg'), err.message, 'erro');
     } finally {

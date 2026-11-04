@@ -320,7 +320,10 @@
     return { lat: Number(lista[0].lat), lng: Number(lista[0].lon) };
   }
   async function localizarCidade(cidade) {
-    const local = await geocodificar({ q: cidade });
+    const url = 'https://nominatim.openstreetmap.org/search?' +
+      new URLSearchParams({ q: cidade + ', Brasil', countrycodes: 'br', format: 'json', limit: '1' });
+    const lista = await (await fetch(url, { headers: { 'Accept-Language': 'pt-BR' } })).json();
+    const local = lista.length ? { lat: Number(lista[0].lat), lng: Number(lista[0].lon) } : null;
     if (!local) throw new Error('Não encontrei essa cidade. Escreva com o estado, ex.: Santos, SP.');
     return local;
   }

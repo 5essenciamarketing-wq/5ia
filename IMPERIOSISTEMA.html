@@ -477,7 +477,7 @@
     <!-- Comercial: placeholders -->
     <section id="pag-leads" class="oculto">
       <div class="principal-topo"><div><h1>Leads</h1><div class="sub">Entrada e gestão de leads</div></div></div>
-      <div class="placeholder"><div class="icone-grande">◎</div><h2>Em construção</h2>Próxima etapa.</div>
+      <div id="leads-conteudo"></div>
     </section>
     <section id="pag-followup" class="oculto">
       <div class="principal-topo"><div><h1>Follow-up</h1><div class="sub">Acompanhamento dos leads</div></div></div>
@@ -642,6 +642,7 @@
     document.querySelectorAll('main > section').forEach(s =>
       s.classList.toggle('oculto', s.id !== 'pag-' + nome));
     if (nome === 'fretes' || nome === 'equipe') carregarFretes();
+    if (nome === 'leads') carregarLeads();
   }
   document.querySelectorAll('.menu .item').forEach(b =>
     b.addEventListener('click', () => mostrarPagina(b.dataset.pag)));
@@ -1256,6 +1257,113 @@
     msg($('vd-msg'), semComissao
       ? 'Venda registrada, mas este produto ainda não tem comissão definida (ficou em zero).'
       : 'Venda registrada.', semComissao ? 'erro' : 'ok');
+  });
+
+  // ---------- Leads ----------
+  let leads = [];
+  const statusLead = { novo: 'Novo', em_contato: 'Em contato', qualificado: 'Qualificado', convertido: 'Convertido', perdido: 'Perdido' };
+
+  async function carregarLeads() {
+    const { data, error } = await sb.from('leads')
+      .select('id, nome, telefone, email, campanha, formulario, status, consultor_id, recebido_em')
+      .order('recebido_em', { ascending: false }).limit(300);
+    if (error) return msg($('leads-conteudo'), error.message, 'erro');
+    leads = data || [];
+    renderLeads();
+  }
+
+  // Link que abre o WhatsApp com o número do lead
+  function linkWhatsApp(tel) {
+    const digitos = String(tel || '').replace(/\D/g, '');
+    if (!digitos) return '—';
+    const numero = digitos.startsWith('55') ? digitos : '55' + digitos;
+    return `<a href="https://wa.me/${numero}" target="_blank" rel="noopener" style="color:var(--ouro);text-decoration:none;">${escapar(tel)}</a>`;
+  }
+
+  function quandoRecebido(l) {
+    return new Date(l.recebido_em).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+  }
+
+  function renderLeads() {
+    const el = $('leads-conteudo');
+    if (!leads.length) {
+      el.innerHTML = `<div class="placeholder"><h2>Nenhum lead ainda</h2>Os leads da planilha aparecem aqui.</div>`;
+      return;
+    }
+
+    if (ehAdmin()) {
+      const consultores = equipe.filter(p => p.papel === 'comercial' && p.ativo);
+      const semConsultor = leads.filter(l => !l.consultor_id).length;
+      el.innerHTML = `
+        <div class="stats">
+          ${stat(leads.length, 'Leads recebidos')}
+          ${stat(semConsultor, 'Sem consultor')}
+        </div>
+        <div class="cartao">
+          <h2>Leads</h2>
+          <p class="suave">Escolha o consultor de cada lead. Você pode trocar a qualquer momento.</p>
+          <div class="tabela-wrap"><table>
+            <tr><th>Recebido</th><th>Nome</th><th>Telefone</th><th>Campanha</th><th>Consultor</th><th>Status</th></tr>
+            ${leads.map(l => `<tr>
+              <td class="etiqueta">${quandoRecebido(l)}</td>
+              <td class="celula-nome">${escapar(l.nome || '—')}</td>
+              <td>${linkWhatsApp(l.telefone)}</td>
+              <td class="etiqueta">${escapar(l.campanha || '—')}</td>
+              <td><select data-lead-consultor="${l.id}" style="width:auto;">
+                <option value="">Não atribuído</option>
+                ${consultores.map(c => `<option value="${c.id}" ${c.id === l.consultor_id ? 'selected' : ''}>${escapar(c.nome)}</option>`).join('')}
+              </select></td>
+              <td class="etiqueta">${statusLead[l.status] || l.status}</td>
+            </tr>`).join('')}
+          </table></div>
+          <div id="leads-msg" class="msg"></div>
+        </div>`;
+    } else {
+      // Consultor: a consulta já traz só os leads atribuídos a ele
+      el.innerHTML = `
+        <div class="stats">
+          ${stat(leads.length, 'Meus leads')}
+          ${stat(leads.filter(l => l.status === 'novo').length, 'Novos')}
+        </div>
+        <div class="cartao">
+          <h2>Meus leads</h2>
+          <p class="suave">Atualize o status conforme o atendimento.</p>
+          <div class="tabela-wrap"><table>
+            <tr><th>Recebido</th><th>Nome</th><th>Telefone</th><th>Campanha</th><th>Status</th></tr>
+            ${leads.map(l => `<tr>
+              <td class="etiqueta">${quandoRecebido(l)}</td>
+              <td class="celula-nome">${escapar(l.nome || '—')}</td>
+              <td>${linkWhatsApp(l.telefone)}</td>
+              <td class="etiqueta">${escapar(l.campanha || '—')}</td>
+              <td><select data-lead-status="${l.id}" style="width:auto;">
+                ${Object.entries(statusLead).map(([k, v]) => `<option value="${k}" ${k === l.status ? 'selected' : ''}>${v}</option>`).join('')}
+              </select></td>
+            </tr>`).join('')}
+          </table></div>
+          <div id="leads-msg" class="msg"></div>
+        </div>`;
+    }
+  }
+
+  // Admin escolhe o consultor; consultor atualiza o status
+  $('leads-conteudo').addEventListener('change', async (e) => {
+    const sel = e.target;
+    let erro = null;
+    if (sel.dataset.leadConsultor) {
+      ({ error: erro } = await sb.from('leads')
+        .update({ consultor_id: sel.value || null })
+        .eq('id', sel.dataset.leadConsultor));
+    } else if (sel.dataset.leadStatus) {
+      ({ error: erro } = await sb.from('leads')
+        .update({ status: sel.value })
+        .eq('id', sel.dataset.leadStatus));
+    } else {
+      return;
+    }
+    if (erro) return msg($('leads-msg'), 'Não foi possível salvar: ' + erro.message, 'erro');
+    msg($('leads-msg'), 'Alteração salva.', 'ok');
+    await carregarLeads();
+    msg($('leads-msg'), 'Alteração salva.', 'ok');
   });
 
   iniciar();

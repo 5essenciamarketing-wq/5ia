@@ -83,6 +83,14 @@ tr.linha:hover td{background:#f4faf9}
 .acoes-modal{margin-top:16px;display:flex;justify-content:flex-end;gap:8px}
 .meu{display:flex;gap:10px;align-items:center;margin-bottom:6px;color:#fff;font-weight:600}
 .row-av{display:flex;gap:10px;align-items:center}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:8px;padding:14px 16px}
+.kpi .v{font-size:24px;font-weight:700}
+.kpi .l{font-size:12px;color:var(--mut);margin-top:2px}
+.kpi.alerta .v{color:var(--red)}
+.bar{height:6px;background:var(--gray-soft);border-radius:999px;overflow:hidden;margin-top:4px;min-width:90px}
+.bar i{display:block;height:100%;background:var(--acc)}
+tr.total td{font-weight:700;background:#fbfcfc}
 .det{display:grid;grid-template-columns:150px 1fr;gap:8px 12px;margin:14px 0 6px;font-size:13px;padding:12px 14px;background:#fbfcfc;border:1px solid var(--line);border-radius:8px}
 .det dt{color:var(--mut);font-weight:600}
 .det dd{margin:0;color:var(--txt)}
@@ -274,9 +282,63 @@ function linkWa(tel){
   return '<a class="wa" href="https://wa.me/' + esc(num) + '" target="_blank" onclick="event.stopPropagation()">WhatsApp</a>';
 }
 
+let desemp = null;
+async function carregarDesemp(){
+  $('conteudo').innerHTML = '<div class="vazio">Carregando desempenho…</div>';
+  try{
+    const d = await chamar('carregarDesempenho', sess.token, fMes);
+    if (secao !== 'desempenho') return;
+    desemp = d;
+    $('conteudo').innerHTML = tabelaDesempenho(d);
+  }catch(err){
+    if (/Sessão/.test(err.message)){ sair(); $('lErro').textContent = err.message; return; }
+    if (secao === 'desempenho') $('conteudo').innerHTML = '<div class="alerta">' + esc(err.message) + '</div>';
+  }
+}
+
+function tabelaDesempenho(d){
+  const t = d.total;
+  const barra = v => '<div class="bar"><i style="width:' + Math.min(100, v) + '%"></i></div>';
+  const kpi = (v, l, cls) => '<div class="kpi ' + (cls || '') + '"><div class="v">' + v + '</div><div class="l">' + l + '</div></div>';
+  const kpis = '<div class="kpis">' +
+    kpi(t.recebidos, 'Leads no período') +
+    kpi(t.taxaContato + '%', 'Taxa de contato') +
+    kpi(t.visitas, 'Visitas agendadas') +
+    kpi(t.vendas, 'Vendas fechadas') +
+    kpi(t.taxaVenda + '%', 'Taxa de venda') +
+    kpi(t.atrasados, 'Sem atualização há 2+ dias', t.atrasados ? 'alerta' : '') +
+    '</div>';
+  const aviso = d.semCorretor
+    ? '<div class="alerta" style="background:#fff8e6;color:#7a5a00;border-color:#f3e0a6">' + d.semCorretor + ' lead(s) ainda sem corretor neste período.</div>' : '';
+  if (!d.linhas.length) return kpis + aviso + '<div class="vazio">Nenhum corretor ativo.</div>';
+  const linhas = d.linhas.map(r => '<tr>' +
+    '<td><div class="row-av">' + avatar(r.usuario, r.nome, 30) + '<div class="nome">' + esc(r.nome) + '</div></div></td>' +
+    '<td>' + r.recebidos + '</td>' +
+    '<td>' + r.contatados + ' <span class="sub">(' + r.taxaContato + '%)</span>' + barra(r.taxaContato) + '</td>' +
+    '<td>' + r.emAndamento + '</td>' +
+    '<td>' + r.visitas + '</td>' +
+    '<td>' + r.propostas + '</td>' +
+    '<td><b>' + r.vendas + '</b></td>' +
+    '<td>' + r.perdidos + '</td>' +
+    '<td>' + r.semResposta + '</td>' +
+    '<td>' + (r.atrasados ? '<span class="pill atras">' + r.atrasados + '</span>' : '0') + '</td>' +
+    '<td>' + r.taxaVenda + '%' + barra(r.taxaVenda) + '</td>' +
+    '</tr>').join('');
+  const totalLinha = '<tr class="total"><td>Total</td><td>' + t.recebidos + '</td>' +
+    '<td>' + t.contatados + ' <span class="sub">(' + t.taxaContato + '%)</span></td>' +
+    '<td>' + t.emAndamento + '</td><td>' + t.visitas + '</td><td>' + t.propostas + '</td>' +
+    '<td>' + t.vendas + '</td><td>' + t.perdidos + '</td><td>' + t.semResposta + '</td>' +
+    '<td>' + t.atrasados + '</td><td>' + t.taxaVenda + '%</td></tr>';
+  return kpis + aviso +
+    '<table><thead><tr><th>Corretor</th><th>Recebidos</th><th>Contatados</th><th>Em andamento</th>' +
+    '<th>Visitas</th><th>Propostas</th><th>Vendas</th><th>Perdidos</th><th>Sem resposta</th>' +
+    '<th>Sem atualização</th><th>Conversão</th></tr></thead><tbody>' + linhas + totalLinha + '</tbody></table>' +
+    '<div class="sub" style="margin-top:10px">Contatados = saiu de "Novo". Conversão = vendas sobre leads recebidos. Período: pela data de entrada do lead.</div>';
+}
+
 function render(){
   renderNav(); renderAvisos();
-  const titulos = {entrada:'Entrada', todos:'Todos os leads', meus:'Meus leads', atrasados:'Sem atualização', corretores:'Corretores'};
+  const titulos = {entrada:'Entrada', todos:'Todos os leads', meus:'Meus leads', atrasados:'Sem atualização', corretores:'Corretores', desempenho:'Desempenho dos corretores'};
   $('titulo').textContent = titulos[secao];
   $('acoes').innerHTML =
     secao === 'entrada' ? '<button class="btn" id="btnNovoLead">+ Novo lead</button>' :
@@ -284,6 +346,7 @@ function render(){
 
   if (secao === 'entrada'){ $('barra').innerHTML = barraMes(); $('conteudo').innerHTML = tabelaEntrada(); }
   else if (secao === 'corretores'){ $('barra').innerHTML = ''; $('conteudo').innerHTML = tabelaCorretores(); }
+  else if (secao === 'desempenho'){ $('barra').innerHTML = barraMes(); carregarDesemp(); }
   else { $('barra').innerHTML = barraFiltros(); $('conteudo').innerHTML = tabelaLeads(filtrados()); }
   ligar();
 }
@@ -293,7 +356,7 @@ function renderNav(){
   const entrada = L.filter(l => l.status === 'Entrada' && !l.corretorUsuario).length;
   const atrasados = L.filter(ehAtrasado).length;
   const itens = sess.papel === 'matriz'
-    ? [['entrada','Entrada', entrada, false], ['todos','Todos os leads', '', false], ['atrasados','Sem atualização', atrasados, atrasados > 0], ['corretores','Corretores', '', false]]
+    ? [['entrada','Entrada', entrada, false], ['todos','Todos os leads', '', false], ['atrasados','Sem atualização', atrasados, atrasados > 0], ['desempenho','Desempenho', '', false], ['corretores','Corretores', '', false]]
     : [['meus','Meus leads', '', false], ['atrasados','Sem atualização', atrasados, atrasados > 0]];
   $('nav').innerHTML = itens.map(([k, n, c, alerta]) =>
     '<div class="nav-item' + (secao === k ? ' on' : '') + '" data-s="' + k + '"><span>' + n + '</span>' +

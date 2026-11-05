@@ -43,6 +43,8 @@
     font-family:'Fraunces',serif; font-weight:700; box-shadow:0 3px 8px rgba(0,0,0,.2);
   }
   .logo-badge img{width:100%; height:100%; object-fit:cover}
+  .logo-badge{cursor:pointer}
+  #meusBtn{white-space:nowrap}
   .head-text{flex:1; min-width:0; display:flex; flex-direction:column; line-height:1.25}
   .head-text .name{font-family:'Fraunces',serif; font-weight:700; font-size:1.1rem}
   .head-text .brand{font-size:.7rem; letter-spacing:.4px; text-transform:uppercase; opacity:.92}
@@ -246,7 +248,7 @@
       <span class="name">Kély</span>
       <span class="brand">Ateliê Bárbahra kély</span>
     </div>
-    <button class="admin-btn" id="adminBtn" type="button">Admin</button>
+    <button class="admin-btn" id="meusBtn" type="button">Meus agendamentos</button>
   </header>
 
   <main class="thread" id="thread"></main>
@@ -444,6 +446,7 @@ const thread = $("#thread");
 const composer = $("#composer");
 const freeInput = $("#freeInput");
 let base = null;   // {cfg, horarios, servicos}
+let basePronta = null; // promessa: a agenda carregou?
 const st = { nome:null, servico:null, mes:null, data:null, hora:null, whatsapp:null };
 
 async function carregarBase(){
@@ -555,8 +558,7 @@ async function iniciar(){
     "Atendimento individual, com 8 anos de experiência.",
     "Para começar seu atendimento, me fale seu nome."
   ]);
-  renderChoices([{label: "Já tenho horário marcado", value: "meus"}], () => meusAgendamentos());
-  pedirTexto(async t => { clearChoices(); st.nome = t; await boasVindas(); }, {nome: true});
+  pedirTexto(async t => { st.nome = t; await boasVindas(); }, {nome: true});
 }
 
 async function boasVindas(){
@@ -565,6 +567,7 @@ async function boasVindas(){
 }
 
 async function escolherServico(){
+  if (!(await basePronta)) return;
   await bot(`Qual procedimento você quer, <b>${primeiroNome(st.nome)}</b>?`);
   renderChoices(
     [
@@ -592,6 +595,7 @@ async function meusAgendamentos(){
 }
 
 async function mostrarMeusAgendamentos(whats){
+  await basePronta;
   let j;
   try {
     j = await postApi({action: "meus_agendamentos", whatsapp: whats});
@@ -854,7 +858,7 @@ async function reiniciar(){
 /* =========================================================================
    PAINEL ADMIN
    ========================================================================= */
-const adminBtn = $("#adminBtn");
+const adminBtn = $("#logoBadge");  // admin: toque na foto da Kély
 const admin = $("#admin");
 const adminBody = $("#adminBody");
 let adminTab = "agenda";
@@ -1184,6 +1188,7 @@ adminBtn.onclick = () => {
   if (senhaAdmin) abrirAdmin();
   else abrirModal("#loginOverlay");
 };
+$("#meusBtn").onclick = () => { clearChoices(); meusAgendamentos(); };
 $("#loginCancelar").onclick = () => fecharModal("#loginOverlay");
 $("#loginForm").onsubmit = async e => {
   e.preventDefault();
@@ -1226,13 +1231,11 @@ $$("[data-forma]").forEach(b => b.onclick = () => concluir(b.dataset.forma));
 async function boot(){
   if (FOTO_ATENDENTE) $("#logoBadge").innerHTML = `<img src="${FOTO_ATENDENTE}" alt="${esc(NEGOCIO.responsavel)}">`;
   else if (LOGO_URL) $("#logoBadge").innerHTML = `<img src="${LOGO_URL}" alt="${esc(NEGOCIO.marca)}">`;
-  try{
-    await carregarBase();
-  }catch(e){
+  basePronta = carregarBase().then(() => true).catch(e => {
     console.error("Falha ao carregar a base:", e);
     addMsg("Ih, não consegui abrir a agenda agora 😕 Tenta atualizar a página ou chama no WhatsApp.", "bot");
-    return;
-  }
+    return false;
+  });
   iniciar();
 }
 boot();

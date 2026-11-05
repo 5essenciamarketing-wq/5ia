@@ -64,6 +64,9 @@
   .msg.user{align-self:flex-end; background:var(--pink-deep); color:#fff; border-bottom-right-radius:4px}
   .msg .price{color:var(--brown); font-weight:700}
   .msg small{color:var(--ink-soft); display:inline-block; margin-top:4px}
+  .pix-box{background:#fff; border:1px solid var(--pink-soft); border-radius:12px; padding:10px; margin-top:8px}
+  .pix-codigo{font-size:.72rem; word-break:break-all; color:var(--ink-soft); max-height:76px; overflow:auto; margin-bottom:8px; font-family:monospace}
+  .pix-box small{display:block; margin-top:8px}
   .galeria{display:flex; gap:6px; overflow-x:auto; margin-top:6px; max-width:100%}
   .galeria img{width:118px; height:138px; object-fit:cover; border-radius:12px; flex-shrink:0}
   .typing{align-self:flex-start; display:flex; gap:4px; background:var(--pink-soft); padding:12px 16px; border-radius:16px}
@@ -757,7 +760,7 @@ async function stepResumo(){
     return;
   }
   await bot(`Então: <b>${esc(s.nome)}</b>, ${esc(dataLonga(st.data))} às <b>${st.hora}</b>, <b>${BRL(s.preco)}</b>.`);
-  await bot(`Pra garantir o horário, o sinal de ${base.cfg.sinal_percent}% (<b>${BRL(valorSinal())}</b>) é pago via PIX. A gente te envia a chave pelo WhatsApp.`);
+  await bot(`Pra garantir o horário, o sinal de ${base.cfg.sinal_percent}% (<b>${BRL(valorSinal())}</b>) é pago via PIX. Na próxima tela você recebe o código PIX para copiar.`);
   renderChoices(
     [{label: "Confirmar agendamento", value: "confirmar"}, {label: "Corrigir data e horário", value: "corrigir"}],
     async v => { if (v === "confirmar") await finalizar(); else await stepMes(); },
@@ -814,11 +817,73 @@ async function finalizarTroca(){
   }
 }
 
+function copiarPix(){
+  const txt = (st.reserva && st.reserva.pix) || "";
+  const feito = () => toast("Código PIX copiado ✨");
+  if (navigator.clipboard && txt){
+    navigator.clipboard.writeText(txt).then(feito, () => copiarNaMao(txt));
+  } else copiarNaMao(txt);
+}
+function copiarNaMao(txt){
+  const area = document.createElement("textarea");
+  area.value = txt; document.body.appendChild(area); area.select();
+  try { document.execCommand("copy"); toast("Código PIX copiado ✨"); }
+  catch(e){ toast("Selecione o código e copie"); }
+  area.remove();
+}
+
+async function mostrarPagamentoSinal(r){
+  if (!r || !r.pix){
+    await bot("Seu horário foi reservado, mas não consegui gerar o PIX agora 😕 Me chama no WhatsApp que a gente resolve na hora.");
+    return renderChoices([{label: "Chamar no WhatsApp", value: "wpp"}],
+      () => window.open(linkWhats(NEGOCIO.whatsapp, textoWpp()), "_blank"));
+  }
+  st.reserva = r;
+  await bot(`Pra garantir o seu horário, pague o sinal de <b>${BRL(r.sinal)}</b> por PIX. Copie o código abaixo e cole no app do seu banco:
+    <div class="pix-box">
+      <div class="pix-codigo">${esc(r.pix)}</div>
+      <button class="btn sm" type="button" onclick="copiarPix()">Copiar código PIX</button>
+      <small>Você tem ${r.expira_min} minutos para pagar. Depois disso, o horário é liberado.</small>
+    </div>`);
+  renderChoices([{label: "Já paguei o sinal", value: "pago"}], () => confirmarPagamento());
+}
+
+async function confirmarPagamento(){
+  const r = st.reserva;
+  try{
+    await postApi({action: "confirmar_sinal", id: r.id, whatsapp: st.whatsapp});
+  }catch(e){
+    console.warn("Erro ao confirmar sinal:", e);
+    const m = String(e.message || "");
+    if (m.includes("reserva_expirada")){
+      st.reserva = null;
+      await bot("Passou dos 30 minutos e esse horário foi liberado 😕 Escolhe outro pra você?");
+      renderChoices([{label: "Escolher outro horário", value: "x"}], () => stepHorario(), {voltar: stepDia});
+      return;
+    }
+    await bot("Não consegui confirmar o pagamento agora 😕 Me manda o comprovante no WhatsApp que a gente confirma na mão.");
+    renderChoices([{label: "Chamar no WhatsApp", value: "wpp"}],
+      () => window.open(linkWhats(NEGOCIO.whatsapp, `Oi! Paguei o sinal do agendamento ${r.id}`), "_blank"));
+    return;
+  }
+  st.reserva = null;
+  await bot(`Recebemos o seu sinal, <b>${primeiroNome(st.nome)}</b>! Seu horário está confirmado ✨`);
+  mostrarCartaoConfirmacao();
+  await bot("Agora é só mandar a confirmação no WhatsApp, com um toque. Assim a Kély já recebe os seus dados. Pra reagendar ou cancelar, é pelo mesmo WhatsApp (cancelamento sem custo com 24h de antecedência).");
+  renderChoices(
+    [{label: "Enviar confirmação no WhatsApp", value: "wpp"}, {label: "Marcar outro horário", value: "novo"}],
+    v => {
+      if (v === "wpp") window.open(linkWhats(NEGOCIO.whatsapp, textoWpp()), "_blank");
+      else reiniciar();
+    }
+  );
+}
+
 async function finalizar(){
   if (st.reagendar) return finalizarTroca();
   await bot("Só um segundo, já confirmo aqui ⏳");
   try{
-    await postApi({
+    const r = await postApi({
       action: "agendar",
       servico_id: st.servico.id,
       data: st.data,
@@ -826,16 +891,7 @@ async function finalizar(){
       nome: st.nome,
       whatsapp: st.whatsapp
     });
-    await bot(`Prontinho, <b>${primeiroNome(st.nome)}</b>! Seu momento está marcado ✨`);
-    mostrarCartaoConfirmacao();
-    await bot("Agora é só mandar a confirmação no WhatsApp, com um toque. Assim a Kély já recebe os seus dados. Pra reagendar ou cancelar, é pelo mesmo WhatsApp (cancelamento sem custo com 24h de antecedência).");
-    renderChoices(
-      [{label: "Enviar confirmação no WhatsApp", value: "wpp"}, {label: "Marcar outro horário", value: "novo"}],
-      v => {
-        if (v === "wpp") window.open(linkWhats(NEGOCIO.whatsapp, textoWpp()), "_blank");
-        else reiniciar();
-      }
-    );
+    await mostrarPagamentoSinal(r);
   }catch(e){
     console.warn("Erro ao agendar:", e);
     if (String(e.message || "").includes("horario_indisponivel")){
@@ -946,6 +1002,9 @@ function botoesStatus(a){
   if (a.status === "agendado") return `
     <button class="btn sm" type="button" data-acao="concluir" data-id="${id}">Concluir</button>
     <button class="btn ghost sm" type="button" data-acao="faltou" data-id="${id}">Faltou</button>
+    <button class="btn ghost sm perigo" type="button" data-acao="cancelar" data-id="${id}">Cancelar</button>`;
+  if (a.status === "aguardando_sinal") return `
+    <button class="btn sm" type="button" data-acao="confirmarSinal" data-id="${id}">Confirmar sinal</button>
     <button class="btn ghost sm perigo" type="button" data-acao="cancelar" data-id="${id}">Cancelar</button>`;
   if (a.status === "concluido") return `
     <button class="btn ghost sm" type="button" data-acao="editar" data-id="${id}">Editar pagamento</button>
@@ -1160,6 +1219,7 @@ async function onAdminClick(e){
   if (acao === "concluir" || acao === "editar") return abrirConcluir(id);
   if (acao === "faltou") return mudarStatus(id, {status: "faltou"});
   if (acao === "cancelar" && confirm("Cancelar este agendamento?")) return mudarStatus(id, {status: "cancelado"});
+  if (acao === "confirmarSinal") return mudarStatus(id, {status: "agendado"});
   if (acao === "reabrir") return mudarStatus(id, {status: "agendado", forma_pagamento: ""});
   if (acao === "csv") return exportarCSV(caixaAtual);
 }

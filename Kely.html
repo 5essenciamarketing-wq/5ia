@@ -472,10 +472,10 @@ function showTyping(){
 function hideTyping(){ const t = $("#typingIndicator"); if (t) t.remove(); }
 function tempoDigitando(html){
   const len = html.replace(/<[^>]+>/g, "").length;
-  return Math.min(2200, Math.max(650, 500 + len * 16 + Math.random() * 400));
+  return Math.min(1100, Math.max(350, 250 + len * 10 + Math.random() * 200));
 }
 async function bot(html, {comPausa = true} = {}){
-  if (comPausa) await pausa(300 + Math.random() * 450);
+  if (comPausa) await pausa(120 + Math.random() * 150);
   showTyping();
   await pausa(tempoDigitando(html));
   hideTyping();
@@ -552,9 +552,11 @@ async function iniciar(){
   composer.style.display = "none";
   await botSeq([
     `Oii, tudo bem? Aqui é a <b>${esc(NEGOCIO.atendente)}</b>, do <b>${esc(NEGOCIO.marca)}</b> 🙂`,
-    "Atendimento individual, com 8 anos de experiência. Qual é o seu nome?"
+    "Atendimento individual, com 8 anos de experiência.",
+    "Para começar seu atendimento, me fale seu nome."
   ]);
-  pedirTexto(async t => { st.nome = t; await boasVindas(); }, {nome: true});
+  renderChoices([{label: "Já tenho horário marcado", value: "meus"}], () => meusAgendamentos());
+  pedirTexto(async t => { clearChoices(); st.nome = t; await boasVindas(); }, {nome: true});
 }
 
 async function boasVindas(){

@@ -353,7 +353,7 @@
 
   <section class="section" id="assinatura">
     <div class="section-head"><span class="num">7</span><h2>Assinatura</h2></div>
-    <p>Para assinar, envie três fotos: a frente e o verso do seu documento de identidade (RG ou CNH) e uma selfie segurando o documento. Depois de anexar as três, marque o aceite e envie. A contratada recebe um PDF único, com o contrato, o termo de assinatura e as fotos.</p>
+    <p>Para assinar, envie três fotos: a frente e o verso do seu documento de identidade (RG ou CNH) e uma selfie segurando o documento. Depois de anexar as três, marque o aceite e envie. A data e a hora do envio são registradas automaticamente. A contratada recebe um PDF único, com o contrato, o termo de assinatura e as fotos.</p>
 
     <div class="sig-card">
       <p class="who">Simone Cristina de Paula Manica</p>
@@ -374,15 +374,10 @@
         </label>
         <label class="photo-slot" id="slotSelfie">
           <span class="ok">✓</span>
-          <div><strong>Selfie com o documento</strong>Toque para tirar ou escolher</div>
+          <div><strong>Selfie com o documento</strong>Toque para tirar com a câmera da frente</div>
           <span class="nome-arquivo" id="nomeSelfie"></span>
           <input type="file" id="fSelfie" accept="image/*" capture="user">
         </label>
-      </div>
-
-      <div class="field">
-        <label for="data">Data e local</label>
-        <input type="text" id="data" placeholder="Ex.: 10/11/2026, cidade">
       </div>
 
       <div class="check">
@@ -392,7 +387,7 @@
 
       <div class="actions">
         <button class="btn" id="btnAssinar" disabled>Enviar assinatura</button>
-        <span class="status" id="status">Faltam as três fotos, a data e o aceite.</span>
+        <span class="status" id="status">Faltam as três fotos e o aceite.</span>
       </div>
     </div>
   </section>
@@ -488,7 +483,6 @@
   const CONFIGURADO = !SCRIPT_URL.startsWith('COLE_AQUI');
 
   const $ = (id) => document.getElementById(id);
-  const data = $('data');
   const aceite = $('aceite');
   const btnAssinar = $('btnAssinar');
   const status = $('status');
@@ -543,7 +537,7 @@
 
   function checkReady() {
     const faltaFoto = FOTOS.filter(f => $(f.input).files.length === 0).map(f => f.rotulo);
-    const ok = faltaFoto.length === 0 && data.value.trim() !== '' && aceite.checked && CONFIGURADO;
+    const ok = faltaFoto.length === 0 && aceite.checked && CONFIGURADO;
     btnAssinar.disabled = !ok;
     if (!CONFIGURADO) {
       setStatus(status, 'Envio indisponível: a URL do Apps Script ainda não foi configurada.', 'erro');
@@ -552,7 +546,6 @@
     } else {
       const falta = [];
       faltaFoto.forEach(r => falta.push('foto da ' + r));
-      if (data.value.trim() === '') falta.push('data e local');
       if (!aceite.checked) falta.push('aceite');
       setStatus(status, 'Falta: ' + falta.join(', ') + '.', '');
     }
@@ -571,7 +564,6 @@
       checkReady();
     });
   });
-  data.addEventListener('input', checkReady);
   aceite.addEventListener('change', checkReady);
 
   btnAssinar.addEventListener('click', async () => {
@@ -588,7 +580,6 @@
         tipo: 'contrato',
         nome: NOME,
         cpf: CPF,
-        dataLocal: data.value.trim(),
         aceite: aceite.checked,
         fotos,
         ip,

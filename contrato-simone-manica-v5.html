@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contrato de Prestação de Serviços — Simone Cristina de Paula Manica</title>
+<style>
+  :root {
+    --bg: #f5f5f3;
+    --card: #ffffff;
+    --ink: #111114;
+    --muted: #6b6b73;
+    --line: #e4e4e0;
+    --gold: #b8912f;
+    --gold-soft: #f7f0dc;
+    --pending: #fff4cc;
+    --green: #16a34a;
+    --green-dark: #138a3e;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Inter", "Segoe UI", system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .topbar {
+    position: sticky; top: 0; z-index: 10;
+    background: rgba(245,245,243,.92);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
+  }
+  .topbar-inner {
+    max-width: 880px; margin: 0 auto; padding: 14px 24px;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  }
+  .brand { font-weight: 700; font-size: 14px; letter-spacing: .08em; text-transform: uppercase; }
+  .brand span { color: var(--gold); }
+  .topnav { display: flex; gap: 18px; font-size: 13px; }
+  .topnav a { color: var(--muted); text-decoration: none; }
+  .topnav a:hover { color: var(--ink); }
+
+  .wrap { max-width: 880px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  .hero { padding: 28px 0 12px; }
+  .eyebrow { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); font-weight: 600; }
+  .hero h1 { font-size: 34px; line-height: 1.15; margin: 10px 0 10px; font-weight: 700; letter-spacing: -.02em; }
+  .hero p { margin: 0; color: var(--muted); }
+  .meta { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 24px; }
+  .meta div { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; }
+  .meta small { display: block; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
+  .meta strong { font-size: 15px; }
+
+  .section {
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 28px 30px; margin-top: 16px;
+  }
+  .section-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 10px; }
+  .num {
+    flex: 0 0 auto; width: 30px; height: 30px; border-radius: 50%;
+    background: var(--ink); color: #fff; font-size: 13px; font-weight: 600;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .section h2 { font-size: 18px; margin: 0; font-weight: 650; letter-spacing: -.01em; }
+  .section p { margin: 10px 0; color: #2a2a30; }
+  .section ul { padding-left: 0; list-style: none; margin: 14px 0 0; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .section li { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font-size: 15px; }
+  .section li::before { content: "✓ "; color: var(--gold); font-weight: 700; }
+  .scope-out { margin-top: 14px; padding: 14px 16px; background: var(--gold-soft); border-radius: 10px; }
+  .scope-out p { margin: 0 0 6px; font-weight: 600; font-size: 14px; }
+  .scope-out ul { display: block; margin: 0; padding-left: 18px; }
+  .scope-out li { background: none; border: 0; padding: 2px 0; font-size: 14px; }
+  .scope-out li::before { content: none; }
+
+  .pending {
+    background: var(--pending); border-radius: 6px; padding: 1px 6px;
+    font-weight: 600; font-size: .95em; white-space: nowrap;
+  }
+
+  .parties { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+  .party { background: var(--bg); border-radius: 10px; padding: 14px 16px; border: 1px solid var(--line); }
+  .party small { display: block; color: var(--gold); text-transform: uppercase; letter-spacing: .08em; font-size: 11px; font-weight: 700; }
+  .party p { margin: 6px 0 0; font-size: 15px; color: var(--ink); }
+
+  .pay { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 16px; }
+  .pay .total, .pay .step { border-radius: 12px; padding: 16px; border: 1px solid var(--line); background: var(--bg); }
+  .pay .total { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .pay small { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+  .pay .total small { color: #c9c9cf; }
+  .pay strong { display: block; font-size: 20px; margin-top: 4px; }
+  .pay .step span { display: block; font-size: 13px; color: var(--muted); margin-top: 6px; }
+
+  .sig-card { margin-top: 14px; border: 1.5px dashed var(--gold); border-radius: var(--radius); padding: 22px; background: #fffdf7; }
+  .sig-card .who { font-weight: 600; margin: 0; }
+  .sig-card .cpf { color: var(--muted); font-size: 14px; margin: 2px 0 16px; }
+  .field { margin-top: 14px; }
+  .field label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; font-weight: 500; }
+  .field input[type=text], .field textarea {
+    width: 100%; padding: 11px 12px; border: 1px solid var(--line); border-radius: 10px; font: inherit; font-size: 15px; background: #fff;
+  }
+  .field textarea { min-height: 84px; resize: vertical; }
+  .field input:focus, .field textarea:focus { outline: 2px solid var(--gold); outline-offset: 1px; border-color: transparent; }
+  .file-drop {
+    display: flex; align-items: center; justify-content: center; text-align: center;
+    border: 1.5px dashed #cfcfc8; border-radius: 12px; padding: 22px; background: #fff; cursor: pointer; color: var(--muted); font-size: 14px;
+  }
+  .file-drop:hover { border-color: var(--gold); color: var(--ink); }
+  #preview { display: none; max-width: 100%; margin-top: 12px; border-radius: 10px; border: 1px solid var(--line); }
+  .check { display: flex; gap: 10px; align-items: flex-start; margin-top: 16px; font-size: 14px; }
+  .check input { margin-top: 4px; width: 16px; height: 16px; accent-color: var(--ink); }
+
+  .actions { margin-top: 18px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+  .btn {
+    background: var(--ink); color: #fff; border: 0; border-radius: 10px; padding: 12px 20px;
+    font: inherit; font-size: 15px; font-weight: 600; cursor: pointer;
+  }
+  .btn:disabled { opacity: .35; cursor: not-allowed; }
+  .status { font-size: 13px; color: var(--muted); }
+  .status.erro { color: #b42318; }
+  .status.ok { color: var(--green-dark); }
+  .footnote { font-size: 12px; color: var(--muted); margin-top: 14px; }
+
+  .pay-btn {
+    position: relative; overflow: hidden; display: inline-flex; align-items: center; justify-content: center;
+    width: 100%; margin-top: 18px; padding: 18px 24px; border-radius: 12px;
+    background: var(--green); color: #fff; text-decoration: none;
+    font-size: 17px; font-weight: 700; letter-spacing: .01em;
+    box-shadow: 0 6px 18px rgba(22,163,74,.28);
+    transition: background .2s, transform .1s;
+  }
+  .pay-btn:hover { background: var(--green-dark); }
+  .pay-btn:active { transform: scale(.99); }
+  .pay-btn::after {
+    content: ""; position: absolute; top: 0; left: -75%; width: 50%; height: 100%;
+    background: linear-gradient(120deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.55) 50%, rgba(255,255,255,0) 100%);
+    animation: sweep 2.8s ease-in-out infinite; pointer-events: none;
+  }
+  @keyframes sweep {
+    0% { left: -75%; }
+    55%, 100% { left: 125%; }
+  }
+  .pay-amount { display: block; font-size: 13px; font-weight: 500; opacity: .9; margin-top: 4px; }
+
+  .locked-note {
+    display: flex; gap: 10px; align-items: flex-start; font-size: 14px;
+    background: var(--gold-soft); border-radius: 10px; padding: 12px 14px; margin-top: 12px;
+  }
+  fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+  fieldset[disabled] { opacity: .45; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  footer { text-align: center; color: var(--muted); font-size: 12px; margin-top: 32px; }
+
+  @media (max-width: 680px) {
+    .meta, .pay, .grid-2 { grid-template-columns: 1fr; }
+    .parties, .section ul { grid-template-columns: 1fr; }
+    .section { padding: 22px 20px; }
+    .hero h1 { font-size: 28px; }
+    .topnav { display: none; }
+  }
+
+  @media print {
+    body { background: #fff; font-size: 12pt; }
+    .topbar, .no-print, .pay-btn { display: none !important; }
+    .wrap { padding: 0; max-width: none; }
+    .section, .meta div, .pay .step, .pay .total { border: 1px solid #ccc; box-shadow: none; break-inside: avoid; }
+    .pay .total { background: #fff; color: #000; }
+    .pay .total small { color: #555; }
+    .pending { background: none; border-bottom: 1px solid #000; border-radius: 0; padding: 0; }
+    .sig-card { background: #fff; }
+    fieldset[disabled] { opacity: 1; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar no-print">
+  <div class="topbar-inner">
+    <div class="brand">Quintessência <span>Digital</span></div>
+    <nav class="topnav">
+      <a href="#partes">Partes</a>
+      <a href="#objeto">Objeto</a>
+      <a href="#valor">Valor</a>
+      <a href="#assinatura">Assinatura</a>
+      <a href="#pagamento">Pagamento</a>
+      <a href="#briefing">Briefing</a>
+    </nav>
+  </div>
+</div>
+
+<main class="wrap">
+
+  <section class="hero">
+    <div class="eyebrow">Contrato de prestação de serviços</div>
+    <h1>Sistema de gestão e landing page</h1>
+    <p>Documento para leitura e assinatura eletrônica entre as partes abaixo.</p>
+    <div class="meta">
+      <div><small>Data</small><strong>10/11/2026</strong></div>
+      <div><small>Valor total</small><strong>R$ 3.500,00</strong></div>
+      <div><small>Hospedagem</small><strong>Sem custo mensal</strong></div>
+    </div>
+  </section>
+
+  <section class="section" id="partes">
+    <div class="section-head"><span class="num">1</span><h2>Partes</h2></div>
+    <div class="parties">
+      <div class="party">
+        <small>Contratante</small>
+        <p><strong>Simone Cristina de Paula Manica</strong><br>CPF 015.829.441-64<br>Tel. +44 7782 583888</p>
+      </div>
+      <div class="party">
+        <small>Contratada</small>
+        <p><strong>Patrick</strong>, Quintessência Digital<br>CNPJ 60.847.161/0001-47<br>5essenciamarketing@gmail.com</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="objeto">
+    <div class="section-head"><span class="num">2</span><h2>Objeto</h2></div>
+    <p>A contratada desenvolverá para a contratante um sistema web de gestão, com os módulos abaixo, e uma landing page de apresentação do negócio.</p>
+    <ul>
+      <li>CRM de clientes e leads</li>
+      <li>Módulo financeiro</li>
+      <li>Controle de estoque</li>
+      <li>Cadastro de funcionários</li>
+      <li>Controle de insumos</li>
+      <li>Landing page</li>
+    </ul>
+    <div class="scope-out">
+      <p>Não estão incluídos neste contrato</p>
+      <ul>
+        <li>Registro ou renovação de domínio pago;</li>
+        <li>Serviços de terceiros com custo próprio (por exemplo, APIs de WhatsApp, anúncios ou e-mail);</li>
+        <li>Manutenção mensal, novas funcionalidades e integrações não listadas acima, orçadas à parte.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section" id="valor">
+    <div class="section-head"><span class="num">3</span><h2>Valor e forma de pagamento</h2></div>
+    <p>O valor total do serviço é de <strong>R$ 3.500,00 (três mil e quinhentos reais)</strong>, pago em duas parcelas de 50%.</p>
+    <div class="pay">
+      <div class="step">
+        <small>Entrada (50%)</small>
+        <strong>R$ 1.750,00</strong>
+        <span>Na assinatura deste contrato</span>
+      </div>
+      <div class="step">
+        <small>Saldo (50%)</small>
+        <strong>R$ 1.750,00</strong>
+        <span>Na entrega do sistema e da landing page</span>
+      </div>
+      <div class="total">
+        <small>Total</small>
+        <strong>R$ 3.500,00</strong>
+        <span style="display:block;font-size:13px;margin-top:6px;opacity:.75;">Pagamento da entrada na seção 8</span>
+      </div>
+    </div>
+    <p style="font-size:14px;color:var(--muted);">O sistema só será entregue após a quitação do saldo.</p>
+  </section>
+
+  <section class="section" id="prazo">
+    <div class="section-head"><span class="num">4</span><h2>Prazo e hospedagem</h2></div>
+    <p>A entrega ocorrerá em até 10 dias corridos (prazo de 7 a 10 dias), contados do pagamento da entrada, desde que a contratante envie os materiais e as informações necessários no prazo combinado.</p>
+    <p>A contratada publicará o sistema e a landing page na plataforma Vercel, em plano sem custo, de modo que a contratante não tenha mensalidade de hospedagem. A landing page ficará em endereço no formato vercel.app, pois não há domínio pago incluído. Caso a contratante queira um domínio próprio, ele será contratado e pago à parte.</p>
+  </section>
+
+  <section class="section" id="dados">
+    <div class="section-head"><span class="num">5</span><h2>Dados pessoais e propriedade</h2></div>
+    <p>A contratada usará os dados pessoais da contratante (nome, CPF, telefone e documento de identidade) somente para a execução deste contrato, em conformidade com a Lei Geral de Proteção de Dados (Lei nº 13.709/2018).</p>
+    <p>Após o pagamento integral, a contratante terá direito de uso do sistema e da landing page entregues. A contratada poderá reutilizar componentes genéricos desenvolvidos no projeto, sem expor dados da contratante.</p>
+  </section>
+
+  <section class="section" id="gerais">
+    <div class="section-head"><span class="num">6</span><h2>Disposições gerais e foro</h2></div>
+    <p>Alterações neste contrato devem ser feitas por escrito e aceitas pelas duas partes. Fica eleito o foro da comarca de <span class="pending">[Balneário Camboriú/SC]</span> para dirimir eventuais dúvidas, com renúncia a qualquer outro.</p>
+  </section>
+
+  <section class="section" id="assinatura">
+    <div class="section-head"><span class="num">7</span><h2>Assinatura</h2></div>
+    <p>A contratante assina este contrato ao enviar uma foto legível de documento de identidade (RG ou CNH) no campo abaixo e marcar o aceite. A contratada guardará a foto junto ao contrato.</p>
+
+    <div class="sig-card">
+      <p class="who">Simone Cristina de Paula Manica</p>
+      <p class="cpf">CPF 015.829.441-64</p>
+
+      <div class="field">
+        <label>Foto do documento de identidade (frente)</label>
+        <label class="file-drop" for="doc" id="dropLabel">Toque para tirar uma foto ou escolher o arquivo</label>
+        <input type="file" id="doc" accept="image/*" capture="environment" style="display:none">
+        <img id="preview" alt="Prévia do documento">
+      </div>
+
+      <div class="field">
+        <label for="data">Data e local</label>
+        <input type="text" id="data" placeholder="Ex.: 10/11/2026, cidade">
+      </div>
+
+      <div class="check">
+        <input type="checkbox" id="aceite">
+        <label for="aceite" style="margin:0;color:var(--ink);font-size:14px;">Li este contrato, concordo com todas as cláusulas e assino eletronicamente.</label>
+      </div>
+
+      <div class="actions no-print">
+        <button class="btn" id="btnAssinar" disabled>Enviar assinatura</button>
+        <button class="btn" id="btnPrint" disabled style="background:#fff;color:var(--ink);border:1px solid var(--line);">Gerar PDF para guardar</button>
+        <span class="status" id="status">Falta foto, data e aceite.</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="pagamento">
+    <div class="section-head"><span class="num">8</span><h2>Pagamento da entrada</h2></div>
+    <p>Pague a entrada de <strong>R$ 1.750,00</strong> pelo link abaixo. Depois do pagamento, a contratada libera o briefing da seção 9 para você preencher as informações do site.</p>
+    <a class="pay-btn no-print" href="https://checkout.nubank.com.br/szbd288unX3iv7c0" target="_blank" rel="noopener">
+      Pagar entrada
+      <span class="pay-amount">R$ 1.750,00 · 50% do total</span>
+    </a>
+    <p class="footnote">Após pagar, envie o comprovante para a contratada.</p>
+  </section>
+
+  <section class="section" id="briefing">
+    <div class="section-head"><span class="num">9</span><h2>Briefing do site e do sistema</h2></div>
+    <div class="locked-note" id="lockNote">
+      <span>🔒</span>
+      <span id="lockText">Verificando a liberação do briefing…</span>
+    </div>
+
+    <fieldset id="briefingFields" disabled>
+      <p>Preencha o que puder. O que faltar, podemos combinar por WhatsApp.</p>
+
+      <div class="field">
+        <label for="b_nome">Nome do negócio, como deve aparecer no site</label>
+        <input type="text" id="b_nome">
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label for="b_cidade">Cidade e endereço</label>
+          <input type="text" id="b_cidade">
+        </div>
+        <div class="field">
+          <label for="b_zap">WhatsApp para contato dos clientes</label>
+          <input type="text" id="b_zap">
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label for="b_insta">Instagram e outras redes</label>
+          <input type="text" id="b_insta">
+        </div>
+        <div class="field">
+          <label for="b_cores">Cores ou estilo desejado</label>
+          <input type="text" id="b_cores" placeholder="Ex.: dourado e preto, clean, moderno">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="b_servicos">Serviços oferecidos e, se quiser mostrar, os preços</label>
+        <textarea id="b_servicos"></textarea>
+      </div>
+
+      <div class="field">
+        <label for="b_sobre">Texto de apresentação (sobre o negócio, diferenciais)</label>
+        <textarea id="b_sobre"></textarea>
+      </div>
+
+      <div class="field">
+        <label for="b_refs">Sites de referência que você gosta (links)</label>
+        <textarea id="b_refs"></textarea>
+      </div>
+
+      <div class="field">
+        <label for="b_sistema">Sistema: quem vai usar, o que precisa controlar e categorias de estoque e insumos</label>
+        <textarea id="b_sistema"></textarea>
+      </div>
+
+      <div class="field">
+        <label for="b_obs">Observações</label>
+        <textarea id="b_obs"></textarea>
+      </div>
+
+      <div class="actions">
+        <button class="btn" id="btnBriefing" type="button">Enviar briefing</button>
+        <span class="status" id="statusBriefing"></span>
+      </div>
+    </fieldset>
+  </section>
+
+  <footer>Quintessência Digital · Contrato de prestação de serviços</footer>
+</main>
+
+<script>
+  // ==== CONFIGURAÇÃO ====
+  // URL do Apps Script publicado (Aplicativo da Web). Substitua pela sua.
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzo7Ab_q6ECkyQu_fCP5QSd9jvjhlfGHbYTUSUsnq24Q3R9-Gg7bzJGD9XWHHSXYx7koA/exec';
+  // Mesmo valor de TOKEN no Code.gs. Obs.: fica visível no código da página.
+  const TOKEN = 'pq7Vz2mK9xR4tLw8nB3cYd6hJ1sF0eA';
+  const CPF = '01582944164';
+  const NOME = 'Simone Cristina de Paula Manica';
+  const CONFIGURADO = !SCRIPT_URL.startsWith('COLE_AQUI');
+
+  const $ = (id) => document.getElementById(id);
+  const doc = $('doc');
+  const preview = $('preview');
+  const dropLabel = $('dropLabel');
+  const data = $('data');
+  const aceite = $('aceite');
+  const btnAssinar = $('btnAssinar');
+  const btnPrint = $('btnPrint');
+  const status = $('status');
+
+  function setStatus(el, msg, tipo) {
+    el.textContent = msg;
+    el.className = 'status' + (tipo ? ' ' + tipo : '');
+  }
+
+  // Reduz a foto para não pesar no envio (lado maior até 1600 px, JPEG 80%)
+  function prepararFoto(file) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const max = 1600;
+        const escala = Math.min(1, max / Math.max(img.width, img.height));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.width * escala);
+        canvas.height = Math.round(img.height * escala);
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        const url = canvas.toDataURL('image/jpeg', 0.8);
+        resolve(url.split(',')[1]);
+      };
+      img.onerror = () => reject(new Error('Não consegui ler a foto.'));
+      img.src = URL.createObjectURL(file);
+    });
+  }
+
+  async function enviar(payload) {
+    const res = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({ token: TOKEN, ...payload })
+    });
+    const json = await res.json();
+    if (!json.ok) throw new Error(json.erro || 'Falha no envio.');
+    return json;
+  }
+
+  function checkReady() {
+    const hasPhoto = doc.files.length > 0;
+    const hasData = data.value.trim() !== '';
+    const ok = hasPhoto && hasData && aceite.checked && CONFIGURADO;
+    btnAssinar.disabled = !ok;
+    if (!CONFIGURADO) {
+      setStatus(status, 'Envio indisponível: a URL do Apps Script ainda não foi configurada.', 'erro');
+    } else if (ok) {
+      setStatus(status, 'Pronto para enviar.', '');
+    } else {
+      const falta = [];
+      if (!hasPhoto) falta.push('foto');
+      if (!hasData) falta.push('data e local');
+      if (!aceite.checked) falta.push('aceite');
+      setStatus(status, 'Falta: ' + falta.join(', ') + '.', '');
+    }
+  }
+
+  doc.addEventListener('change', () => {
+    const f = doc.files[0];
+    if (f) {
+      preview.src = URL.createObjectURL(f);
+      preview.style.display = 'block';
+      dropLabel.textContent = 'Foto anexada: ' + f.name;
+    }
+    checkReady();
+  });
+  data.addEventListener('input', checkReady);
+  aceite.addEventListener('change', checkReady);
+
+  btnAssinar.addEventListener('click', async () => {
+    btnAssinar.disabled = true;
+    setStatus(status, 'Enviando assinatura…', '');
+    try {
+      const fotoBase64 = await prepararFoto(doc.files[0]);
+      await enviar({
+        tipo: 'contrato',
+        nome: NOME,
+        cpf: CPF,
+        dataLocal: data.value.trim(),
+        aceite: aceite.checked,
+        fotoBase64,
+        fotoMime: 'image/jpeg'
+      });
+      setStatus(status, 'Assinatura enviada. Você já pode gerar o PDF para guardar.', 'ok');
+      btnPrint.disabled = false;
+      verificarBriefing();
+    } catch (err) {
+      setStatus(status, 'Não foi possível enviar: ' + err.message, 'erro');
+      btnAssinar.disabled = false;
+    }
+  });
+
+  btnPrint.addEventListener('click', () => window.print());
+
+  // Briefing: liberado quando a entrada aparece como paga na planilha
+  async function verificarBriefing() {
+    if (!CONFIGURADO) {
+      $('lockText').textContent = 'Briefing indisponível no momento.';
+      return;
+    }
+    try {
+      const url = SCRIPT_URL + '?cpf=' + encodeURIComponent(CPF) + '&token=' + encodeURIComponent(TOKEN);
+      const res = await fetch(url);
+      const json = await res.json();
+      if (json.liberado) {
+        $('briefingFields').disabled = false;
+        $('lockNote').style.display = 'none';
+      } else {
+        $('lockText').textContent = 'Este briefing é liberado depois da confirmação do pagamento da entrada. Se você já pagou, envie o comprovante para a contratada.';
+      }
+    } catch (err) {
+      $('lockText').textContent = 'Não consegui verificar a liberação agora. Tente de novo mais tarde.';
+    }
+  }
+
+  $('btnBriefing').addEventListener('click', async () => {
+    const btn = $('btnBriefing');
+    const st = $('statusBriefing');
+    btn.disabled = true;
+    setStatus(st, 'Enviando briefing…', '');
+    const briefing = {
+      nome_negocio: $('b_nome').value,
+      cidade_endereco: $('b_cidade').value,
+      whatsapp: $('b_zap').value,
+      redes: $('b_insta').value,
+      cores_estilo: $('b_cores').value,
+      servicos: $('b_servicos').value,
+      sobre: $('b_sobre').value,
+      referencias: $('b_refs').value,
+      sistema: $('b_sistema').value,
+      observacoes: $('b_obs').value
+    };
+    try {
+      await enviar({ tipo: 'briefing', cpf: CPF, briefing });
+      setStatus(st, 'Briefing enviado. Obrigado!', 'ok');
+    } catch (err) {
+      setStatus(st, 'Não foi possível enviar: ' + err.message, 'erro');
+      btn.disabled = false;
+    }
+  });
+
+  checkReady();
+  verificarBriefing();
+</script>
+</body>
+</html>

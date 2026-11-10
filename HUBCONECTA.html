@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0b0d">
+<title>Hub Conecta BC</title>
+<style>
+:root{
+  --bg:#0b0b0d; --card:#15151a; --line:#2a2a31; --gold:#00e5ff; --gold-soft:rgba(0,229,255,.12);
+  --text:#f2efe9; --muted:#8d8a84; --err:#e07a6a;
+  --radius:14px;
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%}
+body{
+  background:var(--bg); color:var(--text); font-family:var(--font);
+  -webkit-font-smoothing:antialiased; overflow-x:hidden;
+}
+/* Layout em coluna: cabeçalho, conteúdo com rolagem, rodapé fixo com botões */
+.app{
+  min-height:100vh; min-height:100dvh;
+  display:flex; flex-direction:column;
+  max-width:640px; margin:0 auto;
+  padding:env(safe-area-inset-top) 0 0;
+}
+header{
+  display:flex; justify-content:space-between; align-items:center; gap:12px;
+  padding:16px 20px; border-bottom:1px solid var(--line);
+  position:sticky; top:0; background:var(--bg); z-index:2;
+}
+h1{margin:0;font-size:14px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
+nav{display:flex;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:4px}
+nav button{
+  background:none;border:0;color:var(--muted);padding:8px 14px;border-radius:999px;
+  font:inherit;font-size:14px;cursor:pointer;min-height:36px
+}
+nav button.on{background:var(--gold);color:#0b0b0d;font-weight:600}
+
+main{flex:1; padding:20px; padding-bottom:calc(20px + 88px + env(safe-area-inset-bottom))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:24px 20px}
+
+.progress{height:4px;background:var(--line);border-radius:4px;overflow:hidden;margin-bottom:24px}
+.progress i{display:block;height:100%;width:0;background:var(--gold);transition:width .35s ease}
+
+.label{color:var(--muted);font-size:13px;font-weight:500;letter-spacing:.04em}
+h2{font-weight:600;font-size:22px;line-height:1.3;margin:8px 0 20px}
+
+/* 16px evita zoom automático no iPhone ao focar o campo */
+input[type=text],input[type=tel],input[type=search],textarea{
+  width:100%; background:#0f0f13; border:1px solid var(--line); border-radius:12px;
+  color:var(--text); font:inherit; font-size:16px; padding:14px 16px; outline:none;
+  -webkit-appearance:none; appearance:none;
+}
+input:focus,textarea:focus{border-color:var(--gold)}
+textarea{resize:vertical;min-height:120px}
+
+.opts{display:grid;gap:10px}
+.opt{
+  position:relative; display:flex; align-items:center; gap:12px;
+  min-height:52px; padding:14px 16px; border:1px solid var(--line); border-radius:12px;
+  font-size:16px; cursor:pointer; user-select:none;
+}
+.opt input{position:absolute;opacity:0;pointer-events:none}
+.opt::before{
+  content:""; flex:0 0 20px; height:20px; border:1.5px solid var(--muted); border-radius:50%;
+}
+.opt:has(input[type=checkbox])::before{border-radius:6px}
+.opt.sel{border-color:var(--gold);background:var(--gold-soft)}
+.opt.sel::before{background:var(--gold);border-color:var(--gold);box-shadow:inset 0 0 0 4px var(--card)}
+.opt:has(input[type=checkbox]).sel::before{box-shadow:none;background:var(--gold)}
+
+/* Rodapé fixo: sempre visível, sem sobrepor o conteúdo */
+.footer{
+  position:fixed; left:0; right:0; bottom:0; z-index:3;
+  background:linear-gradient(to top,var(--bg) 70%,rgba(11,11,13,0));
+  padding:14px 20px calc(14px + env(safe-area-inset-bottom));
+}
+.footer-inner{max-width:640px;margin:0 auto;display:flex;gap:12px}
+.btn{
+  flex:1; min-height:52px; border-radius:12px; font:inherit; font-size:16px; font-weight:600;
+  cursor:pointer; border:1px solid var(--line); background:var(--card); color:var(--text);
+}
+.btn.primary{background:var(--gold);border-color:var(--gold);color:#0b0b0d}
+.btn:disabled{opacity:.5;cursor:wait}
+.btn.hidden-soft{visibility:hidden}
+.err{color:var(--err);font-size:14px;min-height:20px;margin-top:12px}
+
+.hidden{display:none !important}
+
+.done{text-align:center;padding:40px 12px}
+.done .mark{
+  width:64px;height:64px;margin:0 auto 16px;border-radius:50%;
+  background:var(--gold-soft);color:var(--gold);display:grid;place-items:center;font-size:30px
+}
+.done .btn{max-width:280px;margin:24px auto 0;display:block;width:100%}
+
+/* Lista de contatos: cartões no celular, tabela no desktop */
+.tools{margin-bottom:14px}
+.count{color:var(--muted);font-size:13px;margin:12px 0}
+.contact{
+  border:1px solid var(--line); border-radius:12px; padding:14px 16px; margin-bottom:10px; background:#0f0f13
+}
+.contact b{font-size:16px}
+.contact .meta{color:var(--muted);font-size:13px;margin-top:4px;line-height:1.5}
+.contact a{color:var(--gold);font-size:14px;text-decoration:none;display:inline-block;margin-top:8px}
+.list-actions{display:flex;gap:10px;margin-top:8px}
+.list-actions .btn{flex:1;min-height:46px;font-size:15px}
+table{display:none;width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--gold);font-weight:500;font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+td a{color:var(--gold)}
+
+@media (min-width:720px){
+  .app{max-width:760px}
+  main{padding-bottom:calc(20px + 88px)}
+  .footer-inner{max-width:760px}
+  .card{padding:32px 32px}
+  table{display:table}
+  #cards{display:none}
+  .opt{min-height:48px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>Hub Conecta BC</h1>
+    <nav>
+      <button id="tabNova" class="on">Nova</button>
+      <button id="tabLista">Contatos</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="viewNova" class="card">
+      <div class="progress"><i id="bar"></i></div>
+      <div id="stepBody"></div>
+      <div class="err" id="err"></div>
+    </section>
+
+    <section id="viewDone" class="card done hidden">
+      <div class="mark">✓</div>
+      <div class="label">Obrigado</div>
+      <h2>Obrigado por participar!</h2>      <button class="btn primary" id="again">Nova pesquisa</button>
+    </section>
+
+    <section id="viewLista" class="card hidden">
+      <div class="tools"><input type="search" id="busca" placeholder="Buscar por nome, profissão, situação…"></div>
+      <div id="cards"></div>
+      <div style="overflow-x:auto"><table>
+        <thead><tr><th>Data</th><th>Nome</th><th>Profissão</th><th>PF/PJ</th><th>Situação</th><th>WhatsApp</th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table></div>
+      <div class="count" id="count"></div>
+      <div class="list-actions">
+        <button class="btn" id="reload">Atualizar</button>
+        <button class="btn" id="csv">Exportar CSV</button>
+      </div>
+    </section>
+  </main>
+
+  <div class="footer" id="footer">
+    <div class="footer-inner">
+      <button class="btn" id="back">Voltar</button>
+      <button class="btn primary" id="next">Continuar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===== CONFIGURAÇÃO ===== */
+const CONFIG = {
+  APPS_SCRIPT_URL: 'COLE_AQUI_A_URL_DO_APPS_SCRIPT',
+  TOKEN: 'hub-lQAwu84uncgv-Tu5V8RROT0u' // igual ao TOKEN do Code.gs
+};
+
+const CAPTACAO = [
+  'Indicação', 'Instagram', 'Google / site', 'Tráfego pago',
+  'Prospecção ativa (WhatsApp)', 'Eventos e networking presencial', 'LinkedIn', 'Parcerias'
+];
+const SITUACOES = ['Tem plano de crescimento', 'Está no limite da agenda', 'Ambos', 'Nenhum dos dois'];
+
+const STEPS = [
+  {field:'nome', title:'Qual é o seu nome?', type:'text', ph:'Nome completo'},
+  {field:'cidade', title:'Em qual cidade você atua?', type:'text', ph:'Ex.: Balneário Camboriú, SC'},
+  {field:'profissao', title:'Qual é a sua profissão?', type:'text', ph:'Ex.: advogado, arquiteto, dentista'},
+  {field:'tipo', title:'Você atua como PF ou PJ?', type:'radio', options:['PF (pessoa física)', 'PJ (pessoa jurídica)']},
+  {field:'captacao', title:'Como você capta seus clientes hoje?', type:'multi', options:CAPTACAO},
+  {field:'dificuldade', title:'O que você acha mais difícil para crescer?', type:'textarea', ph:'Conte com as suas palavras'},
+  {field:'situacao', title:'Você tem plano de crescimento ou está no limite da sua agenda?', type:'radio', options:SITUACOES},
+  {field:'whatsapp', title:'Quer deixar seu WhatsApp para receber a confirmação? (opcional)', type:'tel', ph:'(DDD) 99999-9999', optional:true}
+];
+
+const blank = () => ({nome:'', cidade:'', profissao:'', tipo:'', captacao:[], dificuldade:'', situacao:'', whatsapp:''});
+let data = blank();
+let idx = 0;
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtData = d => d ? new Date(d).toLocaleDateString('pt-BR') : '';
+const isTouch = () => !matchMedia('(pointer:fine)').matches;
+
+function normWpp(v){
+  let d = v.replace(/\D/g, '');
+  if (d.length === 10 || d.length === 11) d = '55' + d;
+  return (d.length >= 12 && d.length <= 13) ? d : '';
+}
+
+function showView(v){
+  ['viewNova','viewDone','viewLista'].forEach(id => $(id).classList.toggle('hidden', id !== v));
+  $('footer').classList.toggle('hidden', v !== 'viewNova');
+}
+
+function render(){
+  const s = STEPS[idx];
+  const v = data[s.field];
+  let h = `<div class="label">Pergunta ${idx+1} de ${STEPS.length}</div><h2>${esc(s.title)}</h2>`;
+  if (s.type === 'text' || s.type === 'tel') {
+    h += `<input id="inp" type="${s.type}" ${s.type==='tel'?'inputmode="tel"':''} placeholder="${esc(s.ph)}" value="${esc(v)}" autocomplete="off" enterkeyhint="next">`;
+  } else if (s.type === 'textarea') {
+    h += `<textarea id="inp" rows="5" placeholder="${esc(s.ph)}">${esc(v)}</textarea>`;
+  } else {
+    const multi = s.type === 'multi';
+    const isOn = o => multi ? v.includes(o) : v === o;
+    h += `<div class="opts">` + s.options.map(o =>
+      `<label class="opt ${isOn(o) ? 'sel' : ''}"><input type="${multi ? 'checkbox' : 'radio'}" name="opt" value="${esc(o)}" ${isOn(o) ? 'checked' : ''}>${esc(o)}</label>`
+    ).join('') + `</div>`;
+  }
+  $('stepBody').innerHTML = h;
+  $('bar').style.width = (idx / STEPS.length * 100) + '%';
+  $('back').classList.toggle('hidden-soft', idx === 0);
+  $('next').textContent = idx === STEPS.length - 1 ? 'Salvar' : 'Continuar';
+  $('err').textContent = '';
+  // No celular não abrir o teclado automaticamente: isso cobre a tela e dá a sensação de travamento
+  const inp = $('inp');
+  if (inp && !isTouch()) setTimeout(() => inp.focus(), 50);
+  window.scrollTo({top:0, behavior:'instant'});
+}
+
+function readCurrent(){
+  const s = STEPS[idx];
+  if (s.type === 'radio') return document.querySelector('input[name=opt]:checked')?.value || '';
+  if (s.type === 'multi') return [...document.querySelectorAll('input[name=opt]:checked')].map(i => i.value);
+  return $('inp').value.trim();
+}
+
+function validate(s, val){
+  if (!s.optional && (s.type === 'multi' ? !val.length : !val)) return 'Este campo é obrigatório.';
+  if (s.field === 'whatsapp' && val && !normWpp(val)) return 'Informe um WhatsApp válido com DDD ou deixe em branco.';
+  return '';
+}
+
+async function next(){
+  const s = STEPS[idx];
+  let val = readCurrent();
+  const e = validate(s, val);
+  if (e) { $('err').textContent = e; return; }
+  if (s.field === 'whatsapp') val = val ? normWpp(val) : '';
+  data[s.field] = val;
+  if (idx < STEPS.length - 1) { idx++; render(); return; }
+  await save();
+}
+
+function back(){
+  data[STEPS[idx].field] = readCurrent();
+  if (idx > 0) { idx--; render(); }
+}
+
+async function save(){
+  const btn = $('next');
+  btn.disabled = true; btn.textContent = 'Salvando…';
+  const payload = {...data, captacao: data.captacao.join(', '), token: CONFIG.TOKEN};
+  try {
+    const r = await fetch(CONFIG.APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'text/plain;charset=utf-8'},
+      body: JSON.stringify(payload)
+    });
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || 'erro desconhecido');
+    data = blank(); idx = 0;
+    showView('viewDone');
+  } catch (err) {
+    $('err').textContent = 'Não foi possível salvar (' + err.message + '). Seus dados foram mantidos; tente de novo.';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Salvar';
+  }
+}
+
+/* ===== LISTA ===== */
+let rows = [];
+
+async function load(){
+  $('count').textContent = 'Carregando…';
+  try {
+    const r = await fetch(CONFIG.APPS_SCRIPT_URL + '?token=' + encodeURIComponent(CONFIG.TOKEN));
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error);
+    rows = j.data;
+    drawTable();
+  } catch (err) {
+    $('count').textContent = 'Erro ao carregar: ' + err.message;
+  }
+}
+
+function drawTable(){
+  const q = $('busca').value.trim().toLowerCase();
+  const list = rows.filter(r => !q || Object.values(r).join(' ').toLowerCase().includes(q));
+  $('tbody').innerHTML = list.map(r =>
+    `<tr><td>${esc(fmtData(r.data))}</td><td>${esc(r.nome)}</td><td>${esc(r.profissao)}</td><td>${esc(r.tipo)}</td><td>${esc(r.situacao)}</td><td><a href="https://wa.me/${esc(r.whatsapp)}" target="_blank" rel="noopener">${esc(r.whatsapp)}</a></td></tr>`
+  ).join('');
+  $('cards').innerHTML = list.map(r =>
+    `<div class="contact"><b>${esc(r.nome)}</b><div class="meta">${esc(r.profissao)} · ${esc(r.cidade)} · ${esc(r.tipo)}<br>${esc(r.situacao)}<br>${esc(fmtData(r.data))}</div><a href="https://wa.me/${esc(r.whatsapp)}" target="_blank" rel="noopener">WhatsApp ${esc(r.whatsapp)} →</a></div>`
+  ).join('');
+  $('count').textContent = `${list.length} de ${rows.length} contato(s)`;
+}
+
+function exportCSV(){
+  const cols = ['data','nome','cidade','profissao','tipo','captacao','dificuldade','situacao','whatsapp'];
+  const lines = [cols.join(';')].concat(
+    rows.map(r => cols.map(c => `"${String(r[c] ?? '').replace(/"/g, '""')}"`).join(';'))
+  );
+  const blob = new Blob(['﻿' + lines.join('\n')], {type: 'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'contatos-networking.csv';
+  a.click();
+}
+
+/* ===== EVENTOS ===== */
+function go(tab){
+  $('tabNova').classList.toggle('on', tab === 'nova');
+  $('tabLista').classList.toggle('on', tab === 'lista');
+  if (tab === 'nova') { showView('viewNova'); render(); }
+  else { showView('viewLista'); load(); }
+}
+
+$('stepBody').addEventListener('change', e => {
+  if (!e.target.matches('input[name=opt]')) return;
+  document.querySelectorAll('.opt').forEach(l => l.classList.toggle('sel', l.querySelector('input').checked));
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'BUTTON' && !$('viewNova').classList.contains('hidden')) {
+    e.preventDefault(); next();
+  }
+});
+$('tabNova').onclick = () => go('nova');
+$('tabLista').onclick = () => go('lista');
+$('next').onclick = next;
+$('back').onclick = back;
+$('again').onclick = () => { showView('viewNova'); render(); };
+$('busca').oninput = drawTable;
+$('reload').onclick = load;
+$('csv').onclick = exportCSV;
+
+go('nova');
+</script>
+</body>
+</html>

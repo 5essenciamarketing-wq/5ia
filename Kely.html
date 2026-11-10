@@ -566,7 +566,7 @@ async function iniciar(){
 }
 
 async function boasVindas(){
-  await bot(`Olá maravilhosa, <b>${primeiroNome(st.nome)}</b>! Seja muito bem-vinda ✨ Vou te ajudar a marcar o seu momento.`);
+  await bot(`Oi, maravilhosa! Seja muito bem-vinda ✨ Vou te ajudar a marcar o seu momento.`);
   await escolherServico();
 }
 
@@ -792,6 +792,7 @@ async function finalizarTroca(){
   try{
     await postApi({action: "reagendar", id: st.reagendar.id, whatsapp: st.whatsappMeus, data: st.data, hora: st.hora});
     await bot(`Pronto, <b>${primeiroNome(st.nome)}</b>! Trocamos o seu horário: <b>${esc(st.servico.nome)}</b>, ${esc(dataLonga(st.data))} às <b>${st.hora}</b> ✨`);
+    await bot("Tchau, maravilhosa! Te espero no seu dia ✨");
     st.reagendar = null;
     renderChoices(
       [{label: "Enviar confirmação no WhatsApp", value: "wpp"}, {label: "Voltar ao início", value: "inicio"}],
@@ -871,6 +872,7 @@ async function confirmarPagamento(){
   await bot(`Recebemos o seu sinal, <b>${primeiroNome(st.nome)}</b>! Seu horário está confirmado ✨`);
   mostrarCartaoConfirmacao();
   await bot("Agora é só mandar a confirmação no WhatsApp, com um toque. Assim a Kély já recebe os seus dados. Pra reagendar ou cancelar, é pelo mesmo WhatsApp (cancelamento sem custo com 24h de antecedência).");
+  await bot("Tchau, maravilhosa! Te espero no seu dia ✨");
   renderChoices(
     [{label: "Enviar confirmação no WhatsApp", value: "wpp"}, {label: "Marcar outro horário", value: "novo"}],
     v => {

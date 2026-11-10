@@ -153,6 +153,27 @@
     transition: background .2s, transform .1s;
   }
   .pay-btn:hover { background: var(--green-dark); }
+
+  /* Barra fixa com o pagamento, sempre visível depois do envio da assinatura */
+  .barra-pagar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; display: none;
+    padding: 12px 16px; background: rgba(255,255,255,.97);
+    border-top: 1px solid var(--line); box-shadow: 0 -6px 18px rgba(0,0,0,.08);
+  }
+  .barra-pagar.visivel { display: block; }
+  .barra-pagar a {
+    position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center;
+    max-width: 880px; margin: 0 auto; padding: 16px; border-radius: 12px;
+    background: var(--green); color: #fff; text-decoration: none; font-weight: 700; font-size: 16px;
+    box-shadow: 0 6px 18px rgba(22,163,74,.28);
+  }
+  .barra-pagar a:hover { background: var(--green-dark); }
+  .barra-pagar a::after {
+    content: ""; position: absolute; top: 0; left: -75%; width: 50%; height: 100%;
+    background: linear-gradient(120deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.55) 50%, rgba(255,255,255,0) 100%);
+    animation: sweep 2.8s ease-in-out infinite; pointer-events: none;
+  }
+  body.com-barra { padding-bottom: 90px; }
   .pay-btn:active { transform: scale(.99); }
   .pay-btn[aria-disabled="true"] { background: #b5b5bb; box-shadow: none; pointer-events: none; }
   .pay-btn[aria-disabled="true"]::after { display: none; }
@@ -463,6 +484,10 @@
     </fieldset>
   </section>
 
+  <div class="barra-pagar" id="barraPagar">
+    <a href="#" target="_blank" rel="noopener">Pagar entrada · R$ 1.750,00</a>
+  </div>
+
   <footer>Quintessência Digital</footer>
 </main>
 
@@ -564,6 +589,10 @@
     a.href = URL_PAGAMENTO;
     a.setAttribute('aria-disabled', 'false');
     $('pagarNota').textContent = 'Depois de pagar, envie o comprovante para a contratada.';
+    const barra = $('barraPagar');
+    barra.querySelector('a').href = URL_PAGAMENTO;
+    barra.classList.add('visivel');
+    document.body.classList.add('com-barra');
   }
 
   btnAssinar.addEventListener('click', async () => {

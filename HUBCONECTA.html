@@ -218,9 +218,10 @@ const fmtData = d => d ? new Date(d).toLocaleDateString('pt-BR') : '';
 const isTouch = () => !matchMedia('(pointer:fine)').matches;
 
 function normWpp(v){
-  let d = v.replace(/\D/g, '');
+  // Remove tudo que não é número e zeros do início (ex.: 0 antes do DDD)
+  let d = v.replace(/\D/g, '').replace(/^0+/, '');
   if (d.length === 10 || d.length === 11) d = '55' + d;
-  return (d.length >= 12 && d.length <= 13) ? d : '';
+  return (d.length >= 12 && d.length <= 13 && d.startsWith('55')) ? d : '';
 }
 
 function showView(v){

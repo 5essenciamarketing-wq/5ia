@@ -78,13 +78,11 @@
     font-weight: 600; font-size: .95em; white-space: nowrap;
   }
 
-  /* Módulos */
   .modules { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
   .module { border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; background: var(--bg); }
   .module-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
   .module-tag { font-size: 11px; color: var(--gold); font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
-  .module .inclui, .module .nao { font-size: 14px; margin: 8px 0 0; }
-  .module .nao { color: var(--muted); }
+  .module .inclui { font-size: 14px; margin: 8px 0 0; }
   .module ul { padding-left: 18px; margin: 4px 0 0; }
   .module li { font-size: 14px; margin: 2px 0; }
 
@@ -106,7 +104,6 @@
   .pay strong { display: block; font-size: 20px; margin-top: 4px; }
   .pay .step span { display: block; font-size: 13px; color: var(--muted); margin-top: 6px; }
 
-  /* Fotos da assinatura */
   .sig-card { margin-top: 14px; border: 1.5px dashed var(--gold); border-radius: var(--radius); padding: 22px; background: #fffdf7; }
   .sig-card .who { font-weight: 600; margin: 0; }
   .sig-card .cpf { color: var(--muted); font-size: 14px; margin: 2px 0 16px; }
@@ -216,6 +213,8 @@
     </div>
   </section>
 
+  <div id="contrato-corpo">
+
   <section class="section" id="partes">
     <div class="section-head"><span class="num">1</span><h2>Partes</h2></div>
     <div class="parties">
@@ -232,7 +231,7 @@
 
   <section class="section" id="objeto">
     <div class="section-head"><span class="num">2</span><h2>Objeto e escopo</h2></div>
-    <p>A contratada desenvolverá um sistema web de gestão e uma landing page, com os módulos descritos abaixo. Cada módulo tem o que está incluído e o que não está. Tudo que não estiver na coluna "incluído" fica fora do escopo e pode ser orçado à parte.</p>
+    <p>A contratada desenvolverá um sistema web de gestão e uma landing page, com os módulos descritos abaixo. Tudo que não estiver descrito como incluído fica fora do escopo e pode ser orçado à parte.</p>
 
     <div class="modules">
       <div class="module">
@@ -350,9 +349,11 @@
     <p>Alterações neste contrato devem ser feitas por escrito e aceitas pelas duas partes. Fica eleito o foro da comarca de <span class="pending">[Balneário Camboriú/SC]</span> para dirimir eventuais dúvidas, com renúncia a qualquer outro.</p>
   </section>
 
+  </div>
+
   <section class="section" id="assinatura">
     <div class="section-head"><span class="num">7</span><h2>Assinatura</h2></div>
-    <p>Para assinar, envie três fotos: a frente e o verso do seu documento de identidade (RG ou CNH) e uma selfie segurando o documento. Depois de anexar as três, marque o aceite e envie. A contratada recebe as fotos por e-mail e guarda junto ao contrato.</p>
+    <p>Para assinar, envie três fotos: a frente e o verso do seu documento de identidade (RG ou CNH) e uma selfie segurando o documento. Depois de anexar as três, marque o aceite e envie. A contratada recebe um PDF único, com o contrato, o termo de assinatura e as fotos.</p>
 
     <div class="sig-card">
       <p class="who">Simone Cristina de Paula Manica</p>
@@ -519,6 +520,17 @@
     });
   }
 
+  // IP informado pelo navegador no momento do envio (o Apps Script não enxerga o IP de quem acessa)
+  async function obterIp() {
+    try {
+      const r = await fetch('https://api.ipify.org?format=json');
+      const j = await r.json();
+      return j.ip || 'não obtido';
+    } catch (e) {
+      return 'não obtido';
+    }
+  }
+
   async function enviar(payload) {
     const res = await fetch(SCRIPT_URL, {
       method: 'POST',
@@ -564,19 +576,25 @@
 
   btnAssinar.addEventListener('click', async () => {
     btnAssinar.disabled = true;
-    setStatus(status, 'Enviando as fotos…', '');
+    setStatus(status, 'Enviando a assinatura…', '');
     try {
       const fotos = {};
       for (const f of FOTOS) {
         fotos[f.key] = await prepararFoto($(f.input).files[0]);
       }
+      const ip = await obterIp();
+      const contratoHtml = $('contrato-corpo').innerHTML;
       await enviar({
         tipo: 'contrato',
         nome: NOME,
         cpf: CPF,
         dataLocal: data.value.trim(),
         aceite: aceite.checked,
-        fotos
+        fotos,
+        ip,
+        userAgent: navigator.userAgent,
+        dataHoraCliente: new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
+        contratoHtml
       });
       setStatus(status, 'Assinatura enviada com sucesso. Obrigada!', 'ok');
       verificarBriefing();

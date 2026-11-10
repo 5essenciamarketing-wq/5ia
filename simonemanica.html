@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Contrato de Prestação de Serviços — Simone Cristina de Paula Manica</title>
+<title>Contrato — Simone Cristina de Paula Manica</title>
 <style>
   :root {
     --bg: #f5f5f3;
@@ -26,7 +26,7 @@
     color: var(--ink);
     font-family: "Inter", "Segoe UI", system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
     font-size: 16px;
-    line-height: 1.65;
+    line-height: 1.6;
     -webkit-font-smoothing: antialiased;
   }
 
@@ -70,7 +70,7 @@
   .section h2 { font-size: 18px; margin: 0; font-weight: 650; letter-spacing: -.01em; }
   .section h3 { font-size: 15px; margin: 0; font-weight: 650; }
   .section p { margin: 10px 0; color: #2a2a30; }
-  .section ol, .section ul { color: #2a2a30; padding-left: 20px; margin: 8px 0; }
+  .section ul { color: #2a2a30; padding-left: 20px; margin: 8px 0; }
   .section li { margin: 4px 0; font-size: 15px; }
 
   .pending {
@@ -82,8 +82,7 @@
   .module { border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; background: var(--bg); }
   .module-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
   .module-tag { font-size: 11px; color: var(--gold); font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
-  .module .inclui { font-size: 14px; margin: 8px 0 0; }
-  .module ul { padding-left: 18px; margin: 4px 0 0; }
+  .module ul { padding-left: 18px; margin: 6px 0 0; }
   .module li { font-size: 14px; margin: 2px 0; }
 
   .scope-out { margin-top: 14px; padding: 14px 16px; background: var(--gold-soft); border-radius: 10px; }
@@ -155,6 +154,8 @@
   }
   .pay-btn:hover { background: var(--green-dark); }
   .pay-btn:active { transform: scale(.99); }
+  .pay-btn[aria-disabled="true"] { background: #b5b5bb; box-shadow: none; pointer-events: none; }
+  .pay-btn[aria-disabled="true"]::after { display: none; }
   .pay-btn::after {
     content: ""; position: absolute; top: 0; left: -75%; width: 50%; height: 100%;
     background: linear-gradient(120deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.55) 50%, rgba(255,255,255,0) 100%);
@@ -203,13 +204,13 @@
 <main class="wrap">
 
   <section class="hero">
-    <div class="eyebrow">Contrato de prestação de serviços</div>
+    <div class="eyebrow">Contrato</div>
     <h1>Sistema de gestão e landing page</h1>
-    <p>Documento para leitura e assinatura eletrônica entre as partes abaixo.</p>
+    <p>Leia, assine e siga para o pagamento da entrada.</p>
     <div class="meta">
       <div><small>Data</small><strong>10/11/2026</strong></div>
       <div><small>Valor total</small><strong>R$ 3.500,00</strong></div>
-      <div><small>Hospedagem</small><strong>Conforme seção 4</strong></div>
+      <div><small>Hospedagem</small><strong>Veja a seção 4</strong></div>
     </div>
   </section>
 
@@ -230,130 +231,121 @@
   </section>
 
   <section class="section" id="objeto">
-    <div class="section-head"><span class="num">2</span><h2>Objeto e escopo</h2></div>
-    <p>A contratada desenvolverá um sistema web de gestão e uma landing page, com os módulos descritos abaixo. Tudo que não estiver descrito como incluído fica fora do escopo e pode ser orçado à parte.</p>
+    <div class="section-head"><span class="num">2</span><h2>O que será entregue</h2></div>
+    <p>Um sistema de gestão e uma landing page, com os módulos abaixo. O que não estiver listado fica fora e pode ser orçado à parte.</p>
 
     <div class="modules">
       <div class="module">
-        <div class="module-head"><h3>CRM de clientes e leads</h3><span class="module-tag">Módulo 1</span></div>
-        <p class="inclui"><strong>Incluído:</strong></p>
+        <div class="module-head"><h3>CRM de clientes e leads</h3><span class="module-tag">1</span></div>
         <ul>
-          <li>Cadastro de clientes e leads (nome, contato, origem e observações)</li>
-          <li>Histórico manual de contatos por cliente</li>
-          <li>Etapas de acompanhamento definidas pela contratante (até 6 etapas)</li>
-          <li>Busca e filtro por nome e etapa</li>
+          <li>Cadastro de clientes e leads</li>
+          <li>Histórico de contatos</li>
+          <li>Até 6 etapas de acompanhamento</li>
+          <li>Busca e filtros</li>
         </ul>
       </div>
 
       <div class="module">
-        <div class="module-head"><h3>Módulo financeiro</h3><span class="module-tag">Módulo 2</span></div>
-        <p class="inclui"><strong>Incluído:</strong></p>
+        <div class="module-head"><h3>Financeiro</h3><span class="module-tag">2</span></div>
         <ul>
-          <li>Lançamento manual de receitas e despesas, com data, valor e categoria</li>
-          <li>Categorias definidas pela contratante (até 15)</li>
-          <li>Saldo e totais por período</li>
-          <li>Exportação do extrato em planilha (CSV)</li>
+          <li>Receitas e despesas lançadas à mão</li>
+          <li>Até 15 categorias</li>
+          <li>Saldo por período</li>
+          <li>Exportação em CSV</li>
         </ul>
       </div>
 
       <div class="module">
-        <div class="module-head"><h3>Controle de estoque</h3><span class="module-tag">Módulo 3</span></div>
-        <p class="inclui"><strong>Incluído:</strong></p>
+        <div class="module-head"><h3>Estoque</h3><span class="module-tag">3</span></div>
         <ul>
-          <li>Cadastro de produtos (nome, unidade, quantidade atual)</li>
-          <li>Registro manual de entradas e saídas</li>
-          <li>Alerta visual quando a quantidade fica abaixo do mínimo definido por produto</li>
+          <li>Produtos com quantidade atual</li>
+          <li>Entradas e saídas</li>
+          <li>Alerta de estoque mínimo</li>
         </ul>
       </div>
 
       <div class="module">
-        <div class="module-head"><h3>Cadastro de funcionários</h3><span class="module-tag">Módulo 4</span></div>
-        <p class="inclui"><strong>Incluído:</strong></p>
+        <div class="module-head"><h3>Funcionários</h3><span class="module-tag">4</span></div>
         <ul>
-          <li>Cadastro com nome, função, contato e data de admissão</li>
-          <li>Lista de funcionários com busca e status (ativo ou inativo)</li>
+          <li>Nome, função, contato e admissão</li>
+          <li>Status ativo ou inativo</li>
         </ul>
       </div>
 
       <div class="module">
-        <div class="module-head"><h3>Controle de insumos</h3><span class="module-tag">Módulo 5</span></div>
-        <p class="inclui"><strong>Incluído:</strong></p>
+        <div class="module-head"><h3>Insumos</h3><span class="module-tag">5</span></div>
         <ul>
-          <li>Cadastro de insumos de uso interno (nome e unidade de medida)</li>
-          <li>Registro manual de consumo, com data e responsável</li>
+          <li>Cadastro de insumos</li>
+          <li>Registro de consumo</li>
         </ul>
       </div>
 
       <div class="module">
-        <div class="module-head"><h3>Landing page</h3><span class="module-tag">Módulo 6</span></div>
-        <p class="inclui"><strong>Incluído:</strong></p>
+        <div class="module-head"><h3>Landing page</h3><span class="module-tag">6</span></div>
         <ul>
-          <li>Uma página única, com até 6 seções</li>
-          <li>Formulário de contato com envio para e-mail da contratante</li>
-          <li>Layout adaptado para celular</li>
+          <li>Uma página, até 6 seções</li>
+          <li>Formulário de contato</li>
+          <li>Adaptada ao celular</li>
         </ul>
       </div>
     </div>
 
     <div class="scope-out">
-      <p>Fora do escopo deste contrato</p>
+      <p>Fica fora do contrato</p>
       <ul>
-        <li>Registro ou renovação de domínio próprio;</li>
-        <li>Serviços de terceiros com custo próprio, como APIs de WhatsApp, anúncios pagos e ferramentas de e-mail;</li>
-        <li>Manutenção mensal, suporte contínuo e novas funcionalidades após a entrega;</li>
-        <li>Migração de dados de sistemas anteriores, salvo acordo por escrito.</li>
+        <li>Domínio próprio</li>
+        <li>Serviços pagos de terceiros, como API do WhatsApp, anúncios e e-mail</li>
+        <li>Manutenção mensal e funções novas depois da entrega</li>
+        <li>Migração de dados de sistemas antigos</li>
       </ul>
     </div>
 
-    <p><strong>Ajustes:</strong> a contratante terá até duas rodadas de ajustes de texto e layout dentro do escopo acima. Pedidos de novas funções ou mudança de escopo serão orçados antes de serem feitos.</p>
+    <p>Inclui duas rodadas de ajustes de texto e layout. Mudanças maiores são orçadas antes de começar.</p>
   </section>
 
   <section class="section" id="valor">
-    <div class="section-head"><span class="num">3</span><h2>Valor e forma de pagamento</h2></div>
-    <p>O valor total do serviço é de <strong>R$ 3.500,00 (três mil e quinhentos reais)</strong>, pago em duas parcelas de 50%.</p>
+    <div class="section-head"><span class="num">3</span><h2>Valor</h2></div>
+    <p>O total é <strong>R$ 3.500,00</strong>, em duas parcelas de R$ 1.750,00: a primeira na assinatura e a segunda na entrega.</p>
     <div class="pay">
       <div class="step">
-        <small>Entrada (50%)</small>
+        <small>Entrada</small>
         <strong>R$ 1.750,00</strong>
-        <span>Na assinatura deste contrato</span>
+        <span>Na assinatura</span>
       </div>
       <div class="step">
-        <small>Saldo (50%)</small>
+        <small>Saldo</small>
         <strong>R$ 1.750,00</strong>
-        <span>Na entrega do sistema e da landing page</span>
+        <span>Na entrega</span>
       </div>
       <div class="total">
         <small>Total</small>
         <strong>R$ 3.500,00</strong>
-        <span style="display:block;font-size:13px;margin-top:6px;opacity:.75;">Pagamento da entrada na seção 8</span>
+        <span style="display:block;font-size:13px;margin-top:6px;opacity:.75;">Entrada na seção 8</span>
       </div>
     </div>
-    <p style="font-size:14px;color:var(--muted);">A entrega só acontece após o pagamento do saldo.</p>
   </section>
 
   <section class="section" id="prazo">
     <div class="section-head"><span class="num">4</span><h2>Prazo e hospedagem</h2></div>
-    <p>O prazo máximo de entrega é de <strong>10 dias corridos</strong>, contados do pagamento da entrada e do recebimento do briefing preenchido (seção 9). A contratada estima entre 7 e 10 dias. Atrasos no envio de materiais, respostas ou aprovações pela contratante suspendem o prazo pelo mesmo número de dias.</p>
-    <p>A publicação será feita na plataforma Vercel, usando o plano gratuito enquanto ele estiver disponível nas condições atuais da plataforma. A landing page ficará em endereço no formato vercel.app, pois não há domínio próprio incluído. A contratada não se responsabiliza por alterações de preço, limites ou regras de uso feitas por terceiros. Se a plataforma passar a exigir plano pago, a contratante será avisada antes de qualquer cobrança, e o custo será combinado por escrito.</p>
-    <p>A contratada também não responde por indisponibilidade de serviços de terceiros, como Vercel, Google, Nubank e WhatsApp.</p>
+    <p>Entrega em até <strong>10 dias corridos</strong>, contados do pagamento da entrada e do briefing preenchido. Se o envio de materiais atrasar, o prazo se estende pelo mesmo tempo.</p>
+    <p>O site fica na Vercel, no plano gratuito, enquanto ele estiver disponível. O endereço será do tipo vercel.app, já que não há domínio próprio. Se a Vercel passar a cobrar, eu aviso antes, e nada é cobrado sem o seu OK. Não respondo por falhas de serviços de terceiros, como Vercel, Google, Nubank e WhatsApp.</p>
   </section>
 
   <section class="section" id="dados">
-    <div class="section-head"><span class="num">5</span><h2>Dados pessoais e propriedade</h2></div>
-    <p>A contratada usará os dados pessoais da contratante (nome, CPF, telefone e documento de identidade) somente para a execução deste contrato, em conformidade com a Lei Geral de Proteção de Dados (Lei nº 13.709/2018). As fotos do documento serão usadas apenas para conferir a assinatura deste contrato e não serão repassadas a terceiros.</p>
-    <p>Após o pagamento integral, a contratante terá direito de uso do sistema e da landing page entregues, nos termos deste contrato. A contratada mantém a propriedade de ferramentas e bibliotecas gerais usadas no desenvolvimento, sem expor dados da contratante.</p>
+    <div class="section-head"><span class="num">5</span><h2>Seus dados</h2></div>
+    <p>Usamos seus dados (nome, CPF, telefone e documento) só para este contrato, conforme a LGPD. As fotos servem apenas para conferir a assinatura. Depois do pagamento total, o sistema e a landing page são seus para uso.</p>
   </section>
 
   <section class="section" id="gerais">
-    <div class="section-head"><span class="num">6</span><h2>Disposições gerais e foro</h2></div>
-    <p>Alterações neste contrato devem ser feitas por escrito e aceitas pelas duas partes. Fica eleito o foro da comarca de <span class="pending">[Balneário Camboriú/SC]</span> para dirimir eventuais dúvidas, com renúncia a qualquer outro.</p>
+    <div class="section-head"><span class="num">6</span><h2>Final</h2></div>
+    <p>Mudanças neste contrato devem ser feitas por escrito, com o acordo das duas partes. Fica eleito o foro de <span class="pending">[Balneário Camboriú/SC]</span>.</p>
   </section>
 
   </div>
 
   <section class="section" id="assinatura">
     <div class="section-head"><span class="num">7</span><h2>Assinatura</h2></div>
-    <p>Para assinar, envie três fotos: a frente e o verso do seu documento de identidade (RG ou CNH) e uma selfie segurando o documento. Depois de anexar as três, marque o aceite e envie. A data e a hora do envio são registradas automaticamente. A contratada recebe um PDF único, com o contrato, o termo de assinatura e as fotos.</p>
+    <p>Envie três fotos: frente e verso do seu documento (RG ou CNH) e uma selfie segurando o documento. Depois, marque o aceite e envie. A data e a hora ficam registradas automaticamente.</p>
 
     <div class="sig-card">
       <p class="who">Simone Cristina de Paula Manica</p>
@@ -362,19 +354,19 @@
       <div class="photos">
         <label class="photo-slot" id="slotFrente">
           <span class="ok">✓</span>
-          <div><strong>Frente do documento</strong>Toque para tirar ou escolher</div>
+          <div><strong>Frente do documento</strong>Tirar ou escolher</div>
           <span class="nome-arquivo" id="nomeFrente"></span>
           <input type="file" id="fFrente" accept="image/*" capture="environment">
         </label>
         <label class="photo-slot" id="slotVerso">
           <span class="ok">✓</span>
-          <div><strong>Verso do documento</strong>Toque para tirar ou escolher</div>
+          <div><strong>Verso do documento</strong>Tirar ou escolher</div>
           <span class="nome-arquivo" id="nomeVerso"></span>
           <input type="file" id="fVerso" accept="image/*" capture="environment">
         </label>
         <label class="photo-slot" id="slotSelfie">
           <span class="ok">✓</span>
-          <div><strong>Selfie com o documento</strong>Toque para tirar com a câmera da frente</div>
+          <div><strong>Selfie com o documento</strong>Câmera da frente</div>
           <span class="nome-arquivo" id="nomeSelfie"></span>
           <input type="file" id="fSelfie" accept="image/*" capture="user">
         </label>
@@ -382,7 +374,7 @@
 
       <div class="check">
         <input type="checkbox" id="aceite">
-        <label for="aceite" style="margin:0;color:var(--ink);font-size:14px;">Li este contrato, incluindo os módulos fora do escopo e as condições de hospedagem, e concordo com todas as cláusulas.</label>
+        <label for="aceite" style="margin:0;color:var(--ink);font-size:14px;">Li e concordo com o contrato.</label>
       </div>
 
       <div class="actions">
@@ -394,26 +386,26 @@
 
   <section class="section" id="pagamento">
     <div class="section-head"><span class="num">8</span><h2>Pagamento da entrada</h2></div>
-    <p>Pague a entrada de <strong>R$ 1.750,00</strong> pelo link abaixo. Depois do pagamento, a contratada confirma o recebimento e libera o briefing da seção 9.</p>
-    <a class="pay-btn" href="https://checkout.nubank.com.br/szbd288unX3iv7c0" target="_blank" rel="noopener">
+    <p>Depois de enviar a assinatura, pague a entrada de <strong>R$ 1.750,00</strong> pelo botão abaixo. Quando eu confirmar o pagamento, o briefing da seção 9 libera nesta mesma página.</p>
+    <a class="pay-btn" id="btnPagar" href="#" target="_blank" rel="noopener" aria-disabled="true">
       Pagar entrada
       <span class="pay-amount">R$ 1.750,00 · 50% do total</span>
     </a>
-    <p style="font-size:12px;color:var(--muted);">Após pagar, envie o comprovante para a contratada.</p>
+    <p id="pagarNota" style="font-size:12px;color:var(--muted);">Este botão fica disponível depois do envio da assinatura.</p>
   </section>
 
   <section class="section" id="briefing">
-    <div class="section-head"><span class="num">9</span><h2>Briefing do site e do sistema</h2></div>
+    <div class="section-head"><span class="num">9</span><h2>Briefing</h2></div>
     <div class="locked-note" id="lockNote">
       <span>🔒</span>
-      <span id="lockText">Verificando a liberação do briefing…</span>
+      <span id="lockText">Verificando a liberação…</span>
     </div>
 
     <fieldset id="briefingFields" disabled>
-      <p>Preencha o que puder. Informações que faltarem podem atrasar o prazo da seção 4.</p>
+      <p>Preencha o que puder. O que faltar, a gente combina depois.</p>
 
       <div class="field">
-        <label for="b_nome">Nome do negócio, como deve aparecer no site</label>
+        <label for="b_nome">Nome do negócio, como aparece no site</label>
         <input type="text" id="b_nome">
       </div>
 
@@ -423,7 +415,7 @@
           <input type="text" id="b_cidade">
         </div>
         <div class="field">
-          <label for="b_zap">WhatsApp para contato dos clientes</label>
+          <label for="b_zap">WhatsApp de contato</label>
           <input type="text" id="b_zap">
         </div>
       </div>
@@ -434,28 +426,28 @@
           <input type="text" id="b_insta">
         </div>
         <div class="field">
-          <label for="b_cores">Cores ou estilo desejado</label>
-          <input type="text" id="b_cores" placeholder="Ex.: dourado e preto, clean, moderno">
+          <label for="b_cores">Cores ou estilo</label>
+          <input type="text" id="b_cores" placeholder="Ex.: dourado e preto, clean">
         </div>
       </div>
 
       <div class="field">
-        <label for="b_servicos">Serviços oferecidos e, se quiser mostrar, os preços</label>
+        <label for="b_servicos">Serviços e preços (se quiser mostrar)</label>
         <textarea id="b_servicos"></textarea>
       </div>
 
       <div class="field">
-        <label for="b_sobre">Texto de apresentação (sobre o negócio, diferenciais)</label>
+        <label for="b_sobre">Texto sobre o negócio</label>
         <textarea id="b_sobre"></textarea>
       </div>
 
       <div class="field">
-        <label for="b_refs">Sites de referência que você gosta (links)</label>
+        <label for="b_refs">Sites de referência (links)</label>
         <textarea id="b_refs"></textarea>
       </div>
 
       <div class="field">
-        <label for="b_sistema">Sistema: quem vai usar, o que precisa controlar, etapas do CRM, categorias financeiras, categorias de estoque e insumos</label>
+        <label for="b_sistema">Sistema: quem usa, o que controlar, etapas do CRM, categorias de financeiro, estoque e insumos</label>
         <textarea id="b_sistema"></textarea>
       </div>
 
@@ -471,7 +463,7 @@
     </fieldset>
   </section>
 
-  <footer>Quintessência Digital · Contrato de prestação de serviços</footer>
+  <footer>Quintessência Digital</footer>
 </main>
 
 <script>
@@ -480,6 +472,7 @@
   const TOKEN = 'pq7Vz2mK9xR4tLw8nB3cYd6hJ1sF0eA';
   const CPF = '01582944164';
   const NOME = 'Simone Cristina de Paula Manica';
+  const URL_PAGAMENTO = 'https://checkout.nubank.com.br/szbd288unX3iv7c0';
   const CONFIGURADO = !SCRIPT_URL.startsWith('COLE_AQUI');
 
   const $ = (id) => document.getElementById(id);
@@ -566,6 +559,13 @@
   });
   aceite.addEventListener('change', checkReady);
 
+  function liberarPagamento() {
+    const a = $('btnPagar');
+    a.href = URL_PAGAMENTO;
+    a.setAttribute('aria-disabled', 'false');
+    $('pagarNota').textContent = 'Depois de pagar, envie o comprovante para a contratada.';
+  }
+
   btnAssinar.addEventListener('click', async () => {
     btnAssinar.disabled = true;
     setStatus(status, 'Enviando a assinatura…', '');
@@ -587,7 +587,8 @@
         dataHoraCliente: new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
         contratoHtml
       });
-      setStatus(status, 'Assinatura enviada com sucesso. Obrigada!', 'ok');
+      setStatus(status, 'Assinatura enviada. Obrigada!', 'ok');
+      liberarPagamento();
       verificarBriefing();
     } catch (err) {
       setStatus(status, 'Não foi possível enviar: ' + err.message, 'erro');
@@ -604,14 +605,15 @@
       const url = SCRIPT_URL + '?cpf=' + encodeURIComponent(CPF) + '&token=' + encodeURIComponent(TOKEN);
       const res = await fetch(url);
       const json = await res.json();
+      if (json.assinado) liberarPagamento();
       if (json.liberado) {
         $('briefingFields').disabled = false;
         $('lockNote').style.display = 'none';
       } else {
-        $('lockText').textContent = 'Este briefing é liberado depois da confirmação do pagamento da entrada. Se você já pagou, envie o comprovante para a contratada.';
+        $('lockText').textContent = 'Liberamos aqui mesmo, nesta página, assim que o pagamento da entrada for confirmado. A página atualiza sozinha.';
       }
     } catch (err) {
-      $('lockText').textContent = 'Não consegui verificar a liberação agora. Tente de novo mais tarde.';
+      $('lockText').textContent = 'Não consegui verificar agora. Tente de novo mais tarde.';
     }
   }
 
@@ -643,6 +645,8 @@
 
   checkReady();
   verificarBriefing();
+  // Enquanto o briefing estiver bloqueado, a página verifica a liberação a cada 30 segundos
+  setInterval(() => { if ($('briefingFields').disabled) verificarBriefing(); }, 30000);
 </script>
 </body>
 </html>

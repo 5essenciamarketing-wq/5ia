@@ -1078,6 +1078,13 @@ const ZAPI_T  = '7E3E002717ABB45986650021';
 const ZAPI_C  = 'Fb9f1dad5634343098c2506ee81f99e2eS';
 const SIGN    = '5essência Marketing';
 
+// Formata fone para Z-API: se já tiver código de país (≥12 dígitos), usa como está; senão, assume Brasil (+55)
+function formatarFoneZapi(raw){
+  var digits = (raw||'').replace(/\D/g,'');
+  if(digits.length >= 12) return digits; // já tem DDI
+  return '55' + digits;
+}
+
 // ── BANCO DE VARIAÇÕES ──────────────────────────────────────────
 // Estrutura: cada array tem múltiplas variações para a IA sortear
 // Nunca repete o mesmo padrão duas vezes seguidas
@@ -1495,10 +1502,10 @@ async function enviar() {
     console.log('WPP ativo:', wppAtivo, '| wpp:', ctx.wpp, '| foto:', !!fotoBase64);
     if (wppAtivo && ctx.wpp) {
       const msg = msgFinal || gerarTemplate();
-      const numeros = ['55'+ctx.wpp.replace(/\D/g,'')];
+      const numeros = [formatarFoneZapi(ctx.wpp)];
       const wppFin = clienteAtual?.whatsapp_financeiro;
       if(wppFin && wppFin.replace(/\D/g,'') !== ctx.wpp.replace(/\D/g,''))
-        numeros.push('55'+wppFin.replace(/\D/g,''));
+        numeros.push(formatarFoneZapi(wppFin));
 
       let dw;
       for(const numero of numeros){
@@ -1813,7 +1820,7 @@ async function enviarResumo(wpp, msg, alias, btn){
     const r = await fetch(
       `https://api.z-api.io/instances/${ZAPI_I}/token/${ZAPI_T}/send-text`,
       {method:'POST',headers:{'Content-Type':'application/json','Client-Token':ZAPI_C},
-       body:JSON.stringify({phone:'55'+numero,message:msg})}
+       body:JSON.stringify({phone:formatarFoneZapi(numero),message:msg})}
     );
     const d = await r.json();
     if(d.zaapId||d.messageId||d.id){
@@ -2876,7 +2883,7 @@ async function enviarFollowUpZAPI(id){
   const btn = document.getElementById(`fu-wpp-${id}`);
   if(btn){ btn.disabled=true; btn.textContent='Enviando…'; }
   try{
-    const num = '55'+p.contato.replace(/\D/g,'');
+    const num = formatarFoneZapi(p.contato);
     const r = await fetch(`https://api.z-api.io/instances/${ZAPI_I}/token/${ZAPI_T}/send-text`,{
       method:'POST',
       headers:{'Content-Type':'application/json','Client-Token':ZAPI_C},
@@ -3032,7 +3039,7 @@ async function enviarPitch(){
   const pitch   = document.getElementById('pr-pitch')?.value||'';
   const arquivo = (document.getElementById('pr-arquivo')?.value||'').trim();
   if(!contato){ toast('Preencha o WhatsApp do lead','er'); return; }
-  const num = '55'+contato.replace(/\D/g,'');
+  const num = formatarFoneZapi(contato);
   const btn = document.querySelector('[onclick="enviarPitch()"]');
   if(btn){ btn.disabled=true; btn.textContent='Enviando…'; }
 
@@ -3380,7 +3387,7 @@ async function cobrarCliente(wpp, cobId, alias){
     const r = await fetch(
       `https://api.z-api.io/instances/${ZAPI_I}/token/${ZAPI_T}/send-text`,
       {method:'POST',headers:{'Content-Type':'application/json','Client-Token':ZAPI_C},
-       body:JSON.stringify({phone:'55'+num,message:msg})}
+       body:JSON.stringify({phone:formatarFoneZapi(num),message:msg})}
     ).then(r=>r.json());
     if(r.zaapId||r.messageId||r.id){
       btn.textContent='Enviado!';
@@ -4554,7 +4561,7 @@ window.buscarEmpresasIntel = async function(){
 window.dispararPitchZapi = async function(placeId){
   var emp = intelResultados.find(function(e){ return e.place_id===placeId; });
   if(!emp) return;
-  var fone = '55'+(emp.telefone||'').replace(/\D/g,'');
+  var fone = formatarFoneZapi(emp.telefone);
   if(!fone || fone.length < 12){ toast('Telefone inválido','err'); return; }
 
   var pitchEl = document.getElementById('intel-pitch-content');
@@ -4702,7 +4709,7 @@ window.dispararPitchZapiInline = async function(placeId){
   if(!emp) return;
   // Tenta pegar fone do input inline se aberto
   var foneInput = document.getElementById('intel-fone-edit');
-  var fone = '55'+((foneInput ? foneInput.value : emp.telefone)||'').replace(/\D/g,'');
+  var fone = formatarFoneZapi(foneInput ? foneInput.value : emp.telefone);
   if(!fone || fone.length < 12){ toast('Telefone inválido — preencha o campo WhatsApp','err'); return; }
 
   var pitchTA = document.getElementById('intel-pitch-content');
@@ -4849,7 +4856,7 @@ window.renderIntel = function(body){
       var isDup = e.status==='duplicado';
       var isDone= e.status==='adicionado';
       var fone = e.telefone||'';
-      var link55 = fone ? 'https://wa.me/55'+fone.replace(/\D/g,'') : '';
+      var link55 = fone ? 'https://wa.me/'+formatarFoneZapi(fone) : '';
       cards += '<div style="background:rgba(255,255,255,0.03);border:1px solid '
         +(isDup?'rgba(255,255,255,0.05)':isDone?'rgba(39,199,110,0.2)':'rgba(255,255,255,0.09)')
         +';border-radius:12px;padding:12px;opacity:'+(isDup?'0.5':'1')+';margin-bottom:10px">'

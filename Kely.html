@@ -398,6 +398,27 @@ function esc(v){
 const BRL = v => Number(v || 0).toLocaleString("pt-BR", {style:"currency", currency:"BRL"});
 const primeiroNome = n => esc((n || "").trim().split(/\s+/)[0] || "");
 const capitalizar = s => s.charAt(0).toUpperCase() + s.slice(1);
+function extrairNome(texto){
+  let t = String(texto || "").toLowerCase().replace(/[.,!?;:]+/g, " ").replace(/\s+/g, " ").trim();
+  // "eu me chamo X", "meu nome é X": fica só com o que vem depois
+  const m = t.match(/(?:me chamo|meu nome (?:é|e)|nome é)\s+(.+)$/);
+  if (m) t = m[1];
+  // corta o que vem depois do nome ("bárbara e quero marcar")
+  t = t.split(/\s+(?:e|quero|queria|gostaria|mas|pode|tudo)\b/)[0];
+  // tira saudações e frases de cortesia do começo, quantas vezes forem
+  const cortes = [/^(oi+|oie|ol[áa]|opa)\b/, /^(boa|bom|boas)\s+(dia|tarde|noite)\b/,
+                  /^(eu\s+)?(sou|me chamo|sou a|sou o)\b/, /^(tudo bem|tudo bom)\b/];
+  let mudou = true;
+  while (mudou){
+    mudou = false;
+    for (const r of cortes){
+      const n = t.replace(r, "").trim();
+      if (n !== t){ t = n; mudou = true; }
+    }
+  }
+  return t.split(" ").filter(Boolean).slice(0, 3).join(" ");
+}
+
 function capitalizarNome(str){
   return str.trim().split(/\s+/).map(p => p.charAt(0).toLocaleUpperCase("pt-BR") + p.slice(1).toLocaleLowerCase("pt-BR")).join(" ");
 }
@@ -562,7 +583,11 @@ async function iniciar(){
     "Atendimento individual, com 8 anos de experiência.",
     "Para começar seu atendimento, me fale seu nome."
   ]);
-  pedirTexto(async t => { st.nome = t; await boasVindas(); }, {nome: true});
+  pedirTexto(async t => {
+    const nome = extrairNome(t);
+    st.nome = capitalizarNome(nome || t);
+    await boasVindas();
+  }, {nome: true});
 }
 
 async function boasVindas(){

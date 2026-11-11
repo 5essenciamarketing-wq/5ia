@@ -670,6 +670,17 @@ async function trocarAgendamento(a){
 
 async function aposServico(){
   const s = st.servico;
+  if (s.agenda_online === false){
+    await bot(`Pra <b>${esc(s.nome)}</b>, a Kély faz uma avaliação antes, pra indicar o melhor cuidado pra você. Esse atendimento é direto pelo WhatsApp, pra ela conversar com você com calma.`);
+    renderChoices(
+      [{label: "Falar com a Kély no WhatsApp", value: "wpp"}, {label: "Escolher outro procedimento", value: "outro"}],
+      v => {
+        if (v === "wpp") window.open(linkWhats(NEGOCIO.whatsapp, `Oi! Quero uma avaliação para ${s.nome}.`), "_blank");
+        else escolherServico();
+      }
+    );
+    return;
+  }
   await bot(
     `<b>${esc(s.nome)}</b> — dura uns ${formatDuracao(s.duracao_min)} e fica <span class="price">${BRL(s.preco)}</span>` +
     (s.aviso ? `<br><small>${esc(s.aviso)}</small>` : "")

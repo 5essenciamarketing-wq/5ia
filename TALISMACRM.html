@@ -91,6 +91,9 @@ tr.linha:hover td{background:#f4faf9}
 .bar{height:6px;background:var(--gray-soft);border-radius:999px;overflow:hidden;margin-top:4px;min-width:90px}
 .bar i{display:block;height:100%;background:var(--acc)}
 tr.total td{font-weight:700;background:#fbfcfc}
+.qual{background:#fbfcfc;border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin:14px 0 4px}
+.qual.ok{background:var(--green-soft);color:var(--green);border-color:#cfe8dc;font-weight:600}
+.qual b{font-size:14px}
 .det{display:grid;grid-template-columns:150px 1fr;gap:8px 12px;margin:14px 0 6px;font-size:13px;padding:12px 14px;background:#fbfcfc;border:1px solid var(--line);border-radius:8px}
 .det dt{color:var(--mut);font-weight:600}
 .det dd{margin:0;color:var(--txt)}
@@ -134,11 +137,21 @@ tr.total td{font-weight:700;background:#fbfcfc}
 </div>
 
 <!-- Modal: detalhe e atualização do lead -->
+<div class="modal" id="modalPendentes">
+  <div class="box">
+    <h2>Atualize o status</h2>
+    <div class="sub" id="pBase"></div>
+    <div id="pLista" style="margin-top:12px"></div>
+    <div class="acoes-modal"><button class="btn sec" id="pFechar">Depois</button></div>
+  </div>
+</div>
+
 <div class="modal" id="modalLead">
   <div class="box">
     <h2 id="mNome"></h2>
     <div class="sub" id="mInfo"></div>
     <div id="mDetalhes"></div>
+    <div id="mQualBloco"></div>
     <form id="formAtualiza">
       <div id="mCorretorWrap"><label>Corretor responsável</label><select id="mCorretor"></select></div>
       <label>Status</label>
@@ -247,6 +260,7 @@ async function carregar(){
   try{
     painel = await chamar('carregarPainel', sess.token);
     render();
+    avisarPendentes();
   }catch(err){
     if (/Sessão/.test(err.message)){ sair(); $('lErro').textContent = err.message; return; }
     $('conteudo').innerHTML = '<div class="alerta">' + esc(err.message) + '</div>';
@@ -537,6 +551,38 @@ function detalhes(texto){
 }
 
 // ---------- Modal do lead ----------
+// Pergunta "O lead respondeu?" depois que o Fabrício atribuiu o lead ao corretor
+function blocoQualif(l){
+  if (!l.corretorUsuario || l.status === 'Entrada') return '';
+  if (sess.papel !== 'matriz' && l.corretorUsuario !== sess.usuario) return '';
+  if (l.qualificado && l.enviadoMeta) return '<div class="qual ok">✔ Qualificado. Enviado ao Meta em ' + esc(l.enviadoMeta) + '.</div>';
+  if (l.qualificado) return '<div class="qual"><b>Marcado como qualificado</b><div class="sub">Ainda não chegou ao Meta. Tente de novo.</div><div style="margin-top:10px"><button class="btn" id="btnQualSim">Enviar ao Meta</button></div></div>';
+  return '<div class="qual"><b>O lead respondeu?</b><div class="sub">Se sim, o lead vai para o Meta como qualificado e as campanhas passam a buscar leads de melhor qualidade.</div><div style="margin-top:10px"><button class="btn" id="btnQualSim">Sim, respondeu</button></div></div>';
+}
+
+// Pop-up: leads novos com 24h ou mais sem mudança de status. Aparece uma vez por carregamento da tela.
+let popupMostrado = false;
+function avisarPendentes(){
+  if (popupMostrado || !sess || sess.papel === 'matriz') return;
+  const pend = painel.leads.filter(l => l.pendenteStatus && l.corretorUsuario === sess.usuario);
+  if (!pend.length) return;
+  popupMostrado = true;
+  $('pBase').textContent = pend.length === 1
+    ? 'Você tem 1 lead novo há mais de 24 horas sem mudança de status.'
+    : 'Você tem ' + pend.length + ' leads novos há mais de 24 horas sem mudança de status.';
+  $('pLista').innerHTML = pend.map(l =>
+    '<div class="row-av" style="justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)">' +
+    '<div><div class="nome">' + esc(l.nome) + '</div><div class="sub">' + esc(l.interesse || l.origem) + '</div></div>' +
+    '<button class="btn sm" data-pend="' + esc(l.id) + '">Atualizar</button></div>'
+  ).join('');
+  $('pLista').querySelectorAll('[data-pend]').forEach(b => b.onclick = () => {
+    $('modalPendentes').classList.remove('on');
+    abrirLead(b.dataset.pend);
+  });
+  $('modalPendentes').classList.add('on');
+}
+$('pFechar').onclick = () => $('modalPendentes').classList.remove('on');
+
 function abrirLead(id){
   const l = painel.leads.find(x => x.id === id);
   if (!l) return;
@@ -549,6 +595,17 @@ function abrirLead(id){
       .map(c => '<option value="' + esc(c.usuario) + '"' + (c.usuario === l.corretorUsuario ? ' selected' : '') + '>' + esc(c.nome) + '</option>').join('');
   $('mStatus').innerHTML = STATUS.map(s => '<option' + (s === l.status ? ' selected' : '') + '>' + esc(s) + '</option>').join('');
   $('mDetalhes').innerHTML = detalhes(l.obsEntrada);
+  $('mQualBloco').innerHTML = blocoQualif(l);
+  const bQ = $('btnQualSim');
+  if (bQ) bQ.onclick = async () => {
+    bQ.disabled = true; $('mErro').textContent = '';
+    try{
+      const r = await chamar('qualificarLead', sess.token, l.id, true);
+      await carregar();
+      abrirLead(l.id);
+      if (r.motivo) $('mErro').textContent = r.motivo;
+    }catch(err){ $('mErro').textContent = err.message; bQ.disabled = false; }
+  };
   $('mObs').value = l.obsCorretor || '';
   $('mErro').textContent = '';
   $('modalLead').classList.add('on');

@@ -100,7 +100,31 @@ tr.total td{font-weight:700;background:#fbfcfc}
 .det{display:grid;grid-template-columns:150px 1fr;gap:8px 12px;margin:14px 0 6px;font-size:13px;padding:12px 14px;background:#fbfcfc;border:1px solid var(--line);border-radius:8px}
 .det dt{color:var(--mut);font-weight:600}
 .det dd{margin:0;color:var(--txt)}
-@media(max-width:800px){aside{display:none}main{padding:16px}.barra input,.barra select{width:100%}.grid2{grid-template-columns:1fr}}
+@media(max-width:800px){
+#app{display:block}
+main{padding:14px 12px 96px}
+.topo h1{font-size:19px}
+.barra input,.barra select{width:100%}
+.grid2{grid-template-columns:1fr}
+aside{position:fixed;left:0;right:0;bottom:0;top:auto;width:100%;height:auto;flex-direction:row;align-items:center;padding:6px 8px;z-index:50;box-shadow:0 -4px 14px rgba(0,0,0,.25)}
+.marca{display:none}
+#nav{display:flex;flex:1;justify-content:space-around;gap:4px}
+.nav-item{flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:6px 4px;margin:0;font-size:12px;flex:1;text-align:center}
+.nav-item .n{font-size:10px;padding:0 6px}
+.rodape{margin:0;border:0;padding:0 0 0 6px;display:flex;flex-direction:column}
+.rodape .meu{display:none}
+.rodape button{margin:0 0 4px;padding:4px 8px;font-size:12px}
+table.leads{display:block;background:none;border:0;overflow:visible}
+table.leads thead{display:none}
+table.leads tbody{display:block}
+table.leads tr.linha{display:block;background:var(--card);border:1px solid var(--line);border-radius:10px;margin-bottom:12px;padding:12px}
+table.leads tr.linha:hover td{background:none}
+table.leads td{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:5px 0;border:0;text-align:right}
+table.leads td::before{content:attr(data-label);color:var(--mut);font-size:12px;font-weight:600;text-align:left}
+table.leads td:first-child{display:block;text-align:left;padding-bottom:8px}
+table.leads td:first-child::before{content:none}
+table.leads td:last-child{justify-content:flex-start}
+}
 </style>
 </head>
 <body>
@@ -412,16 +436,16 @@ function barraFiltros(){
 function tabelaLeads(lista){
   if (!lista.length) return '<div class="vazio">Nenhum lead por aqui.</div>';
   const colCorr = sess.papel === 'matriz' ? '<th>Corretor</th>' : '';
-  return '<table><thead><tr><th>Nome</th><th>Telefone</th><th>Interesse</th><th>Origem</th>' + colCorr +
+  return '<table class="leads"><thead><tr><th>Nome</th><th>Telefone</th><th>Interesse</th><th>Origem</th>' + colCorr +
     '<th>Status</th><th>Última atualização</th><th></th></tr></thead><tbody>' +
     lista.map(l => '<tr class="linha" data-lead="' + esc(l.id) + '">' +
       '<td><div class="nome">' + esc(l.nome) + '</div></td>' +
-      '<td>' + esc(l.telefone) + '</td>' +
-      '<td>' + esc(l.interesse) + '</td>' +
-      '<td>' + esc(l.origem) + '</td>' +
-      (sess.papel === 'matriz' ? '<td>' + esc(l.corretorNome) + '</td>' : '') +
-      '<td>' + pillStatus(l) + '</td>' +
-      '<td class="sub">' + esc(l.ultimaAtualizacao || '—') + '</td>' +
+      '<td data-label="Telefone">' + esc(l.telefone) + '</td>' +
+      '<td data-label="Interesse">' + esc(l.interesse) + '</td>' +
+      '<td data-label="Origem">' + esc(l.origem) + '</td>' +
+      (sess.papel === 'matriz' ? '<td data-label="Corretor">' + esc(l.corretorNome) + '</td>' : '') +
+      '<td data-label="Status">' + pillStatus(l) + '</td>' +
+      '<td class="sub" data-label="Atualizado">' + esc(l.ultimaAtualizacao || '—') + '</td>' +
       '<td>' + linkWa(l.telefone) + '</td>' +
       '</tr>').join('') +
     '</tbody></table>';

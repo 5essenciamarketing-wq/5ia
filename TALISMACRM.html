@@ -100,36 +100,18 @@ tr.total td{font-weight:700;background:#fbfcfc}
 .det{display:grid;grid-template-columns:150px 1fr;gap:8px 12px;margin:14px 0 6px;font-size:13px;padding:12px 14px;background:#fbfcfc;border:1px solid var(--line);border-radius:8px}
 .det dt{color:var(--mut);font-weight:600}
 .det dd{margin:0;color:var(--txt)}
-@media(max-width:800px){
-#app{display:block}
-main{padding:70px 12px 28px}
-.topo h1{font-size:19px}
-.barra input,.barra select{width:100%}
-.grid2{grid-template-columns:1fr}
-aside{position:fixed;top:0;left:0;right:0;bottom:auto;width:100%;height:auto;flex-direction:row;align-items:center;gap:6px;padding:8px 10px;overflow-x:auto;white-space:nowrap;z-index:50;box-shadow:0 4px 14px rgba(0,0,0,.25);-webkit-overflow-scrolling:touch}
-.marca{display:none}
-#nav{display:flex;gap:6px;flex:none}
-.nav-item{flex:none;margin:0;padding:7px 12px;border-radius:999px;background:rgba(255,255,255,.08);font-size:13px;display:flex;gap:6px;align-items:center;white-space:nowrap}
-.nav-item .n{font-size:11px;padding:0 7px}
-.rodape{margin:0 0 0 6px;padding:0 0 0 8px;border:0;border-left:1px solid #434851;display:flex;flex:none;gap:6px;align-items:center}
-.rodape .meu{display:none}
-.rodape button{margin:0;padding:6px 11px;font-size:13px;white-space:nowrap;border-radius:999px}
-table.leads{display:block;background:none;border:0;overflow:visible}
-table.leads thead{display:none}
-table.leads tbody{display:block}
-table.leads tbody tr{display:block;background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:14px;padding:14px 14px 10px;box-shadow:0 2px 8px rgba(46,48,97,.06)}
-table.leads tbody tr:hover td{background:none}
-table.leads td{display:grid;grid-template-columns:112px 1fr;gap:10px;align-items:center;padding:6px 0;border:0;text-align:left;font-size:14px}
-table.leads td::before{content:attr(data-label);color:var(--mut);font-size:12px;font-weight:600}
-table.leads td:first-child{display:block;padding:0 0 8px}
-table.leads td:first-child::before{content:none}
-table.leads td:last-child{display:block;padding-top:6px}
-table.leads td.acoes{display:block;padding-top:8px}
-table.leads td.acoes::before{display:block;margin-bottom:8px}
-table.leads td.acoes .linha-acoes{display:flex;gap:8px;align-items:center}
-table.leads td.acoes select{flex:1;min-width:0;padding:10px}
-table.leads td.acoes .btn{padding:10px 16px;white-space:nowrap}
-}
+@media(max-width:800px){aside{display:none}main{padding:16px}.barra input,.barra select{width:100%}.grid2{grid-template-columns:1fr}}
+.barra input,.barra select{height:38px;box-sizing:border-box;padding:0 10px;border:1px solid #cdd5da;border-radius:6px;background:#fff;color:var(--txt);font:inherit;font-size:14px}
+.wa{display:inline-block;background:#1f9d55;color:#fff;padding:6px 12px;border-radius:999px;font-size:13px;font-weight:600;text-decoration:none;white-space:nowrap}
+.wa:hover{background:#17804a}
+tr.parado td:first-child{box-shadow:inset 4px 0 0 var(--red)}
+.trunc{max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+td.tel{white-space:nowrap}
+.resumo{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.res-item{background:#fff;border:1px solid var(--line);border-radius:8px;padding:8px 14px;font-size:13px;color:var(--mut);min-width:150px}
+.res-item b{display:block;font-size:20px;color:var(--acc);font-weight:700}
+.res-item b.vermelho{color:var(--red)}
+.st-inline{height:30px;border:1px solid #cdd5da;border-radius:6px;padding:0 8px;background:#fff;font:inherit;font-size:13px;color:var(--txt);margin-bottom:4px}
 </style>
 </head>
 <body>
@@ -324,11 +306,32 @@ function pillStatus(l){
     (l.atrasado ? ' <span class="pill atras">sem atualização</span>' : '');
 }
 
-function linkWa(tel){
+
+function numeroWa(tel, origem){
   const d = String(tel || '').replace(/\D/g, '');
   if (!d) return '';
-  const num = d.length <= 11 ? '55' + d : d;
+  const o = String(origem || '');
+  if (/EUA/i.test(o)) return (d.length === 11 && d[0] === '1') ? d : '1' + d;
+  if (/Argentina/i.test(o)) return (d.startsWith('54') && d.length >= 12) ? d : '54' + d;
+  return d.length >= 12 ? d : '55' + d;
+}
+function fmtTel(tel, origem){
+  const n = numeroWa(tel, origem);
+  if (!n) return '—';
+  if (n.startsWith('55') && n.length === 13) return '+55 (' + n.slice(2,4) + ') ' + n.slice(4,9) + '-' + n.slice(9);
+  if (n.startsWith('55') && n.length === 12) return '+55 (' + n.slice(2,4) + ') ' + n.slice(4,8) + '-' + n.slice(8);
+  if (n.startsWith('1') && n.length === 11) return '+1 (' + n.slice(1,4) + ') ' + n.slice(4,7) + '-' + n.slice(7);
+  return '+' + n;
+}
+function linkWa(tel, origem){
+  const num = numeroWa(tel, origem);
+  if (!num) return '';
   return '<a class="wa" href="https://wa.me/' + esc(num) + '" target="_blank" onclick="event.stopPropagation()">WhatsApp</a>';
+}
+function selStatus(l){
+  const opts = STATUS.includes(l.status) ? STATUS : [l.status].concat(STATUS);
+  return '<select class="st-inline" data-st="' + esc(l.id) + '" onclick="event.stopPropagation()">' +
+    opts.map(s => '<option' + (s === l.status ? ' selected' : '') + '>' + esc(s) + '</option>').join('') + '</select>';
 }
 
 let desemp = null;
@@ -438,20 +441,28 @@ function barraFiltros(){
     '</select>' + opcCorr;
 }
 
+
 function tabelaLeads(lista){
   if (!lista.length) return '<div class="vazio">Nenhum lead por aqui.</div>';
   const colCorr = sess.papel === 'matriz' ? '<th>Corretor</th>' : '';
-  return '<table class="leads"><thead><tr><th>Nome</th><th>Telefone</th><th>Interesse</th><th>Origem</th>' + colCorr +
+  const nVenda = lista.filter(l => l.status === 'Venda fechada').length;
+  const nParados = lista.filter(l => l.atrasado).length;
+  const resumo = '<div class="resumo">' +
+    '<div class="res-item"><b>' + lista.length + '</b>leads na lista</div>' +
+    '<div class="res-item"><b class="' + (nParados ? 'vermelho' : '') + '">' + nParados + '</b>sem atualização</div>' +
+    '<div class="res-item"><b>' + nVenda + '</b>vendas fechadas</div>' +
+    '</div>';
+  return resumo + '<table><thead><tr><th>Nome</th><th>Telefone</th><th>Interesse</th><th>Origem</th>' + colCorr +
     '<th>Status</th><th>Última atualização</th><th></th></tr></thead><tbody>' +
-    lista.map(l => '<tr class="linha" data-lead="' + esc(l.id) + '">' +
+    lista.map(l => '<tr class="linha' + (l.atrasado ? ' parado' : '') + '" data-lead="' + esc(l.id) + '">' +
       '<td><div class="nome">' + esc(l.nome) + '</div></td>' +
-      '<td data-label="Telefone">' + esc(l.telefone) + '</td>' +
-      '<td data-label="Interesse">' + esc(l.interesse) + '</td>' +
-      '<td data-label="Origem">' + esc(l.origem) + '</td>' +
-      (sess.papel === 'matriz' ? '<td data-label="Corretor">' + esc(l.corretorNome) + '</td>' : '') +
-      '<td data-label="Status">' + pillStatus(l) + '</td>' +
-      '<td class="sub" data-label="Atualizado">' + esc(l.ultimaAtualizacao || '—') + '</td>' +
-      '<td>' + linkWa(l.telefone) + '</td>' +
+      '<td class="tel">' + esc(fmtTel(l.telefone, l.origem)) + '</td>' +
+      '<td><div class="trunc" title="' + esc(l.interesse) + '">' + esc(l.interesse) + '</div></td>' +
+      '<td>' + esc(l.origem) + '</td>' +
+      (sess.papel === 'matriz' ? '<td>' + esc(l.corretorNome) + '</td>' : '') +
+      '<td>' + selStatus(l) + (l.atrasado ? ' <span class="pill atras">sem atualização</span>' : '') + '</td>' +
+      '<td class="sub">' + esc(l.ultimaAtualizacao || '—') + '</td>' +
+      '<td>' + linkWa(l.telefone, l.origem) + '</td>' +
       '</tr>').join('') +
     '</tbody></table>';
 }
@@ -461,14 +472,14 @@ function tabelaEntrada(){
   if (!entrada.length) return '<div class="vazio">Nenhum lead aguardando distribuição.</div>';
   const opts = painel.corretores.filter(c => c.papel === 'corretor' && c.ativo)
     .map(c => '<option value="' + esc(c.usuario) + '">' + esc(c.nome) + '</option>').join('');
-  return '<table class="leads"><thead><tr><th>Nome</th><th>Telefone</th><th>Origem</th><th>Interesse</th><th>Entrou em</th><th>Distribuir para</th></tr></thead><tbody>' +
+  return '<table><thead><tr><th>Nome</th><th>Telefone</th><th>Origem</th><th>Interesse</th><th>Entrou em</th><th>Distribuir para</th></tr></thead><tbody>' +
     entrada.map(l => '<tr>' +
       '<td><div class="nome">' + esc(l.nome) + '</div>' + '' + '</td>' +
-      '<td data-label="Telefone">' + esc(l.telefone) + '</td>' +
-      '<td data-label="Origem">' + esc(l.origem) + '</td>' +
-      '<td data-label="Interesse">' + esc(l.interesse) + '</td>' +
-      '<td class="sub" data-label="Entrou em">' + esc(l.dataEntrada) + '</td>' +
-      '<td class="acoes" data-label="Distribuir para"><div class="linha-acoes"><select data-sel="' + esc(l.id) + '"><option value="">Escolher corretor…</option>' + opts + '</select>' +
+      '<td>' + esc(l.telefone) + '</td>' +
+      '<td>' + esc(l.origem) + '</td>' +
+      '<td>' + esc(l.interesse) + '</td>' +
+      '<td class="sub">' + esc(l.dataEntrada) + '</td>' +
+      '<td><div class="linha-acoes"><select data-sel="' + esc(l.id) + '"><option value="">Escolher corretor…</option>' + opts + '</select>' +
       '<button class="btn small" data-atr="' + esc(l.id) + '">Atribuir</button></div></td>' +
       '</tr>').join('') +
     '</tbody></table>';
@@ -519,6 +530,15 @@ function ligar(){
 
 function ligarLinhas(){
   document.querySelectorAll('tr[data-lead]').forEach(el => el.onclick = () => abrirLead(el.dataset.lead));
+  document.querySelectorAll('.st-inline').forEach(s => s.onchange = async e => {
+    e.stopPropagation();
+    const l = painel.leads.find(x => x.id === s.dataset.st);
+    if (!l) return;
+    if (s.value === 'Perdido'){ s.value = l.status; abrirLead(l.id); return; }
+    s.disabled = true;
+    try{ await chamar('atualizarLead', sess.token, l.id, s.value, l.obsCorretor || ''); await carregar(); }
+    catch(err){ alert(err.message); s.value = l.status; s.disabled = false; }
+  });
 }
 
 // ---------- Fotos e conta ----------

@@ -296,7 +296,7 @@ function filtrados(){
     ? painel.leads.filter(ehAtrasado)
     : painel.leads.filter(l => l.status !== 'Entrada');
   const t = fTexto.trim().toLowerCase();
-  if (t) lista = lista.filter(l => (l.nome + ' ' + l.telefone + ' ' + l.interesse + ' ' + l.origem).toLowerCase().indexOf(t) !== -1);
+  if (t) lista = lista.filter(l => (l.nome + ' ' + l.telefone + ' ' + l.origem).toLowerCase().indexOf(t) !== -1);
   if (fStatus) lista = lista.filter(l => l.status === fStatus);
   if (fCorr) lista = lista.filter(l => l.corretorUsuario === fCorr);
   return lista.filter(noMes).slice().sort((a, b) => (b.atrasado - a.atrasado));
@@ -438,7 +438,7 @@ function barraFiltros(){
       painel.corretores.filter(c => c.papel === 'corretor').map(c =>
         '<option value="' + esc(c.usuario) + '"' + (fCorr === c.usuario ? ' selected' : '') + '>' + esc(c.nome) + '</option>').join('') +
       '</select>' : '';
-  return barraMes() + '<input id="fTexto" placeholder="Pesquisar nome, telefone, interesse…" value="' + esc(fTexto) + '">' +
+  return barraMes() + '<input id="fTexto" placeholder="Pesquisar nome, telefone ou origem…" value="' + esc(fTexto) + '">' +
     '<select id="fStatusSel"><option value="">Todos os status</option>' +
     STATUS.map(s => '<option' + (fStatus === s ? ' selected' : '') + '>' + esc(s) + '</option>').join('') +
     '</select>' + opcCorr;
